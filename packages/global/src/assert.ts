@@ -1,3 +1,4 @@
+import "./global";
 
 interface Options {
   getCallStack?: (skipFrameCount: number, exception?: any) => string[];
