@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "packages/hyperion-core/",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - packages/hyperion-core",
+			"detail": "tsc"
+		},
+		{
+			"type": "npm",
+			"script": "test",
+			"path": "packages/hyperion-core/",
+			"group": "test",
+			"problemMatcher": [],
+			"label": "npm: test - packages/hyperion-core",
+			"detail": "tsc"
+		},
+	]
+}
