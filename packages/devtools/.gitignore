@@ -5,4 +5,5 @@ dist
 coverage
 package-lock.json
 test/**/*.js
+src/**/*.js
 
