@@ -1,10 +1,7 @@
 {
   // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
   "extends": "@hyperion/devtools",
-  // "include": [
-  //   "src",
-  //   "test",
-  //   // "types"
-  // ],
-
+  "include": [
+    "src",
+  ],
 }
