@@ -1,0 +1,32 @@
+{
+  "scope": "@hyperion",
+  "name": "@hyperion/devtools",
+  "description": "set of configs and tools for development",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": "Mehrdad Reshadi",
+  "scripts": {
+    "build": "tsc",
+    "watch": "npm run build -- --watch",
+    "start": "npm run type-check:watch",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "npm run type-check -- --watch",
+    "build-babel": "npm run build:types && npm run build:js",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@babel/cli": "^7.14.8",
+    "@babel/core": "^7.15.0",
+    "@babel/plugin-proposal-class-properties": "^7.14.5",
+    "@babel/preset-env": "^7.15.0",
+    "@babel/preset-typescript": "^7.15.0",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.4.12",
+    "babel-jest": "^27.0.6",
+    "jest": "^27.0.6",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.5"
+  }
+}

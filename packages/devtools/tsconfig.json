@@ -1,0 +1,35 @@
+{
+  // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
+  "include": [
+    "src",
+    "test",
+    // "types"
+  ],
+  "compilerOptions": {
+    "module": "esnext",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "typeRoots": [
+      "node_modules/@types",
+    ],
+    "importHelpers": true, // use tslib
+    "declaration": false, // output .d.ts declaration files for consumers
+    "inlineSourceMap": true,
+    // match output dir to input dir. e.g. dist/index instead of dist/src/index
+    // "rootDir": "./src",
+    "strict": true, // stricter type-checking for stronger correctness. Recommended by TS
+    // linter checks for common issues
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    // noUnused* overlap with @typescript-eslint/no-unused-vars, can disable if duplicative
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "moduleResolution": "node", // use Node's module resolution algorithm, instead of the legacy TS one
+    "jsx": "react", // transpile JSX to React.createElement
+    "esModuleInterop": true, // interop between ESM and CJS modules. Recommended by TS
+    "skipLibCheck": true, // significant perf increase by skipping checking .d.ts files, particularly those in node_modules. Recommended by TS
+    "forceConsistentCasingInFileNames": true, // error out if import and file system have a casing mismatch. Recommended by TS
+  }
+}
