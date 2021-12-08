@@ -25,6 +25,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      # TODO: run entire /test directories instead of individual scripts
       - name: Run devtools tests
       - run: ./packages/devtools/test/sample.test.ts
       
