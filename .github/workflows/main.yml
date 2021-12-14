@@ -27,10 +27,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install deps
-        uses: npm install
+        run: npm install
 
       - name: Install packages
-        uses: npm run install-packages
+        run: npm run install-packages
 
 
       # - name: Lint
