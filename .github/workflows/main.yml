@@ -23,20 +23,23 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
-      # TODO: run entire /test directories instead of individual scripts
-      - name: Run devtools tests
-      - run: ./packages/devtools/test/sample.test.ts
-      
-      - name: run global tests
-      - run: ./packages/global/test/assert.test.ts
-      
-      - name: run hook tests
-      - run: ./packages/hook/test/Hook.test.ts
-      
-      - name: run hyperion-core tests
-      - run: ./packages/hyperion-core/test/ShadowPrototype.ts
-      
+      - name: Install deps
+        uses: npm install
+
+      - name: Install packages
+        uses: npm run install-packages
+
+
+      # - name: Lint
+      #   run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm run test --ci --coverage --maxWorkers=2
 
 

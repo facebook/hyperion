@@ -16,6 +16,7 @@
     "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
     "test": "jest"
   },
-  "dependencies": {
+  "devDependencies": {
+    "@types/jest": "^27.0.3"
   }
 }

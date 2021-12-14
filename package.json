@@ -13,6 +13,8 @@
   "scripts": {
     "_start": "tsdx watch",
     "_build": "tsdx build",
+    "install-packages": "npm install --workspaces",
+    "build": "npm run build --workspaces",
     "test": "npm test --workspaces",
     "_lint": "tsdx lint",
     "_prepare": "tsdx build",

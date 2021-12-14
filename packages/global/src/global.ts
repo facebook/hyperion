@@ -2,6 +2,7 @@
 import "./reference";
 
 declare var window: Object;
+declare var global: Object & {__DEV__?: boolean};
 
 if (
   typeof global === "object"
