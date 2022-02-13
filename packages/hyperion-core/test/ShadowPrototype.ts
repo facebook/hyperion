@@ -18,14 +18,14 @@ describe("test modern classes", () => {
         super.interceptObjectItself(obj);
         obj.result.push(obj.a());
       }
-    })(null);
+    })(null, A.prototype);
 
     const IB = new (class extends ShadowPrototype<B, A>{
       interceptObjectItself(obj: B) {
         super.interceptObjectItself(obj);
         obj.result.push(obj.b());
       }
-    })(IA);
+    })(IA, B.prototype);
 
     IA.onBeforInterceptObj.add(o => o.result.push("-a"));
     IA.onAfterInterceptObj.add(o => o.result.push("+a"));
@@ -66,14 +66,14 @@ describe("test traditional classes", () => {
         super.interceptObjectItself(obj);
         obj.result.push(obj.a());
       }
-    })(null);
+    })(null, A_.prototype);
 
     const IB = new (class extends ShadowPrototype<B, A>{
       interceptObjectItself(obj: B) {
         super.interceptObjectItself(obj);
         obj.result.push(obj.b());
       }
-    })(IA);
+    })(IA, B_.prototype);
 
     IA.onBeforInterceptObj.add(o => o.result.push("-a"));
     IA.onAfterInterceptObj.add(o => o.result.push("+a"));

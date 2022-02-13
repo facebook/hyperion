@@ -1,3 +1,4 @@
+import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
 
 type Extension = {
@@ -9,12 +10,26 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
   readonly onBeforInterceptObj = new Hook<(obj: ObjectType) => void>();
   readonly onAfterInterceptObj = new Hook<(obj: ObjectType) => void>();
 
-  constructor(private readonly parentShadoPrototype: ShadowPrototype<ParentType> | null) {
+  constructor(
+    private readonly parentShadoPrototype: ShadowPrototype<ParentType> | null,
+    public readonly targetPrototype: Object
+  ) {
     /**
      * TODO: if we could say <ObjectType extends ParentType> then may be we could avoid the casts
      * in the following methods
      */
     this.extension = Object.create(parentShadoPrototype?.extension ?? null);
+
+    if (/* __DEV__ && */ this.parentShadoPrototype) {
+      let obj = this.targetPrototype;
+      let proto = this.parentShadoPrototype.targetPrototype;
+      let matched = false;
+      while (obj && !matched) {
+        matched = obj === proto;
+        obj = Object.getPrototypeOf(obj);
+      }
+      assert(matched, `Invalid prototype chain`)
+    }
   }
 
   private callOnBeforeInterceptObject(obj: ObjectType): void {
