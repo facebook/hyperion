@@ -11,8 +11,8 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
   readonly onAfterInterceptObj = new Hook<(obj: ObjectType) => void>();
 
   constructor(
+    public readonly targetPrototype: ObjectType,
     private readonly parentShadoPrototype: ShadowPrototype<ParentType> | null,
-    public readonly targetPrototype: Object
   ) {
     /**
      * TODO: if we could say <ObjectType extends ParentType> then may be we could avoid the casts
@@ -21,7 +21,7 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
     this.extension = Object.create(parentShadoPrototype?.extension ?? null);
 
     if (/* __DEV__ && */ this.parentShadoPrototype) {
-      let obj = this.targetPrototype;
+      let obj: any = this.targetPrototype;
       let proto = this.parentShadoPrototype.targetPrototype;
       let matched = false;
       while (obj && !matched) {
