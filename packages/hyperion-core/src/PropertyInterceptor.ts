@@ -2,7 +2,7 @@ import { assert } from "@hyperion/global"
 
 export class PropertyInterceptor {
   constructor(public name: string) {
-    /* __DEV__ &&  */assert(!!this.name, "Interceptor name should have value");
+    __DEV__ && assert(!!this.name, "Interceptor name should have value");
   }
 }
 
