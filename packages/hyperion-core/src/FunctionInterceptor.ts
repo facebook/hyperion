@@ -1,4 +1,5 @@
-import { getExtendedPropertyDescriptor, PropertyInterceptor } from "./PropertyInterceptor";
+import { Hook } from "@hyperion/hook";
+import { defineProperty, getExtendedPropertyDescriptor, PropertyInterceptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
 
@@ -14,10 +15,19 @@ class FunctionInterceptorBase<
   Name extends string,
   FuncType extends T[Name] extends InterceptableFunction ? T[Name] : never,
   > extends PropertyInterceptor {
+  public onValueObserver = new Hook<(value: ReturnType<FuncType>) => void>();
   public readonly original!: FuncType;
+  public readonly interceptor: FuncType;
 
   constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
     super(name);
+
+    this.interceptor = <FuncType>function (this: unknown) {
+      const result = that.original.apply(this, arguments);
+      that.onValueObserver.call.call(this, result);
+      return result;
+    }
+
     let propName = this.name;
     const desc = getExtendedPropertyDescriptor(shadowPrototype.targetPrototype, propName);
     if (
@@ -25,9 +35,12 @@ class FunctionInterceptorBase<
       && desc.value
     ) {
       this.original = desc.value;
+      desc.value = this.interceptor;
+      defineProperty(desc.container, propName, desc);
     } else {
       this.original = unknownFunc;
     }
+    const that = this;
   }
 }
 
