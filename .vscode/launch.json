@@ -23,8 +23,11 @@
       "name": "Debug Jest Tests",
       "type": "node",
       "request": "launch",
-      "preLaunchTask": "npm: build",
+      // "preLaunchTask": "npm: build",
       // "cwd": "${workspaceFolder}",
+      // "cwd": "${workspaceRoot}/packages/devtools",
+      // "cwd": "${workspaceRoot}/packages/global",
+      // "cwd": "${workspaceRoot}/packages/hook",
       "cwd": "${workspaceRoot}/packages/hyperion-core",
       "runtimeArgs": [
         "--preserve-symlinks",
