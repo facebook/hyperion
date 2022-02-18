@@ -53,10 +53,13 @@ class OnValueFilter<FuncType extends InterceptableFunction> extends Hook<OnValue
 type OnValueObserverFunc<FuncType extends InterceptableFunction> = (value: ReturnType<FuncType>) => void;
 class OnValueObserver<FuncType extends InterceptableFunction> extends Hook<OnValueObserverFunc<FuncType>> { }
 
+type FullFuncType<T extends InterceptableObjectType, Name extends string> = (this: T, ...args: Parameters<T[Name]>) => ReturnType<T[Name]>;
+
 class FunctionInterceptorBase<
   T extends InterceptableObjectType,
   Name extends string,
-  FuncType extends T[Name] extends InterceptableFunction ? T[Name] : never,
+  // FuncType extends T[Name] extends InterceptableFunction ? (this: T, ...args: Parameters<T[Name]>) => ReturnType<T[Name]> : never,
+  FuncType extends FullFuncType<T, Name>
   > extends PropertyInterceptor {
   protected onArgsFilter?: OnArgsFilter<FuncType>;
   protected onArgsObserver?: OnArgsObserver<FuncType>;
@@ -71,8 +74,8 @@ class FunctionInterceptorBase<
     super(name);
 
     const that = this;
-    this.interceptor = <FuncType>function (this: unknown) {
-      return that.dispatcherFunc.apply(this, arguments);
+    this.interceptor = <FuncType>function (this: T) {
+      return that.dispatcherFunc.apply(this, <any>arguments);
     }
 
     let propName = this.name;
@@ -91,24 +94,26 @@ class FunctionInterceptorBase<
   }
 
   private static dispatcherCtors = (() => {
-    const ctors: { [index: number]: (fi: FunctionInterceptor<"foo", { "foo": InterceptableFunction }>) => Function } = {
+    // type T = { "foo": InterceptableFunction };
+    // const ctors: { [index: number]: (fi: FunctionInterceptor<"foo", T>) => Function } = {
+    const ctors: { [index: number]: <FI extends FunctionInterceptorBase<any, any, any>>(fi: FI) => Function } = {
       [InterceptorState.Has_____________]: fi => fi.original,
 
-      [InterceptorState.Has___________VO]: fi => function (this: unknown) {
+      [InterceptorState.Has___________VO]: fi => function (this: any) {
         let result;
         result = fi.original.apply(this, <any>arguments);
         fi.onValueObserver!.call.call(this, result);
         return result;
       },
 
-      [InterceptorState.Has________VF___]: fi => function (this: unknown) {
+      [InterceptorState.Has________VF___]: fi => function (this: any) {
         let result;
         result = fi.original.apply(this, <any>arguments);
         result = fi.onValueFilter!.call.call(this, result);
         return result;
       },
 
-      [InterceptorState.Has________VF_VO]: fi => function (this: unknown) {
+      [InterceptorState.Has________VF_VO]: fi => function (this: any) {
         let result;
         result = fi.original.apply(this, <any>arguments);
         result = fi.onValueFilter!.call.call(this, result);
@@ -116,7 +121,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has____AO_______]: fi => function (this: unknown) {
+      [InterceptorState.Has____AO_______]: fi => function (this: any) {
         let result;
         if (!fi.onArgsObserver!.call.apply(this, <any>arguments)) {
           result = fi.original.apply(this, <any>arguments);
@@ -124,7 +129,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has____AO_____VO]: fi => function (this: unknown) {
+      [InterceptorState.Has____AO_____VO]: fi => function (this: any) {
         let result;
         if (!fi.onArgsObserver!.call.apply(this, <any>arguments)) {
           result = fi.original.apply(this, <any>arguments);
@@ -133,7 +138,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has____AO__VF___]: fi => function (this: unknown) {
+      [InterceptorState.Has____AO__VF___]: fi => function (this: any) {
         let result;
         if (!fi.onArgsObserver!.call.apply(this, <any>arguments)) {
           result = fi.original.apply(this, <any>arguments);
@@ -142,7 +147,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has____AO__VF_VO]: fi => function (this: unknown) {
+      [InterceptorState.Has____AO__VF_VO]: fi => function (this: any) {
         let result;
         if (!fi.onArgsObserver!.call.apply(this, <any>arguments)) {
           result = fi.original.apply(this, <any>arguments);
@@ -152,14 +157,14 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has_AF__________]: fi => function (this: unknown) {
+      [InterceptorState.Has_AF__________]: fi => function (this: any) {
         let result;
         const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
         result = fi.original.apply(this, filteredArgs);
         return result;
       },
 
-      [InterceptorState.Has_AF________VO]: fi => function (this: unknown) {
+      [InterceptorState.Has_AF________VO]: fi => function (this: any) {
         let result;
         const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
         result = fi.original.apply(this, filteredArgs);
@@ -167,7 +172,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has_AF_____VF___]: fi => function (this: unknown) {
+      [InterceptorState.Has_AF_____VF___]: fi => function (this: any) {
         let result;
         const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
         result = fi.original.apply(this, filteredArgs);
@@ -175,7 +180,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has_AF_____VF_VO]: fi => function (this: unknown) {
+      [InterceptorState.Has_AF_____VF_VO]: fi => function (this: any) {
         let result;
         const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
         result = fi.original.apply(this, filteredArgs);
@@ -184,7 +189,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has_AF_AO_______]: fi => function (this: unknown) {
+      [InterceptorState.Has_AF_AO_______]: fi => function (this: any) {
         let result;
         const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
         if (!fi.onArgsObserver!.call.apply(this, filteredArgs)) {
@@ -193,7 +198,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has_AF_AO_____VO]: fi => function (this: unknown) {
+      [InterceptorState.Has_AF_AO_____VO]: fi => function (this: any) {
         let result;
         const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
         if (!fi.onArgsObserver!.call.apply(this, filteredArgs)) {
@@ -203,7 +208,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has_AF_AO__VF___]: fi => function (this: unknown) {
+      [InterceptorState.Has_AF_AO__VF___]: fi => function (this: any) {
         let result;
         const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
         if (!fi.onArgsObserver!.call.apply(this, filteredArgs)) {
@@ -213,7 +218,7 @@ class FunctionInterceptorBase<
         return result;
       },
 
-      [InterceptorState.Has_AF_AO__VF_VO]: fi => function (this: unknown) {
+      [InterceptorState.Has_AF_AO__VF_VO]: fi => function (this: any) {
         let result;
         const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
         if (!fi.onArgsObserver!.call.apply(this, filteredArgs)) {
@@ -318,7 +323,7 @@ class FunctionInterceptorBase<
  * Function with 0 arity (https://en.wikipedia.org/wiki/Arity)
  */
 export class NullaryFunctionInterceptor<Name extends string, T extends InterceptableObjectType>
-  extends FunctionInterceptorBase<T, Name, T[Name]>  {
+  extends FunctionInterceptorBase<T, Name, FullFuncType<T, Name>>  {
 }
 
 /**

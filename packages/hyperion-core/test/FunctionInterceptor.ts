@@ -1,6 +1,7 @@
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
 import { FunctionInterceptor, NullaryFunctionInterceptor } from "../src/FunctionInterceptor";
+import { assert } from "console";
 
 describe("test modern classes", () => {
 
@@ -22,6 +23,10 @@ describe("test modern classes", () => {
       }
     }
 
+    type f1 = A['a'];
+    type f2 = (this: A, ...args: Parameters<A['a']>) => ReturnType<A['a']>;
+
+
     const IAShadow = new ShadowPrototype(A.prototype, null);
     const IA = {
       a: new FunctionInterceptor('a', IAShadow),
@@ -32,7 +37,7 @@ describe("test modern classes", () => {
       b: new NullaryFunctionInterceptor('b', IBShadow),
     }
 
-    return { IAShadow, IBShadow, IA, IB, B }
+    return { IAShadow, IBShadow, IA, IB, A, B }
   }
 
   test("test .original", () => {
@@ -60,7 +65,7 @@ describe("test modern classes", () => {
 
   test("test .interception hooks", () => {
     function testState(state: number) {
-      console.log(`testing state ${state}`);
+      // console.log(`testing state ${state}`);
 
       const { IBShadow, IA, IB, B } = testSetup();
 
@@ -133,4 +138,27 @@ describe("test modern classes", () => {
     o.a('1');
     expect(hookCalled).toBe(0);
   });
+
+  test("test interception hooks this-arg type", () => {
+    const { IA, A, IB, B } = testSetup();
+    const o = new B();
+    IA.a.onArgsObserverAdd(function (this, value) {
+      expect(this instanceof A).toBe(true);
+
+      expect(typeof this.a).toBe("function");
+
+      //@ts-expect-error this.b should give error
+      expect(typeof this.b).toBe("function");
+    });
+
+    IB.b.onArgsObserverAdd(function (this) {
+      expect(this instanceof A).toBe(true);
+      expect(this instanceof B).toBe(true);
+
+      // The following line checks both compile time and runtime correctness
+      expect(typeof this.a).toBe("function");
+      expect(typeof this.b).toBe("function");
+      return false;
+    });
+  })
 });
