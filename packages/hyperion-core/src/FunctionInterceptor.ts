@@ -1,6 +1,6 @@
 import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
-import { defineProperty, getExtendedPropertyDescriptor, PropertyInterceptor } from "./PropertyInterceptor";
+import { defineProperty, getExtendedPropertyDescriptor, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
 // One-hot coding for state of the interceptor
@@ -55,41 +55,28 @@ class OnValueObserver<FuncType extends InterceptableFunction> extends Hook<OnVal
 
 type FullFuncType<T extends InterceptableObjectType, Name extends string> = (this: T, ...args: Parameters<T[Name]>) => ReturnType<T[Name]>;
 
-class FunctionInterceptorBase<
-  T extends InterceptableObjectType,
+export class FunctionInterceptorBase<
+  BaseType,
   Name extends string,
-  // FuncType extends T[Name] extends InterceptableFunction ? (this: T, ...args: Parameters<T[Name]>) => ReturnType<T[Name]> : never,
-  FuncType extends FullFuncType<T, Name>
+  FuncType extends InterceptableFunction
   > extends PropertyInterceptor {
   protected onArgsFilter?: OnArgsFilter<FuncType>;
   protected onArgsObserver?: OnArgsObserver<FuncType>;
   protected onValueFilter?: OnValueFilter<FuncType>;
   protected onValueObserver?: OnValueObserver<FuncType>;
 
-  public readonly original!: FuncType;
+  public readonly original: FuncType;
   public readonly interceptor: FuncType;
   private dispatcherFunc: FuncType;
 
-  constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
+  constructor(name: Name, originalFunc: FuncType = unknownFunc) {
     super(name);
 
     const that = this;
-    this.interceptor = <FuncType>function (this: T) {
+    this.interceptor = <FuncType>function (this: BaseType) {
       return that.dispatcherFunc.apply(this, <any>arguments);
     }
-
-    let propName = this.name;
-    const desc = getExtendedPropertyDescriptor(shadowPrototype.targetPrototype, propName);
-    if (
-      desc
-      && desc.value
-    ) {
-      this.original = desc.value;
-      desc.value = this.interceptor;
-      defineProperty(desc.container, propName, desc);
-    } else {
-      this.original = unknownFunc;
-    }
+    this.original = originalFunc;
     this.dispatcherFunc = this.original; // By default just pass on to original
   }
 
@@ -319,16 +306,21 @@ class FunctionInterceptorBase<
   //#endregion
 }
 
-/**
- * Function with 0 arity (https://en.wikipedia.org/wiki/Arity)
- */
-export class NullaryFunctionInterceptor<Name extends string, T extends InterceptableObjectType>
-  extends FunctionInterceptorBase<T, Name, FullFuncType<T, Name>>  {
-}
-
-/**
- * Function with any arity (https://en.wikipedia.org/wiki/Arity)
- */
 export class FunctionInterceptor<Name extends string, T extends InterceptableObjectType>
-  extends NullaryFunctionInterceptor<Name, T> {
+  extends FunctionInterceptorBase<T, Name, FullFuncType<T, Name>>  {
+
+  constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
+    const desc = getExtendedPropertyDescriptor(shadowPrototype.targetPrototype, name);
+
+    super(name, desc && desc.value);
+
+    if (desc && desc.value) {
+      desc.value = this.interceptor;
+      defineProperty(desc.container, name, desc);
+      this.status = InterceptionStatus.Intercepted;
+    } else {
+      this.status = InterceptionStatus.NotFound;
+      // TODO: what now?
+    }
+  }
 }

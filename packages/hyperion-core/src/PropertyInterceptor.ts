@@ -1,6 +1,14 @@
 import { assert } from "@hyperion/global"
 
-export class PropertyInterceptor {
+export const enum InterceptionStatus {
+  Unknown, // not tried yet
+  Intercepted, // successfully intercepted
+  NotFound, // could not find the property
+}
+
+export abstract class PropertyInterceptor {
+  public status = InterceptionStatus.Unknown;
+
   constructor(public name: string) {
     __DEV__ && assert(!!this.name, "Interceptor name should have value");
   }

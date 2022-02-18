@@ -1,7 +1,6 @@
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
-import { FunctionInterceptor, NullaryFunctionInterceptor } from "../src/FunctionInterceptor";
-import { assert } from "console";
+import { FunctionInterceptor } from "../src/FunctionInterceptor";
 
 describe("test modern classes", () => {
 
@@ -34,7 +33,7 @@ describe("test modern classes", () => {
 
     const IBShadow = new ShadowPrototype(B.prototype, IAShadow);
     const IB = {
-      b: new NullaryFunctionInterceptor('b', IBShadow),
+      b: new FunctionInterceptor('b', IBShadow),
     }
 
     return { IAShadow, IBShadow, IA, IB, A, B }
