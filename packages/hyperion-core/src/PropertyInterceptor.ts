@@ -1,9 +1,11 @@
 import { assert } from "@hyperion/global"
 
+
 export const enum InterceptionStatus {
-  Unknown, // not tried yet
-  Intercepted, // successfully intercepted
-  NotFound, // could not find the property
+  Unknown,
+  Intercepted,
+  NotFound,
+  NoGetterSetter
 }
 
 export abstract class PropertyInterceptor {
