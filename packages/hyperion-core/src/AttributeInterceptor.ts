@@ -8,44 +8,79 @@ export class AttributeInterceptor<BaseType extends { [key: string]: any }, Name 
   public readonly setter: FunctionInterceptorBase<BaseType, Name, (this: BaseType, value: SetAttrType) => void>;
   constructor(name: Name, shadowPrototype: ShadowPrototype<BaseType>) {
     super(name);
-    const desc = getExtendedPropertyDescriptor(shadowPrototype.targetPrototype, name);
-    this.getter = new FunctionInterceptorBase<BaseType, Name, (this: BaseType) => GetAttrType>(name, desc && desc.get);
-    this.setter = new FunctionInterceptorBase<BaseType, Name, (this: BaseType, value: SetAttrType) => void>(name, desc && desc.set);
+
+    this.getter = new FunctionInterceptorBase<BaseType, Name, (this: BaseType) => GetAttrType>(name);
+    this.setter = new FunctionInterceptorBase<BaseType, Name, (this: BaseType, value: SetAttrType) => void>(name);
+
+    this.interceptProperty(shadowPrototype.targetPrototype, false);
+
+    if (this.status !== InterceptionStatus.Intercepted) {
+      shadowPrototype.addPendingPropertyInterceptor(this);
+    }
+  }
+
+  private interceptProperty(obj: object, isOwnProperty: boolean) {
+    let desc = getExtendedPropertyDescriptor(obj, this.name);
+    if (isOwnProperty) {
+      let virtualProperty: any; // TODO: we should do this on the object itself
+      if (desc) {
+        if (desc.value && desc.writable) { // it has value and can change
+          virtualProperty = desc.value;
+          delete desc.value;
+          delete desc.writable;
+          desc.get = function () { return virtualProperty; };
+          desc.set = function (value) { virtualProperty = value; }
+          desc.configurable = true;
+        }
+      } else {
+        desc = {
+          get: function () { return virtualProperty; },
+          set: function (value) { virtualProperty = value; },
+          enumerable: true,
+          configurable: true,
+          container: obj
+        };
+      }
+    }
+
     if (desc) {
-
-      if (desc.get) {
-        desc.get = this.getter.interceptor;
-      }
-
-      if (desc.set) {
-        desc.set = this.setter.interceptor;
-      }
-
       if (desc.get || desc.set) {
-        __DEV__ && assert(desc.configurable, `Cannot intercept attribute ${name}`);
-        defineProperty(desc.container, name, desc);
-        // TODO: set some sort of status based on desc.configurable
+        const { get, set } = desc;
+        if (get) {
+          this.getter.setOriginal(get);
+          desc.get = this.getter.interceptor;
+        }
+        if (set) {
+          this.setter.setOriginal(set);
+          desc.set = this.setter.interceptor
+        }
+        __DEV__ && assert(desc.configurable, `Cannot intercept attribute ${this.name}`);
+        defineProperty(desc.container, this.name, desc);
         if (__DEV__) {
-          let desc = getExtendedPropertyDescriptor(shadowPrototype.targetPrototype, name);
+          let desc = getExtendedPropertyDescriptor(obj, this.name);
           assert(desc?.get === this.getter.interceptor, `getter interceptor did not work`);
           assert(desc?.set === this.setter.interceptor, `setter interceptor did not work`);
         }
-        this.status = InterceptionStatus.Intercepted;
+        this.status = desc.configurable ? InterceptionStatus.Intercepted : InterceptionStatus.NotConfigurable;
+      } else if (desc.value) {
+        //TODO: we should replace this one with get/set
+        console.warn(`Property ${this.name} does not seem to be an attribute`);
+        this.status = InterceptionStatus.NoGetterSetter;
       } else {
         if (__DEV__) {
           if (desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) {
-            console.warn(`Un expected situation, attribute ${name} does not have getter/setter`);
+            console.warn(`Un expected situation, attribute ${this.name} does not have getter/setter defined`);
 
           }
-          if (desc.value) {
-            console.warn(`Property ${name} does not seem to be an attribute`);
-          }
         }
-        this.status = InterceptionStatus.NoGetterSetter;
       }
     } else {
       this.status = InterceptionStatus.NotFound;
-      __DEV__ && console.warn("Could not find attribute and install interceptor", name);
     }
   }
+
+  interceptObjectOwnProperties(obj: object) {
+    return this.interceptProperty(obj, true);
+  }
+
 }

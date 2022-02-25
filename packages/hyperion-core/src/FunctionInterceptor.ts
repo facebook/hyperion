@@ -65,7 +65,7 @@ export class FunctionInterceptorBase<
   protected onValueFilter?: OnValueFilter<FuncType>;
   protected onValueObserver?: OnValueObserver<FuncType>;
 
-  public readonly original: FuncType;
+  protected original: FuncType;
   public readonly interceptor: FuncType;
   private dispatcherFunc: FuncType;
 
@@ -78,6 +78,11 @@ export class FunctionInterceptorBase<
     }
     this.original = originalFunc;
     this.dispatcherFunc = this.original; // By default just pass on to original
+  }
+
+  public setOriginal(originalFunc: FuncType) {
+    this.original = originalFunc;
+    this.updateDispatcherFunc();
   }
 
   private static dispatcherCtors = (() => {
@@ -241,6 +246,7 @@ export class FunctionInterceptorBase<
     state |= this.onArgsObserver ? InterceptorState.HasArgsObserver : 0;
     state |= this.onValueFilter ? InterceptorState.HasValueFilter : 0;
     state |= this.onValueObserver ? InterceptorState.HasValueObserver : 0;
+    //TODO: Check a cached version first
     const dispatcherCtor = FunctionInterceptorBase.dispatcherCtors[state];
     assert(!!dispatcherCtor, `unhandled interceptor state ${state}`);
     this.dispatcherFunc = <FuncType>dispatcherCtor(this);
@@ -310,17 +316,79 @@ export class FunctionInterceptor<Name extends string, T extends InterceptableObj
   extends FunctionInterceptorBase<T, Name, FullFuncType<T, Name>>  {
 
   constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
-    const desc = getExtendedPropertyDescriptor(shadowPrototype.targetPrototype, name);
+    super(name);
 
-    super(name, desc && desc.value);
+    this.interceptProperty(shadowPrototype.targetPrototype, false);
 
-    if (desc && desc.value) {
-      desc.value = this.interceptor;
-      defineProperty(desc.container, name, desc);
-      this.status = InterceptionStatus.Intercepted;
+    if (this.status !== InterceptionStatus.Intercepted) {
+      shadowPrototype.addPendingPropertyInterceptor(this);
+    }
+  }
+
+  private interceptProperty(obj: object, isOwnProperty: boolean) {
+    let desc = getExtendedPropertyDescriptor(obj, this.name);
+    if (isOwnProperty) {
+      let virtualProperty: any; // TODO: we should do this on the object itself
+      if (desc) {
+        if (desc.value && desc.writable) { // it has value and can change
+          virtualProperty = desc.value;
+          delete desc.value;
+          delete desc.writable;
+          desc.get = function () { return virtualProperty; };
+          desc.set = function (value) { virtualProperty = value; }
+          desc.configurable = true;
+        }
+      } else {
+        desc = {
+          get: function () { return virtualProperty; },
+          set: function (value) { virtualProperty = value; },
+          enumerable: true,
+          configurable: true,
+          container: obj
+        };
+      }
+    }
+    
+    if (desc) {
+      if (desc.value) {
+        this.setOriginal(desc.value);
+        desc.value = this.interceptor;
+        defineProperty(desc.container, this.name, desc);
+        this.status = InterceptionStatus.Intercepted;
+      } else if (desc.get || desc.set) {
+        const that = this;
+        const { get, set } = desc;
+        if (get) {
+          desc.get = function () {
+            const originalFunc = get.call(this);
+            if (originalFunc !== that.interceptor) {
+              that.setOriginal(originalFunc);
+            }
+            return that.interceptor;
+          };
+        }
+        if (set) {
+          desc.set = function (value) {
+            // set.call(this, value);
+            set.call(this, that.interceptor);
+            if (value !== that.interceptor && value !== that.original) {
+              that.setOriginal(value);
+            }
+            return that.interceptor;
+          }
+        }
+        defineProperty(desc.container, this.name, desc);
+        this.status = desc.configurable ? InterceptionStatus.Intercepted : InterceptionStatus.NotConfigurable;
+      } else {
+        __DEV__ && assert(false, `unexpected situation! PropertyDescriptor does not have value or get/set!`);
+      }
     } else {
       this.status = InterceptionStatus.NotFound;
-      // TODO: what now?
     }
+
+  }
+
+  interceptObjectOwnProperties(obj: object) {
+    this.interceptProperty(obj, true);
   }
 }

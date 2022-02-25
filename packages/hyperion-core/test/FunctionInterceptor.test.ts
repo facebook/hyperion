@@ -12,6 +12,17 @@ describe("test modern classes", () => {
         this.result.push(tmp);
         return tmp;
       }
+
+      foo: (b: boolean) => boolean;
+      baz: (n: number) => number;
+
+      _bar: (n: number) => number;
+      get bar() { return this._bar; }
+      set bar(func: (n: number) => number) { this._bar = func; }
+
+      constructor() {
+        this.baz = n => -n;
+      }
     }
 
     class B extends A {
@@ -22,13 +33,12 @@ describe("test modern classes", () => {
       }
     }
 
-    type f1 = A['a'];
-    type f2 = (this: A, ...args: Parameters<A['a']>) => ReturnType<A['a']>;
-
-
     const IAShadow = new ShadowPrototype(A.prototype, null);
     const IA = {
       a: new FunctionInterceptor('a', IAShadow),
+      foo: new FunctionInterceptor('foo', IAShadow),
+      baz: new FunctionInterceptor('baz', IAShadow),
+      bar: new FunctionInterceptor('bar', IAShadow),
     };
 
     const IBShadow = new ShadowPrototype(B.prototype, IAShadow);
@@ -39,14 +49,14 @@ describe("test modern classes", () => {
     return { IAShadow, IBShadow, IA, IB, A, B }
   }
 
-  test("test .original", () => {
+  test("test .interceptor", () => {
     const { IBShadow, IA, IB, B } = testSetup();
 
     const o = new B();
     IBShadow.interceptObject(o);
 
-    IA.a.original.apply(o, ['1']);
-    IB.b.original.apply(o);
+    IA.a.interceptor.apply(o, ['1']);
+    IB.b.interceptor.apply(o);
 
     expect(o.result.join("")).toBe("[a:1][b]");
   });
@@ -159,5 +169,31 @@ describe("test modern classes", () => {
       expect(typeof this.b).toBe("function");
       return false;
     });
-  })
+  });
+
+  test("test interception of object's own properties", () => {
+    const { IBShadow, IA, B } = testSetup();
+    const o = new B();
+    IBShadow.interceptObject(o);
+
+    let result = [];
+
+    const argsObserver = <T>(value: T) => {
+      result.push(value);
+    };
+
+    IA.foo.onArgsObserverAdd(argsObserver);
+    IA.bar.onArgsObserverAdd(argsObserver)
+    IA.baz.onArgsObserverAdd(argsObserver)
+
+    o.foo = function (this, b) { return !b; }
+    o.bar = n => 2 * n;
+
+    result.push(o.foo(true));
+    result.push(o.baz(10));
+    result.push(o.bar(21));
+
+    expect(result.join(",")).toBe("true,false,10,-10,21,42");
+
+  });
 });

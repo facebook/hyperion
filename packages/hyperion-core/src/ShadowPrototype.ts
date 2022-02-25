@@ -1,5 +1,6 @@
 import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
+import { PropertyInterceptor } from "./PropertyInterceptor";
 
 type Extension = {
 };
@@ -9,6 +10,7 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
   readonly extension: Extension;
   readonly onBeforInterceptObj = new Hook<(obj: ObjectType) => void>();
   readonly onAfterInterceptObj = new Hook<(obj: ObjectType) => void>();
+  private pendingPropertyInterceptors?: PropertyInterceptor[];
 
   constructor(
     public readonly targetPrototype: ObjectType,
@@ -45,6 +47,11 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
   protected interceptObjectItself(obj: ObjectType): void {
     this.parentShadoPrototype?.interceptObjectItself(obj as unknown as ParentType);
     // We can make any necessary modificatio to the object itself here
+    if (this.pendingPropertyInterceptors) {
+      for (const pi of this.pendingPropertyInterceptors) {
+        pi.interceptObjectOwnProperties(obj);
+      }
+    }
   }
 
 
@@ -53,5 +60,12 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
     this.callOnBeforeInterceptObject(obj);
     this.interceptObjectItself(obj);
     this.callOnAfterInterceptObject(obj);
+  }
+
+  public addPendingPropertyInterceptor(pi: PropertyInterceptor) {
+    if (!this.pendingPropertyInterceptors) {
+      this.pendingPropertyInterceptors = [];
+    }
+    this.pendingPropertyInterceptors.push(pi);
   }
 }

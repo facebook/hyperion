@@ -5,7 +5,8 @@ export const enum InterceptionStatus {
   Unknown,
   Intercepted,
   NotFound,
-  NoGetterSetter
+  NoGetterSetter,
+  NotConfigurable
 }
 
 export abstract class PropertyInterceptor {
@@ -13,6 +14,10 @@ export abstract class PropertyInterceptor {
 
   constructor(public name: string) {
     __DEV__ && assert(!!this.name, "Interceptor name should have value");
+  }
+
+  interceptObjectOwnProperties(_obj: object){
+    __DEV__ && assert(false, `This method must be overriden`);
   }
 }
 
