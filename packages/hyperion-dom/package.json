@@ -1,0 +1,28 @@
+{
+  "scope": "@hyperion",
+  "name": "@hyperion/hyperion-dom",
+  "description": "DOM utility to intercept DOM api and 'aspects' to them",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "watch": "npm run build -- --watch",
+    "start": "npm run watch",
+    "test": "npm run build & jest"
+  },
+  "workspaces": [
+    "../devtools",
+    "../global",
+    "../hook",
+    "../hyperion-core"
+  ],
+  "dependencies": {
+    "@hyperion/global": "*",
+    "@hyperion/hook": "*",
+    "@hyperion/hyperion-core": "*"
+  },
+  "devDependencies": {
+    "@hyperion/devtools": "*",
+    "@types/jest": "^27.4.1"
+  }
+}
