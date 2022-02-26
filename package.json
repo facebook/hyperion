@@ -48,12 +48,14 @@
     "./packages/devtools",
     "./packages/global",
     "./packages/hook",
-    "./packages/hyperion-core"
+    "./packages/hyperion-core",
+    "./packages/hyperion-dom"
   ],
   "dependencies": {
     "@hyperion/global": "*",
     "@hyperion/hook": "*",
-    "@hyperion/hyperion-core": "*"
+    "@hyperion/hyperion-core": "*",
+    "@hyperion/hyperion-dom": "*"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.8",
