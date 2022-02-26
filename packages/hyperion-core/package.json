@@ -20,6 +20,7 @@
     "@hyperion/hook": "*"
   },
   "devDependencies": {
-    "@types/jest": "^27.0.3"
+    "@hyperion/devtools": "*",
+    "@types/jest": "^27.4.1"
   }
 }
