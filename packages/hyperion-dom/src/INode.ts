@@ -1,5 +1,5 @@
 import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
-import { DOMShadowPrototype, sampleHTMLElement } from "./DomShadowPrototype";
+import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
 import { IEventTargetPrototype } from "./IEventTarget";
 
 export const INodePrototype = new DOMShadowPrototype(Node, IEventTargetPrototype, { sampleObject: sampleHTMLElement });
