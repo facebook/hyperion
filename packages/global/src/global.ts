@@ -2,14 +2,18 @@
 import "./reference";
 
 declare var window: Object;
-declare var global: Object & {__DEV__?: boolean};
+declare var global: Object & {
+  __DEV__?: boolean;
+  process?: {
+    env?: { [index: string]: any }
+  }
+};
 
 if (
   typeof global === "object"
-  && typeof window !== "object"
   && typeof __DEV__ !== "boolean"
 ) {
-  if (typeof global["__DEV__"] !== "boolean") {
+  if (global?.process?.env?.JEST_WORKER_ID) {
     global["__DEV__"] = true;
   }
 }
