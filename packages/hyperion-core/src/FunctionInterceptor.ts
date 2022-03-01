@@ -53,8 +53,6 @@ class OnValueFilter<FuncType extends InterceptableFunction> extends Hook<OnValue
 type OnValueObserverFunc<FuncType extends InterceptableFunction> = (value: ReturnType<FuncType>) => void;
 class OnValueObserver<FuncType extends InterceptableFunction> extends Hook<OnValueObserverFunc<FuncType>> { }
 
-type FullFuncType<T extends InterceptableObjectType, Name extends string> = (this: T, ...args: Parameters<T[Name]>) => ReturnType<T[Name]>;
-
 export class FunctionInterceptorBase<
   BaseType,
   Name extends string,
@@ -312,8 +310,12 @@ export class FunctionInterceptorBase<
   //#endregion
 }
 
-export class FunctionInterceptor<Name extends string, T extends InterceptableObjectType>
-  extends FunctionInterceptorBase<T, Name, FullFuncType<T, Name>>  {
+export class FunctionInterceptor<
+  Name extends string,
+  T extends InterceptableObjectType,
+  FuncType extends InterceptableFunction = (this: T, ...args: Parameters<T[Name]>) => ReturnType<T[Name]>
+  >
+  extends FunctionInterceptorBase<T, Name, FuncType>  {
 
   constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
     super(name);
@@ -348,7 +350,7 @@ export class FunctionInterceptor<Name extends string, T extends InterceptableObj
         };
       }
     }
-    
+
     if (desc) {
       if (desc.value) {
         this.setOriginal(desc.value);
