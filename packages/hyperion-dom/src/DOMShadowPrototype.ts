@@ -14,24 +14,27 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
       let obj: object | undefined = sampleObject;
       if (!obj && nodeType) {
         switch (nodeType) {
-          case window.document.ATTRIBUTE_NODE: obj = document.createElement(""); break;
-          case window.document.CDATA_SECTION_NODE: obj = document.createElement(""); break;
-          case window.document.COMMENT_NODE: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_FRAGMENT_NODE: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_NODE: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_POSITION_CONTAINED_BY: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_POSITION_CONTAINS: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_POSITION_DISCONNECTED: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_POSITION_FOLLOWING: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_POSITION_PRECEDING: obj = document.createElement(""); break;
-          case window.document.DOCUMENT_TYPE_NODE: obj = document.createElement(""); break;
-          case window.document.ELEMENT_NODE: obj = document.createElement(""); break;
-          case window.document.ENTITY_NODE: obj = document.createElement(""); break;
-          case window.document.ENTITY_REFERENCE_NODE: obj = document.createElement(""); break;
-          case window.document.NOTATION_NODE: obj = document.createElement(""); break;
-          case window.document.PROCESSING_INSTRUCTION_NODE: obj = document.createElement(""); break;
-          case window.document.TEXT_NODE: obj = document.createElement(""); break;
+          // case window.document.ATTRIBUTE_NODE: obj = document.createElement(""); break;
+          // case window.document.CDATA_SECTION_NODE: obj = document.createElement(""); break;
+          // case window.document.COMMENT_NODE: obj = document.createElement(""); break;
+          // case window.document.DOCUMENT_FRAGMENT_NODE: obj = document.createElement(""); break;
+          case window.document.DOCUMENT_NODE: obj = window.document; break;
+          // case window.document.DOCUMENT_POSITION_CONTAINED_BY: obj = document.createElement(""); break;
+          // case window.document.DOCUMENT_POSITION_CONTAINS: obj = document.createElement(""); break;
+          // case window.document.DOCUMENT_POSITION_DISCONNECTED: obj = document.createElement(""); break;
+          // case window.document.DOCUMENT_POSITION_FOLLOWING: obj = document.createElement(""); break;
+          // case window.document.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC: obj = document.createElement(""); break;
+          // case window.document.DOCUMENT_POSITION_PRECEDING: obj = document.createElement(""); break;
+          // case window.document.DOCUMENT_TYPE_NODE: obj = document.createElement(""); break;
+          case window.document.ELEMENT_NODE: obj = sampleHTMLElement; break;
+          // case window.document.ENTITY_NODE: obj = document.createElement(""); break;
+          // case window.document.ENTITY_REFERENCE_NODE: obj = document.createElement(""); break;
+          // case window.document.NOTATION_NODE: obj = document.createElement(""); break;
+          // case window.document.PROCESSING_INSTRUCTION_NODE: obj = document.createElement(""); break;
+          // case window.document.TEXT_NODE: obj = document.createElement(""); break;
+          default:
+            assert(false, `Unsupported and unexpected nodeType ${nodeType}`);
+            break;
         }
       }
       if (!obj && nodeName) {

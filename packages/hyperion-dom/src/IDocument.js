@@ -1,0 +1,6 @@
+import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { DOMShadowPrototype } from "./DOMShadowPrototype";
+import { INodePrototype } from "./INode";
+export var IDocumentPrototype = new DOMShadowPrototype(Document, INodePrototype, { nodeType: window.document.DOCUMENT_NODE });
+export var createElement = new FunctionInterceptor("createElement", IDocumentPrototype);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiSURvY3VtZW50LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiSURvY3VtZW50LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sRUFBRSxtQkFBbUIsRUFBRSxNQUFNLGlEQUFpRCxDQUFDO0FBQ3RGLE9BQU8sRUFBRSxrQkFBa0IsRUFBRSxNQUFNLHNCQUFzQixDQUFDO0FBQzFELE9BQU8sRUFBRSxjQUFjLEVBQUUsTUFBTSxTQUFTLENBQUM7QUFFekMsTUFBTSxDQUFDLElBQU0sa0JBQWtCLEdBQUcsSUFBSSxrQkFBa0IsQ0FBQyxRQUFRLEVBQUUsY0FBYyxFQUFFLEVBQUUsUUFBUSxFQUFFLE1BQU0sQ0FBQyxRQUFRLENBQUMsYUFBYSxFQUFFLENBQUMsQ0FBQztBQUVoSSxNQUFNLENBQUMsSUFBTSxhQUFhLEdBQUcsSUFBSSxtQkFBbUIsQ0FBQyxlQUFlLEVBQUUsa0JBQWtCLENBQUMsQ0FBQyJ9
