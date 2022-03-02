@@ -13,7 +13,10 @@ if (
   typeof global === "object"
   && typeof __DEV__ !== "boolean"
 ) {
-  if (global?.process?.env?.JEST_WORKER_ID) {
+  if (
+    global?.process?.env?.JEST_WORKER_ID ||
+    global?.process?.env?.NODE_ENV === 'development'
+  ) {
     global["__DEV__"] = true;
   }
 }
