@@ -47,10 +47,10 @@ class OnArgsFilter<FuncType extends InterceptableFunction> extends Hook<OnArgsFi
 type OnArgsObserverFunc<FuncType extends InterceptableFunction> = (this: ThisType<FuncType>, ...args: Parameters<FuncType>) => void | boolean | undefined;
 class OnArgsObserver<FuncType extends InterceptableFunction> extends Hook<OnArgsObserverFunc<FuncType>> { }
 
-type OnValueFilterFunc<FuncType extends InterceptableFunction> = (value: ReturnType<FuncType>) => typeof value;
+type OnValueFilterFunc<FuncType extends InterceptableFunction> = (this: ThisType<FuncType>, value: ReturnType<FuncType>) => typeof value;
 class OnValueFilter<FuncType extends InterceptableFunction> extends Hook<OnValueFilterFunc<FuncType>> { }
 
-type OnValueObserverFunc<FuncType extends InterceptableFunction> = (value: ReturnType<FuncType>) => void;
+type OnValueObserverFunc<FuncType extends InterceptableFunction> = (this: ThisType<FuncType>, value: ReturnType<FuncType>) => void;
 class OnValueObserver<FuncType extends InterceptableFunction> extends Hook<OnValueObserverFunc<FuncType>> { }
 
 export class FunctionInterceptorBase<
