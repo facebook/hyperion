@@ -1,9 +1,17 @@
 /**
  * Copyright (c) Meta Platforms, Inc. and its affiliates. All Rights Reserved.
  *
- * This file is @generated from the Hyperion project hosted on
+ * This file is auto generated from the Hyperion project hosted on
  * https://github.com/facebookincubator/hyperion
+ * Instead of changing this file, you should:
+ * - git clone https://github.com/facebookincubator/hyperion
+ * - npm install
+ * - npm run install-packages
+ * - <make necessary modifications>
+ * - npm run build
+ * - <copy the 'hyperion/dist/hyperion.js' file
  *
+ * @generated SignedSource<<08411d9f4a630be70617b13b3a5bcc0e>>
  */
 
     
