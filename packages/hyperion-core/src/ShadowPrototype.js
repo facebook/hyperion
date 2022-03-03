@@ -1,62 +1,59 @@
 import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
-var ShadowPrototype = /** @class */ (function () {
-    function ShadowPrototype(targetPrototype, parentShadoPrototype) {
-        var _a;
+export class ShadowPrototype {
+    targetPrototype;
+    parentShadoPrototype;
+    extension;
+    onBeforInterceptObj = new Hook();
+    onAfterInterceptObj = new Hook();
+    pendingPropertyInterceptors;
+    constructor(targetPrototype, parentShadoPrototype) {
         this.targetPrototype = targetPrototype;
         this.parentShadoPrototype = parentShadoPrototype;
-        this.onBeforInterceptObj = new Hook();
-        this.onAfterInterceptObj = new Hook();
         /**
          * TODO: if we could say <ObjectType extends ParentType> then may be we could avoid the casts
          * in the following methods
          */
-        this.extension = Object.create((_a = parentShadoPrototype === null || parentShadoPrototype === void 0 ? void 0 : parentShadoPrototype.extension) !== null && _a !== void 0 ? _a : null);
+        this.extension = Object.create(parentShadoPrototype?.extension ?? null);
         if ( /* __DEV__ && */this.parentShadoPrototype) {
-            var obj = this.targetPrototype;
-            var proto = this.parentShadoPrototype.targetPrototype;
-            var matched = false;
+            let obj = this.targetPrototype;
+            let proto = this.parentShadoPrototype.targetPrototype;
+            let matched = false;
             while (obj && !matched) {
                 matched = obj === proto;
                 obj = Object.getPrototypeOf(obj);
             }
-            assert(matched, "Invalid prototype chain");
+            assert(matched, `Invalid prototype chain`);
         }
     }
-    ShadowPrototype.prototype.callOnBeforeInterceptObject = function (obj) {
-        var _a, _b;
-        (_a = this.parentShadoPrototype) === null || _a === void 0 ? void 0 : _a.callOnBeforeInterceptObject(obj);
-        (_b = this.onBeforInterceptObj) === null || _b === void 0 ? void 0 : _b.call(obj);
-    };
-    ShadowPrototype.prototype.callOnAfterInterceptObject = function (obj) {
-        var _a, _b;
-        (_a = this.parentShadoPrototype) === null || _a === void 0 ? void 0 : _a.callOnAfterInterceptObject(obj);
-        (_b = this.onAfterInterceptObj) === null || _b === void 0 ? void 0 : _b.call(obj);
-    };
-    ShadowPrototype.prototype.interceptObjectItself = function (obj) {
-        var _a;
-        (_a = this.parentShadoPrototype) === null || _a === void 0 ? void 0 : _a.interceptObjectItself(obj);
+    callOnBeforeInterceptObject(obj) {
+        this.parentShadoPrototype?.callOnBeforeInterceptObject(obj);
+        this.onBeforInterceptObj?.call(obj);
+    }
+    callOnAfterInterceptObject(obj) {
+        this.parentShadoPrototype?.callOnAfterInterceptObject(obj);
+        this.onAfterInterceptObj?.call(obj);
+    }
+    interceptObjectItself(obj) {
+        this.parentShadoPrototype?.interceptObjectItself(obj);
         // We can make any necessary modificatio to the object itself here
         if (this.pendingPropertyInterceptors) {
-            for (var _i = 0, _b = this.pendingPropertyInterceptors; _i < _b.length; _i++) {
-                var pi = _b[_i];
+            for (const pi of this.pendingPropertyInterceptors) {
                 pi.interceptObjectOwnProperties(obj);
             }
         }
-    };
-    ShadowPrototype.prototype.interceptObject = function (obj) {
+    }
+    interceptObject(obj) {
         // This behaves similar to how constructors work, i.e. from parent class to child class
         this.callOnBeforeInterceptObject(obj);
         this.interceptObjectItself(obj);
         this.callOnAfterInterceptObject(obj);
-    };
-    ShadowPrototype.prototype.addPendingPropertyInterceptor = function (pi) {
+    }
+    addPendingPropertyInterceptor(pi) {
         if (!this.pendingPropertyInterceptors) {
             this.pendingPropertyInterceptors = [];
         }
         this.pendingPropertyInterceptors.push(pi);
-    };
-    return ShadowPrototype;
-}());
-export { ShadowPrototype };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiU2hhZG93UHJvdG90eXBlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiU2hhZG93UHJvdG90eXBlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sRUFBRSxNQUFNLEVBQUUsTUFBTSxrQkFBa0IsQ0FBQztBQUMxQyxPQUFPLEVBQUUsSUFBSSxFQUFFLE1BQU0sZ0JBQWdCLENBQUM7QUFPdEM7SUFNRSx5QkFDa0IsZUFBMkIsRUFDMUIsb0JBQXdEOztRQUR6RCxvQkFBZSxHQUFmLGVBQWUsQ0FBWTtRQUMxQix5QkFBb0IsR0FBcEIsb0JBQW9CLENBQW9DO1FBTmxFLHdCQUFtQixHQUFHLElBQUksSUFBSSxFQUE2QixDQUFDO1FBQzVELHdCQUFtQixHQUFHLElBQUksSUFBSSxFQUE2QixDQUFDO1FBT25FOzs7V0FHRztRQUNILElBQUksQ0FBQyxTQUFTLEdBQUcsTUFBTSxDQUFDLE1BQU0sQ0FBQyxNQUFBLG9CQUFvQixhQUFwQixvQkFBb0IsdUJBQXBCLG9CQUFvQixDQUFFLFNBQVMsbUNBQUksSUFBSSxDQUFDLENBQUM7UUFFeEUsS0FBSSxnQkFBaUIsSUFBSSxDQUFDLG9CQUFvQixFQUFFO1lBQzlDLElBQUksR0FBRyxHQUFRLElBQUksQ0FBQyxlQUFlLENBQUM7WUFDcEMsSUFBSSxLQUFLLEdBQUcsSUFBSSxDQUFDLG9CQUFvQixDQUFDLGVBQWUsQ0FBQztZQUN0RCxJQUFJLE9BQU8sR0FBRyxLQUFLLENBQUM7WUFDcEIsT0FBTyxHQUFHLElBQUksQ0FBQyxPQUFPLEVBQUU7Z0JBQ3RCLE9BQU8sR0FBRyxHQUFHLEtBQUssS0FBSyxDQUFDO2dCQUN4QixHQUFHLEdBQUcsTUFBTSxDQUFDLGNBQWMsQ0FBQyxHQUFHLENBQUMsQ0FBQzthQUNsQztZQUNELE1BQU0sQ0FBQyxPQUFPLEVBQUUseUJBQXlCLENBQUMsQ0FBQTtTQUMzQztJQUNILENBQUM7SUFFTyxxREFBMkIsR0FBbkMsVUFBb0MsR0FBZTs7UUFDakQsTUFBQSxJQUFJLENBQUMsb0JBQW9CLDBDQUFFLDJCQUEyQixDQUFDLEdBQTRCLENBQUMsQ0FBQztRQUNyRixNQUFBLElBQUksQ0FBQyxtQkFBbUIsMENBQUUsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO0lBQ3RDLENBQUM7SUFFTyxvREFBMEIsR0FBbEMsVUFBbUMsR0FBZTs7UUFDaEQsTUFBQSxJQUFJLENBQUMsb0JBQW9CLDBDQUFFLDBCQUEwQixDQUFDLEdBQTRCLENBQUMsQ0FBQztRQUNwRixNQUFBLElBQUksQ0FBQyxtQkFBbUIsMENBQUUsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO0lBQ3RDLENBQUM7SUFFUywrQ0FBcUIsR0FBL0IsVUFBZ0MsR0FBZTs7UUFDN0MsTUFBQSxJQUFJLENBQUMsb0JBQW9CLDBDQUFFLHFCQUFxQixDQUFDLEdBQTRCLENBQUMsQ0FBQztRQUMvRSxrRUFBa0U7UUFDbEUsSUFBSSxJQUFJLENBQUMsMkJBQTJCLEVBQUU7WUFDcEMsS0FBaUIsVUFBZ0MsRUFBaEMsS0FBQSxJQUFJLENBQUMsMkJBQTJCLEVBQWhDLGNBQWdDLEVBQWhDLElBQWdDLEVBQUU7Z0JBQTlDLElBQU0sRUFBRSxTQUFBO2dCQUNYLEVBQUUsQ0FBQyw0QkFBNEIsQ0FBQyxHQUFHLENBQUMsQ0FBQzthQUN0QztTQUNGO0lBQ0gsQ0FBQztJQUdNLHlDQUFlLEdBQXRCLFVBQXVCLEdBQWU7UUFDcEMsdUZBQXVGO1FBQ3ZGLElBQUksQ0FBQywyQkFBMkIsQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUN0QyxJQUFJLENBQUMscUJBQXFCLENBQUMsR0FBRyxDQUFDLENBQUM7UUFDaEMsSUFBSSxDQUFDLDBCQUEwQixDQUFDLEdBQUcsQ0FBQyxDQUFDO0lBQ3ZDLENBQUM7SUFFTSx1REFBNkIsR0FBcEMsVUFBcUMsRUFBdUI7UUFDMUQsSUFBSSxDQUFDLElBQUksQ0FBQywyQkFBMkIsRUFBRTtZQUNyQyxJQUFJLENBQUMsMkJBQTJCLEdBQUcsRUFBRSxDQUFDO1NBQ3ZDO1FBQ0QsSUFBSSxDQUFDLDJCQUEyQixDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsQ0FBQztJQUM1QyxDQUFDO0lBQ0gsc0JBQUM7QUFBRCxDQUFDLEFBOURELElBOERDIn0=
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiU2hhZG93UHJvdG90eXBlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiU2hhZG93UHJvdG90eXBlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sRUFBRSxNQUFNLEVBQUUsTUFBTSxrQkFBa0IsQ0FBQztBQUMxQyxPQUFPLEVBQUUsSUFBSSxFQUFFLE1BQU0sZ0JBQWdCLENBQUM7QUFPdEMsTUFBTSxPQUFPLGVBQWU7SUFPUjtJQUNDO0lBUFYsU0FBUyxDQUFZO0lBQ3JCLG1CQUFtQixHQUFHLElBQUksSUFBSSxFQUE2QixDQUFDO0lBQzVELG1CQUFtQixHQUFHLElBQUksSUFBSSxFQUE2QixDQUFDO0lBQzdELDJCQUEyQixDQUF5QjtJQUU1RCxZQUNrQixlQUEyQixFQUMxQixvQkFBd0Q7UUFEekQsb0JBQWUsR0FBZixlQUFlLENBQVk7UUFDMUIseUJBQW9CLEdBQXBCLG9CQUFvQixDQUFvQztRQUV6RTs7O1dBR0c7UUFDSCxJQUFJLENBQUMsU0FBUyxHQUFHLE1BQU0sQ0FBQyxNQUFNLENBQUMsb0JBQW9CLEVBQUUsU0FBUyxJQUFJLElBQUksQ0FBQyxDQUFDO1FBRXhFLEtBQUksZ0JBQWlCLElBQUksQ0FBQyxvQkFBb0IsRUFBRTtZQUM5QyxJQUFJLEdBQUcsR0FBUSxJQUFJLENBQUMsZUFBZSxDQUFDO1lBQ3BDLElBQUksS0FBSyxHQUFHLElBQUksQ0FBQyxvQkFBb0IsQ0FBQyxlQUFlLENBQUM7WUFDdEQsSUFBSSxPQUFPLEdBQUcsS0FBSyxDQUFDO1lBQ3BCLE9BQU8sR0FBRyxJQUFJLENBQUMsT0FBTyxFQUFFO2dCQUN0QixPQUFPLEdBQUcsR0FBRyxLQUFLLEtBQUssQ0FBQztnQkFDeEIsR0FBRyxHQUFHLE1BQU0sQ0FBQyxjQUFjLENBQUMsR0FBRyxDQUFDLENBQUM7YUFDbEM7WUFDRCxNQUFNLENBQUMsT0FBTyxFQUFFLHlCQUF5QixDQUFDLENBQUE7U0FDM0M7SUFDSCxDQUFDO0lBRU8sMkJBQTJCLENBQUMsR0FBZTtRQUNqRCxJQUFJLENBQUMsb0JBQW9CLEVBQUUsMkJBQTJCLENBQUMsR0FBNEIsQ0FBQyxDQUFDO1FBQ3JGLElBQUksQ0FBQyxtQkFBbUIsRUFBRSxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUM7SUFDdEMsQ0FBQztJQUVPLDBCQUEwQixDQUFDLEdBQWU7UUFDaEQsSUFBSSxDQUFDLG9CQUFvQixFQUFFLDBCQUEwQixDQUFDLEdBQTRCLENBQUMsQ0FBQztRQUNwRixJQUFJLENBQUMsbUJBQW1CLEVBQUUsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO0lBQ3RDLENBQUM7SUFFUyxxQkFBcUIsQ0FBQyxHQUFlO1FBQzdDLElBQUksQ0FBQyxvQkFBb0IsRUFBRSxxQkFBcUIsQ0FBQyxHQUE0QixDQUFDLENBQUM7UUFDL0Usa0VBQWtFO1FBQ2xFLElBQUksSUFBSSxDQUFDLDJCQUEyQixFQUFFO1lBQ3BDLEtBQUssTUFBTSxFQUFFLElBQUksSUFBSSxDQUFDLDJCQUEyQixFQUFFO2dCQUNqRCxFQUFFLENBQUMsNEJBQTRCLENBQUMsR0FBRyxDQUFDLENBQUM7YUFDdEM7U0FDRjtJQUNILENBQUM7SUFHTSxlQUFlLENBQUMsR0FBZTtRQUNwQyx1RkFBdUY7UUFDdkYsSUFBSSxDQUFDLDJCQUEyQixDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ3RDLElBQUksQ0FBQyxxQkFBcUIsQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNoQyxJQUFJLENBQUMsMEJBQTBCLENBQUMsR0FBRyxDQUFDLENBQUM7SUFDdkMsQ0FBQztJQUVNLDZCQUE2QixDQUFDLEVBQXVCO1FBQzFELElBQUksQ0FBQyxJQUFJLENBQUMsMkJBQTJCLEVBQUU7WUFDckMsSUFBSSxDQUFDLDJCQUEyQixHQUFHLEVBQUUsQ0FBQztTQUN2QztRQUNELElBQUksQ0FBQywyQkFBMkIsQ0FBQyxJQUFJLENBQUMsRUFBRSxDQUFDLENBQUM7SUFDNUMsQ0FBQztDQUNGIn0=

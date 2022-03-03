@@ -1,37 +1,36 @@
-import { __extends } from "tslib";
 import { assert } from "@hyperion/global";
 import { FunctionInterceptorBase } from "./FunctionInterceptor";
 import { defineProperty, getExtendedPropertyDescriptor, PropertyInterceptor } from "./PropertyInterceptor";
-var AttributeInterceptor = /** @class */ (function (_super) {
-    __extends(AttributeInterceptor, _super);
-    function AttributeInterceptor(name, shadowPrototype) {
-        var _this = _super.call(this, name) || this;
-        _this.getter = new FunctionInterceptorBase(name);
-        _this.setter = new FunctionInterceptorBase(name);
-        _this.interceptProperty(shadowPrototype.targetPrototype, false);
-        if (_this.status !== 1 /* Intercepted */) {
-            shadowPrototype.addPendingPropertyInterceptor(_this);
+export class AttributeInterceptor extends PropertyInterceptor {
+    getter;
+    setter;
+    constructor(name, shadowPrototype) {
+        super(name);
+        this.getter = new FunctionInterceptorBase(name);
+        this.setter = new FunctionInterceptorBase(name);
+        this.interceptProperty(shadowPrototype.targetPrototype, false);
+        if (this.status !== 1 /* Intercepted */) {
+            shadowPrototype.addPendingPropertyInterceptor(this);
         }
-        return _this;
     }
-    AttributeInterceptor.prototype.interceptProperty = function (obj, isOwnProperty) {
-        var desc = getExtendedPropertyDescriptor(obj, this.name);
+    interceptProperty(obj, isOwnProperty) {
+        let desc = getExtendedPropertyDescriptor(obj, this.name);
         if (isOwnProperty) {
-            var virtualProperty_1; // TODO: we should do this on the object itself
+            let virtualProperty; // TODO: we should do this on the object itself
             if (desc) {
                 if (desc.value && desc.writable) { // it has value and can change
-                    virtualProperty_1 = desc.value;
+                    virtualProperty = desc.value;
                     delete desc.value;
                     delete desc.writable;
-                    desc.get = function () { return virtualProperty_1; };
-                    desc.set = function (value) { virtualProperty_1 = value; };
+                    desc.get = function () { return virtualProperty; };
+                    desc.set = function (value) { virtualProperty = value; };
                     desc.configurable = true;
                 }
             }
             else {
                 desc = {
-                    get: function () { return virtualProperty_1; },
-                    set: function (value) { virtualProperty_1 = value; },
+                    get: function () { return virtualProperty; },
+                    set: function (value) { virtualProperty = value; },
                     enumerable: true,
                     configurable: true,
                     container: obj
@@ -40,7 +39,7 @@ var AttributeInterceptor = /** @class */ (function (_super) {
         }
         if (desc) {
             if (desc.get || desc.set) {
-                var get = desc.get, set = desc.set;
+                const { get, set } = desc;
                 if (get) {
                     this.getter.setOriginal(get);
                     desc.get = this.getter.interceptor;
@@ -49,24 +48,24 @@ var AttributeInterceptor = /** @class */ (function (_super) {
                     this.setter.setOriginal(set);
                     desc.set = this.setter.interceptor;
                 }
-                __DEV__ && assert(desc.configurable, "Cannot intercept attribute ".concat(this.name));
+                __DEV__ && assert(desc.configurable, `Cannot intercept attribute ${this.name}`);
                 defineProperty(desc.container, this.name, desc);
                 if (__DEV__) {
-                    var desc_1 = getExtendedPropertyDescriptor(obj, this.name);
-                    assert((desc_1 === null || desc_1 === void 0 ? void 0 : desc_1.get) === this.getter.interceptor, "getter interceptor did not work");
-                    assert((desc_1 === null || desc_1 === void 0 ? void 0 : desc_1.set) === this.setter.interceptor, "setter interceptor did not work");
+                    let desc = getExtendedPropertyDescriptor(obj, this.name);
+                    assert(desc?.get === this.getter.interceptor, `getter interceptor did not work`);
+                    assert(desc?.set === this.setter.interceptor, `setter interceptor did not work`);
                 }
                 this.status = desc.configurable ? 1 /* Intercepted */ : 4 /* NotConfigurable */;
             }
             else if (desc.value) {
                 //TODO: we should replace this one with get/set
-                console.warn("Property ".concat(this.name, " does not seem to be an attribute"));
+                console.warn(`Property ${this.name} does not seem to be an attribute`);
                 this.status = 3 /* NoGetterSetter */;
             }
             else {
                 if (__DEV__) {
                     if (desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) {
-                        console.warn("Un expected situation, attribute ".concat(this.name, " does not have getter/setter defined"));
+                        console.warn(`Un expected situation, attribute ${this.name} does not have getter/setter defined`);
                     }
                 }
             }
@@ -74,11 +73,9 @@ var AttributeInterceptor = /** @class */ (function (_super) {
         else {
             this.status = 2 /* NotFound */;
         }
-    };
-    AttributeInterceptor.prototype.interceptObjectOwnProperties = function (obj) {
+    }
+    interceptObjectOwnProperties(obj) {
         return this.interceptProperty(obj, true);
-    };
-    return AttributeInterceptor;
-}(PropertyInterceptor));
-export { AttributeInterceptor };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQXR0cmlidXRlSW50ZXJjZXB0b3IuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJBdHRyaWJ1dGVJbnRlcmNlcHRvci50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiO0FBQUEsT0FBTyxFQUFFLE1BQU0sRUFBRSxNQUFNLGtCQUFrQixDQUFDO0FBQzFDLE9BQU8sRUFBRSx1QkFBdUIsRUFBRSxNQUFNLHVCQUF1QixDQUFDO0FBQ2hFLE9BQU8sRUFBRSxjQUFjLEVBQUUsNkJBQTZCLEVBQXNCLG1CQUFtQixFQUFFLE1BQU0sdUJBQXVCLENBQUM7QUFHL0g7SUFBaUssd0NBQW1CO0lBR2xMLDhCQUFZLElBQVUsRUFBRSxlQUEwQztRQUFsRSxZQUNFLGtCQUFNLElBQUksQ0FBQyxTQVVaO1FBUkMsS0FBSSxDQUFDLE1BQU0sR0FBRyxJQUFJLHVCQUF1QixDQUFrRCxJQUFJLENBQUMsQ0FBQztRQUNqRyxLQUFJLENBQUMsTUFBTSxHQUFHLElBQUksdUJBQXVCLENBQStELElBQUksQ0FBQyxDQUFDO1FBRTlHLEtBQUksQ0FBQyxpQkFBaUIsQ0FBQyxlQUFlLENBQUMsZUFBZSxFQUFFLEtBQUssQ0FBQyxDQUFDO1FBRS9ELElBQUksS0FBSSxDQUFDLE1BQU0sd0JBQW1DLEVBQUU7WUFDbEQsZUFBZSxDQUFDLDZCQUE2QixDQUFDLEtBQUksQ0FBQyxDQUFDO1NBQ3JEOztJQUNILENBQUM7SUFFTyxnREFBaUIsR0FBekIsVUFBMEIsR0FBVyxFQUFFLGFBQXNCO1FBQzNELElBQUksSUFBSSxHQUFHLDZCQUE2QixDQUFDLEdBQUcsRUFBRSxJQUFJLENBQUMsSUFBSSxDQUFDLENBQUM7UUFDekQsSUFBSSxhQUFhLEVBQUU7WUFDakIsSUFBSSxpQkFBb0IsQ0FBQyxDQUFDLCtDQUErQztZQUN6RSxJQUFJLElBQUksRUFBRTtnQkFDUixJQUFJLElBQUksQ0FBQyxLQUFLLElBQUksSUFBSSxDQUFDLFFBQVEsRUFBRSxFQUFFLDhCQUE4QjtvQkFDL0QsaUJBQWUsR0FB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
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQXR0cmlidXRlSW50ZXJjZXB0b3IuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJBdHRyaWJ1dGVJbnRlcmNlcHRvci50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxPQUFPLEVBQUUsTUFBTSxFQUFFLE1BQU0sa0JBQWtCLENBQUM7QUFDMUMsT0FBTyxFQUFFLHVCQUF1QixFQUFFLE1BQU0sdUJBQXVCLENBQUM7QUFDaEUsT0FBTyxFQUFFLGNBQWMsRUFBRSw2QkFBNkIsRUFBc0IsbUJBQW1CLEVBQUUsTUFBTSx1QkFBdUIsQ0FBQztBQUcvSCxNQUFNLE9BQU8sb0JBQTRJLFNBQVEsbUJBQW1CO0lBQ2xLLE1BQU0sQ0FBMkU7SUFDakYsTUFBTSxDQUF3RjtJQUM5RyxZQUFZLElBQVUsRUFBRSxlQUEwQztRQUNoRSxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUM7UUFFWixJQUFJLENBQUMsTUFBTSxHQUFHLElBQUksdUJBQXVCLENBQWtELElBQUksQ0FBQyxDQUFDO1FBQ2pHLElBQUksQ0FBQyxNQUFNLEdBQUcsSUFBSSx1QkFBdUIsQ0FBK0QsSUFBSSxDQUFDLENBQUM7UUFFOUcsSUFBSSxDQUFDLGlCQUFpQixDQUFDLGVBQWUsQ0FBQyxlQUFlLEVBQUUsS0FBSyxDQUFDLENBQUM7UUFFL0QsSUFBSSxJQUFJLENBQUMsTUFBTSx3QkFBbUMsRUFBRTtZQUNsRCxlQUFlLENBQUMsNkJBQTZCLENBQUMsSUFBSSxDQUFDLENBQUM7U0FDckQ7SUFDSCxDQUFDO0lBRU8saUJBQWlCLENBQUMsR0FBVyxFQUFFLGFBQXNCO1FBQzNELElBQUksSUFBSSxHQUFHLDZCQUE2QixDQUFDLEdBQUcsRUFBRSxJQUFJLENBQUMsSUFBSSxDQUFDLENBQUM7UUFDekQsSUFBSSxhQUFhLEVBQUU7WUFDakIsSUFBSSxlQUFvQixDQUFDLENBQUMsK0NBQStDO1lBQ3pFLElBQUksSUFBSSxFQUFFO2dCQUNSLElBQUksSUFBSSxDQUFDLEtBQUssSUFBSSxJQUFJLENBQUMs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

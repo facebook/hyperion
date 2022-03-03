@@ -1,14 +1,11 @@
-import { __extends } from "tslib";
 import { assert } from "@hyperion/global";
 import { ShadowPrototype } from "@hyperion/hyperion-core/src/ShadowPrototype";
-var DOMShadowPrototype = /** @class */ (function (_super) {
-    __extends(DOMShadowPrototype, _super);
-    function DOMShadowPrototype(targetPrototypeCtor, parentShadoPrototype, options) {
-        var _this = this;
-        var targetPrototype = targetPrototypeCtor === null || targetPrototypeCtor === void 0 ? void 0 : targetPrototypeCtor.prototype;
+export class DOMShadowPrototype extends ShadowPrototype {
+    constructor(targetPrototypeCtor, parentShadoPrototype, options) {
+        let targetPrototype = targetPrototypeCtor?.prototype;
         if (!targetPrototype && options) {
-            var sampleObject = options.sampleObject, nodeName = options.nodeName, nodeType = options.nodeType;
-            var obj = sampleObject;
+            const { sampleObject, nodeName, nodeType } = options;
+            let obj = sampleObject;
             if (!obj && nodeType) {
                 switch (nodeType) {
                     // case window.document.ATTRIBUTE_NODE: obj = document.createElement(""); break;
@@ -34,7 +31,7 @@ var DOMShadowPrototype = /** @class */ (function (_super) {
                     // case window.document.PROCESSING_INSTRUCTION_NODE: obj = document.createElement(""); break;
                     // case window.document.TEXT_NODE: obj = document.createElement(""); break;
                     default:
-                        assert(false, "Unsupported and unexpected nodeType ".concat(nodeType));
+                        assert(false, `Unsupported and unexpected nodeType ${nodeType}`);
                         break;
                 }
             }
@@ -45,10 +42,10 @@ var DOMShadowPrototype = /** @class */ (function (_super) {
                 targetPrototype = Object.getPrototypeOf(obj);
             }
         }
-        assert(typeof targetPrototype === "object", "Cannot create shadow prototype for undefined");
-        _this = _super.call(this, targetPrototype, parentShadoPrototype) || this;
+        assert(typeof targetPrototype === "object", `Cannot create shadow prototype for undefined`);
+        super(targetPrototype, parentShadoPrototype);
         if (options) {
-            var nodeName = options.nodeName, nodeType = options.nodeType;
+            const { nodeName, nodeType } = options;
             if (nodeName) {
                 // TODO: register 'this' for nodeName
             }
@@ -56,10 +53,7 @@ var DOMShadowPrototype = /** @class */ (function (_super) {
                 // TODO: register 'this' for nodeType
             }
         }
-        return _this;
     }
-    return DOMShadowPrototype;
-}(ShadowPrototype));
-export { DOMShadowPrototype };
-export var sampleHTMLElement = window.document.head;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiRE9NU2hhZG93UHJvdG90eXBlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiRE9NU2hhZG93UHJvdG90eXBlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7QUFBQSxPQUFPLEVBQUUsTUFBTSxFQUFFLE1BQU0sa0JBQWtCLENBQUM7QUFDMUMsT0FBTyxFQUFFLGVBQWUsRUFBRSxNQUFNLDZDQUE2QyxDQUFDO0FBRTlFO0lBQ1Usc0NBQXNDO0lBQzlDLDRCQUFZLG1CQUE2QyxFQUFFLG9CQUF3RCxFQUFFLE9BSXBIO1FBSkQsaUJBcURDO1FBaERDLElBQUksZUFBZSxHQUFHLG1CQUFtQixhQUFuQixtQkFBbUIsdUJBQW5CLG1CQUFtQixDQUFFLFNBQVMsQ0FBQztRQUNyRCxJQUFJLENBQUMsZUFBZSxJQUFJLE9BQU8sRUFBRTtZQUN2QixJQUFBLFlBQVksR0FBeUIsT0FBTyxhQUFoQyxFQUFFLFFBQVEsR0FBZSxPQUFPLFNBQXRCLEVBQUUsUUFBUSxHQUFLLE9BQU8sU0FBWixDQUFhO1lBQ3JELElBQUksR0FBRyxHQUF1QixZQUFZLENBQUM7WUFDM0MsSUFBSSxDQUFDLEdBQUcsSUFBSSxRQUFRLEVBQUU7Z0JBQ3BCLFFBQVEsUUFBUSxFQUFFO29CQUNoQixnRkFBZ0Y7b0JBQ2hGLG9GQUFvRjtvQkFDcEYsOEVBQThFO29CQUM5RSx3RkFBd0Y7b0JBQ3hGLEtBQUssTUFBTSxDQUFDLFFBQVEsQ0FBQyxhQUFhO3dCQUFFLEdBQUcsR0FBRyxNQUFNLENBQUMsUUFBUSxDQUFDO3dCQUFDLE1BQU07b0JBQ2pFLGdHQUFnRztvQkFDaEcsNEZBQTRGO29CQUM1RixnR0FBZ0c7b0JBQ2hHLDZGQUE2RjtvQkFDN0YsMkdBQTJHO29CQUMzRyw2RkFBNkY7b0JBQzdGLG9GQUFvRjtvQkFDcEYsS0FBSyxNQUFNLENBQUMsUUFBUSxDQUFDLFlBQVk7d0JBQUUsR0FBRyxHQUFHLGlCQUFpQixDQUFDO3dCQUFDLE1BQU07b0JBQ2xFLDZFQUE2RTtvQkFDN0UsdUZBQXVGO29CQUN2RiwrRUFBK0U7b0JBQy9FLDZGQUE2RjtvQkFDN0YsMkVBQTJFO29CQUMzRTt3QkFDRSxNQUFNLENBQUMsS0FBSyxFQUFFLDhDQUF1QyxRQUFRLENBQUUsQ0FBQyxDQUFDO3dCQUNqRSxNQUFNO2lCQUNUO2FBQ0Y7WUFDRCxJQUFJLENBQUMsR0FBRyxJQUFJLFFBQVEsRUFBRTtnQkFDcEIsR0FBRyxHQUFHLE1BQU0sQ0FBQyxRQUFRLENBQUMsYUFBYSxDQUFDLFFBQVEsQ0FBQyxDQUFDO2FBQy9DO1lBQ0QsSUFBSSxHQUFHLEVBQUU7Z0JBQ1AsZUFBZSxHQUFHLE1BQU0sQ0FBQyxjQUFjLENBQUMsR0FBRyxDQUFDLENBQUM7YUFDOUM7U0FDRjtRQUNELE1BQU0sQ0FBQyxPQUFPLGVBQWUsS0FBSyxRQUFRLEVBQUUsOENBQThDLENBQUMsQ0FBQztnQkFDNUYsa0JBQU0sZUFBZSxFQUFFLG9CQUFvQixDQUFDO1FBRTVDLElBQUksT0FBTyxFQUFFO1lBQ0gsSUFBQSxRQUFRLEdBQWUsT0FBTyxTQUF0QixFQUFFLFFBQVEsR0FBSyxPQUFPLFNBQVosQ0FBYTtZQUN2QyxJQUFJLFFBQVEsRUFBRTtnQkFDWixxQ0FBcUM7YUFDdEM7WUFDRCxJQUFJLFFBQVEsRUFBRTtnQkFDWixxQ0FBcUM7YUFDdEM7U0FDRjs7SUFDSCxDQUFDO0lBRUgseUJBQUM7QUFBRCxDQUFDLEFBekRELENBQ1UsZUFBZSxHQXdEeEI7O0FBRUQsTUFBTSxDQUFDLElBQU0saUJBQWlCLEdBQUcsTUFBTSxDQUFDLFFBQVEsQ0FBQyxJQUFJLENBQUMifQ==
+}
+export const sampleHTMLElement = window.document.head;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiRE9NU2hhZG93UHJvdG90eXBlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiRE9NU2hhZG93UHJvdG90eXBlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sRUFBRSxNQUFNLEVBQUUsTUFBTSxrQkFBa0IsQ0FBQztBQUMxQyxPQUFPLEVBQUUsZUFBZSxFQUFFLE1BQU0sNkNBQTZDLENBQUM7QUFFOUUsTUFBTSxPQUFPLGtCQUNYLFNBQVEsZUFBc0M7SUFDOUMsWUFBWSxtQkFBNkMsRUFBRSxvQkFBd0QsRUFBRSxPQUlwSDtRQUNDLElBQUksZUFBZSxHQUFHLG1CQUFtQixFQUFFLFNBQVMsQ0FBQztRQUNyRCxJQUFJLENBQUMsZUFBZSxJQUFJLE9BQU8sRUFBRTtZQUMvQixNQUFNLEVBQUUsWUFBWSxFQUFFLFFBQVEsRUFBRSxRQUFRLEVBQUUsR0FBRyxPQUFPLENBQUM7WUFDckQsSUFBSSxHQUFHLEdBQXVCLFlBQVksQ0FBQztZQUMzQyxJQUFJLENBQUMsR0FBRyxJQUFJLFFBQVEsRUFBRTtnQkFDcEIsUUFBUSxRQUFRLEVBQUU7b0JBQ2hCLGdGQUFnRjtvQkFDaEYsb0ZBQW9GO29CQUNwRiw4RUFBOEU7b0JBQzlFLHdGQUF3RjtvQkFDeEYsS0FBSyxNQUFNLENBQUMsUUFBUSxDQUFDLGFBQWE7d0JBQUUsR0FBRyxHQUFHLE1BQU0sQ0FBQyxRQUFRLENBQUM7d0JBQUMsTUFBTTtvQkFDakUsZ0dBQWdHO29CQUNoRyw0RkFBNEY7b0JBQzVGLGdHQUFnRztvQkFDaEcsNkZBQTZGO29CQUM3RiwyR0FBMkc7b0JBQzNHLDZGQUE2RjtvQkFDN0Ysb0ZBQW9GO29CQUNwRixLQUFLLE1BQU0sQ0FBQyxRQUFRLENBQUMsWUFBWTt3QkFBRSxHQUFHLEdBQUcsaUJBQWlCLENBQUM7d0JBQUMsTUFBTTtvQkFDbEUsNkVBQTZFO29CQUM3RSx1RkFBdUY7b0JBQ3ZGLCtFQUErRTtvQkFDL0UsNkZBQTZGO29CQUM3RiwyRUFBMkU7b0JBQzNFO3dCQUNFLE1BQU0sQ0FBQyxLQUFLLEVBQUUsdUNBQXVDLFFBQVEsRUFBRSxDQUFDLENBQUM7d0JBQ2pFLE1BQU07aUJBQ1Q7YUFDRjtZQUNELElBQUksQ0FBQyxHQUFHLElBQUksUUFBUSxFQUFFO2dCQUNwQixHQUFHLEdBQUcsTUFBTSxDQUFDLFFBQVEsQ0FBQyxhQUFhLENBQUMsUUFBUSxDQUFDLENBQUM7YUFDL0M7WUFDRCxJQUFJLEdBQUcsRUFBRTtnQkFDUCxlQUFlLEdBQUcsTUFBTSxDQUFDLGNBQWMsQ0FBQyxHQUFHLENBQUMsQ0FBQzthQUM5QztTQUNGO1FBQ0QsTUFBTSxDQUFDLE9BQU8sZUFBZSxLQUFLLFFBQVEsRUFBRSw4Q0FBOEMsQ0FBQyxDQUFDO1FBQzVGLEtBQUssQ0FBQyxlQUFlLEVBQUUsb0JBQW9CLENBQUMsQ0FBQztRQUU3QyxJQUFJLE9BQU8sRUFBRTtZQUNYLE1BQU0sRUFBRSxRQUFRLEVBQUUsUUFBUSxFQUFFLEdBQUcsT0FBTyxDQUFDO1lBQ3ZDLElBQUksUUFBUSxFQUFFO2dCQUNaLHFDQUFxQzthQUN0QztZQUNELElBQUksUUFBUSxFQUFFO2dCQUNaLHFDQUFxQzthQUN0QztTQUNGO0lBQ0gsQ0FBQztDQUVGO0FBRUQsTUFBTSxDQUFDLE1BQU0saUJBQWlCLEdBQUcsTUFBTSxDQUFDLFFBQVEsQ0FBQyxJQUFJLENBQUMifQ==
