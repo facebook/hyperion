@@ -7,6 +7,16 @@ export default defineConfig({
     file: './dist/hyperion.js',
     format: 'es',
     name: 'hyperion',
+    intro: `
+/**
+ * Copyright (c) Meta Platforms, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This file is @generated from the Hyperion project hosted on
+ * https://github.com/facebookincubator/hyperion
+ *
+ */
+
+    `,
     generatedCode: {
       preset: 'es2015',
       preferConst: true,

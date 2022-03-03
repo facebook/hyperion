@@ -1,3 +1,6 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and its affiliates. All Rights Reserved.
+ */
 
 import "./reference";
 
