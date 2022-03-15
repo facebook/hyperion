@@ -32,7 +32,7 @@ const enum InterceptorState {
   Has_AF_AO__VF_VO = HasArgsFilter | HasArgsObserver | HasValueFilter | HasValueObserver,
 }
 
-type InterceptableFunction = (this: any, ...args: any) => any | { new(...args: any): any };
+export type InterceptableFunction = (this: any, ...args: any) => any | { new(...args: any): any };
 type InterceptableObjectType = { [key: string]: InterceptableFunction | any };
 
 const unknownFunc: any = function () {
@@ -76,6 +76,10 @@ export class FunctionInterceptorBase<
     }
     this.original = originalFunc;
     this.dispatcherFunc = this.original; // By default just pass on to original
+  }
+
+  public getOriginal(): FuncType {
+    return this.original;
   }
 
   public setOriginal(originalFunc: FuncType) {

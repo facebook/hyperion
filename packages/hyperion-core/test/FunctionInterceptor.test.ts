@@ -49,6 +49,19 @@ describe("test modern classes", () => {
     return { IAShadow, IBShadow, IA, IB, A, B }
   }
 
+  
+  test("test .original", () => {
+    const { IBShadow, IA, IB, B } = testSetup();
+
+    const o = new B();
+    IBShadow.interceptObject(o);
+
+    IA.a.getOriginal().apply(o, ['1']);
+    IB.b.getOriginal().apply(o);
+
+    expect(o.result.join("")).toBe("[a:1][b]");
+  });
+
   test("test .interceptor", () => {
     const { IBShadow, IA, IB, B } = testSetup();
 
