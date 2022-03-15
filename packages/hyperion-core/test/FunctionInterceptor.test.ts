@@ -49,7 +49,7 @@ describe("test modern classes", () => {
     return { IAShadow, IBShadow, IA, IB, A, B }
   }
 
-  
+
   test("test .original", () => {
     const { IBShadow, IA, IB, B } = testSetup();
 
@@ -72,6 +72,29 @@ describe("test modern classes", () => {
     IB.b.interceptor.apply(o);
 
     expect(o.result.join("")).toBe("[a:1][b]");
+  });
+
+  test("test .custom", () => {
+    const { IBShadow, IA, IB, B } = testSetup();
+
+    const o = new B();
+    IBShadow.interceptObject(o);
+
+    IA.a.setCustom(function (this, s) {
+      const tmp = `[CC:${s}]`;
+      this.result.push(tmp);
+      return tmp;
+    });
+    IB.b.setCustom(function (this) {
+      const tmp = "[CC]";
+      this.result.push(tmp);
+      return tmp;
+    })
+
+    o.a('1');
+    o.b();
+
+    expect(o.result.join("")).toBe("[CC:1][CC]");
   });
 
   // TODO: somehow JEST is not able to import and understand const enums! For now copy this value here from FunctionInterceptor.ts
