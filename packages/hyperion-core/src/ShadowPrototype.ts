@@ -2,9 +2,33 @@ import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
 import { PropertyInterceptor } from "./PropertyInterceptor";
 
-type Extension = {
+/// Items that can show up in virtual table
+interface VirtualProperty { }
+
+/**
+ * virtual table that matches the prototype chain in the shadow
+ */
+interface VirtualTable {
+  [name: string]: VirtualProperty;
+}
+
+/**
+ * captures both VirtualTable and any other item that we want to
+ * allow in the inheritance chain of the shadow prototype
+ */
+type Extension = VirtualTable & {
+  useCaseInsensitivePropertyName?: boolean
 };
 
+
+function getVirtualPropertyName(name: string, extension: Extension): string {
+  return extension?.useCaseInsensitivePropertyName ? ('' + name).toLocaleLowerCase() : name;
+}
+
+const ObjectHasOwnProperty = Object.prototype.hasOwnProperty;
+export function hasOwnProperty(obj: Object, propName: string): boolean {
+  return ObjectHasOwnProperty.call(obj, propName);
+}
 
 export class ShadowPrototype<ObjectType extends Object = any, ParentType extends Object = any> {
   readonly extension: Extension;
@@ -68,4 +92,38 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
     }
     this.pendingPropertyInterceptors.push(pi);
   }
+
+  public getVirtualProperty<T>(name: string): T & VirtualProperty {
+    const vtable = this.extension;
+    const canonicalName = getVirtualPropertyName(name, vtable);
+    return <T>vtable[canonicalName];
+  }
+
+  public setVirtualProperty<T>(name: string, virtualProp: T & VirtualProperty): void {
+    const vtable = this.extension;
+    const canonicalName = getVirtualPropertyName(name, vtable);
+    if (__DEV__) {
+      assert(!hasOwnProperty(vtable, canonicalName), `Vritual property ${name} already exists`);
+      assert(
+        !vtable[canonicalName],
+        `virtual property ${name} will override the parent's.`,
+        { logger: { error(msg) { console.warn(msg) } } }
+      );
+    }
+    vtable[canonicalName] = virtualProp;
+  }
+
+  public removeVirtualPropery<T>(name: string, virtualProp: T & VirtualProperty): void {
+    const vtable = this.extension;
+    const canonicalName = getVirtualPropertyName(name, vtable);
+    if (__DEV__) {
+      assert(hasOwnProperty(vtable, canonicalName), `Vritual property ${name} does not exists`);
+    }
+    if (vtable[canonicalName] === virtualProp) {
+      delete vtable[canonicalName];
+    } else {
+      console.error(`Vritual property ${name} does not match and was not deleted`);
+    }
+  }
+
 }

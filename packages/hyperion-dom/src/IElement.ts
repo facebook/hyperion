@@ -1,9 +1,18 @@
 import { AttributeInterceptor } from "@hyperion/hyperion-core/src/AttributeInterceptor";
 import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
+import { ElementAttributeInterceptor } from "./ElementAttributeInterceptor";
 import { INodePrototype } from "./INode";
 
-export const IElementtPrototype = new DOMShadowPrototype(Element, INodePrototype, { sampleObject: sampleHTMLElement });
+export const IElementtPrototype = new DOMShadowPrototype(
+  Element,
+  INodePrototype,
+  {
+    sampleObject: sampleHTMLElement,
+    nodeType: document.ELEMENT_NODE
+  }
+);
+IElementtPrototype.extension.useCaseInsensitivePropertyName = true;
 
 export const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype);
 export const getAttributeNS = new FunctionInterceptor('getAttributeNS', IElementtPrototype);
@@ -30,4 +39,5 @@ export const setAttributeNode = new FunctionInterceptor('setAttributeNode', IEle
 export const setAttributeNodeNS = new FunctionInterceptor('setAttributeNodeNS', IElementtPrototype);
 export const toggleAttribute = new FunctionInterceptor('toggleAttribute', IElementtPrototype);
 
+export const id = new ElementAttributeInterceptor("id", IElementtPrototype);
 export const innerHTML = new AttributeInterceptor("innerHTML", IElementtPrototype);

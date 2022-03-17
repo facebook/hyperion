@@ -4,11 +4,12 @@
 
 import "jest";
 import * as IElement from "../src/IElement";
+import { VirtualAttribute } from "../src/VirtualAttribute";
 
 describe('test Element', () => {
   test('test getAttribute', () => {
     let result = [];
-    IElement.getAttribute.onArgsObserverAdd(function (this, value) {
+    const observer = IElement.getAttribute.onArgsObserverAdd(function (this, value) {
       result.push(this);
       result.push(value);
     });
@@ -17,6 +18,8 @@ describe('test Element', () => {
     elem.setAttribute("test", "test");
     elem.getAttribute("test");
     expect(result).toStrictEqual([elem, "test"]);
+
+    IElement.getAttribute.onArgsObserverRemove(observer);
   });
 
   test('test innerHTML', () => {
@@ -43,5 +46,38 @@ describe('test Element', () => {
 
     elem.innerHTML = "<center>test<center>";
     expect(oldNodes).toStrictEqual(removedNodes);
+  });
+
+  test("Element attributes", () => {
+    let result = [];
+    let observer = <T>(value: T) => { result.push(value) };
+    const expectResultTobe = (expected: any[]) => {
+      expect(result).toStrictEqual(expected);
+      result = [];
+    }
+
+
+    const vId = IElement.IElementtPrototype.getVirtualProperty<VirtualAttribute>("id");
+    vId.rawValue.getter.onValueObserverAdd(observer);
+    vId.rawValue.setter.onArgsObserverAdd(observer);
+    vId.processedValue.getter.onValueObserverAdd(observer);
+    vId.processedValue.setter.onArgsObserverAdd(observer);
+
+    const elem = window.document.createElement("div");
+    [
+      id => elem.id = id,
+      id => (elem.setAttribute("id", id), id),
+      id => (elem.getAttributeNode("id").value = id, id),
+      id => elem.attributes["id"].value = id,
+      id => {
+        const attr = document.createAttribute("id");
+        attr.value = id;
+        elem.setAttributeNode(attr);
+        return '' + id;
+      }
+    ].forEach((setter, index) => {
+      const result = setter(index);
+      expectResultTobe([result]);
+    });
   });
 });

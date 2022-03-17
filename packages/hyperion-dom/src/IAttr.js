@@ -1,0 +1,9 @@
+import { AttributeInterceptor } from "@hyperion/hyperion-core/src/AttributeInterceptor";
+import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
+import { INodePrototype } from "./INode";
+export const IAttrPrototype = new DOMShadowPrototype(Attr, INodePrototype, {
+    sampleObject: sampleHTMLElement.attributes[0],
+    nodeType: document.ATTRIBUTE_NODE
+});
+export const value = new AttributeInterceptor("value", IAttrPrototype);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiSUF0dHIuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJJQXR0ci50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxPQUFPLEVBQUUsb0JBQW9CLEVBQUUsTUFBTSxrREFBa0QsQ0FBQztBQUN4RixPQUFPLEVBQUUsa0JBQWtCLEVBQUUsaUJBQWlCLEVBQUUsTUFBTSxzQkFBc0IsQ0FBQztBQUM3RSxPQUFPLEVBQUUsY0FBYyxFQUFFLE1BQU0sU0FBUyxDQUFDO0FBRXpDLE1BQU0sQ0FBQyxNQUFNLGNBQWMsR0FBRyxJQUFJLGtCQUFrQixDQUNsRCxJQUFJLEVBQ0osY0FBYyxFQUNkO0lBQ0UsWUFBWSxFQUFFLGlCQUFpQixDQUFDLFVBQVUsQ0FBQyxDQUFDLENBQUM7SUFDN0MsUUFBUSxFQUFFLFFBQVEsQ0FBQyxjQUFjO0NBQ2xDLENBQ0YsQ0FBQztBQUVGLE1BQU0sQ0FBQyxNQUFNLEtBQUssR0FBRyxJQUFJLG9CQUFvQixDQUFDLE9BQU8sRUFBRSxjQUFjLENBQUMsQ0FBQyJ9

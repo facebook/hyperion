@@ -1,5 +1,5 @@
 import { assert } from "@hyperion/global";
-import { ShadowPrototype } from "./ShadowPrototype";
+import { hasOwnProperty, ShadowPrototype } from "./ShadowPrototype";
 
 /**
  * Intercepted objects may carry extra information to link them to the intercepted logic
@@ -18,8 +18,6 @@ const ExtensionPropName = "__ext";
 const ShadowPrototypePropName = "__sproto";
 let extensionId = 0;
 
-
-const ObjectHasOwnProperty = Object.prototype.hasOwnProperty;
 
 type ShadowPrototypeGetter = (protoObj: Object & Partial<Record<typeof ShadowPrototypePropName, ShadowPrototype>>) => ShadowPrototype | null | undefined
 const shadowPrototypeGetters: ShadowPrototypeGetter[] = [];
@@ -74,7 +72,7 @@ function isInterceptable(value: any): boolean {
 }
 
 export function isIntercepted(value: any): boolean {
-  return ObjectHasOwnProperty.call(value, ExtensionPropName);
+  return hasOwnProperty(value, ExtensionPropName);
 }
 
 export function intercept(value: any, shadowPrototype?: ShadowPrototype | null): typeof value {

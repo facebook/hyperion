@@ -1,5 +1,17 @@
 import { assert } from "@hyperion/global";
 import { ShadowPrototype } from "@hyperion/hyperion-core/src/ShadowPrototype";
+import { VirtualAttribute } from "./VirtualAttribute";
+import { getObjectExtension } from "@hyperion/hyperion-core/src/intercept";
+import * as intercept from "@hyperion/hyperion-core/src/intercept";
+
+const NodeType2ShadoPrototype = new Map<number, ShadowPrototype>();
+const NodeName2ShadoPrototype = new Map<string, ShadowPrototype>();
+intercept.registerShadowPrototypeGetter(node => {
+  if (node instanceof Node) {
+    return NodeType2ShadoPrototype.get(node.nodeType) ?? NodeName2ShadoPrototype.get(node.nodeName);
+  }
+  return null;
+})
 
 export class DOMShadowPrototype<ClassType extends Object, ParentType extends Object>
   extends ShadowPrototype<ClassType, ParentType> {
@@ -50,10 +62,10 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
     if (options) {
       const { nodeName, nodeType } = options;
       if (nodeName) {
-        // TODO: register 'this' for nodeName
+        NodeName2ShadoPrototype.set(nodeName, this);
       }
       if (nodeType) {
-        // TODO: register 'this' for nodeType
+        NodeType2ShadoPrototype.set(nodeType, this);
       }
     }
   }
@@ -61,3 +73,25 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
 }
 
 export const sampleHTMLElement = window.document.head;
+
+export function getVirtualAttribute<Name extends string>(obj: Object, name: Name): VirtualAttribute<Element, Name> | null {
+  let shadowProto = getObjectExtension(obj, true)?.shadowPrototype;
+  if (!shadowProto) {
+    return null;
+  }
+
+  if (__DEV__) {
+    /**
+     * For DOM node, HTML nodes use case insensitive attributes, 
+     * while other node types (e.g. svg, xml, ...) use case sensitive attribute names
+     * we can check this based on the namespaceURI of the node
+     * https://developer.mozilla.org/en-US/docs/Web/API/Element/namespaceURI
+     */
+    assert(
+      (<Element>obj).namespaceURI !== "http://www.w3.org/1999/xhtml" || shadowProto.extension.useCaseInsensitivePropertyName,
+      `HTML Elements shadow prototypes should use case insensitive naming`
+    );
+  }
+
+  return shadowProto.getVirtualProperty<VirtualAttribute<Element, Name>>(name);
+}

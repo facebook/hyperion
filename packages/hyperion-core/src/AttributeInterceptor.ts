@@ -1,16 +1,39 @@
 import { assert } from "@hyperion/global";
-import { FunctionInterceptorBase } from "./FunctionInterceptor";
+import { FunctionInterceptorBase, InterceptableFunction } from "./FunctionInterceptor";
 import { defineProperty, getExtendedPropertyDescriptor, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
-export class AttributeInterceptor<BaseType extends { [key: string]: any }, Name extends string, GetAttrType = BaseType[Name], SetAttrType = GetAttrType> extends PropertyInterceptor {
-  public readonly getter: FunctionInterceptorBase<BaseType, Name, (this: BaseType) => GetAttrType>;
-  public readonly setter: FunctionInterceptorBase<BaseType, Name, (this: BaseType, value: SetAttrType) => void>;
-  constructor(name: Name, shadowPrototype: ShadowPrototype<BaseType>) {
+export class AttributeInterceptorBase<
+  BaseType extends { [key: string]: any },
+  Name extends string,
+  GetterType extends InterceptableFunction = (this: BaseType) => BaseType[Name],
+  SetterType extends InterceptableFunction = (this: BaseType, value: BaseType[Name]) => void
+  > extends PropertyInterceptor {
+  public readonly getter: FunctionInterceptorBase<BaseType, Name, GetterType>;
+  public readonly setter: FunctionInterceptorBase<BaseType, Name, SetterType>;
+
+  constructor(name: Name, getter?: GetterType, setter?: SetterType) {
     super(name);
 
-    this.getter = new FunctionInterceptorBase<BaseType, Name, (this: BaseType) => GetAttrType>(name);
-    this.setter = new FunctionInterceptorBase<BaseType, Name, (this: BaseType, value: SetAttrType) => void>(name);
+    this.getter = new FunctionInterceptorBase<BaseType, Name, GetterType>(name, getter);
+    this.setter = new FunctionInterceptorBase<BaseType, Name, SetterType>(name, setter);
+
+  }
+}
+
+export class AttributeInterceptor<
+  BaseType extends { [key: string]: any },
+  Name extends string,
+  GetAttrType = BaseType[Name],
+  SetAttrType = GetAttrType
+  > extends AttributeInterceptorBase<
+  BaseType,
+  Name,
+  (this: BaseType) => GetAttrType,
+  (this: BaseType, value: SetAttrType) => void
+  > {
+  constructor(name: Name, shadowPrototype: ShadowPrototype<BaseType>) {
+    super(name);
 
     this.interceptProperty(shadowPrototype.targetPrototype, false);
 

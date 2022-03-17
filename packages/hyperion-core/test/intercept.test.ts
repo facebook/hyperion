@@ -132,7 +132,7 @@ describe("test interception mechanism", () => {
     IBShadow.onAfterInterceptObj.add(expectObjIntercepted);
 
     let result = [];
-    const argsObserver = <T>(value: T) => {
+    const observer = <T>(value: T) => {
       result.push(value);
     };
     const expectResultTobe = (expected: any[]) => {
@@ -140,22 +140,25 @@ describe("test interception mechanism", () => {
       result = [];
     }
 
-    IA.a1.getter.onValueObserverAdd(argsObserver);
-    IA.a1.setter.onArgsObserverAdd(argsObserver);
+    IA.a1.getter.onValueObserverAdd(observer);
+    IA.a1.setter.onArgsObserverAdd(observer);
 
-    IA.a2.getter.onValueObserverAdd(argsObserver);
-    IA.a2.setter.onArgsObserverAdd(argsObserver);
+    IA.a2.getter.onValueObserverAdd(observer);
+    IA.a2.setter.onArgsObserverAdd(observer);
 
-    IA.a3.getter.onValueObserverAdd(argsObserver);
-    IA.a3.setter.onArgsObserverAdd(argsObserver);
+    IA.a3.getter.onValueObserverAdd(observer);
+    IA.a3.setter.onArgsObserverAdd(observer);
 
-    IA.a4.getter.onValueObserverAdd(argsObserver);
-    IA.a4.setter.onArgsObserverAdd(argsObserver);
+    IA.a4.getter.onValueObserverAdd(observer);
+    IA.a4.setter.onArgsObserverAdd(observer);
 
-    IB.b.getter.onValueObserverAdd(argsObserver);
-    IB.b.setter.onArgsObserverAdd(argsObserver);
+    IB.b.getter.onValueObserverAdd(observer);
+    IB.b.setter.onArgsObserverAdd(observer);
 
-    [IA.f1, IA.f2, IA.f3, IA.f4].forEach(fi => fi.onArgsObserverAdd(argsObserver));
+    [IA.f1, IA.f2, IA.f3, IA.f4].forEach(fi => {
+      fi.onArgsObserverAdd(observer);
+      fi.onValueObserverAdd(observer);
+    });
 
     intercept(o);
     expect(testCount).toBe(2);
