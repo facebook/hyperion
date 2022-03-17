@@ -2,7 +2,6 @@ import { Hook } from "@hyperion/hook";
 import * as INode from "@hyperion/hyperion-dom/src/INode";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 
-MutationRecord
 interface MutationAction<Action extends "added" | "removed"> {
   action: Action
   target: Node;
