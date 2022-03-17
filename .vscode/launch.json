@@ -28,9 +28,9 @@
       // "cwd": "${workspaceRoot}/packages/devtools",
       // "cwd": "${workspaceRoot}/packages/global",
       // "cwd": "${workspaceRoot}/packages/hook",
-      // "cwd": "${workspaceRoot}/packages/hyperion-core",
+      "cwd": "${workspaceRoot}/packages/hyperion-core",
       // "cwd": "${workspaceRoot}/packages/hyperion-dom",
-      "cwd": "${workspaceRoot}/packages/hyperion-util",
+      // "cwd": "${workspaceRoot}/packages/hyperion-util",
       "runtimeArgs": [
         "--preserve-symlinks",
         "--inspect-brk",

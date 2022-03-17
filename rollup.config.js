@@ -10,7 +10,7 @@ export default defineConfig({
     name: 'hyperion',
     intro: `
 /**
- * Copyright (c) Meta Platforms, Inc. and its affiliates. All Rights Reserved.
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  *
  * This file is auto generated from the Hyperion project hosted on
  * https://github.com/facebookincubator/hyperion
@@ -22,7 +22,7 @@ export default defineConfig({
  * - npm run build
  * - <copy the 'hyperion/dist/hyperion.js' file
  *
- * @generated SignedSource<<...>>
+ * @generated SignedSource<<08411d9f4a630be70617b13b3a5bcc0e>>
  */
 
     `,
@@ -55,8 +55,7 @@ export default defineConfig({
           const b = bundle[bundleName];
           if (typeof b.code === "string") {
             const signature = md5(b.code);
-            b.code = b.code.replace(`@generated SignedSource<<...>>`, `@generated SignedSource<<${signature}>>`);
-            console.log("found a boundle", b.code);
+            b.code = b.code.replace(/@generated SignedSource<<[^>]+>>/, `@generated SignedSource<<${signature}>>`);
           }
         }
       }

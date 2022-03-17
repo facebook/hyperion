@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
 import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor"
 

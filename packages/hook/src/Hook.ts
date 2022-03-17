@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 export const EmptyCallback: Function = () => { };
 
 type Extended<CallbackType> = CallbackType & {

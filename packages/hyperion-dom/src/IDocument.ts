@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { DOMShadowPrototype } from "./DOMShadowPrototype";
 import { INodePrototype } from "./INode";

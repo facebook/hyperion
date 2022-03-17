@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Meta Platforms, Inc. and its affiliates. All Rights Reserved.
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  *
  * This file is auto generated from the Hyperion project hosted on
  * https://github.com/facebookincubator/hyperion
@@ -11,39 +11,10 @@
  * - npm run build
  * - <copy the 'hyperion/dist/hyperion.js' file
  *
- * @generated SignedSource<<08411d9f4a630be70617b13b3a5bcc0e>>
+ * @generated SignedSource<<c3a5c3c55d991934f4e0aa88bc64c8d3>>
  */
 
     
-
-/**
- * Copyright (c) Meta Platforms, Inc. and its affiliates. All Rights Reserved.
- */
-if (typeof global === "object"
-    && typeof __DEV__ !== "boolean") {
-    if (global?.process?.env?.JEST_WORKER_ID ||
-        global?.process?.env?.NODE_ENV === 'development') {
-        global["__DEV__"] = true;
-    }
-}
-
-const devOptions = {
-    getCallStack: () => [],
-    logger: console,
-};
-function assert(condition, message, options) {
-    if (!condition) {
-        const callStackGetter = options?.getCallStack ?? devOptions.getCallStack;
-        const logger = options?.logger ?? devOptions.logger;
-        const callStack = callStackGetter(2);
-        if (callStack && callStack.length > 0) {
-            logger.error(message, callStack);
-        }
-        else {
-            logger.error(message);
-        }
-    }
-}
 
 const EmptyCallback = () => { };
 class Hook {
@@ -130,6 +101,35 @@ class Hook {
     }
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+if (typeof global === "object"
+    && typeof __DEV__ !== "boolean") {
+    if (global?.process?.env?.JEST_WORKER_ID ||
+        global?.process?.env?.NODE_ENV === 'development') {
+        global["__DEV__"] = true;
+    }
+}
+
+const devOptions = {
+    getCallStack: () => [],
+    logger: console,
+};
+function assert(condition, message, options) {
+    if (!condition) {
+        const callStackGetter = options?.getCallStack ?? devOptions.getCallStack;
+        const logger = options?.logger ?? devOptions.logger;
+        const callStack = callStackGetter(2);
+        if (callStack && callStack.length > 0) {
+            logger.error(message, callStack);
+        }
+        else {
+            logger.error(message);
+        }
+    }
+}
+
 class PropertyInterceptor {
     name;
     status = 0 /* Unknown */;
@@ -184,6 +184,8 @@ class FunctionInterceptorBase extends PropertyInterceptor {
     onValueFilter;
     onValueObserver;
     original;
+    customFunc;
+    implementation; // usually either the .original or the .customFunc
     interceptor;
     dispatcherFunc;
     constructor(name, originalFunc = unknownFunc) {
@@ -193,32 +195,47 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             return that.dispatcherFunc.apply(this, arguments);
         };
         this.original = originalFunc;
+        this.implementation = originalFunc;
         this.dispatcherFunc = this.original; // By default just pass on to original
+    }
+    getOriginal() {
+        return this.original;
     }
     setOriginal(originalFunc) {
         this.original = originalFunc;
+        if (!this.customFunc) {
+            // If no custom function is set, the implementation should point to original function
+            this.implementation = originalFunc;
+        }
+        this.updateDispatcherFunc();
+    }
+    setCustom(customFunc) {
+        // Once we have custom implementation, we chose that from that point on
+        __DEV__ && assert(!this.customFunc, `There is already a custom function assigned to ${this.name}`);
+        this.customFunc = customFunc;
+        this.implementation = customFunc;
         this.updateDispatcherFunc();
     }
     static dispatcherCtors = (() => {
         // type T = { "foo": InterceptableFunction };
         // const ctors: { [index: number]: (fi: FunctionInterceptor<"foo", T>) => Function } = {
         const ctors = {
-            [0 /* Has_____________ */]: fi => fi.original,
+            [0 /* Has_____________ */]: fi => fi.customFunc ?? fi.original,
             [1 /* Has___________VO */]: fi => function () {
                 let result;
-                result = fi.original.apply(this, arguments);
+                result = fi.implementation.apply(this, arguments);
                 fi.onValueObserver.call.call(this, result);
                 return result;
             },
             [2 /* Has________VF___ */]: fi => function () {
                 let result;
-                result = fi.original.apply(this, arguments);
+                result = fi.implementation.apply(this, arguments);
                 result = fi.onValueFilter.call.call(this, result);
                 return result;
             },
             [3 /* Has________VF_VO */]: fi => function () {
                 let result;
-                result = fi.original.apply(this, arguments);
+                result = fi.implementation.apply(this, arguments);
                 result = fi.onValueFilter.call.call(this, result);
                 fi.onValueObserver.call.call(this, result);
                 return result;
@@ -226,14 +243,14 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             [4 /* Has____AO_______ */]: fi => function () {
                 let result;
                 if (!fi.onArgsObserver.call.apply(this, arguments)) {
-                    result = fi.original.apply(this, arguments);
+                    result = fi.implementation.apply(this, arguments);
                 }
                 return result;
             },
             [5 /* Has____AO_____VO */]: fi => function () {
                 let result;
                 if (!fi.onArgsObserver.call.apply(this, arguments)) {
-                    result = fi.original.apply(this, arguments);
+                    result = fi.implementation.apply(this, arguments);
                     fi.onValueObserver.call.call(this, result);
                 }
                 return result;
@@ -241,7 +258,7 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             [6 /* Has____AO__VF___ */]: fi => function () {
                 let result;
                 if (!fi.onArgsObserver.call.apply(this, arguments)) {
-                    result = fi.original.apply(this, arguments);
+                    result = fi.implementation.apply(this, arguments);
                     result = fi.onValueFilter.call.call(this, result);
                 }
                 return result;
@@ -249,7 +266,7 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             [7 /* Has____AO__VF_VO */]: fi => function () {
                 let result;
                 if (!fi.onArgsObserver.call.apply(this, arguments)) {
-                    result = fi.original.apply(this, arguments);
+                    result = fi.implementation.apply(this, arguments);
                     result = fi.onValueFilter.call.call(this, result);
                     fi.onValueObserver.call.call(this, result);
                 }
@@ -258,27 +275,27 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             [8 /* Has_AF__________ */]: fi => function () {
                 let result;
                 const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
-                result = fi.original.apply(this, filteredArgs);
+                result = fi.implementation.apply(this, filteredArgs);
                 return result;
             },
             [9 /* Has_AF________VO */]: fi => function () {
                 let result;
                 const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
-                result = fi.original.apply(this, filteredArgs);
+                result = fi.implementation.apply(this, filteredArgs);
                 fi.onValueObserver.call.call(this, result);
                 return result;
             },
             [10 /* Has_AF_____VF___ */]: fi => function () {
                 let result;
                 const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
-                result = fi.original.apply(this, filteredArgs);
+                result = fi.implementation.apply(this, filteredArgs);
                 result = fi.onValueFilter.call.call(this, result);
                 return result;
             },
             [11 /* Has_AF_____VF_VO */]: fi => function () {
                 let result;
                 const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
-                result = fi.original.apply(this, filteredArgs);
+                result = fi.implementation.apply(this, filteredArgs);
                 result = fi.onValueFilter.call.call(this, result);
                 fi.onValueObserver.call.call(this, result);
                 return result;
@@ -287,7 +304,7 @@ class FunctionInterceptorBase extends PropertyInterceptor {
                 let result;
                 const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
-                    result = fi.original.apply(this, filteredArgs);
+                    result = fi.implementation.apply(this, filteredArgs);
                 }
                 return result;
             },
@@ -295,7 +312,7 @@ class FunctionInterceptorBase extends PropertyInterceptor {
                 let result;
                 const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
-                    result = fi.original.apply(this, filteredArgs);
+                    result = fi.implementation.apply(this, filteredArgs);
                     fi.onValueObserver.call.call(this, result);
                 }
                 return result;
@@ -304,7 +321,7 @@ class FunctionInterceptorBase extends PropertyInterceptor {
                 let result;
                 const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
-                    result = fi.original.apply(this, filteredArgs);
+                    result = fi.implementation.apply(this, filteredArgs);
                     result = fi.onValueFilter.call.call(this, result);
                 }
                 return result;
@@ -313,7 +330,7 @@ class FunctionInterceptorBase extends PropertyInterceptor {
                 let result;
                 const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
-                    result = fi.original.apply(this, filteredArgs);
+                    result = fi.implementation.apply(this, filteredArgs);
                     result = fi.onValueFilter.call.call(this, result);
                     fi.onValueObserver.call.call(this, result);
                 }
@@ -478,6 +495,13 @@ class FunctionInterceptor extends FunctionInterceptorBase {
     }
 }
 
+function getVirtualPropertyName(name, extension) {
+    return extension?.useCaseInsensitivePropertyName ? ('' + name).toLocaleLowerCase() : name;
+}
+const ObjectHasOwnProperty = Object.prototype.hasOwnProperty;
+function hasOwnProperty(obj, propName) {
+    return ObjectHasOwnProperty.call(obj, propName);
+}
 class ShadowPrototype {
     targetPrototype;
     parentShadoPrototype;
@@ -533,6 +557,90 @@ class ShadowPrototype {
         }
         this.pendingPropertyInterceptors.push(pi);
     }
+    getVirtualProperty(name) {
+        const vtable = this.extension;
+        const canonicalName = getVirtualPropertyName(name, vtable);
+        return vtable[canonicalName];
+    }
+    setVirtualProperty(name, virtualProp) {
+        const vtable = this.extension;
+        const canonicalName = getVirtualPropertyName(name, vtable);
+        if (__DEV__) {
+            assert(!hasOwnProperty(vtable, canonicalName), `Vritual property ${name} already exists`);
+            assert(!vtable[canonicalName], `virtual property ${name} will override the parent's.`, { logger: { error(msg) { console.warn(msg); } } });
+        }
+        vtable[canonicalName] = virtualProp;
+    }
+    removeVirtualPropery(name, virtualProp) {
+        const vtable = this.extension;
+        const canonicalName = getVirtualPropertyName(name, vtable);
+        if (__DEV__) {
+            assert(hasOwnProperty(vtable, canonicalName), `Vritual property ${name} does not exists`);
+        }
+        if (vtable[canonicalName] === virtualProp) {
+            delete vtable[canonicalName];
+        }
+        else {
+            console.error(`Vritual property ${name} does not match and was not deleted`);
+        }
+    }
+}
+
+const ExtensionPropName = "__ext";
+const ShadowPrototypePropName = "__sproto";
+let extensionId = 0;
+const shadowPrototypeGetters = [];
+let cachedPropertyDescriptor = {
+/** Want all the following fields to be false, but should not specify explicitly
+ * enumerable: false,
+ * writable: false,
+ * configurable: false
+ */
+};
+function isInterceptable(value) {
+    /**
+     * Generally we want to intercept objects and functions
+     * Html tags are generally object, but some browsers use function for tags such as <object>, <embed>, ...
+     */
+    let typeofValue = typeof value;
+    return value &&
+        (typeofValue === "object" || typeofValue === "function");
+}
+function isIntercepted(value) {
+    return hasOwnProperty(value, ExtensionPropName);
+}
+function intercept(value, shadowPrototype) {
+    if (isInterceptable(value) && !isIntercepted(value)) {
+        __DEV__ && assert(!!shadowPrototype || !value[ExtensionPropName], "Unexpected situation");
+        // TODO: check for custom interceptors
+        let shadowProto = shadowPrototype;
+        for (let i = 0; !shadowProto && i < shadowPrototypeGetters.length; ++i) {
+            shadowProto = shadowPrototypeGetters[i](value);
+        }
+        if (!shadowProto) {
+            shadowProto = value[ShadowPrototypePropName];
+        }
+        if (shadowProto) {
+            let extension = {
+                virtualAttributeValues: {},
+                shadowPrototype: shadowProto,
+                id: extensionId++,
+            };
+            cachedPropertyDescriptor.value = extension;
+            Object.defineProperty(value, ExtensionPropName, cachedPropertyDescriptor);
+            shadowProto.interceptObject(value);
+        }
+    }
+    return value;
+}
+function getObjectExtension(obj, interceptIfAbsent) {
+    __DEV__ && assert(isInterceptable(obj), "Only objects or functions are allowed");
+    let ext = obj[ExtensionPropName];
+    if (!ext && interceptIfAbsent) {
+        intercept(obj);
+        ext = obj[ExtensionPropName];
+    }
+    return ext;
 }
 
 class DOMShadowPrototype extends ShadowPrototype {
@@ -582,6 +690,22 @@ class DOMShadowPrototype extends ShadowPrototype {
     }
 }
 const sampleHTMLElement = window.document.head;
+function getVirtualAttribute(obj, name) {
+    let shadowProto = getObjectExtension(obj, true)?.shadowPrototype;
+    if (!shadowProto) {
+        return null;
+    }
+    if (__DEV__) {
+        /**
+         * For DOM node, HTML nodes use case insensitive attributes,
+         * while other node types (e.g. svg, xml, ...) use case sensitive attribute names
+         * we can check this based on the namespaceURI of the node
+         * https://developer.mozilla.org/en-US/docs/Web/API/Element/namespaceURI
+         */
+        assert(obj.namespaceURI !== "http://www.w3.org/1999/xhtml" || shadowProto.extension.useCaseInsensitivePropertyName, `HTML Elements shadow prototypes should use case insensitive naming`);
+    }
+    return shadowProto.getVirtualProperty(name);
+}
 
 const IEventTargetPrototype = new DOMShadowPrototype(EventTarget, null, { sampleObject: sampleHTMLElement });
 new FunctionInterceptor('addEventListener', IEventTargetPrototype);
@@ -590,28 +714,23 @@ new FunctionInterceptor('removeEventListener', IEventTargetPrototype);
 
 const INodePrototype = new DOMShadowPrototype(Node, IEventTargetPrototype, { sampleObject: sampleHTMLElement });
 const appendChild = new FunctionInterceptor('appendChild', INodePrototype);
-const cloneNode = new FunctionInterceptor('cloneNode', INodePrototype);
+new FunctionInterceptor('cloneNode', INodePrototype);
 const insertBefore = new FunctionInterceptor('insertBefore', INodePrototype);
 const removeChild = new FunctionInterceptor('removeChild', INodePrototype);
 const replaceChild = new FunctionInterceptor('replaceChild', INodePrototype);
 
-const INode = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    INodePrototype,
-    appendChild,
-    cloneNode,
-    insertBefore,
-    removeChild,
-    replaceChild
-});
-
-class AttributeInterceptor extends PropertyInterceptor {
+class AttributeInterceptorBase extends PropertyInterceptor {
     getter;
     setter;
+    constructor(name, getter, setter) {
+        super(name);
+        this.getter = new FunctionInterceptorBase(name, getter);
+        this.setter = new FunctionInterceptorBase(name, setter);
+    }
+}
+class AttributeInterceptor extends AttributeInterceptorBase {
     constructor(name, shadowPrototype) {
         super(name);
-        this.getter = new FunctionInterceptorBase(name);
-        this.setter = new FunctionInterceptorBase(name);
         this.interceptProperty(shadowPrototype.targetPrototype, false);
         if (this.status !== 1 /* Intercepted */) {
             shadowPrototype.addPendingPropertyInterceptor(this);
@@ -683,62 +802,117 @@ class AttributeInterceptor extends PropertyInterceptor {
     }
 }
 
-const IElementtPrototype = new DOMShadowPrototype(Element, INodePrototype, { sampleObject: sampleHTMLElement });
-const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype);
-const getAttributeNS = new FunctionInterceptor('getAttributeNS', IElementtPrototype);
-const getAttributeNames = new FunctionInterceptor('getAttributeNames', IElementtPrototype);
-const getAttributeNode = new FunctionInterceptor('getAttributeNode', IElementtPrototype);
-const getAttributeNodeNS = new FunctionInterceptor('getAttributeNodeNS', IElementtPrototype);
-const getBoundingClientRect = new FunctionInterceptor('getBoundingClientRect', IElementtPrototype);
-const getClientRects = new FunctionInterceptor('getClientRects', IElementtPrototype);
-const getElementsByClassName = new FunctionInterceptor('getElementsByClassName', IElementtPrototype);
-const getElementsByTagName = new FunctionInterceptor('getElementsByTagName', IElementtPrototype);
-const getElementsByTagNameNS = new FunctionInterceptor('getElementsByTagNameNS', IElementtPrototype);
-const hasAttribute = new FunctionInterceptor('hasAttribute', IElementtPrototype);
-const hasAttributeNS = new FunctionInterceptor('hasAttributeNS', IElementtPrototype);
-const hasAttributes = new FunctionInterceptor('hasAttributes', IElementtPrototype);
-const insertAdjacentElement = new FunctionInterceptor('insertAdjacentElement', IElementtPrototype);
-const insertAdjacentHTML = new FunctionInterceptor('insertAdjacentHTML', IElementtPrototype);
-const insertAdjacentText = new FunctionInterceptor('insertAdjacentText', IElementtPrototype);
-const removeAttribute = new FunctionInterceptor('removeAttribute', IElementtPrototype);
-const removeAttributeNS = new FunctionInterceptor('removeAttributeNS', IElementtPrototype);
-const removeAttributeNode = new FunctionInterceptor('removeAttributeNode', IElementtPrototype);
-const setAttribute = new FunctionInterceptor('setAttribute', IElementtPrototype);
-const setAttributeNS = new FunctionInterceptor('setAttributeNS', IElementtPrototype);
-const setAttributeNode = new FunctionInterceptor('setAttributeNode', IElementtPrototype);
-const setAttributeNodeNS = new FunctionInterceptor('setAttributeNodeNS', IElementtPrototype);
-const toggleAttribute = new FunctionInterceptor('toggleAttribute', IElementtPrototype);
-const innerHTML = new AttributeInterceptor("innerHTML", IElementtPrototype);
+const IAttrPrototype = new DOMShadowPrototype(Attr, INodePrototype, { sampleObject: sampleHTMLElement.attributes[0] });
+const value = new AttributeInterceptor("value", IAttrPrototype);
 
-const IElement = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    IElementtPrototype,
-    getAttribute,
-    getAttributeNS,
-    getAttributeNames,
-    getAttributeNode,
-    getAttributeNodeNS,
-    getBoundingClientRect,
-    getClientRects,
-    getElementsByClassName,
-    getElementsByTagName,
-    getElementsByTagNameNS,
-    hasAttribute,
-    hasAttributeNS,
-    hasAttributes,
-    insertAdjacentElement,
-    insertAdjacentHTML,
-    insertAdjacentText,
-    removeAttribute,
-    removeAttributeNS,
-    removeAttributeNode,
-    setAttribute,
-    setAttributeNS,
-    setAttributeNode,
-    setAttributeNodeNS,
-    toggleAttribute,
-    innerHTML
+value.getter.setCustom(function () {
+    var attr = this;
+    var ownerElement = attr.ownerElement;
+    if (ownerElement) {
+        var vattr = getVirtualAttribute(ownerElement, attr.name);
+        if (vattr) {
+            var attrVal = vattr.getRawValue(ownerElement);
+            if (attrVal != null) {
+                return attrVal;
+            }
+        }
+    }
+    return value.getter.getOriginal().call(attr);
 });
+value.setter.setCustom(function (value$1) {
+    var attr = this;
+    var ownerElement = attr.ownerElement;
+    if (ownerElement) {
+        var vattr = getVirtualAttribute(ownerElement, attr.name);
+        if (vattr) {
+            return vattr.setRawValue(ownerElement, value$1);
+        }
+    }
+    return value.setter.getOriginal().call(attr, value$1);
+});
+
+getAttribute.setCustom(function (name) {
+    var vattr = getVirtualAttribute(this, name);
+    if (vattr) {
+        var attrVal = vattr.getRawValue(this);
+        if (attrVal !== null) {
+            return attrVal;
+        }
+    }
+    return getAttribute.getOriginal().apply(this, arguments);
+});
+setAttribute.setCustom(function (name, value) {
+    var vattr = getVirtualAttribute(this, name);
+    if (vattr) {
+        return vattr.setRawValue(this, value);
+    }
+    else {
+        return setAttribute.getOriginal().apply(this, arguments);
+    }
+});
+
+class VirtualAttribute {
+    rawValue;
+    processedValue;
+    constructor(rawValue, processedValue) {
+        this.rawValue = rawValue;
+        this.processedValue = processedValue;
+    }
+    getRawValue(obj) {
+        return this.rawValue.getter.interceptor.call(obj);
+    }
+    setRawValue(obj, value) {
+        return this.rawValue.setter.interceptor.call(obj, value);
+    }
+    getProcessedValue(obj) {
+        return this.processedValue.getter.interceptor.call(obj);
+    }
+    setProcessedValue(obj, value) {
+        return this.processedValue.setter.interceptor.call(obj, value);
+    }
+}
+
+class ElementAttributeInterceptor extends AttributeInterceptor {
+    raw;
+    constructor(name, shadowPrototype) {
+        super(name, shadowPrototype);
+        this.raw = new AttributeInterceptorBase(name, function () {
+            return getAttribute.getOriginal().call(this, name);
+        }, function (value) {
+            return setAttribute.getOriginal().call(this, name, value);
+        });
+        IElementtPrototype.setVirtualProperty(name, new VirtualAttribute(this.raw, this));
+    }
+}
+
+const IElementtPrototype = new DOMShadowPrototype(Element, INodePrototype, { sampleObject: sampleHTMLElement });
+IElementtPrototype.extension.useCaseInsensitivePropertyName = true;
+const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype);
+new FunctionInterceptor('getAttributeNS', IElementtPrototype);
+new FunctionInterceptor('getAttributeNames', IElementtPrototype);
+new FunctionInterceptor('getAttributeNode', IElementtPrototype);
+new FunctionInterceptor('getAttributeNodeNS', IElementtPrototype);
+new FunctionInterceptor('getBoundingClientRect', IElementtPrototype);
+new FunctionInterceptor('getClientRects', IElementtPrototype);
+new FunctionInterceptor('getElementsByClassName', IElementtPrototype);
+new FunctionInterceptor('getElementsByTagName', IElementtPrototype);
+new FunctionInterceptor('getElementsByTagNameNS', IElementtPrototype);
+new FunctionInterceptor('hasAttribute', IElementtPrototype);
+new FunctionInterceptor('hasAttributeNS', IElementtPrototype);
+new FunctionInterceptor('hasAttributes', IElementtPrototype);
+const insertAdjacentElement = new FunctionInterceptor('insertAdjacentElement', IElementtPrototype);
+new FunctionInterceptor('insertAdjacentHTML', IElementtPrototype);
+new FunctionInterceptor('insertAdjacentText', IElementtPrototype);
+new FunctionInterceptor('removeAttribute', IElementtPrototype);
+new FunctionInterceptor('removeAttributeNS', IElementtPrototype);
+new FunctionInterceptor('removeAttributeNode', IElementtPrototype);
+const setAttribute = new FunctionInterceptor('setAttribute', IElementtPrototype);
+new FunctionInterceptor('setAttributeNS', IElementtPrototype);
+new FunctionInterceptor('setAttributeNode', IElementtPrototype);
+new FunctionInterceptor('setAttributeNodeNS', IElementtPrototype);
+new FunctionInterceptor('toggleAttribute', IElementtPrototype);
+new ElementAttributeInterceptor("id", IElementtPrototype);
+const innerHTML = new AttributeInterceptor("innerHTML", IElementtPrototype);
 
 const onDOMMutation = new Hook();
 appendChild.onArgsObserverAdd(function (value) {
@@ -806,4 +980,4 @@ const SyncMutationObserver = /*#__PURE__*/Object.freeze({
     onDOMMutation
 });
 
-export { IElement, INode, SyncMutationObserver };
+export { SyncMutationObserver };

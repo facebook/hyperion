@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import { getVirtualAttribute } from "./DOMShadowPrototype";
 import * as IAttr from "./IAttr";
 

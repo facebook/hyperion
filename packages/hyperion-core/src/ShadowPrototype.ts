@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
 import { PropertyInterceptor } from "./PropertyInterceptor";

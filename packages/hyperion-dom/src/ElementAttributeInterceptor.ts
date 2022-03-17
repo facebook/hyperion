@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import { AttributeInterceptor, AttributeInterceptorBase } from "@hyperion/hyperion-core/src/AttributeInterceptor";
 import { ShadowPrototype } from "@hyperion/hyperion-core/src/ShadowPrototype";
 import * as IElement from "./IElement";
