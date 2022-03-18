@@ -11,11 +11,14 @@
  * - npm run build
  * - <copy the 'hyperion/dist/hyperion.js' file
  *
- * @generated SignedSource<<c3a5c3c55d991934f4e0aa88bc64c8d3>>
+ * @generated SignedSource<<20ab46767f8f98084ee43a7fed3da35b>>
  */
 
     
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 const EmptyCallback = () => { };
 class Hook {
     _callbacks;
@@ -112,6 +115,9 @@ if (typeof global === "object"
     }
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 const devOptions = {
     getCallStack: () => [],
     logger: console,
@@ -130,6 +136,9 @@ function assert(condition, message, options) {
     }
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 class PropertyInterceptor {
     name;
     status = 0 /* Unknown */;
@@ -167,6 +176,9 @@ function defineProperty(obj, propName, desc) {
     }
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 const unknownFunc = function () {
     console.warn('Unknown or missing function called! ');
 };
@@ -495,6 +507,9 @@ class FunctionInterceptor extends FunctionInterceptorBase {
     }
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 function getVirtualPropertyName(name, extension) {
     return extension?.useCaseInsensitivePropertyName ? ('' + name).toLocaleLowerCase() : name;
 }
@@ -586,10 +601,26 @@ class ShadowPrototype {
     }
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 const ExtensionPropName = "__ext";
 const ShadowPrototypePropName = "__sproto";
 let extensionId = 0;
 const shadowPrototypeGetters = [];
+/**
+ * @param getter function to map a given object to a shadow prototype
+ * @returns a function that can remove the getter.
+ */
+function registerShadowPrototypeGetter(getter) {
+    shadowPrototypeGetters.push(getter);
+    return (() => {
+        const index = shadowPrototypeGetters.indexOf(getter);
+        if (index > -1) {
+            shadowPrototypeGetters.splice(index, 1);
+        }
+    });
+}
 let cachedPropertyDescriptor = {
 /** Want all the following fields to be false, but should not specify explicitly
  * enumerable: false,
@@ -622,12 +653,12 @@ function intercept(value, shadowPrototype) {
         }
         if (shadowProto) {
             let extension = {
-                virtualAttributeValues: {},
+                virtualPropertyValues: {},
                 shadowPrototype: shadowProto,
                 id: extensionId++,
             };
             cachedPropertyDescriptor.value = extension;
-            Object.defineProperty(value, ExtensionPropName, cachedPropertyDescriptor);
+            Object.defineProperty(value, ExtensionPropName, cachedPropertyDescriptor); // has to be done before interception starts
             shadowProto.interceptObject(value);
         }
     }
@@ -643,6 +674,17 @@ function getObjectExtension(obj, interceptIfAbsent) {
     return ext;
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+const NodeType2ShadoPrototype = new Map();
+const NodeName2ShadoPrototype = new Map();
+registerShadowPrototypeGetter(node => {
+    if (node instanceof Node) {
+        return NodeType2ShadoPrototype.get(node.nodeType) ?? NodeName2ShadoPrototype.get(node.nodeName);
+    }
+    return null;
+});
 class DOMShadowPrototype extends ShadowPrototype {
     constructor(targetPrototypeCtor, parentShadoPrototype, options) {
         let targetPrototype = targetPrototypeCtor?.prototype;
@@ -687,6 +729,15 @@ class DOMShadowPrototype extends ShadowPrototype {
         }
         assert(typeof targetPrototype === "object", `Cannot create shadow prototype for undefined`);
         super(targetPrototype, parentShadoPrototype);
+        if (options) {
+            const { nodeName, nodeType } = options;
+            if (nodeName) {
+                NodeName2ShadoPrototype.set(nodeName, this);
+            }
+            if (nodeType) {
+                NodeType2ShadoPrototype.set(nodeType, this);
+            }
+        }
     }
 }
 const sampleHTMLElement = window.document.head;
@@ -707,11 +758,17 @@ function getVirtualAttribute(obj, name) {
     return shadowProto.getVirtualProperty(name);
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 const IEventTargetPrototype = new DOMShadowPrototype(EventTarget, null, { sampleObject: sampleHTMLElement });
 new FunctionInterceptor('addEventListener', IEventTargetPrototype);
 new FunctionInterceptor('dispatchEvent', IEventTargetPrototype);
 new FunctionInterceptor('removeEventListener', IEventTargetPrototype);
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 const INodePrototype = new DOMShadowPrototype(Node, IEventTargetPrototype, { sampleObject: sampleHTMLElement });
 const appendChild = new FunctionInterceptor('appendChild', INodePrototype);
 new FunctionInterceptor('cloneNode', INodePrototype);
@@ -719,6 +776,9 @@ const insertBefore = new FunctionInterceptor('insertBefore', INodePrototype);
 const removeChild = new FunctionInterceptor('removeChild', INodePrototype);
 const replaceChild = new FunctionInterceptor('replaceChild', INodePrototype);
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 class AttributeInterceptorBase extends PropertyInterceptor {
     getter;
     setter;
@@ -740,20 +800,26 @@ class AttributeInterceptor extends AttributeInterceptorBase {
         let desc = getExtendedPropertyDescriptor(obj, this.name);
         if (isOwnProperty) {
             let virtualProperty; // TODO: we should do this on the object itself
+            const get = function () {
+                return virtualProperty;
+            };
+            const set = function (value) {
+                virtualProperty = value;
+            };
             if (desc) {
                 if (desc.value && desc.writable) { // it has value and can change
                     virtualProperty = desc.value;
                     delete desc.value;
                     delete desc.writable;
-                    desc.get = function () { return virtualProperty; };
-                    desc.set = function (value) { virtualProperty = value; };
+                    desc.get = get;
+                    desc.set = set;
                     desc.configurable = true;
                 }
             }
             else {
                 desc = {
-                    get: function () { return virtualProperty; },
-                    set: function (value) { virtualProperty = value; },
+                    get,
+                    set,
                     enumerable: true,
                     configurable: true,
                     container: obj
@@ -802,55 +868,149 @@ class AttributeInterceptor extends AttributeInterceptorBase {
     }
 }
 
-const IAttrPrototype = new DOMShadowPrototype(Attr, INodePrototype, { sampleObject: sampleHTMLElement.attributes[0] });
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ *
+ * This file only contains set of features that ElementAttributeInterceptor
+ * needs. They are here to avoid circular depndency between modules.
+ */
+const IElementtPrototype$1 = new DOMShadowPrototype(Element, INodePrototype, {
+    sampleObject: sampleHTMLElement,
+    nodeType: document.ELEMENT_NODE
+});
+IElementtPrototype$1.extension.useCaseInsensitivePropertyName = true;
+const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype$1);
+const getAttributeNS = new FunctionInterceptor('getAttributeNS', IElementtPrototype$1);
+// export const getAttributeNames = new FunctionInterceptor('getAttributeNames', IElementtPrototype);
+// export const getAttributeNode = new FunctionInterceptor('getAttributeNode', IElementtPrototype);
+// export const getAttributeNodeNS = new FunctionInterceptor('getAttributeNodeNS', IElementtPrototype);
+// export const getBoundingClientRect = new FunctionInterceptor('getBoundingClientRect', IElementtPrototype);
+// export const getClientRects = new FunctionInterceptor('getClientRects', IElementtPrototype);
+// export const getElementsByClassName = new FunctionInterceptor('getElementsByClassName', IElementtPrototype);
+// export const getElementsByTagName = new FunctionInterceptor('getElementsByTagName', IElementtPrototype);
+// export const getElementsByTagNameNS = new FunctionInterceptor('getElementsByTagNameNS', IElementtPrototype);
+// export const hasAttribute = new FunctionInterceptor('hasAttribute', IElementtPrototype);
+// export const hasAttributeNS = new FunctionInterceptor('hasAttributeNS', IElementtPrototype);
+// export const hasAttributes = new FunctionInterceptor('hasAttributes', IElementtPrototype);
+// export const insertAdjacentElement = new FunctionInterceptor('insertAdjacentElement', IElementtPrototype);
+// export const insertAdjacentHTML = new FunctionInterceptor('insertAdjacentHTML', IElementtPrototype);
+// export const insertAdjacentText = new FunctionInterceptor('insertAdjacentText', IElementtPrototype);
+// export const removeAttribute = new FunctionInterceptor('removeAttribute', IElementtPrototype);
+// export const removeAttributeNS = new FunctionInterceptor('removeAttributeNS', IElementtPrototype);
+// export const removeAttributeNode = new FunctionInterceptor('removeAttributeNode', IElementtPrototype);
+const setAttribute = new FunctionInterceptor('setAttribute', IElementtPrototype$1);
+const setAttributeNS = new FunctionInterceptor('setAttributeNS', IElementtPrototype$1);
+const setAttributeNode = new FunctionInterceptor('setAttributeNode', IElementtPrototype$1);
+const setAttributeNodeNS = new FunctionInterceptor('setAttributeNodeNS', IElementtPrototype$1);
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+const IAttrPrototype = new DOMShadowPrototype(Attr, INodePrototype, {
+    sampleObject: sampleHTMLElement.attributes[0],
+    nodeType: document.ATTRIBUTE_NODE
+});
 const value = new AttributeInterceptor("value", IAttrPrototype);
 
-value.getter.setCustom(function () {
-    var attr = this;
-    var ownerElement = attr.ownerElement;
-    if (ownerElement) {
-        var vattr = getVirtualAttribute(ownerElement, attr.name);
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+function init$1() {
+    value.getter.setCustom(function () {
+        var attr = this;
+        var ownerElement = attr.ownerElement;
+        if (ownerElement) {
+            var vattr = getVirtualAttribute(ownerElement, attr.name);
+            if (vattr) {
+                var attrVal = vattr.getRawValue(ownerElement);
+                if (attrVal != null) {
+                    return attrVal;
+                }
+            }
+        }
+        return value.getter.getOriginal().call(attr);
+    });
+    value.setter.setCustom(function (value$1) {
+        var attr = this;
+        var ownerElement = attr.ownerElement;
+        if (ownerElement) {
+            var vattr = getVirtualAttribute(ownerElement, attr.name);
+            if (vattr) {
+                return vattr.setRawValue(ownerElement, value$1);
+            }
+        }
+        return value.setter.getOriginal().call(attr, value$1);
+    });
+}
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+function init() {
+    getAttribute.setCustom(function (name) {
+        const vattr = getVirtualAttribute(this, name);
         if (vattr) {
-            var attrVal = vattr.getRawValue(ownerElement);
-            if (attrVal != null) {
+            const attrVal = vattr.getRawValue(this);
+            if (attrVal !== null) {
                 return attrVal;
             }
         }
-    }
-    return value.getter.getOriginal().call(attr);
-});
-value.setter.setCustom(function (value$1) {
-    var attr = this;
-    var ownerElement = attr.ownerElement;
-    if (ownerElement) {
-        var vattr = getVirtualAttribute(ownerElement, attr.name);
+        return getAttribute.getOriginal().apply(this, arguments);
+    });
+    setAttribute.setCustom(function (name, value) {
+        const vattr = getVirtualAttribute(this, name);
         if (vattr) {
-            return vattr.setRawValue(ownerElement, value$1);
+            return vattr.setRawValue(this, value);
         }
-    }
-    return value.setter.getOriginal().call(attr, value$1);
-});
-
-getAttribute.setCustom(function (name) {
-    var vattr = getVirtualAttribute(this, name);
-    if (vattr) {
-        var attrVal = vattr.getRawValue(this);
-        if (attrVal !== null) {
-            return attrVal;
+        else {
+            return setAttribute.getOriginal().apply(this, arguments);
         }
+    });
+    getAttributeNS.setCustom(function (_namespace, name) {
+        const vattr = getVirtualAttribute(this, name);
+        if (vattr) {
+            var attrVal = vattr.getRawValue(this);
+            if (attrVal !== null) {
+                return attrVal;
+            }
+        }
+        return getAttributeNS.getOriginal().apply(this, arguments);
+    });
+    setAttributeNS.setCustom(function (_namespace, name, value) {
+        const vattr = getVirtualAttribute(this, name);
+        if (vattr) {
+            return vattr.setRawValue(this, value);
+        }
+        else {
+            return setAttributeNS.getOriginal().apply(this, arguments);
+        }
+    });
+    function createSetAttributeNodeCustom(originalFunc) {
+        return function (newAttr) {
+            var result;
+            const notAlreadyAttached = !newAttr.ownerElement;
+            const vattr = getVirtualAttribute(this, newAttr.name);
+            if (notAlreadyAttached && vattr) {
+                //The custom logic for Attr has not run before (see IAttrCustom), so trigger it now
+                const value = newAttr.value; //In case .value changes after attaching, or if there is pending custom logic
+                result = originalFunc.call(this, newAttr);
+                __DEV__ && assert(!!newAttr.ownerElement, "Attr must now be attached to an ownerElement");
+                vattr.setRawValue(this, value);
+            }
+            else {
+                result = originalFunc.call(this, newAttr);
+            }
+            return result;
+        };
     }
-    return getAttribute.getOriginal().apply(this, arguments);
-});
-setAttribute.setCustom(function (name, value) {
-    var vattr = getVirtualAttribute(this, name);
-    if (vattr) {
-        return vattr.setRawValue(this, value);
-    }
-    else {
-        return setAttribute.getOriginal().apply(this, arguments);
-    }
-});
+    setAttributeNode.setCustom(createSetAttributeNodeCustom(setAttributeNode.getOriginal()));
+    setAttributeNodeNS.setCustom(createSetAttributeNodeCustom(setAttributeNodeNS.getOriginal()));
+    //TODO: add logic for removeAttribute*
+}
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 class VirtualAttribute {
     rawValue;
     processedValue;
@@ -872,6 +1032,14 @@ class VirtualAttribute {
     }
 }
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+let lazyInit = () => {
+    init$1();
+    init();
+    lazyInit = () => { };
+};
 class ElementAttributeInterceptor extends AttributeInterceptor {
     raw;
     constructor(name, shadowPrototype) {
@@ -881,14 +1049,26 @@ class ElementAttributeInterceptor extends AttributeInterceptor {
         }, function (value) {
             return setAttribute.getOriginal().call(this, name, value);
         });
-        IElementtPrototype.setVirtualProperty(name, new VirtualAttribute(this.raw, this));
+        IElementtPrototype$1.setVirtualProperty(name, new VirtualAttribute(this.raw, this));
+        lazyInit();
     }
 }
 
-const IElementtPrototype = new DOMShadowPrototype(Element, INodePrototype, { sampleObject: sampleHTMLElement });
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+// export const IElementtPrototype = new DOMShadowPrototype(
+//   Element,
+//   INodePrototype,
+//   {
+//     sampleObject: sampleHTMLElement,
+//     nodeType: document.ELEMENT_NODE
+//   }
+// );
+const IElementtPrototype = IElementtPrototype$1;
 IElementtPrototype.extension.useCaseInsensitivePropertyName = true;
-const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype);
-new FunctionInterceptor('getAttributeNS', IElementtPrototype);
+// export const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype);
+// export const getAttributeNS = new FunctionInterceptor('getAttributeNS', IElementtPrototype);
 new FunctionInterceptor('getAttributeNames', IElementtPrototype);
 new FunctionInterceptor('getAttributeNode', IElementtPrototype);
 new FunctionInterceptor('getAttributeNodeNS', IElementtPrototype);
@@ -906,14 +1086,17 @@ new FunctionInterceptor('insertAdjacentText', IElementtPrototype);
 new FunctionInterceptor('removeAttribute', IElementtPrototype);
 new FunctionInterceptor('removeAttributeNS', IElementtPrototype);
 new FunctionInterceptor('removeAttributeNode', IElementtPrototype);
-const setAttribute = new FunctionInterceptor('setAttribute', IElementtPrototype);
-new FunctionInterceptor('setAttributeNS', IElementtPrototype);
-new FunctionInterceptor('setAttributeNode', IElementtPrototype);
-new FunctionInterceptor('setAttributeNodeNS', IElementtPrototype);
+// export const setAttribute = new FunctionInterceptor('setAttribute', IElementtPrototype);
+// export const setAttributeNS = new FunctionInterceptor('setAttributeNS', IElementtPrototype);
+// export const setAttributeNode = new FunctionInterceptor('setAttributeNode', IElementtPrototype);
+// export const setAttributeNodeNS = new FunctionInterceptor('setAttributeNodeNS', IElementtPrototype);
 new FunctionInterceptor('toggleAttribute', IElementtPrototype);
 new ElementAttributeInterceptor("id", IElementtPrototype);
 const innerHTML = new AttributeInterceptor("innerHTML", IElementtPrototype);
 
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 const onDOMMutation = new Hook();
 appendChild.onArgsObserverAdd(function (value) {
     onDOMMutation.call({
@@ -980,4 +1163,24 @@ const SyncMutationObserver = /*#__PURE__*/Object.freeze({
     onDOMMutation
 });
 
-export { SyncMutationObserver };
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+function trackElementsWithAttributes(attributeNames) {
+    const hook = new Hook();
+    const callback = function () {
+        hook.call(this);
+    };
+    for (const attr of attributeNames) {
+        const vattr = new ElementAttributeInterceptor(attr, IElementtPrototype);
+        vattr.raw.setter.onArgsObserverAdd(callback);
+    }
+    return hook;
+}
+
+const trackElementsWithAttributes$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    default: trackElementsWithAttributes
+});
+
+export { SyncMutationObserver, trackElementsWithAttributes$1 as trackElementsWithAttributes };
