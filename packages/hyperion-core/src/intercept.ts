@@ -11,7 +11,7 @@ import { hasOwnProperty, ShadowPrototype } from "./ShadowPrototype";
  * This is analogous to the shadow concept in the dom.
  */
 interface IExtension {
-  readonly virtualAttributeValues: object,
+  readonly virtualPropertyValues: { [name: string]: unknown },
   readonly shadowPrototype: ShadowPrototype,
   readonly id: number,
 }
@@ -97,12 +97,12 @@ export function intercept(value: any, shadowPrototype?: ShadowPrototype | null):
 
     if (shadowProto) {
       let extension: IExtension = {
-        virtualAttributeValues: {},
+        virtualPropertyValues: {},
         shadowPrototype: shadowProto,
         id: extensionId++,
       }
       cachedPropertyDescriptor.value = extension;
-      Object.defineProperty(value, ExtensionPropName, cachedPropertyDescriptor);
+      Object.defineProperty(value, ExtensionPropName, cachedPropertyDescriptor); // has to be done before interception starts
       shadowProto.interceptObject(value);
     }
 
@@ -110,7 +110,7 @@ export function intercept(value: any, shadowPrototype?: ShadowPrototype | null):
   return value;
 }
 
-export function getObjectExtension<T>(obj: ExtensibleObject, interceptIfAbsent?: boolean): IExtension & T {
+export function getObjectExtension<T = IExtension>(obj: ExtensibleObject, interceptIfAbsent?: boolean): IExtension & T {
   __DEV__ && assert(isInterceptable(obj), "Only objects or functions are allowed");
   let ext = obj[ExtensionPropName];
   if (!ext && interceptIfAbsent) {
@@ -118,4 +118,23 @@ export function getObjectExtension<T>(obj: ExtensibleObject, interceptIfAbsent?:
     ext = obj[ExtensionPropName];
   }
   return ext;
+}
+
+export function getVirtualProperty<T>(obj: ExtensibleObject, propName: string): T | undefined {
+  const ext = getObjectExtension(obj, true);
+  return ext?.shadowPrototype.getVirtualProperty<T>(propName);
+}
+
+export function getVirtualPropertyValue<T>(obj: ExtensibleObject, propName: string): T | undefined {
+  const ext = getObjectExtension(obj, true);
+  return <T | undefined>ext?.virtualPropertyValues[propName]
+}
+
+export function setVirtualPropertyValue<T>(obj: ExtensibleObject, propName: string, value: T) {
+  const ext = getObjectExtension(obj, true);
+  if (ext) {
+    ext.virtualPropertyValues[propName] = value;
+  } else {
+    assert(!!ext, `Could not get extension for the object`);
+  }
 }
