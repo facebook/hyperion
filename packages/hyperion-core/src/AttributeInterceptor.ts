@@ -50,19 +50,25 @@ export class AttributeInterceptor<
     let desc = getExtendedPropertyDescriptor(obj, this.name);
     if (isOwnProperty) {
       let virtualProperty: any; // TODO: we should do this on the object itself
+      const get = function () {
+        return virtualProperty;
+      };
+      const set = function (value: any) {
+        virtualProperty = value;
+      }
       if (desc) {
         if (desc.value && desc.writable) { // it has value and can change
           virtualProperty = desc.value;
           delete desc.value;
           delete desc.writable;
-          desc.get = function () { return virtualProperty; };
-          desc.set = function (value) { virtualProperty = value; }
+          desc.get = get;
+          desc.set = set;
           desc.configurable = true;
         }
       } else {
         desc = {
-          get: function () { return virtualProperty; },
-          set: function (value) { virtualProperty = value; },
+          get,
+          set,
           enumerable: true,
           configurable: true,
           container: obj
