@@ -4,7 +4,7 @@
 
 import { assert } from "@hyperion/global";
 import { getVirtualAttribute } from "./DOMShadowPrototype";
-import * as IElement from "./IElement";
+import * as IElement from "./IElement_";
 
 export function init() {
 
@@ -47,8 +47,6 @@ export function init() {
       return IElement.setAttributeNS.getOriginal().apply(this, <any>arguments);
     }
   });
-
-
 
   function createSetAttributeNodeCustom(originalFunc: Function) {
     return function (this: Element, newAttr: Attr) {

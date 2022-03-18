@@ -4,22 +4,25 @@
 
 import { AttributeInterceptor } from "@hyperion/hyperion-core/src/AttributeInterceptor";
 import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
-import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
+// import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
 import { ElementAttributeInterceptor } from "./ElementAttributeInterceptor";
-import { INodePrototype } from "./INode";
+// import { INodePrototype } from "./INode";
+import * as IElememt_ from "./IElement_";
+export * from "./IElement_";
 
-export const IElementtPrototype = new DOMShadowPrototype(
-  Element,
-  INodePrototype,
-  {
-    sampleObject: sampleHTMLElement,
-    nodeType: document.ELEMENT_NODE
-  }
-);
+// export const IElementtPrototype = new DOMShadowPrototype(
+//   Element,
+//   INodePrototype,
+//   {
+//     sampleObject: sampleHTMLElement,
+//     nodeType: document.ELEMENT_NODE
+//   }
+// );
+export const IElementtPrototype = IElememt_.IElementtPrototype;
 IElementtPrototype.extension.useCaseInsensitivePropertyName = true;
 
-export const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype);
-export const getAttributeNS = new FunctionInterceptor('getAttributeNS', IElementtPrototype);
+// export const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype);
+// export const getAttributeNS = new FunctionInterceptor('getAttributeNS', IElementtPrototype);
 export const getAttributeNames = new FunctionInterceptor('getAttributeNames', IElementtPrototype);
 export const getAttributeNode = new FunctionInterceptor('getAttributeNode', IElementtPrototype);
 export const getAttributeNodeNS = new FunctionInterceptor('getAttributeNodeNS', IElementtPrototype);
@@ -37,10 +40,10 @@ export const insertAdjacentText = new FunctionInterceptor('insertAdjacentText', 
 export const removeAttribute = new FunctionInterceptor('removeAttribute', IElementtPrototype);
 export const removeAttributeNS = new FunctionInterceptor('removeAttributeNS', IElementtPrototype);
 export const removeAttributeNode = new FunctionInterceptor('removeAttributeNode', IElementtPrototype);
-export const setAttribute = new FunctionInterceptor('setAttribute', IElementtPrototype);
-export const setAttributeNS = new FunctionInterceptor('setAttributeNS', IElementtPrototype);
-export const setAttributeNode = new FunctionInterceptor('setAttributeNode', IElementtPrototype);
-export const setAttributeNodeNS = new FunctionInterceptor('setAttributeNodeNS', IElementtPrototype);
+// export const setAttribute = new FunctionInterceptor('setAttribute', IElementtPrototype);
+// export const setAttributeNS = new FunctionInterceptor('setAttributeNS', IElementtPrototype);
+// export const setAttributeNode = new FunctionInterceptor('setAttributeNode', IElementtPrototype);
+// export const setAttributeNodeNS = new FunctionInterceptor('setAttributeNodeNS', IElementtPrototype);
 export const toggleAttribute = new FunctionInterceptor('toggleAttribute', IElementtPrototype);
 
 export const id = new ElementAttributeInterceptor("id", IElementtPrototype);

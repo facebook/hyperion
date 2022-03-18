@@ -4,7 +4,7 @@
 
 import { AttributeInterceptor, AttributeInterceptorBase } from "@hyperion/hyperion-core/src/AttributeInterceptor";
 import { ShadowPrototype } from "@hyperion/hyperion-core/src/ShadowPrototype";
-import * as IElement from "./IElement";
+import * as IElement from "./IElement_";
 import * as IAttrCustom from "./IAttrCustom";
 import * as IElementCustom from "./IElementCustom";
 import { VirtualAttribute } from "./VirtualAttribute";
@@ -13,7 +13,7 @@ import { VirtualAttribute } from "./VirtualAttribute";
 let lazyInit = () => {
   IAttrCustom.init();
   IElementCustom.init();
-  lazyInit = () => { }
+  lazyInit = () => { };
 }
 
 export class ElementAttributeInterceptor<
