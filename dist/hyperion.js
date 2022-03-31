@@ -11,7 +11,7 @@
  * - npm run build
  * - <copy the 'hyperion/dist/hyperion.js' file
  *
- * @generated SignedSource<<20ab46767f8f98084ee43a7fed3da35b>>
+ * @generated SignedSource<<95c056e1cda25d9e07eda046ae199a9c>>
  */
 
     
@@ -1168,19 +1168,13 @@ const SyncMutationObserver = /*#__PURE__*/Object.freeze({
  */
 function trackElementsWithAttributes(attributeNames) {
     const hook = new Hook();
-    const callback = function () {
-        hook.call(this);
-    };
     for (const attr of attributeNames) {
         const vattr = new ElementAttributeInterceptor(attr, IElementtPrototype);
-        vattr.raw.setter.onArgsObserverAdd(callback);
+        vattr.raw.setter.onArgsObserverAdd(function (value) {
+            hook.call(this, attr, value);
+        });
     }
     return hook;
 }
 
-const trackElementsWithAttributes$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    default: trackElementsWithAttributes
-});
-
-export { SyncMutationObserver, trackElementsWithAttributes$1 as trackElementsWithAttributes };
+export { SyncMutationObserver, trackElementsWithAttributes };

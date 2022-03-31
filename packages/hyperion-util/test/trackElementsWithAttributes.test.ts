@@ -5,7 +5,7 @@
  */
 
 import "jest";
-import trackElementsWithAttributes from "../src/trackElementsWithAttributes";
+import { trackElementsWithAttributes } from "../src/trackElementsWithAttributes";
 
 describe('test monitoring element attributes', () => {
   test('test monitoring element attributes', () => {

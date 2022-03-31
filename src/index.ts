@@ -3,4 +3,4 @@
  */
 
 export * as SyncMutationObserver from "@hyperion/hyperion-util/src/SyncMutationObserver";
-export * as trackElementsWithAttributes from "@hyperion/hyperion-util/src/trackElementsWithAttributes";
+export { trackElementsWithAttributes } from "@hyperion/hyperion-util/src/trackElementsWithAttributes";
