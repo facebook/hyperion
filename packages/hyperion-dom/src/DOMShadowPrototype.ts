@@ -23,6 +23,7 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
     sampleObject?: ClassType;
     nodeName?: string,
     nodeType?: number,
+    registerOnPrototype?: boolean,
   }) {
     let targetPrototype = targetPrototypeCtor?.prototype;
     if (!targetPrototype && options) {
@@ -66,10 +67,22 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
     if (options) {
       const { nodeName, nodeType } = options;
       if (nodeName) {
-        NodeName2ShadoPrototype.set(nodeName, this);
+        NodeName2ShadoPrototype.set(nodeName.toUpperCase(), this);
       }
       if (nodeType) {
         NodeType2ShadoPrototype.set(nodeType, this);
+      }
+    }
+
+    if (options?.registerOnPrototype && targetPrototype) {
+      /**
+       * We can now only rely on the prototype itself, so we can register the shadow on the actual prototype
+       * However, in some cases we may run into exception if the object is frozen or cross origin in the browser.
+       */
+      try {
+        intercept.registerShadowPrototype(targetPrototype, this);
+      } catch (e) {
+        console.error(`Could not register shadow prototype on the prototype object.`)
       }
     }
   }
