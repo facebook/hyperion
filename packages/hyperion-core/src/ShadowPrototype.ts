@@ -4,7 +4,8 @@
 
 import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
-import { PropertyInterceptor } from "./PropertyInterceptor";
+import { hasOwnProperty, PropertyInterceptor } from "./PropertyInterceptor";
+
 
 /// Items that can show up in virtual table
 interface VirtualProperty { }
@@ -27,11 +28,6 @@ type Extension = VirtualTable & {
 
 function getVirtualPropertyName(name: string, extension: Extension): string {
   return extension?.useCaseInsensitivePropertyName ? ('' + name).toLocaleLowerCase() : name;
-}
-
-const ObjectHasOwnProperty = Object.prototype.hasOwnProperty;
-export function hasOwnProperty(obj: Object, propName: string): boolean {
-  return ObjectHasOwnProperty.call(obj, propName);
 }
 
 export class ShadowPrototype<ObjectType extends Object = any, ParentType extends Object = any> {

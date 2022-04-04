@@ -4,7 +4,7 @@
 
 import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
-import { defineProperty, getExtendedPropertyDescriptor, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
+import { copyOwnProperties, defineProperty, getExtendedPropertyDescriptor, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
 // One-hot coding for state of the interceptor
@@ -36,25 +36,40 @@ const enum InterceptorState {
   Has_AF_AO__VF_VO = HasArgsFilter | HasArgsObserver | HasValueFilter | HasValueObserver,
 }
 
-export type InterceptableFunction = (this: any, ...args: any) => any | { new(...args: any): any };
-type InterceptableObjectType = { [key: string]: InterceptableFunction | any };
+export type InterceptableConstructor = abstract new (...args: any) => any
+type InterceptableMethod = ((this: any, ...args: any) => any);
+export type InterceptableFunction = InterceptableMethod | InterceptableConstructor;
+export type InterceptableObjectType = { [key: string]: InterceptableFunction | any };
 
 const unknownFunc: any = function () {
   console.warn('Unknown or missing function called! ');
 }
 
-type ThisType<T extends InterceptableFunction> = T extends (this: infer U, ...arg: any) => any ? U : {};
+type FuncThisType<T extends InterceptableFunction> =
+  T extends (this: infer U, ...arg: any) => any ? U :
+  T extends InterceptableConstructor ? never :
+  {};
 
-type OnArgsFilterFunc<FuncType extends InterceptableFunction> = (this: ThisType<FuncType>, args: Parameters<FuncType>) => Parameters<FuncType>;
+type FuncParameters<T extends InterceptableFunction> =
+  T extends InterceptableMethod ? Parameters<T> :
+  T extends InterceptableConstructor ? ConstructorParameters<T> :
+  never;
+
+type FuncReturnType<T extends InterceptableFunction> =
+  T extends InterceptableMethod ? ReturnType<T> :
+  T extends InterceptableConstructor ? InstanceType<T> :
+  never;
+
+type OnArgsFilterFunc<FuncType extends InterceptableFunction> = ((this: FuncThisType<FuncType>, args: FuncParameters<FuncType>) => FuncParameters<FuncType>)
 class OnArgsFilter<FuncType extends InterceptableFunction> extends Hook<OnArgsFilterFunc<FuncType>> { }
 
-type OnArgsObserverFunc<FuncType extends InterceptableFunction> = (this: ThisType<FuncType>, ...args: Parameters<FuncType>) => void | boolean | undefined;
+type OnArgsObserverFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, ...args: FuncParameters<FuncType>) => void | boolean | undefined;
 class OnArgsObserver<FuncType extends InterceptableFunction> extends Hook<OnArgsObserverFunc<FuncType>> { }
 
-type OnValueFilterFunc<FuncType extends InterceptableFunction> = (this: ThisType<FuncType>, value: ReturnType<FuncType>) => typeof value;
+type OnValueFilterFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => typeof value;
 class OnValueFilter<FuncType extends InterceptableFunction> extends Hook<OnValueFilterFunc<FuncType>> { }
 
-type OnValueObserverFunc<FuncType extends InterceptableFunction> = (this: ThisType<FuncType>, value: ReturnType<FuncType>) => void;
+type OnValueObserverFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => void;
 class OnValueObserver<FuncType extends InterceptableFunction> extends Hook<OnValueObserverFunc<FuncType>> { }
 
 export class FunctionInterceptorBase<
@@ -79,11 +94,15 @@ export class FunctionInterceptorBase<
 
     const that = this;
     this.interceptor = <FuncType>function (this: BaseType) {
-      return that.dispatcherFunc.apply(this, <any>arguments);
-    }
+      // In all cases we are dealing with methods, we handle constructors separately.
+      // It is too cumbersome (and perf inefficient) to separate classes for methods and constructors.
+      // TODO: is there a runtime check we can do to ensure this? e.g. checking func.prototype? Some constructors are functions too! 
+      return (<InterceptableMethod>(that.dispatcherFunc)).apply(this, <any>arguments);
+    };
     this.original = originalFunc;
     this.implementation = originalFunc;
     this.dispatcherFunc = this.original; // By default just pass on to original
+    this.setOriginal(originalFunc); // to perform any extra bookkeeping
   }
 
   public getOriginal(): FuncType {
@@ -91,11 +110,28 @@ export class FunctionInterceptorBase<
   }
 
   public setOriginal(originalFunc: FuncType) {
+    if (this.original === originalFunc) {
+      return; // not much left to do
+    }
+
     this.original = originalFunc;
     if (!this.customFunc) {
       // If no custom function is set, the implementation should point to original function
       this.implementation = originalFunc;
     }
+
+    /**
+     * We should make interceptor look as much like the original as possible.
+     * This includes {.name, .prototype, .toString(), ...}
+     * Note that copyOwnProperties will skip properties that destination already has
+     * therefore we might have to copy some properties manually
+     */
+    copyOwnProperties(originalFunc, this.interceptor);
+    this.interceptor.toString = function () {
+      return originalFunc.toString();
+    };
+
+
     this.updateDispatcherFunc();
   }
 

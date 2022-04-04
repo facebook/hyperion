@@ -3,7 +3,8 @@
  */
 
 import { assert } from "@hyperion/global";
-import { hasOwnProperty, ShadowPrototype } from "./ShadowPrototype";
+import { hasOwnProperty } from "./PropertyInterceptor";
+import { ShadowPrototype } from "./ShadowPrototype";
 
 /**
  * Intercepted objects may carry extra information to link them to the intercepted logic
