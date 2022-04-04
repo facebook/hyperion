@@ -4,7 +4,7 @@
 
 import { assert } from "@hyperion/global";
 import { FunctionInterceptorBase, InterceptableFunction } from "./FunctionInterceptor";
-import { defineProperty, getExtendedPropertyDescriptor, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
+import { defineProperty, getExtendedPropertyDescriptor, hasOwnProperty, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
 export class AttributeInterceptorBase<
@@ -101,7 +101,7 @@ export class AttributeInterceptor<
         this.status = InterceptionStatus.NoGetterSetter;
       } else {
         if (__DEV__) {
-          if (desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) {
+          if (hasOwnProperty(desc, "get") || hasOwnProperty(desc, "set")) {
             console.warn(`Un expected situation, attribute ${this.name} does not have getter/setter defined`);
 
           }

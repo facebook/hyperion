@@ -20,7 +20,7 @@ export abstract class PropertyInterceptor {
     __DEV__ && assert(!!this.name, "Interceptor name should have value");
   }
 
-  interceptObjectOwnProperties(_obj: object){
+  interceptObjectOwnProperties(_obj: object) {
     __DEV__ && assert(false, `This method must be overriden`);
   }
 }
@@ -57,3 +57,30 @@ export function defineProperty(obj: Object, propName: string, desc: PropertyDesc
   }
 }
 
+
+const ObjectHasOwnProperty = Object.prototype.hasOwnProperty;
+export function hasOwnProperty(obj: Object, propName: string): boolean {
+  return ObjectHasOwnProperty.call(obj, propName);
+}
+
+type ObjectOrFunction = Object & Partial<Pick<Function, "prototype" | "name">>;
+export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T) {
+  if (!src || !dest) {
+    // Not much to copy. This can legitimately happen if for example function/attribute value is undefined during interception.
+    return;
+  }
+
+  let ownProps = Object.getOwnPropertyNames(src);
+  for (let i = 0, length = ownProps.length; i < length; ++i) {
+    let propName = ownProps[i];
+    if (!(propName in dest)) {
+      let desc = Object.getOwnPropertyDescriptor(src, propName) as PropertyDecorator; //Since we are iterating the getOwnPropertyNames, we know this must have value
+      assert(desc != null, `Unexpected situation, we should have own property for ${propName}`);
+      try {
+        Object.defineProperty(dest, propName, desc);
+      } catch (e) {
+        __DEV__ && console.error("Adding property ", propName, " throws exception: ", e);
+      }
+    }
+  }
+}
