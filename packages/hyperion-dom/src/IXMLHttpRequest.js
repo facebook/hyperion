@@ -1,0 +1,12 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+import { AttributeInterceptor } from "@hyperion/hyperion-core/src/AttributeInterceptor";
+import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { DOMShadowPrototype } from "./DOMShadowPrototype";
+import { IEventTargetPrototype } from "./IEventTarget";
+export const IXMLHttpRequestPrototype = new DOMShadowPrototype(XMLHttpRequest, IEventTargetPrototype, { sampleObject: new XMLHttpRequest(), registerOnPrototype: true });
+export const open = new FunctionInterceptor("open", IXMLHttpRequestPrototype);
+export const send = new FunctionInterceptor("send", IXMLHttpRequestPrototype);
+export const withCredentials = new AttributeInterceptor("withCredentials", IXMLHttpRequestPrototype);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiSVhNTEh0dHBSZXF1ZXN0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiSVhNTEh0dHBSZXF1ZXN0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOztHQUVHO0FBRUgsT0FBTyxFQUFFLG9CQUFvQixFQUFFLE1BQU0sa0RBQWtELENBQUM7QUFDeEYsT0FBTyxFQUFFLG1CQUFtQixFQUFFLE1BQU0saURBQWlELENBQUM7QUFDdEYsT0FBTyxFQUFFLGtCQUFrQixFQUFFLE1BQU0sc0JBQXNCLENBQUM7QUFDMUQsT0FBTyxFQUFFLHFCQUFxQixFQUFFLE1BQU0sZ0JBQWdCLENBQUM7QUFFdkQsTUFBTSxDQUFDLE1BQU0sd0JBQXdCLEdBQUcsSUFBSSxrQkFBa0IsQ0FBQyxjQUFjLEVBQUUscUJBQXFCLEVBQUUsRUFBRSxZQUFZLEVBQUUsSUFBSSxjQUFjLEVBQUUsRUFBRSxtQkFBbUIsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFDO0FBRXpLLE1BQU0sQ0FBQyxNQUFNLElBQUksR0FBRyxJQUFJLG1CQUFtQixDQUFDLE1BQU0sRUFBRSx3QkFBd0IsQ0FBQyxDQUFDO0FBQzlFLE1BQU0sQ0FBQyxNQUFNLElBQUksR0FBRyxJQUFJLG1CQUFtQixDQUFDLE1BQU0sRUFBRSx3QkFBd0IsQ0FBQyxDQUFDO0FBQzlFLE1BQU0sQ0FBQyxNQUFNLGVBQWUsR0FBRyxJQUFJLG9CQUFvQixDQUFDLGlCQUFpQixFQUFFLHdCQUF3QixDQUFDLENBQUMifQ==
