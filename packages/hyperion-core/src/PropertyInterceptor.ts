@@ -70,11 +70,11 @@ export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T) {
     return;
   }
 
-  let ownProps = Object.getOwnPropertyNames(src);
+  const ownProps = Object.getOwnPropertyNames(src);
   for (let i = 0, length = ownProps.length; i < length; ++i) {
-    let propName = ownProps[i];
+    const propName = ownProps[i];
     if (!(propName in dest)) {
-      let desc = Object.getOwnPropertyDescriptor(src, propName) as PropertyDecorator; //Since we are iterating the getOwnPropertyNames, we know this must have value
+      const desc = Object.getOwnPropertyDescriptor(src, propName) as PropertyDecorator; //Since we are iterating the getOwnPropertyNames, we know this must have value
       assert(desc != null, `Unexpected situation, we should have own property for ${propName}`);
       try {
         Object.defineProperty(dest, propName, desc);
