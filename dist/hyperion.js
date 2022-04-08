@@ -11,7 +11,7 @@
  * - npm run build
  * - <copy the 'hyperion/dist/hyperion.js' file
  *
- * @generated SignedSource<<95c056e1cda25d9e07eda046ae199a9c>>
+ * @generated SignedSource<<670bfb8b3f25519fdc0c186876e19e65>>
  */
 
     
@@ -175,6 +175,30 @@ function defineProperty(obj, propName, desc) {
         __DEV__ && console.warn(propName, " defining throws exception : ", e, " on ", obj);
     }
 }
+const ObjectHasOwnProperty = Object.prototype.hasOwnProperty;
+function hasOwnProperty(obj, propName) {
+    return ObjectHasOwnProperty.call(obj, propName);
+}
+function copyOwnProperties(src, dest) {
+    if (!src || !dest) {
+        // Not much to copy. This can legitimately happen if for example function/attribute value is undefined during interception.
+        return;
+    }
+    const ownProps = Object.getOwnPropertyNames(src);
+    for (let i = 0, length = ownProps.length; i < length; ++i) {
+        const propName = ownProps[i];
+        if (!(propName in dest)) {
+            const desc = Object.getOwnPropertyDescriptor(src, propName); //Since we are iterating the getOwnPropertyNames, we know this must have value
+            assert(desc != null, `Unexpected situation, we should have own property for ${propName}`);
+            try {
+                Object.defineProperty(dest, propName, desc);
+            }
+            catch (e) {
+                __DEV__ && console.error("Adding property ", propName, " throws exception: ", e);
+            }
+        }
+    }
+}
 
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
@@ -204,21 +228,38 @@ class FunctionInterceptorBase extends PropertyInterceptor {
         super(name);
         const that = this;
         this.interceptor = function () {
-            return that.dispatcherFunc.apply(this, arguments);
+            // In all cases we are dealing with methods, we handle constructors separately.
+            // It is too cumbersome (and perf inefficient) to separate classes for methods and constructors.
+            // TODO: is there a runtime check we can do to ensure this? e.g. checking func.prototype? Some constructors are functions too! 
+            return (that.dispatcherFunc).apply(this, arguments);
         };
         this.original = originalFunc;
         this.implementation = originalFunc;
         this.dispatcherFunc = this.original; // By default just pass on to original
+        this.setOriginal(originalFunc); // to perform any extra bookkeeping
     }
     getOriginal() {
         return this.original;
     }
     setOriginal(originalFunc) {
+        if (this.original === originalFunc) {
+            return; // not much left to do
+        }
         this.original = originalFunc;
         if (!this.customFunc) {
             // If no custom function is set, the implementation should point to original function
             this.implementation = originalFunc;
         }
+        /**
+         * We should make interceptor look as much like the original as possible.
+         * This includes {.name, .prototype, .toString(), ...}
+         * Note that copyOwnProperties will skip properties that destination already has
+         * therefore we might have to copy some properties manually
+         */
+        copyOwnProperties(originalFunc, this.interceptor);
+        this.interceptor.toString = function () {
+            return originalFunc.toString();
+        };
         this.updateDispatcherFunc();
     }
     setCustom(customFunc) {
@@ -513,10 +554,6 @@ class FunctionInterceptor extends FunctionInterceptorBase {
 function getVirtualPropertyName(name, extension) {
     return extension?.useCaseInsensitivePropertyName ? ('' + name).toLocaleLowerCase() : name;
 }
-const ObjectHasOwnProperty = Object.prototype.hasOwnProperty;
-function hasOwnProperty(obj, propName) {
-    return ObjectHasOwnProperty.call(obj, propName);
-}
 class ShadowPrototype {
     targetPrototype;
     parentShadoPrototype;
@@ -621,6 +658,19 @@ function registerShadowPrototypeGetter(getter) {
         }
     });
 }
+/**
+ * intercept function can look up the prototype chain to find a proper ShadowPrototype for intercepting
+ * a given object.
+ * You should be careful to call this function on non-leaf nodes of the prototype chain.
+ * This will be the last priority after the shadowPrototypeGetters is tried
+ */
+function registerShadowPrototype(protoObj, shadowPrototype) {
+    __DEV__ && assert(!protoObj[ShadowPrototypePropName], `hiding existing ShadowPrototype in the chain of prototype ${protoObj}.`, { logger: { error: msg => console.debug(msg) } });
+    Object.defineProperty(protoObj, ShadowPrototypePropName, {
+        value: shadowPrototype,
+        // configurable: true,
+    });
+}
 let cachedPropertyDescriptor = {
 /** Want all the following fields to be false, but should not specify explicitly
  * enumerable: false,
@@ -672,6 +722,19 @@ function getObjectExtension(obj, interceptIfAbsent) {
         ext = obj[ExtensionPropName];
     }
     return ext;
+}
+function getVirtualPropertyValue(obj, propName) {
+    const ext = getObjectExtension(obj, true);
+    return ext?.virtualPropertyValues[propName];
+}
+function setVirtualPropertyValue(obj, propName, value) {
+    const ext = getObjectExtension(obj, true);
+    if (ext) {
+        ext.virtualPropertyValues[propName] = value;
+    }
+    else {
+        assert(!!ext, `Could not get extension for the object`);
+    }
 }
 
 /**
@@ -732,10 +795,22 @@ class DOMShadowPrototype extends ShadowPrototype {
         if (options) {
             const { nodeName, nodeType } = options;
             if (nodeName) {
-                NodeName2ShadoPrototype.set(nodeName, this);
+                NodeName2ShadoPrototype.set(nodeName.toUpperCase(), this);
             }
             if (nodeType) {
                 NodeType2ShadoPrototype.set(nodeType, this);
+            }
+        }
+        if (options?.registerOnPrototype && targetPrototype) {
+            /**
+             * We can now only rely on the prototype itself, so we can register the shadow on the actual prototype
+             * However, in some cases we may run into exception if the object is frozen or cross origin in the browser.
+             */
+            try {
+                registerShadowPrototype(targetPrototype, this);
+            }
+            catch (e) {
+                console.error(`Could not register shadow prototype on the prototype object.`);
             }
         }
     }
@@ -840,7 +915,7 @@ class AttributeInterceptor extends AttributeInterceptorBase {
                 __DEV__ && assert(desc.configurable, `Cannot intercept attribute ${this.name}`);
                 defineProperty(desc.container, this.name, desc);
                 if (__DEV__) {
-                    let desc = getExtendedPropertyDescriptor(obj, this.name);
+                    const desc = getExtendedPropertyDescriptor(obj, this.name);
                     assert(desc?.get === this.getter.interceptor, `getter interceptor did not work`);
                     assert(desc?.set === this.setter.interceptor, `setter interceptor did not work`);
                 }
@@ -853,7 +928,7 @@ class AttributeInterceptor extends AttributeInterceptorBase {
             }
             else {
                 if (__DEV__) {
-                    if (desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) {
+                    if (hasOwnProperty(desc, "get") || hasOwnProperty(desc, "set")) {
                         console.warn(`Un expected situation, attribute ${this.name} does not have getter/setter defined`);
                     }
                 }
@@ -1177,4 +1252,99 @@ function trackElementsWithAttributes(attributeNames) {
     return hook;
 }
 
-export { SyncMutationObserver, trackElementsWithAttributes };
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+class ConstructorInterceptor extends FunctionInterceptor {
+    ctorInterceptor = null;
+    constructor(name, shadowPrototype) {
+        super(name, shadowPrototype /* , true */); //If we intercept constructor, that means we want the output to be intercepted
+    }
+    setOriginal(originalFunc) {
+        const ctorFunc = originalFunc;
+        this.ctorInterceptor = function () {
+            let result;
+            switch (arguments.length) {
+                case 0:
+                    result = new ctorFunc();
+                    break;
+                case 1:
+                    result = new ctorFunc(arguments[0]);
+                    break;
+                case 2:
+                    result = new ctorFunc(arguments[0], arguments[1]);
+                    break;
+                case 3:
+                    result = new ctorFunc(arguments[0], arguments[1], arguments[2]);
+                    break;
+                case 4:
+                    result = new ctorFunc(arguments[0], arguments[1], arguments[2], arguments[3]);
+                    break;
+                case 5:
+                    result = new ctorFunc(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4]);
+                    break;
+                case 6:
+                    result = new ctorFunc(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+                    break;
+                default: throw "Unsupported case!";
+            }
+            return intercept(result);
+        };
+        return super.setOriginal(this.ctorInterceptor);
+    }
+}
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+const IWindowPrototype = new DOMShadowPrototype(Window, IEventTargetPrototype, { sampleObject: window, registerOnPrototype: true });
+const fetch = new FunctionInterceptor("fetch", IWindowPrototype);
+new ConstructorInterceptor("XMLHttpRequest", IWindowPrototype);
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+const IXMLHttpRequestPrototype = new DOMShadowPrototype(XMLHttpRequest, IEventTargetPrototype, { sampleObject: new XMLHttpRequest(), registerOnPrototype: true });
+const open = new FunctionInterceptor("open", IXMLHttpRequestPrototype);
+const send = new FunctionInterceptor("send", IXMLHttpRequestPrototype);
+new AttributeInterceptor("withCredentials", IXMLHttpRequestPrototype);
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+/**
+ * This is a generic event to be fired when a network request is about to happen.
+ * Generally, various network api can be intercepted to provide a more unified way
+ * of notifying the app about network requests.
+ */
+const onNetworkRequest = new Hook();
+fetch.onArgsObserverAdd((input, init) => {
+    let request;
+    if (typeof input === "string") {
+        request = {
+            method: init?.method ?? "get",
+            url: input,
+        };
+    }
+    else {
+        request = {
+            method: input.method,
+            url: input.url,
+        };
+    }
+    onNetworkRequest.call(request);
+});
+//#region XHR
+const XHR_REQUEST_INFO_PROP = 'requestInfo';
+open.onArgsObserverAdd(function (method, url) {
+    setVirtualPropertyValue(this, XHR_REQUEST_INFO_PROP, { method, url });
+});
+send.onArgsObserverAdd(function (_body) {
+    const request = getVirtualPropertyValue(this, XHR_REQUEST_INFO_PROP);
+    assert(request != null, `Unexpected situation! Request info is missing from xhr object`);
+    onNetworkRequest.call(request); // assert already ensures request is not undefined
+});
+//#endregion
+//TODO: do we care about sendBeacon as well?
+
+export { SyncMutationObserver, onNetworkRequest, trackElementsWithAttributes };

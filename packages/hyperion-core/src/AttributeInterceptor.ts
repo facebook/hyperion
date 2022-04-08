@@ -90,7 +90,7 @@ export class AttributeInterceptor<
         __DEV__ && assert(desc.configurable, `Cannot intercept attribute ${this.name}`);
         defineProperty(desc.container, this.name, desc);
         if (__DEV__) {
-          let desc = getExtendedPropertyDescriptor(obj, this.name);
+          const desc = getExtendedPropertyDescriptor(obj, this.name);
           assert(desc?.get === this.getter.interceptor, `getter interceptor did not work`);
           assert(desc?.set === this.setter.interceptor, `setter interceptor did not work`);
         }

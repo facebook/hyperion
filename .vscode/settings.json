@@ -4,7 +4,7 @@
   "editor.insertSpaces": true,
   "search.exclude": {
     "**/.git": true,
-    "**/node_modules": false,
+    "**/node_modules": true,
     "**/*.js": true,
     "build/*": true,
   },
