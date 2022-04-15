@@ -6,7 +6,7 @@ import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
 import { AttributeInterceptor } from "../src/AttributeInterceptor";
 import { FunctionInterceptor } from "../src/FunctionInterceptor";
-import { intercept, isIntercepted, registerShadowPrototype, registerShadowPrototypeGetter } from "../src/intercept";
+import { getVirtualPropertyValue, intercept, isIntercepted, registerShadowPrototype, registerShadowPrototypeGetter, setVirtualPropertyValue } from "../src/intercept";
 
 describe("test interception mechanism", () => {
 
@@ -193,4 +193,16 @@ describe("test interception mechanism", () => {
     expectResultTobe([21, 42]);
   });
 
+  test("test virtual attribute values", () => {
+    const { IAShadow, IBShadow, IA, IB, A, B } = testSetup();
+    registerShadowPrototype(B.prototype, IBShadow);
+
+    const o = new B();
+
+    type VA = number;
+    const VANAME = "_tmp";
+
+    const va = getVirtualPropertyValue<VA>(o, VANAME) ?? setVirtualPropertyValue<VA>(o, VANAME, 42);
+    expect(va).toBe(42);
+  });
 });

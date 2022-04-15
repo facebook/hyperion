@@ -99,7 +99,7 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
     return <T>vtable[canonicalName];
   }
 
-  public setVirtualProperty<T>(name: string, virtualProp: T & VirtualProperty): void {
+  public setVirtualProperty<T>(name: string, virtualProp: T & VirtualProperty): T {
     const vtable = this.extension;
     const canonicalName = getVirtualPropertyName(name, vtable);
     if (__DEV__) {
@@ -111,6 +111,7 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
       );
     }
     vtable[canonicalName] = virtualProp;
+    return virtualProp;
   }
 
   public removeVirtualPropery<T>(name: string, virtualProp: T & VirtualProperty): void {

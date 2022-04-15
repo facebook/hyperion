@@ -131,11 +131,12 @@ export function getVirtualPropertyValue<T>(obj: ExtensibleObject, propName: stri
   return <T | undefined>ext?.virtualPropertyValues[propName]
 }
 
-export function setVirtualPropertyValue<T>(obj: ExtensibleObject, propName: string, value: T) {
+export function setVirtualPropertyValue<T>(obj: ExtensibleObject, propName: string, value: T): T {
   const ext = getObjectExtension(obj, true);
   if (ext) {
     ext.virtualPropertyValues[propName] = value;
   } else {
     assert(!!ext, `Could not get extension for the object`);
   }
+  return value;
 }
