@@ -9,7 +9,7 @@ const NodeType2ShadoPrototype = new Map();
 const NodeName2ShadoPrototype = new Map();
 intercept.registerShadowPrototypeGetter(node => {
     if (node instanceof Node) {
-        return NodeType2ShadoPrototype.get(node.nodeType) ?? NodeName2ShadoPrototype.get(node.nodeName);
+        return NodeName2ShadoPrototype.get(node.nodeName) ?? NodeType2ShadoPrototype.get(node.nodeType);
     }
     return null;
 });
