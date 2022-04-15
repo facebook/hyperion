@@ -5,3 +5,4 @@
 export * as SyncMutationObserver from "@hyperion/hyperion-util/src/SyncMutationObserver";
 export { trackElementsWithAttributes } from "@hyperion/hyperion-util/src/trackElementsWithAttributes";
 export { onNetworkRequest } from "@hyperion/hyperion-util/src/onNetworkRequest";
+export { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";

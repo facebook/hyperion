@@ -11,7 +11,7 @@
  * - npm run build
  * - <copy the 'hyperion/dist/hyperion.js' file
  *
- * @generated SignedSource<<670bfb8b3f25519fdc0c186876e19e65>>
+ * @generated SignedSource<<461dc7c006f6a9e8071ca10b33a98277>>
  */
 
     
@@ -622,6 +622,7 @@ class ShadowPrototype {
             assert(!vtable[canonicalName], `virtual property ${name} will override the parent's.`, { logger: { error(msg) { console.warn(msg); } } });
         }
         vtable[canonicalName] = virtualProp;
+        return virtualProp;
     }
     removeVirtualPropery(name, virtualProp) {
         const vtable = this.extension;
@@ -735,6 +736,7 @@ function setVirtualPropertyValue(obj, propName, value) {
     else {
         assert(!!ext, `Could not get extension for the object`);
     }
+    return value;
 }
 
 /**
@@ -744,7 +746,7 @@ const NodeType2ShadoPrototype = new Map();
 const NodeName2ShadoPrototype = new Map();
 registerShadowPrototypeGetter(node => {
     if (node instanceof Node) {
-        return NodeType2ShadoPrototype.get(node.nodeType) ?? NodeName2ShadoPrototype.get(node.nodeName);
+        return NodeName2ShadoPrototype.get(node.nodeName) ?? NodeType2ShadoPrototype.get(node.nodeType);
     }
     return null;
 });
@@ -1347,4 +1349,4 @@ send.onArgsObserverAdd(function (_body) {
 //#endregion
 //TODO: do we care about sendBeacon as well?
 
-export { SyncMutationObserver, onNetworkRequest, trackElementsWithAttributes };
+export { SyncMutationObserver, getVirtualPropertyValue, onNetworkRequest, setVirtualPropertyValue, trackElementsWithAttributes };
