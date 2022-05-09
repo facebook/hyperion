@@ -103,12 +103,12 @@ describe("test modern classes", () => {
 
   // TODO: somehow JEST is not able to import and understand const enums! For now copy this value here from FunctionInterceptor.ts
   const enum InterceptorState {
-    HasArgsFilter = 1 << 3,
+    HasArgsMapper = 1 << 3,
     HasArgsObserver = 1 << 2,
-    HasValueFilter = 1 << 1,
+    HasValueMapper = 1 << 1,
     HasValueObserver = 1 << 0,
     Has_____________ = 0 | 0 | 0 | 0,
-    Has_AF_AO__VF_VO = HasArgsFilter | HasArgsObserver | HasValueFilter | HasValueObserver,
+    Has_AF_AO__VF_VO = HasArgsMapper | HasArgsObserver | HasValueMapper | HasValueObserver,
 
   }
 
@@ -123,8 +123,8 @@ describe("test modern classes", () => {
       const arg0 = '1';
       let arg0Filtered = arg0;
 
-      if (state & InterceptorState.HasArgsFilter) {
-        IA.a.onArgsFilterAdd(function (value) {
+      if (state & InterceptorState.HasArgsMapper) {
+        IA.a.onArgsMapperAdd(function (value) {
           const a1 = value[0];
           expect(a1).toBe(arg0);
 
@@ -147,8 +147,8 @@ describe("test modern classes", () => {
       let value0 = `[a:${arg0Filtered}]`;
       let value0Filtered = value0;
 
-      if (state & InterceptorState.HasValueFilter) {
-        IA.a.onValueFilterAdd(value => {
+      if (state & InterceptorState.HasValueMapper) {
+        IA.a.onValueMapperAdd(value => {
           expect(value).toBe(value0);
           result += value;
           return `{${value}}`;
@@ -178,9 +178,9 @@ describe("test modern classes", () => {
   test("test .interception remove hooks", () => {
     const { IA, B } = testSetup();
     let hookCalled = 0;
-    IA.a.onArgsFilterRemove(IA.a.onArgsFilterAdd(value => (hookCalled++, value)));
+    IA.a.onArgsMapperRemove(IA.a.onArgsMapperAdd(value => (hookCalled++, value)));
     IA.a.onArgsObserverRemove(IA.a.onArgsObserverAdd(_ => { hookCalled++ }));
-    IA.a.onValueFilterRemove(IA.a.onValueFilterAdd(value => (hookCalled++, value)));
+    IA.a.onValueMapperRemove(IA.a.onValueMapperAdd(value => (hookCalled++, value)));
     IA.a.onValueObserverRemove(IA.a.onValueObserverAdd(_ => { hookCalled++ }));
 
     const o = new B();

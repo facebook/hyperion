@@ -74,7 +74,7 @@ describe("test Constructor Interceptor", () => {
     IBCtor.onArgsObserverAdd(function (value) {
       observer(value);
     })
-    IBCtor.onArgsFilterAdd(function (this, value) {
+    IBCtor.onArgsMapperAdd(function (this, value) {
       const a0 = value[0];
       observer(a0);
       value[0] = a0 + 1;
@@ -83,7 +83,7 @@ describe("test Constructor Interceptor", () => {
     IBCtor.onValueObserverAdd(function (this, value) {
       observer(value);
     })
-    IBCtor.onValueFilterAdd(function (this, value) {
+    IBCtor.onValueMapperAdd(function (this, value) {
       observer(value);
       return value;
     })
