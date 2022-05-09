@@ -7,18 +7,18 @@ import { copyOwnProperties, defineProperty, getExtendedPropertyDescriptor, Prope
 const unknownFunc = function () {
     console.warn('Unknown or missing function called! ');
 };
-class OnArgsFilter extends Hook {
+class OnArgsMapper extends Hook {
 }
 class OnArgsObserver extends Hook {
 }
-class OnValueFilter extends Hook {
+class OnValueMapper extends Hook {
 }
 class OnValueObserver extends Hook {
 }
 export class FunctionInterceptorBase extends PropertyInterceptor {
-    onArgsFilter;
+    onArgsMapper;
     onArgsObserver;
-    onValueFilter;
+    onValueMapper;
     onValueObserver;
     original;
     customFunc;
@@ -84,13 +84,13 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
             [2 /* Has________VF___ */]: fi => function () {
                 let result;
                 result = fi.implementation.apply(this, arguments);
-                result = fi.onValueFilter.call.call(this, result);
+                result = fi.onValueMapper.call.call(this, result);
                 return result;
             },
             [3 /* Has________VF_VO */]: fi => function () {
                 let result;
                 result = fi.implementation.apply(this, arguments);
-                result = fi.onValueFilter.call.call(this, result);
+                result = fi.onValueMapper.call.call(this, result);
                 fi.onValueObserver.call.call(this, result);
                 return result;
             },
@@ -113,7 +113,7 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
                 let result;
                 if (!fi.onArgsObserver.call.apply(this, arguments)) {
                     result = fi.implementation.apply(this, arguments);
-                    result = fi.onValueFilter.call.call(this, result);
+                    result = fi.onValueMapper.call.call(this, result);
                 }
                 return result;
             },
@@ -121,42 +121,42 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
                 let result;
                 if (!fi.onArgsObserver.call.apply(this, arguments)) {
                     result = fi.implementation.apply(this, arguments);
-                    result = fi.onValueFilter.call.call(this, result);
+                    result = fi.onValueMapper.call.call(this, result);
                     fi.onValueObserver.call.call(this, result);
                 }
                 return result;
             },
             [8 /* Has_AF__________ */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 result = fi.implementation.apply(this, filteredArgs);
                 return result;
             },
             [9 /* Has_AF________VO */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 result = fi.implementation.apply(this, filteredArgs);
                 fi.onValueObserver.call.call(this, result);
                 return result;
             },
             [10 /* Has_AF_____VF___ */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 result = fi.implementation.apply(this, filteredArgs);
-                result = fi.onValueFilter.call.call(this, result);
+                result = fi.onValueMapper.call.call(this, result);
                 return result;
             },
             [11 /* Has_AF_____VF_VO */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 result = fi.implementation.apply(this, filteredArgs);
-                result = fi.onValueFilter.call.call(this, result);
+                result = fi.onValueMapper.call.call(this, result);
                 fi.onValueObserver.call.call(this, result);
                 return result;
             },
             [12 /* Has_AF_AO_______ */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
                     result = fi.implementation.apply(this, filteredArgs);
                 }
@@ -164,7 +164,7 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
             },
             [13 /* Has_AF_AO_____VO */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
                     result = fi.implementation.apply(this, filteredArgs);
                     fi.onValueObserver.call.call(this, result);
@@ -173,19 +173,19 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
             },
             [14 /* Has_AF_AO__VF___ */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
                     result = fi.implementation.apply(this, filteredArgs);
-                    result = fi.onValueFilter.call.call(this, result);
+                    result = fi.onValueMapper.call.call(this, result);
                 }
                 return result;
             },
             [15 /* Has_AF_AO__VF_VO */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
                     result = fi.implementation.apply(this, filteredArgs);
-                    result = fi.onValueFilter.call.call(this, result);
+                    result = fi.onValueMapper.call.call(this, result);
                     fi.onValueObserver.call.call(this, result);
                 }
                 return result;
@@ -193,13 +193,13 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
         };
         if (__DEV__) {
             // just to make sure we caovered all cases correctly
-            for (let i = 8 /* HasArgsFilter */ | 4 /* HasArgsObserver */ | 2 /* HasValueFilter */ | 1 /* HasValueObserver */; i >= 0; --i) {
+            for (let i = 8 /* HasArgsMapper */ | 4 /* HasArgsObserver */ | 2 /* HasValueMapper */ | 1 /* HasValueObserver */; i >= 0; --i) {
                 const ctor = ctors[i];
                 assert(!!ctor, `unhandled interceptor state ${i}`);
                 ctors[i] = fi => {
-                    assert((i & 8 /* HasArgsFilter */) === 0 || !!fi.onArgsFilter, `missing expected .onArgsFilter for state ${i}`);
+                    assert((i & 8 /* HasArgsMapper */) === 0 || !!fi.onArgsMapper, `missing expected .onArgsFilter for state ${i}`);
                     assert((i & 4 /* HasArgsObserver */) === 0 || !!fi.onArgsObserver, `missing expected .onArgsObserver for state ${i}`);
-                    assert((i & 2 /* HasValueFilter */) === 0 || !!fi.onValueFilter, `missing expected .onValueFilter for state ${i}`);
+                    assert((i & 2 /* HasValueMapper */) === 0 || !!fi.onValueMapper, `missing expected .onValueFilter for state ${i}`);
                     assert((i & 1 /* HasValueObserver */) === 0 || !!fi.onValueObserver, `missing expected .onValueObserver for state ${i}`);
                     return ctor(fi);
                 };
@@ -209,9 +209,9 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
     })();
     updateDispatcherFunc() {
         let state = 0;
-        state |= this.onArgsFilter ? 8 /* HasArgsFilter */ : 0;
+        state |= this.onArgsMapper ? 8 /* HasArgsMapper */ : 0;
         state |= this.onArgsObserver ? 4 /* HasArgsObserver */ : 0;
-        state |= this.onValueFilter ? 2 /* HasValueFilter */ : 0;
+        state |= this.onValueMapper ? 2 /* HasValueMapper */ : 0;
         state |= this.onValueObserver ? 1 /* HasValueObserver */ : 0;
         //TODO: Check a cached version first
         const dispatcherCtor = FunctionInterceptorBase.dispatcherCtors[state];
@@ -219,15 +219,15 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
         this.dispatcherFunc = dispatcherCtor(this);
     }
     //#region helper function to lazily extend hooks
-    onArgsFilterAdd(cb) {
-        if (!this.onArgsFilter) {
-            this.onArgsFilter = new OnArgsFilter();
+    onArgsMapperAdd(cb) {
+        if (!this.onArgsMapper) {
+            this.onArgsMapper = new OnArgsMapper();
             this.updateDispatcherFunc();
         }
-        return this.onArgsFilter.add(cb);
+        return this.onArgsMapper.add(cb);
     }
-    onArgsFilterRemove(cb) {
-        if (this.onArgsFilter?.remove(cb)) {
+    onArgsMapperRemove(cb) {
+        if (this.onArgsMapper?.remove(cb)) {
             this.updateDispatcherFunc();
         }
         return cb;
@@ -245,15 +245,15 @@ export class FunctionInterceptorBase extends PropertyInterceptor {
         }
         return cb;
     }
-    onValueFilterAdd(cb) {
-        if (!this.onValueFilter) {
-            this.onValueFilter = new OnValueFilter();
+    onValueMapperAdd(cb) {
+        if (!this.onValueMapper) {
+            this.onValueMapper = new OnValueMapper();
             this.updateDispatcherFunc();
         }
-        return this.onValueFilter.add(cb);
+        return this.onValueMapper.add(cb);
     }
-    onValueFilterRemove(cb) {
-        if (this.onValueFilter?.remove(cb)) {
+    onValueMapperRemove(cb) {
+        if (this.onValueMapper?.remove(cb)) {
             this.updateDispatcherFunc();
         }
         return cb;

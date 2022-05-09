@@ -9,9 +9,9 @@ import { ShadowPrototype } from "./ShadowPrototype";
 
 // One-hot coding for state of the interceptor
 const enum InterceptorState {
-  HasArgsFilter = 1 << 3,
+  HasArgsMapper = 1 << 3,
   HasArgsObserver = 1 << 2,
-  HasValueFilter = 1 << 1,
+  HasValueMapper = 1 << 1,
   HasValueObserver = 1 << 0,
 
   /**
@@ -20,20 +20,20 @@ const enum InterceptorState {
    * */
   Has_____________ = 0 | 0 | 0 | 0,
   Has___________VO = 0 | 0 | 0 | HasValueObserver,
-  Has________VF___ = 0 | 0 | HasValueFilter | 0,
-  Has________VF_VO = 0 | 0 | HasValueFilter | HasValueObserver,
+  Has________VF___ = 0 | 0 | HasValueMapper | 0,
+  Has________VF_VO = 0 | 0 | HasValueMapper | HasValueObserver,
   Has____AO_______ = 0 | HasArgsObserver | 0 | 0,
   Has____AO_____VO = 0 | HasArgsObserver | 0 | HasValueObserver,
-  Has____AO__VF___ = 0 | HasArgsObserver | HasValueFilter | 0,
-  Has____AO__VF_VO = 0 | HasArgsObserver | HasValueFilter | HasValueObserver,
-  Has_AF__________ = HasArgsFilter | 0 | 0 | 0,
-  Has_AF________VO = HasArgsFilter | 0 | 0 | HasValueObserver,
-  Has_AF_____VF___ = HasArgsFilter | 0 | HasValueFilter | 0,
-  Has_AF_____VF_VO = HasArgsFilter | 0 | HasValueFilter | HasValueObserver,
-  Has_AF_AO_______ = HasArgsFilter | HasArgsObserver | 0 | 0,
-  Has_AF_AO_____VO = HasArgsFilter | HasArgsObserver | 0 | HasValueObserver,
-  Has_AF_AO__VF___ = HasArgsFilter | HasArgsObserver | HasValueFilter | 0,
-  Has_AF_AO__VF_VO = HasArgsFilter | HasArgsObserver | HasValueFilter | HasValueObserver,
+  Has____AO__VF___ = 0 | HasArgsObserver | HasValueMapper | 0,
+  Has____AO__VF_VO = 0 | HasArgsObserver | HasValueMapper | HasValueObserver,
+  Has_AF__________ = HasArgsMapper | 0 | 0 | 0,
+  Has_AF________VO = HasArgsMapper | 0 | 0 | HasValueObserver,
+  Has_AF_____VF___ = HasArgsMapper | 0 | HasValueMapper | 0,
+  Has_AF_____VF_VO = HasArgsMapper | 0 | HasValueMapper | HasValueObserver,
+  Has_AF_AO_______ = HasArgsMapper | HasArgsObserver | 0 | 0,
+  Has_AF_AO_____VO = HasArgsMapper | HasArgsObserver | 0 | HasValueObserver,
+  Has_AF_AO__VF___ = HasArgsMapper | HasArgsObserver | HasValueMapper | 0,
+  Has_AF_AO__VF_VO = HasArgsMapper | HasArgsObserver | HasValueMapper | HasValueObserver,
 }
 
 export type InterceptableConstructor = abstract new (...args: any) => any
@@ -60,14 +60,14 @@ type FuncReturnType<T extends InterceptableFunction> =
   T extends InterceptableConstructor ? InstanceType<T> :
   never;
 
-type OnArgsFilterFunc<FuncType extends InterceptableFunction> = ((this: FuncThisType<FuncType>, args: FuncParameters<FuncType>) => FuncParameters<FuncType>)
-class OnArgsFilter<FuncType extends InterceptableFunction> extends Hook<OnArgsFilterFunc<FuncType>> { }
+type OnArgsMapperFunc<FuncType extends InterceptableFunction> = ((this: FuncThisType<FuncType>, args: FuncParameters<FuncType>) => FuncParameters<FuncType>)
+class OnArgsMapper<FuncType extends InterceptableFunction> extends Hook<OnArgsMapperFunc<FuncType>> { }
 
 type OnArgsObserverFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, ...args: FuncParameters<FuncType>) => void | boolean | undefined;
 class OnArgsObserver<FuncType extends InterceptableFunction> extends Hook<OnArgsObserverFunc<FuncType>> { }
 
-type OnValueFilterFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => typeof value;
-class OnValueFilter<FuncType extends InterceptableFunction> extends Hook<OnValueFilterFunc<FuncType>> { }
+type OnValueMapperFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => typeof value;
+class OnValueMapper<FuncType extends InterceptableFunction> extends Hook<OnValueMapperFunc<FuncType>> { }
 
 type OnValueObserverFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => void;
 class OnValueObserver<FuncType extends InterceptableFunction> extends Hook<OnValueObserverFunc<FuncType>> { }
@@ -77,9 +77,9 @@ export class FunctionInterceptorBase<
   Name extends string,
   FuncType extends InterceptableFunction
   > extends PropertyInterceptor {
-  protected onArgsFilter?: OnArgsFilter<FuncType>;
+  protected onArgsMapper?: OnArgsMapper<FuncType>;
   protected onArgsObserver?: OnArgsObserver<FuncType>;
-  protected onValueFilter?: OnValueFilter<FuncType>;
+  protected onValueMapper?: OnValueMapper<FuncType>;
   protected onValueObserver?: OnValueObserver<FuncType>;
 
   protected original: FuncType;
@@ -159,14 +159,14 @@ export class FunctionInterceptorBase<
       [InterceptorState.Has________VF___]: fi => function (this: any) {
         let result;
         result = fi.implementation.apply(this, <any>arguments);
-        result = fi.onValueFilter!.call.call(this, result);
+        result = fi.onValueMapper!.call.call(this, result);
         return result;
       },
 
       [InterceptorState.Has________VF_VO]: fi => function (this: any) {
         let result;
         result = fi.implementation.apply(this, <any>arguments);
-        result = fi.onValueFilter!.call.call(this, result);
+        result = fi.onValueMapper!.call.call(this, result);
         fi.onValueObserver!.call.call(this, result);
         return result;
       },
@@ -192,7 +192,7 @@ export class FunctionInterceptorBase<
         let result;
         if (!fi.onArgsObserver!.call.apply(this, <any>arguments)) {
           result = fi.implementation.apply(this, <any>arguments);
-          result = fi.onValueFilter!.call.call(this, result);
+          result = fi.onValueMapper!.call.call(this, result);
         }
         return result;
       },
@@ -201,7 +201,7 @@ export class FunctionInterceptorBase<
         let result;
         if (!fi.onArgsObserver!.call.apply(this, <any>arguments)) {
           result = fi.implementation.apply(this, <any>arguments);
-          result = fi.onValueFilter!.call.call(this, result);
+          result = fi.onValueMapper!.call.call(this, result);
           fi.onValueObserver!.call.call(this, result);
         }
         return result;
@@ -209,14 +209,14 @@ export class FunctionInterceptorBase<
 
       [InterceptorState.Has_AF__________]: fi => function (this: any) {
         let result;
-        const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
+        const filteredArgs = fi.onArgsMapper!.call.call(this, <any>arguments); //Pass as an array
         result = fi.implementation.apply(this, filteredArgs);
         return result;
       },
 
       [InterceptorState.Has_AF________VO]: fi => function (this: any) {
         let result;
-        const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
+        const filteredArgs = fi.onArgsMapper!.call.call(this, <any>arguments); //Pass as an array
         result = fi.implementation.apply(this, filteredArgs);
         fi.onValueObserver!.call.call(this, result);
         return result;
@@ -224,24 +224,24 @@ export class FunctionInterceptorBase<
 
       [InterceptorState.Has_AF_____VF___]: fi => function (this: any) {
         let result;
-        const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
+        const filteredArgs = fi.onArgsMapper!.call.call(this, <any>arguments); //Pass as an array
         result = fi.implementation.apply(this, filteredArgs);
-        result = fi.onValueFilter!.call.call(this, result);
+        result = fi.onValueMapper!.call.call(this, result);
         return result;
       },
 
       [InterceptorState.Has_AF_____VF_VO]: fi => function (this: any) {
         let result;
-        const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
+        const filteredArgs = fi.onArgsMapper!.call.call(this, <any>arguments); //Pass as an array
         result = fi.implementation.apply(this, filteredArgs);
-        result = fi.onValueFilter!.call.call(this, result);
+        result = fi.onValueMapper!.call.call(this, result);
         fi.onValueObserver!.call.call(this, result);
         return result;
       },
 
       [InterceptorState.Has_AF_AO_______]: fi => function (this: any) {
         let result;
-        const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
+        const filteredArgs = fi.onArgsMapper!.call.call(this, <any>arguments); //Pass as an array
         if (!fi.onArgsObserver!.call.apply(this, filteredArgs)) {
           result = fi.implementation.apply(this, filteredArgs);
         }
@@ -250,7 +250,7 @@ export class FunctionInterceptorBase<
 
       [InterceptorState.Has_AF_AO_____VO]: fi => function (this: any) {
         let result;
-        const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
+        const filteredArgs = fi.onArgsMapper!.call.call(this, <any>arguments); //Pass as an array
         if (!fi.onArgsObserver!.call.apply(this, filteredArgs)) {
           result = fi.implementation.apply(this, filteredArgs);
           fi.onValueObserver!.call.call(this, result);
@@ -260,20 +260,20 @@ export class FunctionInterceptorBase<
 
       [InterceptorState.Has_AF_AO__VF___]: fi => function (this: any) {
         let result;
-        const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
+        const filteredArgs = fi.onArgsMapper!.call.call(this, <any>arguments); //Pass as an array
         if (!fi.onArgsObserver!.call.apply(this, filteredArgs)) {
           result = fi.implementation.apply(this, filteredArgs);
-          result = fi.onValueFilter!.call.call(this, result);
+          result = fi.onValueMapper!.call.call(this, result);
         }
         return result;
       },
 
       [InterceptorState.Has_AF_AO__VF_VO]: fi => function (this: any) {
         let result;
-        const filteredArgs = fi.onArgsFilter!.call.call(this, <any>arguments); //Pass as an array
+        const filteredArgs = fi.onArgsMapper!.call.call(this, <any>arguments); //Pass as an array
         if (!fi.onArgsObserver!.call.apply(this, filteredArgs)) {
           result = fi.implementation.apply(this, filteredArgs);
-          result = fi.onValueFilter!.call.call(this, result);
+          result = fi.onValueMapper!.call.call(this, result);
           fi.onValueObserver!.call.call(this, result);
         }
         return result;
@@ -282,13 +282,13 @@ export class FunctionInterceptorBase<
     };
     if (__DEV__) {
       // just to make sure we caovered all cases correctly
-      for (let i = InterceptorState.HasArgsFilter | InterceptorState.HasArgsObserver | InterceptorState.HasValueFilter | InterceptorState.HasValueObserver; i >= 0; --i) {
+      for (let i = InterceptorState.HasArgsMapper | InterceptorState.HasArgsObserver | InterceptorState.HasValueMapper | InterceptorState.HasValueObserver; i >= 0; --i) {
         const ctor = ctors[i];
         assert(!!ctor, `unhandled interceptor state ${i}`);
         ctors[i] = fi => {
-          assert((i & InterceptorState.HasArgsFilter) === 0 || !!fi.onArgsFilter, `missing expected .onArgsFilter for state ${i}`);
+          assert((i & InterceptorState.HasArgsMapper) === 0 || !!fi.onArgsMapper, `missing expected .onArgsFilter for state ${i}`);
           assert((i & InterceptorState.HasArgsObserver) === 0 || !!fi.onArgsObserver, `missing expected .onArgsObserver for state ${i}`);
-          assert((i & InterceptorState.HasValueFilter) === 0 || !!fi.onValueFilter, `missing expected .onValueFilter for state ${i}`);
+          assert((i & InterceptorState.HasValueMapper) === 0 || !!fi.onValueMapper, `missing expected .onValueFilter for state ${i}`);
           assert((i & InterceptorState.HasValueObserver) === 0 || !!fi.onValueObserver, `missing expected .onValueObserver for state ${i}`);
           return ctor(fi);
         }
@@ -300,9 +300,9 @@ export class FunctionInterceptorBase<
 
   private updateDispatcherFunc() {
     let state = 0;
-    state |= this.onArgsFilter ? InterceptorState.HasArgsFilter : 0;
+    state |= this.onArgsMapper ? InterceptorState.HasArgsMapper : 0;
     state |= this.onArgsObserver ? InterceptorState.HasArgsObserver : 0;
-    state |= this.onValueFilter ? InterceptorState.HasValueFilter : 0;
+    state |= this.onValueMapper ? InterceptorState.HasValueMapper : 0;
     state |= this.onValueObserver ? InterceptorState.HasValueObserver : 0;
     //TODO: Check a cached version first
     const dispatcherCtor = FunctionInterceptorBase.dispatcherCtors[state];
@@ -311,15 +311,15 @@ export class FunctionInterceptorBase<
   }
 
   //#region helper function to lazily extend hooks
-  public onArgsFilterAdd(cb: OnArgsFilterFunc<FuncType>): typeof cb {
-    if (!this.onArgsFilter) {
-      this.onArgsFilter = new OnArgsFilter<FuncType>();
+  public onArgsMapperAdd(cb: OnArgsMapperFunc<FuncType>): typeof cb {
+    if (!this.onArgsMapper) {
+      this.onArgsMapper = new OnArgsMapper<FuncType>();
       this.updateDispatcherFunc();
     }
-    return this.onArgsFilter.add(cb);
+    return this.onArgsMapper.add(cb);
   }
-  public onArgsFilterRemove(cb: OnArgsFilterFunc<FuncType>): typeof cb {
-    if (this.onArgsFilter?.remove(cb)) {
+  public onArgsMapperRemove(cb: OnArgsMapperFunc<FuncType>): typeof cb {
+    if (this.onArgsMapper?.remove(cb)) {
       this.updateDispatcherFunc();
     }
     return cb
@@ -339,15 +339,15 @@ export class FunctionInterceptorBase<
     return cb
   }
 
-  public onValueFilterAdd(cb: OnValueFilterFunc<FuncType>): typeof cb {
-    if (!this.onValueFilter) {
-      this.onValueFilter = new OnValueFilter<FuncType>();
+  public onValueMapperAdd(cb: OnValueMapperFunc<FuncType>): typeof cb {
+    if (!this.onValueMapper) {
+      this.onValueMapper = new OnValueMapper<FuncType>();
       this.updateDispatcherFunc();
     }
-    return this.onValueFilter.add(cb);
+    return this.onValueMapper.add(cb);
   }
-  public onValueFilterRemove(cb: OnValueFilterFunc<FuncType>): typeof cb {
-    if (this.onValueFilter?.remove(cb)) {
+  public onValueMapperRemove(cb: OnValueMapperFunc<FuncType>): typeof cb {
+    if (this.onValueMapper?.remove(cb)) {
       this.updateDispatcherFunc();
     }
     return cb
