@@ -45,7 +45,7 @@ const unknownFunc: any = function () {
   console.warn('Unknown or missing function called! ');
 }
 
-type FuncThisType<T extends InterceptableFunction> =
+export type FuncThisType<T extends InterceptableFunction> =
   T extends (this: infer U, ...arg: any) => any ? U :
   T extends InterceptableConstructor ? never :
   {};
@@ -82,7 +82,7 @@ export class FunctionInterceptorBase<
   protected onValueMapper?: OnValueMapper<FuncType>;
   protected onValueObserver?: OnValueObserver<FuncType>;
 
-  protected original: FuncType;
+  protected original: FuncType = unknownFunc;
   private customFunc?: FuncType;
   private implementation: FuncType; // usually either the .original or the .customFunc
 
@@ -99,7 +99,6 @@ export class FunctionInterceptorBase<
       // TODO: is there a runtime check we can do to ensure this? e.g. checking func.prototype? Some constructors are functions too! 
       return (<InterceptableMethod>(that.dispatcherFunc)).apply(this, <any>arguments);
     };
-    this.original = originalFunc;
     this.implementation = originalFunc;
     this.dispatcherFunc = this.original; // By default just pass on to original
     this.setOriginal(originalFunc); // to perform any extra bookkeeping
