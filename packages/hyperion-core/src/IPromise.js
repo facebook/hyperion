@@ -1,0 +1,12 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { registerShadowPrototype } from "./intercept";
+import { ShadowPrototype } from "./ShadowPrototype";
+const PromisePrototype = Object.getPrototypeOf(Promise.resolve());
+export const IPromisePrototype = new ShadowPrototype(PromisePrototype, null);
+export const then = new FunctionInterceptor("then", IPromisePrototype);
+export const Catch = new FunctionInterceptor("catch", IPromisePrototype);
+registerShadowPrototype(PromisePrototype, IPromisePrototype);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiSVByb21pc2UuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJJUHJvbWlzZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7R0FFRztBQUVILE9BQU8sRUFBRSxtQkFBbUIsRUFBRSxNQUFNLGlEQUFpRCxDQUFDO0FBQ3RGLE9BQU8sRUFBRSx1QkFBdUIsRUFBRSxNQUFNLGFBQWEsQ0FBQztBQUN0RCxPQUFPLEVBQUUsZUFBZSxFQUFFLE1BQU0sbUJBQW1CLENBQUM7QUFFcEQsTUFBTSxnQkFBZ0IsR0FBRyxNQUFNLENBQUMsY0FBYyxDQUFDLE9BQU8sQ0FBQyxPQUFPLEVBQUUsQ0FBQyxDQUFDO0FBRWxFLE1BQU0sQ0FBQyxNQUFNLGlCQUFpQixHQUFHLElBQUksZUFBZSxDQUFtQixnQkFBZ0IsRUFBRSxJQUFJLENBQUMsQ0FBQztBQUMvRixNQUFNLENBQUMsTUFBTSxJQUFJLEdBQUcsSUFBSSxtQkFBbUIsQ0FBQyxNQUFNLEVBQUUsaUJBQWlCLENBQUMsQ0FBQztBQUN2RSxNQUFNLENBQUMsTUFBTSxLQUFLLEdBQUcsSUFBSSxtQkFBbUIsQ0FBQyxPQUFPLEVBQUUsaUJBQWlCLENBQUMsQ0FBQztBQUV6RSx1QkFBdUIsQ0FBQyxnQkFBZ0IsRUFBRSxpQkFBaUIsQ0FBQyxDQUFDIn0=
