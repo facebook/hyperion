@@ -5,6 +5,7 @@
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
 import { FunctionInterceptor } from "../src/FunctionInterceptor";
+import { interceptFunction } from "../src/intercept";
 
 describe("test modern classes", () => {
 
@@ -53,6 +54,25 @@ describe("test modern classes", () => {
     return { IAShadow, IBShadow, IA, IB, A, B }
   }
 
+  test("test direct interception", () => {
+    const func = (i: number, s: string) => i + s.length;
+    func.x = 42;
+    const fi = interceptFunction(func, null, "tester");
+    const argObserver = fi.onArgsObserverAdd(jest.fn());
+    const valueObserver = fi.onValueObserverAdd(jest.fn());
+    expect(fi.getOriginal()).toStrictEqual(func);
+    expect(fi.interceptor.x).toBe(func.x);
+    const result = fi.interceptor(10, "12345");
+    expect(result).toBe(15);
+    expect(argObserver).toBeCalledTimes(1);
+    expect(argObserver).toBeCalledWith(10, "12345");
+    expect(valueObserver).toBeCalledWith(15);
+
+    const fi2 = interceptFunction(func, null, "test2");
+    const fi3 = interceptFunction(fi.interceptor, null, "test3");
+    expect(fi2).toStrictEqual(fi);
+    expect(fi3).toStrictEqual(fi);
+  });
 
   test("test .original", () => {
     const { IBShadow, IA, IB, B } = testSetup();

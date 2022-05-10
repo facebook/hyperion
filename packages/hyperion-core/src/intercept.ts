@@ -5,6 +5,7 @@
 import { assert } from "@hyperion/global";
 import { hasOwnProperty } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
+import { FuncThisType, FunctionInterceptorBase, InterceptableFunction } from "./FunctionInterceptor";
 
 /**
  * Intercepted objects may carry extra information to link them to the intercepted logic
@@ -139,4 +140,28 @@ export function setVirtualPropertyValue<T>(obj: ExtensibleObject, propName: stri
     assert(!!ext, `Could not get extension for the object`);
   }
   return value;
+}
+
+type ExtendedFuncType<FuncType extends InterceptableFunction> =
+  FuncType &
+  { [ExtensionPropName]?: GenericFunctionInterceptor<ExtendedFuncType<FuncType>> };
+
+export type GenericFunctionInterceptor<FuncType extends InterceptableFunction> =
+  FunctionInterceptorBase<FuncThisType<FuncType>, string, FuncType> &
+  { [index: string]: any };
+
+export function interceptFunction<FuncType extends InterceptableFunction>(
+  func: ExtendedFuncType<FuncType>,
+  fiCtor?: (new (name: string, originalFunc: FuncType) => GenericFunctionInterceptor<ExtendedFuncType<FuncType>>),
+  name: string = `_annonymous`
+): GenericFunctionInterceptor<FuncType> {
+  assert(typeof func === "function", `cannot intercept non-function input`);
+
+  let funcInterceptor = func[ExtensionPropName];
+  if (!funcInterceptor) {
+    funcInterceptor = fiCtor ? new fiCtor(name, func) : new FunctionInterceptorBase(name, func);
+    func[ExtensionPropName] = funcInterceptor;
+    funcInterceptor.interceptor[ExtensionPropName] = funcInterceptor
+  }
+  return funcInterceptor;
 }
