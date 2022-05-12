@@ -50,6 +50,7 @@
     "./packages/hook",
     "./packages/hyperion-core",
     "./packages/hyperion-dom",
+    "./packages/hyperion-flowlet",
     "./packages/hyperion-util"
   ],
   "dependencies": {
@@ -57,6 +58,7 @@
     "@hyperion/hook": "*",
     "@hyperion/hyperion-core": "*",
     "@hyperion/hyperion-dom": "*",
+    "@hyperion/hyperion-flowlet": "*",
     "@hyperion/hyperion-util": "*"
   },
   "devDependencies": {

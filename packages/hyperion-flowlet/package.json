@@ -1,0 +1,28 @@
+{
+  "scope": "@hyperion",
+  "name": "@hyperion/hyperion-flowlet",
+  "description": "Tracking the async execution flow of the application",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "watch": "npm run build -- --watch",
+    "start": "npm run watch",
+    "test": "npm run build & jest"
+  },
+  "workspaces": [
+    "../devtools",
+    "../global",
+    "../hook",
+    "../hyperion-dom"
+  ],
+  "dependencies": {
+    "@hyperion/global": "*",
+    "@hyperion/hook": "*",
+    "@hyperion/hyperion-dom": "*"
+  },
+  "devDependencies": {
+    "@hyperion/devtools": "*",
+    "@types/jest": "^27.4.1"
+  }
+}
