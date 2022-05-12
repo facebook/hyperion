@@ -1,0 +1,11 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+import { DOMShadowPrototype } from "./DOMShadowPrototype";
+import { EventHandlerAttributeInterceptor } from "./EventHandlerAttributeInterceptor";
+import { IEventTargetPrototype } from "./IEventTarget";
+export const IWorkerPrototype = new DOMShadowPrototype(Worker, IEventTargetPrototype, { registerOnPrototype: true });
+export const onmessage = new EventHandlerAttributeInterceptor("onmessage", IWorkerPrototype);
+export const onmessageerror = new EventHandlerAttributeInterceptor("onmessageerror", IWorkerPrototype);
+export const onerror = new EventHandlerAttributeInterceptor("onerror", IWorkerPrototype);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiSVdvcmtlci5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIklXb3JrZXIudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7O0dBRUc7QUFFSCxPQUFPLEVBQUUsa0JBQWtCLEVBQUUsTUFBTSxzQkFBc0IsQ0FBQztBQUMxRCxPQUFPLEVBQUUsZ0NBQWdDLEVBQUUsTUFBTSxvQ0FBb0MsQ0FBQztBQUN0RixPQUFPLEVBQUUscUJBQXFCLEVBQUUsTUFBTSxnQkFBZ0IsQ0FBQztBQUV2RCxNQUFNLENBQUMsTUFBTSxnQkFBZ0IsR0FBRyxJQUFJLGtCQUFrQixDQUFDLE1BQU0sRUFBRSxxQkFBcUIsRUFBRSxFQUFFLG1CQUFtQixFQUFFLElBQUksRUFBRSxDQUFDLENBQUM7QUFFckgsTUFBTSxDQUFDLE1BQU0sU0FBUyxHQUFHLElBQUksZ0NBQWdDLENBQUMsV0FBVyxFQUFFLGdCQUFnQixDQUFDLENBQUM7QUFDN0YsTUFBTSxDQUFDLE1BQU0sY0FBYyxHQUFHLElBQUksZ0NBQWdDLENBQUMsZ0JBQWdCLEVBQUUsZ0JBQWdCLENBQUMsQ0FBQztBQUN2RyxNQUFNLENBQUMsTUFBTSxPQUFPLEdBQUcsSUFBSSxnQ0FBZ0MsQ0FBQyxTQUFTLEVBQUUsZ0JBQWdCLENBQUMsQ0FBQyJ9
