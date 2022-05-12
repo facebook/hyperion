@@ -65,7 +65,7 @@ describe('test Promise', () => {
     expect(thenArgsObserver).toBeCalledWith(510);
     expect(thenValueObserver).toBeCalledWith(542);
 
-    IPromise.then.onArgsMapperRemove(argsMapper1)
+    IPromise.then.onArgsMapperRemove(argsMapper1);
 
   });
 
