@@ -38,7 +38,7 @@ const enum InterceptorState {
 
 export type InterceptableConstructor = abstract new (...args: any) => any
 type InterceptableMethod = ((this: any, ...args: any) => any);
-export type InterceptableFunction = InterceptableMethod | InterceptableConstructor;
+export type InterceptableFunction = InterceptableMethod | InterceptableConstructor | Function;
 export type InterceptableObjectType = { [key: string]: InterceptableFunction | any };
 
 const unknownFunc: any = function () {
@@ -48,6 +48,7 @@ const unknownFunc: any = function () {
 export type FuncThisType<T extends InterceptableFunction> =
   T extends (this: infer U, ...arg: any) => any ? U :
   T extends InterceptableConstructor ? never :
+  T extends Function ? Function :
   {};
 
 type FuncParameters<T extends InterceptableFunction> =

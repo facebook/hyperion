@@ -4,7 +4,7 @@
 
 import "./reference";
 
-declare var window: Object;
+declare var window: Window;
 declare var global: Object & {
   __DEV__?: boolean;
   process?: {
@@ -23,3 +23,12 @@ if (
     global["__DEV__"] = true;
   }
 }
+
+const globalScope =
+  typeof globalThis === "object" ? globalThis :
+    typeof global === "object" ? global :
+      typeof window === "object" ? window :
+        typeof self === "object" ? self :
+          {};
+
+export default globalScope;
