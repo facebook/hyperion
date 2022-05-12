@@ -28,10 +28,14 @@ describe("test AsyncCounter", () => {
     const id = setInterval(trigger, 100);
 
     counter.countDown().countDown(4);
+    expect(counter.getCount()).toBe(-5);
+    expect(counter.getSteps()).toBe(2);
 
     const finalCount = await counter.reachTarget();
     clearInterval(id);
 
+    expect(counter.getCount()).toBe(finalCount);
+    expect(counter.getSteps()).toBe(2 + finalCount + 5);
     expect(trigger).toBeCalledTimes(finalCount + 5);
   });
 });
