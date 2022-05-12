@@ -11,7 +11,7 @@
  * - npm run build
  * - <copy the 'hyperion/dist/hyperion.js' file
  *
- * @generated SignedSource<<461dc7c006f6a9e8071ca10b33a98277>>
+ * @generated SignedSource<<b6b55e695dd5ff53624fac30282355d1>>
  */
 
     
@@ -114,6 +114,11 @@ if (typeof global === "object"
         global["__DEV__"] = true;
     }
 }
+const globalScope = typeof globalThis === "object" ? globalThis :
+    typeof global === "object" ? global :
+        typeof window === "object" ? window :
+            typeof self === "object" ? self :
+                {};
 
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
@@ -206,20 +211,20 @@ function copyOwnProperties(src, dest) {
 const unknownFunc = function () {
     console.warn('Unknown or missing function called! ');
 };
-class OnArgsFilter extends Hook {
+class OnArgsMapper extends Hook {
 }
 class OnArgsObserver extends Hook {
 }
-class OnValueFilter extends Hook {
+class OnValueMapper extends Hook {
 }
 class OnValueObserver extends Hook {
 }
 class FunctionInterceptorBase extends PropertyInterceptor {
-    onArgsFilter;
+    onArgsMapper;
     onArgsObserver;
-    onValueFilter;
+    onValueMapper;
     onValueObserver;
-    original;
+    original = unknownFunc;
     customFunc;
     implementation; // usually either the .original or the .customFunc
     interceptor;
@@ -233,7 +238,6 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             // TODO: is there a runtime check we can do to ensure this? e.g. checking func.prototype? Some constructors are functions too! 
             return (that.dispatcherFunc).apply(this, arguments);
         };
-        this.original = originalFunc;
         this.implementation = originalFunc;
         this.dispatcherFunc = this.original; // By default just pass on to original
         this.setOriginal(originalFunc); // to perform any extra bookkeeping
@@ -283,13 +287,13 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             [2 /* Has________VF___ */]: fi => function () {
                 let result;
                 result = fi.implementation.apply(this, arguments);
-                result = fi.onValueFilter.call.call(this, result);
+                result = fi.onValueMapper.call.call(this, result);
                 return result;
             },
             [3 /* Has________VF_VO */]: fi => function () {
                 let result;
                 result = fi.implementation.apply(this, arguments);
-                result = fi.onValueFilter.call.call(this, result);
+                result = fi.onValueMapper.call.call(this, result);
                 fi.onValueObserver.call.call(this, result);
                 return result;
             },
@@ -312,7 +316,7 @@ class FunctionInterceptorBase extends PropertyInterceptor {
                 let result;
                 if (!fi.onArgsObserver.call.apply(this, arguments)) {
                     result = fi.implementation.apply(this, arguments);
-                    result = fi.onValueFilter.call.call(this, result);
+                    result = fi.onValueMapper.call.call(this, result);
                 }
                 return result;
             },
@@ -320,42 +324,42 @@ class FunctionInterceptorBase extends PropertyInterceptor {
                 let result;
                 if (!fi.onArgsObserver.call.apply(this, arguments)) {
                     result = fi.implementation.apply(this, arguments);
-                    result = fi.onValueFilter.call.call(this, result);
+                    result = fi.onValueMapper.call.call(this, result);
                     fi.onValueObserver.call.call(this, result);
                 }
                 return result;
             },
             [8 /* Has_AF__________ */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 result = fi.implementation.apply(this, filteredArgs);
                 return result;
             },
             [9 /* Has_AF________VO */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 result = fi.implementation.apply(this, filteredArgs);
                 fi.onValueObserver.call.call(this, result);
                 return result;
             },
             [10 /* Has_AF_____VF___ */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 result = fi.implementation.apply(this, filteredArgs);
-                result = fi.onValueFilter.call.call(this, result);
+                result = fi.onValueMapper.call.call(this, result);
                 return result;
             },
             [11 /* Has_AF_____VF_VO */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 result = fi.implementation.apply(this, filteredArgs);
-                result = fi.onValueFilter.call.call(this, result);
+                result = fi.onValueMapper.call.call(this, result);
                 fi.onValueObserver.call.call(this, result);
                 return result;
             },
             [12 /* Has_AF_AO_______ */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
                     result = fi.implementation.apply(this, filteredArgs);
                 }
@@ -363,7 +367,7 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             },
             [13 /* Has_AF_AO_____VO */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
                     result = fi.implementation.apply(this, filteredArgs);
                     fi.onValueObserver.call.call(this, result);
@@ -372,19 +376,19 @@ class FunctionInterceptorBase extends PropertyInterceptor {
             },
             [14 /* Has_AF_AO__VF___ */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
                     result = fi.implementation.apply(this, filteredArgs);
-                    result = fi.onValueFilter.call.call(this, result);
+                    result = fi.onValueMapper.call.call(this, result);
                 }
                 return result;
             },
             [15 /* Has_AF_AO__VF_VO */]: fi => function () {
                 let result;
-                const filteredArgs = fi.onArgsFilter.call.call(this, arguments); //Pass as an array
+                const filteredArgs = fi.onArgsMapper.call.call(this, arguments); //Pass as an array
                 if (!fi.onArgsObserver.call.apply(this, filteredArgs)) {
                     result = fi.implementation.apply(this, filteredArgs);
-                    result = fi.onValueFilter.call.call(this, result);
+                    result = fi.onValueMapper.call.call(this, result);
                     fi.onValueObserver.call.call(this, result);
                 }
                 return result;
@@ -392,13 +396,13 @@ class FunctionInterceptorBase extends PropertyInterceptor {
         };
         if (__DEV__) {
             // just to make sure we caovered all cases correctly
-            for (let i = 8 /* HasArgsFilter */ | 4 /* HasArgsObserver */ | 2 /* HasValueFilter */ | 1 /* HasValueObserver */; i >= 0; --i) {
+            for (let i = 8 /* HasArgsMapper */ | 4 /* HasArgsObserver */ | 2 /* HasValueMapper */ | 1 /* HasValueObserver */; i >= 0; --i) {
                 const ctor = ctors[i];
                 assert(!!ctor, `unhandled interceptor state ${i}`);
                 ctors[i] = fi => {
-                    assert((i & 8 /* HasArgsFilter */) === 0 || !!fi.onArgsFilter, `missing expected .onArgsFilter for state ${i}`);
+                    assert((i & 8 /* HasArgsMapper */) === 0 || !!fi.onArgsMapper, `missing expected .onArgsFilter for state ${i}`);
                     assert((i & 4 /* HasArgsObserver */) === 0 || !!fi.onArgsObserver, `missing expected .onArgsObserver for state ${i}`);
-                    assert((i & 2 /* HasValueFilter */) === 0 || !!fi.onValueFilter, `missing expected .onValueFilter for state ${i}`);
+                    assert((i & 2 /* HasValueMapper */) === 0 || !!fi.onValueMapper, `missing expected .onValueFilter for state ${i}`);
                     assert((i & 1 /* HasValueObserver */) === 0 || !!fi.onValueObserver, `missing expected .onValueObserver for state ${i}`);
                     return ctor(fi);
                 };
@@ -408,9 +412,9 @@ class FunctionInterceptorBase extends PropertyInterceptor {
     })();
     updateDispatcherFunc() {
         let state = 0;
-        state |= this.onArgsFilter ? 8 /* HasArgsFilter */ : 0;
+        state |= this.onArgsMapper ? 8 /* HasArgsMapper */ : 0;
         state |= this.onArgsObserver ? 4 /* HasArgsObserver */ : 0;
-        state |= this.onValueFilter ? 2 /* HasValueFilter */ : 0;
+        state |= this.onValueMapper ? 2 /* HasValueMapper */ : 0;
         state |= this.onValueObserver ? 1 /* HasValueObserver */ : 0;
         //TODO: Check a cached version first
         const dispatcherCtor = FunctionInterceptorBase.dispatcherCtors[state];
@@ -418,15 +422,15 @@ class FunctionInterceptorBase extends PropertyInterceptor {
         this.dispatcherFunc = dispatcherCtor(this);
     }
     //#region helper function to lazily extend hooks
-    onArgsFilterAdd(cb) {
-        if (!this.onArgsFilter) {
-            this.onArgsFilter = new OnArgsFilter();
+    onArgsMapperAdd(cb) {
+        if (!this.onArgsMapper) {
+            this.onArgsMapper = new OnArgsMapper();
             this.updateDispatcherFunc();
         }
-        return this.onArgsFilter.add(cb);
+        return this.onArgsMapper.add(cb);
     }
-    onArgsFilterRemove(cb) {
-        if (this.onArgsFilter?.remove(cb)) {
+    onArgsMapperRemove(cb) {
+        if (this.onArgsMapper?.remove(cb)) {
             this.updateDispatcherFunc();
         }
         return cb;
@@ -444,15 +448,15 @@ class FunctionInterceptorBase extends PropertyInterceptor {
         }
         return cb;
     }
-    onValueFilterAdd(cb) {
-        if (!this.onValueFilter) {
-            this.onValueFilter = new OnValueFilter();
+    onValueMapperAdd(cb) {
+        if (!this.onValueMapper) {
+            this.onValueMapper = new OnValueMapper();
             this.updateDispatcherFunc();
         }
-        return this.onValueFilter.add(cb);
+        return this.onValueMapper.add(cb);
     }
-    onValueFilterRemove(cb) {
-        if (this.onValueFilter?.remove(cb)) {
+    onValueMapperRemove(cb) {
+        if (this.onValueMapper?.remove(cb)) {
             this.updateDispatcherFunc();
         }
         return cb;
@@ -738,6 +742,16 @@ function setVirtualPropertyValue(obj, propName, value) {
     }
     return value;
 }
+function interceptFunction(func, fiCtor, name = `_annonymous`) {
+    assert(typeof func === "function", `cannot intercept non-function input`);
+    let funcInterceptor = func[ExtensionPropName];
+    if (!funcInterceptor) {
+        funcInterceptor = fiCtor ? new fiCtor(name, func) : new FunctionInterceptorBase(name, func);
+        func[ExtensionPropName] = funcInterceptor;
+        funcInterceptor.interceptor[ExtensionPropName] = funcInterceptor;
+    }
+    return funcInterceptor;
+}
 
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
@@ -839,9 +853,9 @@ function getVirtualAttribute(obj, name) {
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 const IEventTargetPrototype = new DOMShadowPrototype(EventTarget, null, { sampleObject: sampleHTMLElement });
-new FunctionInterceptor('addEventListener', IEventTargetPrototype);
+const addEventListener = new FunctionInterceptor('addEventListener', IEventTargetPrototype);
 new FunctionInterceptor('dispatchEvent', IEventTargetPrototype);
-new FunctionInterceptor('removeEventListener', IEventTargetPrototype);
+const removeEventListener = new FunctionInterceptor('removeEventListener', IEventTargetPrototype);
 
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
@@ -1299,9 +1313,27 @@ class ConstructorInterceptor extends FunctionInterceptor {
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
+class EventHandlerAttributeInterceptor extends AttributeInterceptor {
+}
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 const IWindowPrototype = new DOMShadowPrototype(Window, IEventTargetPrototype, { sampleObject: window, registerOnPrototype: true });
 const fetch = new FunctionInterceptor("fetch", IWindowPrototype);
+new FunctionInterceptor("requestAnimationFrame", IWindowPrototype);
+new FunctionInterceptor("requestIdleCallback", IWindowPrototype);
+new FunctionInterceptor("setInterval", IWindowPrototype);
+new FunctionInterceptor("setTimeout", IWindowPrototype);
+new ConstructorInterceptor("IntersectionObserver", IWindowPrototype);
+new ConstructorInterceptor("MutationObserver", IWindowPrototype);
 new ConstructorInterceptor("XMLHttpRequest", IWindowPrototype);
+//#region Event Handlers https://developer.mozilla.org/en-US/docs/Web/API/Window#event_handlers
+new EventHandlerAttributeInterceptor("onerror", IWindowPrototype);
+const ondevicemotion = new EventHandlerAttributeInterceptor("ondevicemotion", IWindowPrototype);
+const ondeviceorientation = new EventHandlerAttributeInterceptor("ondeviceorientation", IWindowPrototype);
+const onorientationchange = new EventHandlerAttributeInterceptor("onorientationchange", IWindowPrototype);
+//#endretion
 
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
@@ -1310,6 +1342,13 @@ const IXMLHttpRequestPrototype = new DOMShadowPrototype(XMLHttpRequest, IEventTa
 const open = new FunctionInterceptor("open", IXMLHttpRequestPrototype);
 const send = new FunctionInterceptor("send", IXMLHttpRequestPrototype);
 new AttributeInterceptor("withCredentials", IXMLHttpRequestPrototype);
+const onabort$1 = new EventHandlerAttributeInterceptor("onabort", IXMLHttpRequestPrototype);
+const onerror = new EventHandlerAttributeInterceptor("onerror", IXMLHttpRequestPrototype);
+const onload$1 = new EventHandlerAttributeInterceptor("onload", IXMLHttpRequestPrototype);
+const onloadend = new EventHandlerAttributeInterceptor("onloadend", IXMLHttpRequestPrototype);
+const onloadstart$1 = new EventHandlerAttributeInterceptor("onloadstart", IXMLHttpRequestPrototype);
+const onprogress$1 = new EventHandlerAttributeInterceptor("onprogress", IXMLHttpRequestPrototype);
+const ontimeout = new EventHandlerAttributeInterceptor("ontimeout", IXMLHttpRequestPrototype);
 
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
@@ -1349,4 +1388,413 @@ send.onArgsObserverAdd(function (_body) {
 //#endregion
 //TODO: do we care about sendBeacon as well?
 
-export { SyncMutationObserver, getVirtualPropertyValue, onNetworkRequest, setVirtualPropertyValue, trackElementsWithAttributes };
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+function isEventListenerObject(func) {
+    return typeof func === "object" && typeof func.handleEvent == "function";
+}
+function interceptEventListener(listener) {
+    let funcInterceptor;
+    if (isEventListenerObject(listener)) {
+        funcInterceptor = interceptFunction(listener.handleEvent);
+        listener.handleEvent = funcInterceptor.interceptor;
+    }
+    else {
+        funcInterceptor = interceptFunction(listener);
+    }
+    return funcInterceptor;
+}
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+const IHTMLElementtPrototype = new DOMShadowPrototype(HTMLElement, IElementtPrototype, {
+    sampleObject: sampleHTMLElement,
+    nodeType: document.ELEMENT_NODE
+});
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+// Technically we can chose any of HTMLElement, SVGElement, or MathElement
+const IGlobalEventHandlersPrototype = IHTMLElementtPrototype;
+//#region global Event Handlers https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers
+const onabort = new EventHandlerAttributeInterceptor("onabort", IGlobalEventHandlersPrototype);
+const onanimationcancel = new EventHandlerAttributeInterceptor("onanimationcancel", IGlobalEventHandlersPrototype);
+const onanimationend = new EventHandlerAttributeInterceptor("onanimationend", IGlobalEventHandlersPrototype);
+const onanimationiteration = new EventHandlerAttributeInterceptor("onanimationiteration", IGlobalEventHandlersPrototype);
+const onanimationstart = new EventHandlerAttributeInterceptor("onanimationstart", IGlobalEventHandlersPrototype);
+const onauxclick = new EventHandlerAttributeInterceptor("onauxclick", IGlobalEventHandlersPrototype);
+const onblur = new EventHandlerAttributeInterceptor("onblur", IGlobalEventHandlersPrototype);
+const oncanplay = new EventHandlerAttributeInterceptor("oncanplay", IGlobalEventHandlersPrototype);
+const oncanplaythrough = new EventHandlerAttributeInterceptor("oncanplaythrough", IGlobalEventHandlersPrototype);
+const onchange = new EventHandlerAttributeInterceptor("onchange", IGlobalEventHandlersPrototype);
+const onclick = new EventHandlerAttributeInterceptor("onclick", IGlobalEventHandlersPrototype);
+const onclose = new EventHandlerAttributeInterceptor("onclose", IGlobalEventHandlersPrototype);
+const oncontextmenu = new EventHandlerAttributeInterceptor("oncontextmenu", IGlobalEventHandlersPrototype);
+const oncuechange = new EventHandlerAttributeInterceptor("oncuechange", IGlobalEventHandlersPrototype);
+const ondblclick = new EventHandlerAttributeInterceptor("ondblclick", IGlobalEventHandlersPrototype);
+const ondrag = new EventHandlerAttributeInterceptor("ondrag", IGlobalEventHandlersPrototype);
+const ondragend = new EventHandlerAttributeInterceptor("ondragend", IGlobalEventHandlersPrototype);
+const ondragenter = new EventHandlerAttributeInterceptor("ondragenter", IGlobalEventHandlersPrototype);
+const ondragleave = new EventHandlerAttributeInterceptor("ondragleave", IGlobalEventHandlersPrototype);
+const ondragover = new EventHandlerAttributeInterceptor("ondragover", IGlobalEventHandlersPrototype);
+const ondragstart = new EventHandlerAttributeInterceptor("ondragstart", IGlobalEventHandlersPrototype);
+const ondrop = new EventHandlerAttributeInterceptor("ondrop", IGlobalEventHandlersPrototype);
+const ondurationchange = new EventHandlerAttributeInterceptor("ondurationchange", IGlobalEventHandlersPrototype);
+const onemptied = new EventHandlerAttributeInterceptor("onemptied", IGlobalEventHandlersPrototype);
+const onended = new EventHandlerAttributeInterceptor("onended", IGlobalEventHandlersPrototype);
+const onfocus = new EventHandlerAttributeInterceptor("onfocus", IGlobalEventHandlersPrototype);
+const onformdata = new EventHandlerAttributeInterceptor("onformdata", IGlobalEventHandlersPrototype);
+const ongotpointercapture = new EventHandlerAttributeInterceptor("ongotpointercapture", IGlobalEventHandlersPrototype);
+const oninput = new EventHandlerAttributeInterceptor("oninput", IGlobalEventHandlersPrototype);
+const oninvalid = new EventHandlerAttributeInterceptor("oninvalid", IGlobalEventHandlersPrototype);
+const onkeydown = new EventHandlerAttributeInterceptor("onkeydown", IGlobalEventHandlersPrototype);
+const onkeypress = new EventHandlerAttributeInterceptor("onkeypress", IGlobalEventHandlersPrototype);
+const onkeyup = new EventHandlerAttributeInterceptor("onkeyup", IGlobalEventHandlersPrototype);
+const onload = new EventHandlerAttributeInterceptor("onload", IGlobalEventHandlersPrototype);
+const onloadeddata = new EventHandlerAttributeInterceptor("onloadeddata", IGlobalEventHandlersPrototype);
+const onloadedmetadata = new EventHandlerAttributeInterceptor("onloadedmetadata", IGlobalEventHandlersPrototype);
+const onloadstart = new EventHandlerAttributeInterceptor("onloadstart", IGlobalEventHandlersPrototype);
+const onlostpointercapture = new EventHandlerAttributeInterceptor("onlostpointercapture", IGlobalEventHandlersPrototype);
+const onmousedown = new EventHandlerAttributeInterceptor("onmousedown", IGlobalEventHandlersPrototype);
+const onmouseenter = new EventHandlerAttributeInterceptor("onmouseenter", IGlobalEventHandlersPrototype);
+const onmouseleave = new EventHandlerAttributeInterceptor("onmouseleave", IGlobalEventHandlersPrototype);
+const onmousemove = new EventHandlerAttributeInterceptor("onmousemove", IGlobalEventHandlersPrototype);
+const onmouseout = new EventHandlerAttributeInterceptor("onmouseout", IGlobalEventHandlersPrototype);
+const onmouseover = new EventHandlerAttributeInterceptor("onmouseover", IGlobalEventHandlersPrototype);
+const onmouseup = new EventHandlerAttributeInterceptor("onmouseup", IGlobalEventHandlersPrototype);
+const onpause = new EventHandlerAttributeInterceptor("onpause", IGlobalEventHandlersPrototype);
+const onplay = new EventHandlerAttributeInterceptor("onplay", IGlobalEventHandlersPrototype);
+const onplaying = new EventHandlerAttributeInterceptor("onplaying", IGlobalEventHandlersPrototype);
+const onpointercancel = new EventHandlerAttributeInterceptor("onpointercancel", IGlobalEventHandlersPrototype);
+const onpointerdown = new EventHandlerAttributeInterceptor("onpointerdown", IGlobalEventHandlersPrototype);
+const onpointerenter = new EventHandlerAttributeInterceptor("onpointerenter", IGlobalEventHandlersPrototype);
+const onpointerleave = new EventHandlerAttributeInterceptor("onpointerleave", IGlobalEventHandlersPrototype);
+const onpointermove = new EventHandlerAttributeInterceptor("onpointermove", IGlobalEventHandlersPrototype);
+const onpointerout = new EventHandlerAttributeInterceptor("onpointerout", IGlobalEventHandlersPrototype);
+const onpointerover = new EventHandlerAttributeInterceptor("onpointerover", IGlobalEventHandlersPrototype);
+const onpointerup = new EventHandlerAttributeInterceptor("onpointerup", IGlobalEventHandlersPrototype);
+const onprogress = new EventHandlerAttributeInterceptor("onprogress", IGlobalEventHandlersPrototype);
+const onratechange = new EventHandlerAttributeInterceptor("onratechange", IGlobalEventHandlersPrototype);
+const onreset = new EventHandlerAttributeInterceptor("onreset", IGlobalEventHandlersPrototype);
+const onresize = new EventHandlerAttributeInterceptor("onresize", IGlobalEventHandlersPrototype);
+const onscroll = new EventHandlerAttributeInterceptor("onscroll", IGlobalEventHandlersPrototype);
+const onsecuritypolicyviolation = new EventHandlerAttributeInterceptor("onsecuritypolicyviolation", IGlobalEventHandlersPrototype);
+const onseeked = new EventHandlerAttributeInterceptor("onseeked", IGlobalEventHandlersPrototype);
+const onseeking = new EventHandlerAttributeInterceptor("onseeking", IGlobalEventHandlersPrototype);
+const onselect = new EventHandlerAttributeInterceptor("onselect", IGlobalEventHandlersPrototype);
+const onselectionchange = new EventHandlerAttributeInterceptor("onselectionchange", IGlobalEventHandlersPrototype);
+const onselectstart = new EventHandlerAttributeInterceptor("onselectstart", IGlobalEventHandlersPrototype);
+const onslotchange = new EventHandlerAttributeInterceptor("onslotchange", IGlobalEventHandlersPrototype);
+const onstalled = new EventHandlerAttributeInterceptor("onstalled", IGlobalEventHandlersPrototype);
+const onsubmit = new EventHandlerAttributeInterceptor("onsubmit", IGlobalEventHandlersPrototype);
+const onsuspend = new EventHandlerAttributeInterceptor("onsuspend", IGlobalEventHandlersPrototype);
+const ontimeupdate = new EventHandlerAttributeInterceptor("ontimeupdate", IGlobalEventHandlersPrototype);
+const ontoggle = new EventHandlerAttributeInterceptor("ontoggle", IGlobalEventHandlersPrototype);
+const ontouchcancel = new EventHandlerAttributeInterceptor("ontouchcancel", IGlobalEventHandlersPrototype);
+const ontouchend = new EventHandlerAttributeInterceptor("ontouchend", IGlobalEventHandlersPrototype);
+const ontouchmove = new EventHandlerAttributeInterceptor("ontouchmove", IGlobalEventHandlersPrototype);
+const ontouchstart = new EventHandlerAttributeInterceptor("ontouchstart", IGlobalEventHandlersPrototype);
+const ontransitioncancel = new EventHandlerAttributeInterceptor("ontransitioncancel", IGlobalEventHandlersPrototype);
+const ontransitionend = new EventHandlerAttributeInterceptor("ontransitionend", IGlobalEventHandlersPrototype);
+const ontransitionrun = new EventHandlerAttributeInterceptor("ontransitionrun", IGlobalEventHandlersPrototype);
+const ontransitionstart = new EventHandlerAttributeInterceptor("ontransitionstart", IGlobalEventHandlersPrototype);
+const onvolumechange = new EventHandlerAttributeInterceptor("onvolumechange", IGlobalEventHandlersPrototype);
+const onwaiting = new EventHandlerAttributeInterceptor("onwaiting", IGlobalEventHandlersPrototype);
+const onwebkitanimationend = new EventHandlerAttributeInterceptor("onwebkitanimationend", IGlobalEventHandlersPrototype);
+const onwebkitanimationiteration = new EventHandlerAttributeInterceptor("onwebkitanimationiteration", IGlobalEventHandlersPrototype);
+const onwebkitanimationstart = new EventHandlerAttributeInterceptor("onwebkitanimationstart", IGlobalEventHandlersPrototype);
+const onwebkittransitionend = new EventHandlerAttributeInterceptor("onwebkittransitionend", IGlobalEventHandlersPrototype);
+const onwheel = new EventHandlerAttributeInterceptor("onwheel", IGlobalEventHandlersPrototype);
+const onafterprint = new EventHandlerAttributeInterceptor("onafterprint", IGlobalEventHandlersPrototype);
+const onbeforeprint = new EventHandlerAttributeInterceptor("onbeforeprint", IGlobalEventHandlersPrototype);
+const onbeforeunload = new EventHandlerAttributeInterceptor("onbeforeunload", IGlobalEventHandlersPrototype);
+const ongamepadconnected = new EventHandlerAttributeInterceptor("ongamepadconnected", IGlobalEventHandlersPrototype);
+const ongamepaddisconnected = new EventHandlerAttributeInterceptor("ongamepaddisconnected", IGlobalEventHandlersPrototype);
+const onhashchange = new EventHandlerAttributeInterceptor("onhashchange", IGlobalEventHandlersPrototype);
+const onlanguagechange = new EventHandlerAttributeInterceptor("onlanguagechange", IGlobalEventHandlersPrototype);
+const onmessage = new EventHandlerAttributeInterceptor("onmessage", IGlobalEventHandlersPrototype);
+const onmessageerror = new EventHandlerAttributeInterceptor("onmessageerror", IGlobalEventHandlersPrototype);
+const onoffline = new EventHandlerAttributeInterceptor("onoffline", IGlobalEventHandlersPrototype);
+const ononline = new EventHandlerAttributeInterceptor("ononline", IGlobalEventHandlersPrototype);
+const onpagehide = new EventHandlerAttributeInterceptor("onpagehide", IGlobalEventHandlersPrototype);
+const onpageshow = new EventHandlerAttributeInterceptor("onpageshow", IGlobalEventHandlersPrototype);
+const onpopstate = new EventHandlerAttributeInterceptor("onpopstate", IGlobalEventHandlersPrototype);
+const onrejectionhandled = new EventHandlerAttributeInterceptor("onrejectionhandled", IGlobalEventHandlersPrototype);
+const onstorage = new EventHandlerAttributeInterceptor("onstorage", IGlobalEventHandlersPrototype);
+const onunhandledrejection = new EventHandlerAttributeInterceptor("onunhandledrejection", IGlobalEventHandlersPrototype);
+const onunload = new EventHandlerAttributeInterceptor("onunload", IGlobalEventHandlersPrototype);
+//#endretion
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+const PromisePrototype = Object.getPrototypeOf(Promise.resolve());
+const IPromisePrototype = new ShadowPrototype(PromisePrototype, null);
+const then = new FunctionInterceptor("then", IPromisePrototype);
+const Catch = new FunctionInterceptor("catch", IPromisePrototype);
+registerShadowPrototype(PromisePrototype, IPromisePrototype);
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+const IGlobalThisPrototype = new ShadowPrototype(globalScope, null);
+const setInterval = new FunctionInterceptor("setInterval", IGlobalThisPrototype);
+const setTimeout = new FunctionInterceptor("setTimeout", IGlobalThisPrototype);
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+function initFlowletTrackers(flowletManager) {
+    const IS_SETUP_PROP_NAME = `__isSetup`;
+    function wrap(listener) {
+        if (!listener) {
+            return listener;
+        }
+        const currentFLowlet = flowletManager.top();
+        if (!currentFLowlet) {
+            return listener;
+        }
+        const funcInterceptor = interceptEventListener(listener);
+        if (!funcInterceptor[IS_SETUP_PROP_NAME]) {
+            funcInterceptor[IS_SETUP_PROP_NAME] = true;
+            funcInterceptor.onArgsObserverAdd(() => {
+                flowletManager.push(currentFLowlet);
+            });
+            funcInterceptor.onValueObserverAdd(() => {
+                flowletManager.pop(currentFLowlet);
+            });
+            // funcInterceptor.setCustom(function (this: any) {
+            //   const handler = funcInterceptor.getOriginal();
+            //   if (flowletManager.top() === currentFLowlet) {
+            //     return handler.apply(this, <any>arguments);
+            //   }
+            //   let res;
+            //   try {
+            //     flowletManager.push(currentFLowlet);
+            //     res = handler.apply(this, <any>arguments);
+            //   } finally {
+            //     flowletManager.pop(currentFLowlet);
+            //   }
+            //   return res;
+            // })
+        }
+        return isEventListenerObject(listener) ? listener : funcInterceptor.interceptor;
+    }
+    function unwrap(listener) {
+        if (listener && !isEventListenerObject(listener) && isIntercepted(listener)) {
+            const funcInterceptor = interceptEventListener(listener);
+            return funcInterceptor.getOriginal();
+        }
+        return listener;
+    }
+    for (const eventHandler of [
+        ondevicemotion,
+        ondeviceorientation,
+        onorientationchange,
+        onabort,
+        onanimationcancel,
+        onanimationend,
+        onanimationiteration,
+        onanimationstart,
+        onauxclick,
+        onblur,
+        oncanplay,
+        oncanplaythrough,
+        onchange,
+        onclick,
+        onclose,
+        oncontextmenu,
+        oncuechange,
+        ondblclick,
+        ondrag,
+        ondragend,
+        ondragenter,
+        ondragleave,
+        ondragover,
+        ondragstart,
+        ondrop,
+        ondurationchange,
+        onemptied,
+        onended,
+        onfocus,
+        onformdata,
+        ongotpointercapture,
+        oninput,
+        oninvalid,
+        onkeydown,
+        onkeypress,
+        onkeyup,
+        onload,
+        onloadeddata,
+        onloadedmetadata,
+        onloadstart,
+        onlostpointercapture,
+        onmousedown,
+        onmouseenter,
+        onmouseleave,
+        onmousemove,
+        onmouseout,
+        onmouseover,
+        onmouseup,
+        onpause,
+        onplay,
+        onplaying,
+        onpointercancel,
+        onpointerdown,
+        onpointerenter,
+        onpointerleave,
+        onpointermove,
+        onpointerout,
+        onpointerover,
+        onpointerup,
+        onprogress,
+        onratechange,
+        onreset,
+        onresize,
+        onscroll,
+        onsecuritypolicyviolation,
+        onseeked,
+        onseeking,
+        onselect,
+        onselectionchange,
+        onselectstart,
+        onslotchange,
+        onstalled,
+        onsubmit,
+        onsuspend,
+        ontimeupdate,
+        ontoggle,
+        ontouchcancel,
+        ontouchend,
+        ontouchmove,
+        ontouchstart,
+        ontransitioncancel,
+        ontransitionend,
+        ontransitionrun,
+        ontransitionstart,
+        onvolumechange,
+        onwaiting,
+        onwebkitanimationend,
+        onwebkitanimationiteration,
+        onwebkitanimationstart,
+        onwebkittransitionend,
+        onwheel,
+        onafterprint,
+        onbeforeprint,
+        onbeforeunload,
+        ongamepadconnected,
+        ongamepaddisconnected,
+        onhashchange,
+        onlanguagechange,
+        onmessage,
+        onmessageerror,
+        onoffline,
+        ononline,
+        onpagehide,
+        onpageshow,
+        onpopstate,
+        onrejectionhandled,
+        onstorage,
+        onunhandledrejection,
+        onunload,
+        // IWorker.onmessage,
+        // IWorker.onmessageerror,
+        // IWorker.onerror,
+        onabort$1,
+        onerror,
+        onload$1,
+        onloadend,
+        onloadstart$1,
+        onprogress$1,
+        ontimeout,
+    ]) {
+        eventHandler.setter.onArgsMapperAdd(function (args) {
+            const func = args[0];
+            args[0] = wrap(func);
+            return args;
+        });
+    }
+    for (const fi of [
+        setTimeout,
+        setInterval
+    ]) {
+        fi.onArgsMapperAdd(args => {
+            let handler = args[0];
+            if (typeof handler === "string") {
+                handler = new Function(handler);
+            }
+            args[0] = wrap(handler);
+            return args;
+        });
+    }
+    then.onArgsMapperAdd(args => {
+        args[0] = wrap(args[0]);
+        args[1] = wrap(args[1]);
+        return args;
+    });
+    Catch.onArgsMapperAdd(args => {
+        args[0] = wrap(args[0]);
+        return args;
+    });
+    addEventListener.onArgsMapperAdd(args => {
+        args[1] = wrap(args[1]);
+        return args;
+    });
+    removeEventListener.onArgsMapperAdd(args => {
+        args[1] = unwrap(args[1]);
+        return args;
+    });
+}
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+class Flowlet {
+    name;
+    parent;
+    constructor(name, parent) {
+        this.name = name;
+        this.parent = parent;
+    }
+    fullName() {
+        return `${this.parent?.fullName() ?? ""}/${this.name}`;
+    }
+    fork(name) {
+        return new Flowlet(name, this);
+    }
+}
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+class FlowletManager {
+    flowletStack = [];
+    top() {
+        const last = this.flowletStack.length - 1;
+        return last >= 0 ? this.flowletStack[last] : null;
+    }
+    push(flowlet) {
+        this.flowletStack.push(flowlet);
+        this.onPush.call(flowlet);
+        return flowlet;
+    }
+    onPush = new Hook();
+    /**
+     * pop and return top of stack
+     * @param flowlet if passed, asserts top matches the input
+     * @returns top of the stack or null
+     */
+    pop(flowlet) {
+        let currTop = this.top();
+        __DEV__ && assert(!flowlet || currTop === flowlet, `Incompatible top of the stack`);
+        this.flowletStack.pop();
+        this.onPop.call(currTop);
+        return currTop;
+    }
+    onPop = new Hook();
+}
+
+export { Flowlet, FlowletManager, SyncMutationObserver, getVirtualPropertyValue, initFlowletTrackers, onNetworkRequest, setVirtualPropertyValue, trackElementsWithAttributes };
