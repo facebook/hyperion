@@ -11,7 +11,7 @@
  * - npm run build
  * - <copy the 'hyperion/dist/hyperion.js' file
  *
- * @generated SignedSource<<b6b55e695dd5ff53624fac30282355d1>>
+ * @generated SignedSource<<fbc5eb81c64f3eaacd2d000135c5e1a0>>
  */
 
     
@@ -806,7 +806,7 @@ class DOMShadowPrototype extends ShadowPrototype {
                 targetPrototype = Object.getPrototypeOf(obj);
             }
         }
-        assert(typeof targetPrototype === "object", `Cannot create shadow prototype for undefined`);
+        assert(targetPrototype && typeof targetPrototype === "object", `Cannot create shadow prototype for undefined`);
         super(targetPrototype, parentShadoPrototype);
         if (options) {
             const { nodeName, nodeType } = options;
@@ -1343,7 +1343,7 @@ const open = new FunctionInterceptor("open", IXMLHttpRequestPrototype);
 const send = new FunctionInterceptor("send", IXMLHttpRequestPrototype);
 new AttributeInterceptor("withCredentials", IXMLHttpRequestPrototype);
 const onabort$1 = new EventHandlerAttributeInterceptor("onabort", IXMLHttpRequestPrototype);
-const onerror = new EventHandlerAttributeInterceptor("onerror", IXMLHttpRequestPrototype);
+const onerror$1 = new EventHandlerAttributeInterceptor("onerror", IXMLHttpRequestPrototype);
 const onload$1 = new EventHandlerAttributeInterceptor("onload", IXMLHttpRequestPrototype);
 const onloadend = new EventHandlerAttributeInterceptor("onloadend", IXMLHttpRequestPrototype);
 const onloadstart$1 = new EventHandlerAttributeInterceptor("onloadstart", IXMLHttpRequestPrototype);
@@ -1515,8 +1515,8 @@ const ongamepadconnected = new EventHandlerAttributeInterceptor("ongamepadconnec
 const ongamepaddisconnected = new EventHandlerAttributeInterceptor("ongamepaddisconnected", IGlobalEventHandlersPrototype);
 const onhashchange = new EventHandlerAttributeInterceptor("onhashchange", IGlobalEventHandlersPrototype);
 const onlanguagechange = new EventHandlerAttributeInterceptor("onlanguagechange", IGlobalEventHandlersPrototype);
-const onmessage = new EventHandlerAttributeInterceptor("onmessage", IGlobalEventHandlersPrototype);
-const onmessageerror = new EventHandlerAttributeInterceptor("onmessageerror", IGlobalEventHandlersPrototype);
+const onmessage$1 = new EventHandlerAttributeInterceptor("onmessage", IGlobalEventHandlersPrototype);
+const onmessageerror$1 = new EventHandlerAttributeInterceptor("onmessageerror", IGlobalEventHandlersPrototype);
 const onoffline = new EventHandlerAttributeInterceptor("onoffline", IGlobalEventHandlersPrototype);
 const ononline = new EventHandlerAttributeInterceptor("ononline", IGlobalEventHandlersPrototype);
 const onpagehide = new EventHandlerAttributeInterceptor("onpagehide", IGlobalEventHandlersPrototype);
@@ -1547,9 +1547,22 @@ const setTimeout = new FunctionInterceptor("setTimeout", IGlobalThisPrototype);
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
+/**
+ * In jest environment Worker is not defined. The following will allow tests to run
+ * while actually keeping the feature enabled for browsers.
+ */
+const WorkerClass = window.Worker ?? { prototype: IEventTargetPrototype.targetPrototype, };
+const IWorkerPrototype = new DOMShadowPrototype(WorkerClass, IEventTargetPrototype, { registerOnPrototype: true });
+const onmessage = new EventHandlerAttributeInterceptor("onmessage", IWorkerPrototype);
+const onmessageerror = new EventHandlerAttributeInterceptor("onmessageerror", IWorkerPrototype);
+const onerror = new EventHandlerAttributeInterceptor("onerror", IWorkerPrototype);
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 function initFlowletTrackers(flowletManager) {
     const IS_SETUP_PROP_NAME = `__isSetup`;
-    function wrap(listener) {
+    function wrap(listener, apiName) {
         if (!listener) {
             return listener;
         }
@@ -1560,26 +1573,31 @@ function initFlowletTrackers(flowletManager) {
         const funcInterceptor = interceptEventListener(listener);
         if (!funcInterceptor[IS_SETUP_PROP_NAME]) {
             funcInterceptor[IS_SETUP_PROP_NAME] = true;
-            funcInterceptor.onArgsObserverAdd(() => {
-                flowletManager.push(currentFLowlet);
-            });
-            funcInterceptor.onValueObserverAdd(() => {
-                flowletManager.pop(currentFLowlet);
-            });
-            // funcInterceptor.setCustom(function (this: any) {
-            //   const handler = funcInterceptor.getOriginal();
-            //   if (flowletManager.top() === currentFLowlet) {
-            //     return handler.apply(this, <any>arguments);
-            //   }
-            //   let res;
-            //   try {
-            //     flowletManager.push(currentFLowlet);
-            //     res = handler.apply(this, <any>arguments);
-            //   } finally {
-            //     flowletManager.pop(currentFLowlet);
-            //   }
-            //   return res;
+            // funcInterceptor.onArgsObserverAdd(() => {
+            //   flowletManager.push(currentFLowlet);
+            // });
+            // funcInterceptor.onValueObserverAdd(() => {
+            //   flowletManager.pop(currentFLowlet);
             // })
+            funcInterceptor.setCustom(function () {
+                const handler = funcInterceptor.getOriginal();
+                if (flowletManager.top() === currentFLowlet) {
+                    return handler.apply(this, arguments);
+                }
+                let res;
+                let flowlet; // using this extra variable to enable .push to change the value if needed
+                try {
+                    flowlet = flowletManager.push(currentFLowlet, apiName);
+                    res = handler.apply(this, arguments);
+                }
+                catch (e) {
+                    console.error('callback throw', e);
+                }
+                finally {
+                    flowletManager.pop(flowlet, apiName);
+                }
+                return res;
+            });
         }
         return isEventListenerObject(listener) ? listener : funcInterceptor.interceptor;
     }
@@ -1689,8 +1707,8 @@ function initFlowletTrackers(flowletManager) {
         ongamepaddisconnected,
         onhashchange,
         onlanguagechange,
-        onmessage,
-        onmessageerror,
+        onmessage$1,
+        onmessageerror$1,
         onoffline,
         ononline,
         onpagehide,
@@ -1700,11 +1718,11 @@ function initFlowletTrackers(flowletManager) {
         onstorage,
         onunhandledrejection,
         onunload,
-        // IWorker.onmessage,
-        // IWorker.onmessageerror,
-        // IWorker.onerror,
-        onabort$1,
+        onmessage,
+        onmessageerror,
         onerror,
+        onabort$1,
+        onerror$1,
         onload$1,
         onloadend,
         onloadstart$1,
@@ -1713,7 +1731,7 @@ function initFlowletTrackers(flowletManager) {
     ]) {
         eventHandler.setter.onArgsMapperAdd(function (args) {
             const func = args[0];
-            args[0] = wrap(func);
+            args[0] = wrap(func, eventHandler.name);
             return args;
         });
     }
@@ -1726,21 +1744,21 @@ function initFlowletTrackers(flowletManager) {
             if (typeof handler === "string") {
                 handler = new Function(handler);
             }
-            args[0] = wrap(handler);
+            args[0] = wrap(handler, fi.name);
             return args;
         });
     }
     then.onArgsMapperAdd(args => {
-        args[0] = wrap(args[0]);
-        args[1] = wrap(args[1]);
+        args[0] = wrap(args[0], then.name);
+        args[1] = wrap(args[1], then.name);
         return args;
     });
     Catch.onArgsMapperAdd(args => {
-        args[0] = wrap(args[0]);
+        args[0] = wrap(args[0], Catch.name);
         return args;
     });
     addEventListener.onArgsMapperAdd(args => {
-        args[1] = wrap(args[1]);
+        args[1] = wrap(args[1], `${addEventListener.name}:${args[0]}`);
         return args;
     });
     removeEventListener.onArgsMapperAdd(args => {
@@ -1776,9 +1794,9 @@ class FlowletManager {
         const last = this.flowletStack.length - 1;
         return last >= 0 ? this.flowletStack[last] : null;
     }
-    push(flowlet) {
+    push(flowlet, reason) {
+        this.onPush.call(flowlet, reason);
         this.flowletStack.push(flowlet);
-        this.onPush.call(flowlet);
         return flowlet;
     }
     onPush = new Hook();
@@ -1787,11 +1805,11 @@ class FlowletManager {
      * @param flowlet if passed, asserts top matches the input
      * @returns top of the stack or null
      */
-    pop(flowlet) {
+    pop(flowlet, reason) {
         let currTop = this.top();
-        __DEV__ && assert(!flowlet || currTop === flowlet, `Incompatible top of the stack`);
+        __DEV__ && assert(!flowlet || currTop === flowlet, `Incompatible top of the stack: expected({${flowlet?.name}}), actual({${currTop?.name}})`);
         this.flowletStack.pop();
-        this.onPop.call(currTop);
+        this.onPop.call(currTop, reason);
         return currTop;
     }
     onPop = new Hook();
