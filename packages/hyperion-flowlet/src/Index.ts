@@ -9,14 +9,14 @@ import * as IGlobalEventHandlers from "@hyperion/hyperion-dom/src/IGlobalEventHa
 import * as IPromise from "@hyperion/hyperion-core/src/IPromise";
 import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 import * as IGlobalThis from "@hyperion/hyperion-core/src/IGlobalThis";
-// import * as IWorker from "@hyperion/hyperion-dom/src/IWorker";
+import * as IWorker from "@hyperion/hyperion-dom/src/IWorker";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
 import { FlowletManager } from "./FlowletManager";
 
 export function initFlowletTrackers(flowletManager: FlowletManager) {
 
   const IS_SETUP_PROP_NAME = `__isSetup`;
-  function wrap<T extends CallbackType | undefined | null>(listener: T): T {
+  function wrap<T extends CallbackType | undefined | null>(listener: T, apiName: string): T {
     if (!listener) {
       return listener;
     }
@@ -29,26 +29,29 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     const funcInterceptor = interceptEventListener(listener);
     if (!funcInterceptor[IS_SETUP_PROP_NAME]) {
       funcInterceptor[IS_SETUP_PROP_NAME] = true;
-      funcInterceptor.onArgsObserverAdd(() => {
-        flowletManager.push(currentFLowlet);
-      });
-      funcInterceptor.onValueObserverAdd(() => {
-        flowletManager.pop(currentFLowlet);
-      })
-      // funcInterceptor.setCustom(function (this: any) {
-      //   const handler = funcInterceptor.getOriginal();
-      //   if (flowletManager.top() === currentFLowlet) {
-      //     return handler.apply(this, <any>arguments);
-      //   }
-      //   let res;
-      //   try {
-      //     flowletManager.push(currentFLowlet);
-      //     res = handler.apply(this, <any>arguments);
-      //   } finally {
-      //     flowletManager.pop(currentFLowlet);
-      //   }
-      //   return res;
+      // funcInterceptor.onArgsObserverAdd(() => {
+      //   flowletManager.push(currentFLowlet);
+      // });
+      // funcInterceptor.onValueObserverAdd(() => {
+      //   flowletManager.pop(currentFLowlet);
       // })
+      funcInterceptor.setCustom(function (this: any) {
+        const handler: Function = funcInterceptor.getOriginal();
+        if (flowletManager.top() === currentFLowlet) {
+          return handler.apply(this, <any>arguments);
+        }
+        let res;
+        let flowlet; // using this extra variable to enable .push to change the value if needed
+        try {
+          flowlet = flowletManager.push(currentFLowlet, apiName);
+          res = handler.apply(this, <any>arguments);
+        } catch (e) {
+          console.error('callback throw', e);
+        } finally {
+          flowletManager.pop(flowlet, apiName);
+        }
+        return res;
+      });
     }
     return isEventListenerObject(listener) ? listener : <T>funcInterceptor.interceptor;
   }
@@ -171,9 +174,9 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     IGlobalEventHandlers.onstorage,
     IGlobalEventHandlers.onunhandledrejection,
     IGlobalEventHandlers.onunload,
-    // IWorker.onmessage,
-    // IWorker.onmessageerror,
-    // IWorker.onerror,
+    IWorker.onmessage,
+    IWorker.onmessageerror,
+    IWorker.onerror,
     IXMLHttpRequest.onabort,
     IXMLHttpRequest.onerror,
     IXMLHttpRequest.onload,
@@ -184,7 +187,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
   ]) {
     eventHandler.setter.onArgsMapperAdd(function (this, args: [any]) {
       const func = args[0];
-      args[0] = wrap(func);
+      args[0] = wrap(func, eventHandler.name);
       return args;
     });
   }
@@ -198,24 +201,24 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
       if (typeof handler === "string") {
         handler = new Function(handler);
       }
-      args[0] = wrap(handler);
+      args[0] = wrap(handler, fi.name);
       return args;
     })
   }
 
   IPromise.then.onArgsMapperAdd(args => {
-    args[0] = wrap(args[0]);
-    args[1] = wrap(args[1]);
+    args[0] = wrap(args[0], IPromise.then.name);
+    args[1] = wrap(args[1], IPromise.then.name);
     return args;
   });
 
   IPromise.Catch.onArgsMapperAdd(args => {
-    args[0] = wrap(args[0]);
+    args[0] = wrap(args[0], IPromise.Catch.name);
     return args;
   });
 
   IEventTarget.addEventListener.onArgsMapperAdd(args => {
-    args[1] = wrap(args[1]);
+    args[1] = wrap(args[1], `${IEventTarget.addEventListener.name}:${args[0]}`);
     return args;
   });
   IEventTarget.removeEventListener.onArgsMapperAdd(args => {
