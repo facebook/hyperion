@@ -61,7 +61,7 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
         targetPrototype = Object.getPrototypeOf(obj);
       }
     }
-    assert(typeof targetPrototype === "object", `Cannot create shadow prototype for undefined`);
+    assert(targetPrototype && typeof targetPrototype === "object", `Cannot create shadow prototype for undefined`);
     super(targetPrototype, parentShadoPrototype);
 
     if (options) {
