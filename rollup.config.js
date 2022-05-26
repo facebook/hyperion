@@ -20,9 +20,9 @@ export default defineConfig({
  * - npm run install-packages
  * - <make necessary modifications>
  * - npm run build
- * - <copy the 'hyperion/dist/hyperion.js' file
+ * - <copy the 'hyperion/dist/' folder
  *
- * @generated SignedSource<<08411d9f4a630be70617b13b3a5bcc0e>>
+ * @generated <<SignedSource::08411d9f4a630be70617b13b3a5bcc0e>>
  */
 
     `,
@@ -55,7 +55,7 @@ export default defineConfig({
           const b = bundle[bundleName];
           if (typeof b.code === "string") {
             const signature = md5(b.code);
-            b.code = b.code.replace(/@generated SignedSource<<[^>]+>>/, `@generated SignedSource<<${signature}>>`);
+            b.code = b.code.replace(/@generated <<SignedSource::[^>]+>>/, `@generated <<SignedSource::${signature}>>`);
           }
         }
       }
