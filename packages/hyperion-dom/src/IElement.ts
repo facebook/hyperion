@@ -19,7 +19,6 @@ export * from "./IElement_";
 //   }
 // );
 export const IElementtPrototype = IElememt_.IElementtPrototype;
-IElementtPrototype.extension.useCaseInsensitivePropertyName = true;
 
 // export const getAttribute = new FunctionInterceptor('getAttribute', IElementtPrototype);
 // export const getAttributeNS = new FunctionInterceptor('getAttributeNS', IElementtPrototype);
