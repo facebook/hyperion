@@ -5,7 +5,35 @@ import md5 from 'md5';
 export default defineConfig({
   input: 'src/index.js',
   output: {
-    file: './dist/hyperion.js',
+    // file: './dist/hyperion.js',
+    dir: './dist',
+    manualChunks: {
+      "hyperionCore": [
+        "@hyperion/hyperion-core/src/intercept",
+        "@hyperion/hyperion-dom/src/INode",
+        "@hyperion/hyperion-dom/src/IElement_",
+      ],
+      "hyperionTrackElementsWithAttributes": [
+        "@hyperion/hyperion-dom/src/IElement",
+        "@hyperion/hyperion-util/src/trackElementsWithAttributes",
+      ],
+      "hyperionSyncMutationObserver": [
+        "@hyperion/hyperion-util/src/SyncMutationObserver",
+      ],
+      "hyperionOnNetworkRequest": [
+        "@hyperion/hyperion-dom/src/IWindow",
+        "@hyperion/hyperion-dom/src/IXMLHttpRequest",
+        "@hyperion/hyperion-util/src/onNetworkRequest",
+      ],
+      "hyperionFlowlet": [
+        "@hyperion/hyperion-flowlet/src/Index",
+        "@hyperion/hyperion-flowlet/src/Flowlet",
+        "@hyperion/hyperion-flowlet/src/FlowletManager",
+      ],
+    },
+    chunkFileNames: "[name].js",
+    minifyInternalExports: false,
+    /////////////////////////////////////////////////////////////////
     format: 'es',
     name: 'hyperion',
     intro: `
@@ -56,6 +84,7 @@ export default defineConfig({
           if (typeof b.code === "string") {
             const signature = md5(b.code);
             b.code = b.code.replace(/@generated <<SignedSource::[^>]+>>/, `@generated <<SignedSource::${signature}>>`);
+            b.code = b.code.replace(/(import [^']*from ')[.]\/([^.]+)[.]js(';)/g, `$1$2$3`);
           }
         }
       }
