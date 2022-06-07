@@ -56,4 +56,37 @@ describe("test FlowletManager", () => {
     expect(manager.top()).toStrictEqual(main);
   });
 
+  test("wrap/unwrap methods", () => {
+    const manager = new FlowletManager();
+
+    type Callback = () => void;
+    const batchRunner = new class {
+      private callbacks: Callback[] = [];
+      schedule(cb: Callback) {
+        this.callbacks.push(manager.wrap(cb, 'schedule'));
+      }
+      runall() {
+        for (const cb of this.callbacks) {
+          cb();
+        }
+      }
+    }
+
+    const f1 = manager.push(new Flowlet("f1"));
+    batchRunner.schedule(() => {
+      expect(manager.top()).toStrictEqual(f1);
+    });
+
+    const f2 = manager.push(f1.fork("f2"));
+    batchRunner.schedule(() => {
+      expect(manager.top()).toStrictEqual(f2);
+    });
+
+    manager.pop(f2);
+    manager.pop(f1);
+
+    expect(2);
+    batchRunner.runall();
+  });
+
 });
