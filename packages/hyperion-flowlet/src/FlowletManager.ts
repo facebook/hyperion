@@ -28,8 +28,13 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
    */
   pop(flowlet?: T, reason?: string): T | null {
     let currTop = this.top();
-    __DEV__ && assert(!flowlet || currTop === flowlet, `Incompatible top of the stack: expected({${flowlet?.name}}), actual({${currTop?.name}})`);
-    this.flowletStack.pop();
+    // __DEV__ && assert(!flowlet || currTop === flowlet, `Incompatible top of the stack: expected({${flowlet?.name}}), actual({${currTop?.name}})`);
+    __DEV__ && assert(!!flowlet, `Cannot pop undefined flowlet from top of the stack: ${currTop?.fullName()}`);
+    if (currTop === flowlet) {
+      this.flowletStack.pop();
+    } else {
+      this.flowletStack = this.flowletStack.filter(f => f !== flowlet);
+    }
     this.onPop.call(currTop, reason);
     return currTop;
   }
