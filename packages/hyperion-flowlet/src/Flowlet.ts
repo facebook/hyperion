@@ -3,14 +3,16 @@
  */
 
 export class Flowlet {
+  private readonly _fullName: string;
   constructor(
     public readonly name: string,
     public readonly parent?: Flowlet
   ) {
+    this._fullName = `${this.parent?.fullName() ?? ""}/${this.name}`;
   }
 
   fullName(): string {
-    return `${this.parent?.fullName() ?? ""}/${this.name}`;
+    return this._fullName;
   }
 
   fork(name: string): Flowlet {
