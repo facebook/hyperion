@@ -77,8 +77,6 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
         try {
           flowlet = flowletManager.push(currentFLowlet, apiName);
           res = handler.apply(this, <any>arguments);
-        } catch (e) {
-          console.error('callback throw', e);
         } finally {
           flowletManager.pop(flowlet, apiName);
         }

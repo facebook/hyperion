@@ -93,4 +93,36 @@ describe("test FlowletManager", () => {
     batchRunner.runall();
   });
 
+  test("wrap callback with exception", () => {
+    const manager = new FlowletManager();
+
+    type Callback = () => void;
+    const batchRunner = new class {
+      private callbacks: Callback[] = [];
+      schedule(cb: Callback) {
+        this.callbacks.push(manager.wrap(cb, 'schedule'));
+      }
+      runall() {
+        for (const cb of this.callbacks) {
+          cb();
+        }
+      }
+    }
+
+    const f1 = manager.push(new Flowlet("f1"));
+    const ExceptionText = "Test Exception";
+    const func = () => {
+      expect(manager.top()).toStrictEqual(f1);
+      throw ExceptionText;
+    }
+    const wrapped = manager.wrap(func, 'test error');
+
+    expect(4);
+
+    expect(func).toThrow(ExceptionText);
+
+    manager.push(f1.fork("f2")); // push to change the .top to ensure full logic of wrap is triggered
+    expect(wrapped).toThrow(ExceptionText);
+  });
+
 });
