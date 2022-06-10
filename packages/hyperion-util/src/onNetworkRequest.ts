@@ -27,10 +27,15 @@ IWindow.fetch.onArgsObserverAdd((input, init) => {
       method: init?.method ?? "get",
       url: input,
     };
-  } else {
+  } else if (input instanceof Request) {
     request = {
       method: input.method,
       url: input.url,
+    }
+  } else {
+    request = {
+      method: "GET",
+      url: input
     }
   }
 
