@@ -18,6 +18,9 @@ describe("test Flowlet", () => {
     expect(f2.fullName()).toBe("/f1/f2");
     f1.data.i = 10;
     expect(f2.data.i).toBe(10);
+    f2.data.i = 20;
+    expect(f2.data.i).toBe(20);
+
   });
 
 });

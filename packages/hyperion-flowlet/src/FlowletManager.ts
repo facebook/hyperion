@@ -2,7 +2,6 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
 import { isIntercepted } from "@hyperion/hyperion-core/src/intercept";
 import { CallbackType, interceptEventListener, isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
@@ -33,14 +32,16 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
    */
   pop(flowlet?: T, reason?: string): T | null {
     let currTop = this.top();
-    // __DEV__ && assert(!flowlet || currTop === flowlet, `Incompatible top of the stack: expected({${flowlet?.name}}), actual({${currTop?.name}})`);
-    __DEV__ && assert(!!flowlet, `Cannot pop undefined flowlet from top of the stack: ${currTop?.fullName()}`);
+    if (!flowlet) {
+      return currTop;
+    }
+    // __DEV__ && assert(!!flowlet, `Cannot pop undefined flowlet from top of the stack: ${currTop?.fullName()}`);
     if (currTop === flowlet) {
       this.flowletStack.pop();
     } else {
       this.flowletStack = this.flowletStack.filter(f => f !== flowlet);
     }
-    this.onPop.call(currTop, reason);
+    this.onPop.call(flowlet, reason);
     return currTop;
   }
   readonly onPop = new Hook<(flowlet: T | null, reason?: string) => void>();

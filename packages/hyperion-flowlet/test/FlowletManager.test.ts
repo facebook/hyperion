@@ -50,9 +50,13 @@ describe("test FlowletManager", () => {
     });
     expect(manager.top()).toStrictEqual(f2);
 
-    manager.pop(f1);
+    // We pop f1, but top is f2
+    expect(manager.pop(f1)).toStrictEqual(f2);
+    expect(pops).toStrictEqual([f1]);
     expect(manager.top()).toStrictEqual(f2);
+
     expect(await p1).toStrictEqual(f2);
+    expect(pops).toStrictEqual([f1, f2]);
     expect(manager.top()).toStrictEqual(main);
   });
 
