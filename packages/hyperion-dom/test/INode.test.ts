@@ -9,7 +9,7 @@ import * as INode from "../src/INode";
 
 describe('test Node interception', () => {
   test('test add to tree', () => {
-    let result = [];
+    let result: any[] = [];
     const observer = (function <T, V>(this: T, value: V) {
       result = [this, value];
     });

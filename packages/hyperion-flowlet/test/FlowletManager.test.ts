@@ -11,10 +11,10 @@ describe("test FlowletManager", () => {
   test("test FlowletManager methods and events", () => {
     const manager = new FlowletManager();
 
-    const pushes = [];
+    const pushes: Flowlet[] = [];
     manager.onPush.add(flowlet => pushes.push(flowlet));
 
-    const pops = [];
+    const pops: (Flowlet | null)[] = [];
     manager.onPop.add(flowlet => pops.push(flowlet));
 
     const main = manager.push(new Flowlet("main"));
@@ -34,10 +34,10 @@ describe("test FlowletManager", () => {
   test("test FlowletManager methods and events for async code", async () => {
     const manager = new FlowletManager();
 
-    const pushes = [];
+    const pushes: Flowlet[] = [];
     manager.onPush.add(flowlet => pushes.push(flowlet));
 
-    const pops = [];
+    const pops: (Flowlet | null)[] = [];
     manager.onPop.add(flowlet => pops.push(flowlet));
 
     const main = manager.push(new Flowlet("main"));

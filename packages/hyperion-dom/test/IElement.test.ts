@@ -10,7 +10,7 @@ import { VirtualAttribute } from "../src/VirtualAttribute";
 
 describe('test Element', () => {
   test('test getAttribute', () => {
-    let result = [];
+    let result: any[] = [];
     const observer = IElement.getAttribute.onArgsObserverAdd(function (this, value) {
       result.push(this);
       result.push(value);
@@ -27,8 +27,8 @@ describe('test Element', () => {
   test('test innerHTML', () => {
     let result = [];
     let target: Node;
-    let addedNodes: Node[];
-    let removedNodes: Node[];
+    let addedNodes: Node[] = [];
+    let removedNodes: Node[] = [];
 
     IElement.innerHTML.setter.onArgsObserverAdd(function (this, value) {
       target = this;
@@ -51,7 +51,7 @@ describe('test Element', () => {
   });
 
   test("Element attributes", () => {
-    let result = [];
+    let result: any[] = [];
     let observer = <T>(value: T) => { result.push(value) };
     const expectResultTobe = (expected: any[]) => {
       expect(result).toStrictEqual(expected);
@@ -69,7 +69,13 @@ describe('test Element', () => {
     [
       id => elem.id = id,
       id => (elem.setAttribute("id", id), id),
-      id => (elem.getAttributeNode("id").value = id, id),
+      id => {
+        const attr = elem.getAttributeNode("id");
+        if (attr) {
+          attr.value = id;
+        }
+        return id;
+      },
       id => elem.attributes["id"].value = id,
       id => {
         const attr = document.createAttribute("id");

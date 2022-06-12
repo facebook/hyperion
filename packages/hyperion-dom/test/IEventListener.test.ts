@@ -9,7 +9,10 @@ import { CallbackType, interceptEventListener, isEventListenerObject } from "../
 import * as IEventTarget from "../src/IEventTarget";
 import * as IGlobalEventHandlers from "../src/IGlobalEventHandlers";
 
-function wrapListener<T extends CallbackType>(listener: T, observer: jest.Mock<any, any>) {
+function wrapListener<T extends CallbackType>(listener: T | null, observer: jest.Mock<any, any>) {
+  if (!listener) {
+    return listener;
+  }
   const wrapped = interceptEventListener(listener);
   wrapped.onArgsObserverAdd(observer);
   if (!isEventListenerObject(listener)) {

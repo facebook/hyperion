@@ -9,7 +9,7 @@ import * as IDocument from "../src/IDocument";
 
 describe('test Document interception', () => {
   test('test create element', () => {
-    let result = [];
+    let result: any[] = [];
     const observer = (function <T, V>(this: T, value: V) {
       result = [this, value];
     });

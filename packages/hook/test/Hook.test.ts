@@ -55,7 +55,7 @@ describe("test Hook", () => {
     expect(test).toBe(undefined);
 
     // try removing random func
-    expect(hook.remove(()=>false)).toBe(false);
+    expect(hook.remove(() => false)).toBe(false);
   });
 
   test("one once callback", () => {
@@ -68,7 +68,7 @@ describe("test Hook", () => {
   })
 
   test("multiple once callbacks", () => {
-    const result = [];
+    const result: any[] = [];
     const hook = new Hook<(i: number) => void>();
     const cb1 = hook.add(i => result.push(i > 10), true);
     const cb2 = hook.add(i => result.push(i > 100), true);

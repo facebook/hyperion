@@ -16,7 +16,7 @@ describe('test monitoring element attributes', () => {
     ];
 
     const hook = trackElementsWithAttributes(attributes);
-    const receivedElems = [];
+    const receivedElems: Element[] = [];
     hook.add(elem => receivedElems.push(elem));
 
     const expectedElements = attributes.map(attr => {

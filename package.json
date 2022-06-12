@@ -62,19 +62,20 @@
     "@hyperion/hyperion-util": "*"
   },
   "devDependencies": {
-    "@babel/cli": "^7.17.6",
-    "@babel/core": "^7.17.5",
-    "@babel/plugin-proposal-class-properties": "^7.16.7",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-typescript": "^7.16.7",
-    "@types/jest": "^27.4.1",
-    "@types/node": "^17.0.21",
-    "babel-jest": "^27.5.1",
-    "jest": "^27.5.1",
+    "@babel/cli": "^7.17.10",
+    "@babel/core": "^7.18.2",
+    "@babel/plugin-proposal-class-properties": "^7.17.12",
+    "@babel/preset-env": "^7.18.2",
+    "@babel/preset-typescript": "^7.17.12",
+    "@types/jest": "^28.1.1",
+    "@types/node": "^17.0.42",
+    "babel-jest": "^28.1.1",
+    "jest": "^28.1.1",
+    "jest-environment-jsdom": "^28.1.1",
     "md5": "^2.3.0",
-    "rollup": "^2.69.0",
+    "rollup": "^2.75.6",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "tslib": "^2.3.0",
+    "tslib": "^2.4.0",
     "typescript": "^4.7.3"
   }
 }
