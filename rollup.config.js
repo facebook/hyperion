@@ -88,11 +88,15 @@ export default defineConfig({
           const b = bundle[bundleName];
           if (typeof b.code === "string") {
             const signature = md5(b.code);
-            b.code = b.code.replace(/@generated <<SignedSource::[^>]+>>/, `@generated <<SignedSource::${signature}>>`);
-            b.code = b.code.replace(/(import [^']*from ')[.]\/([^.]+)[.]js(';)/g, `$1$2$3`);
+            b.code = b.code
+              .replace(/@generated <<SignedSource::[^>]+>>/, `@generated <<SignedSource::${signature}>>`)
+              .replace(/(import [^']*from ')[.]\/([^.]+)[.]js(';)/g, `$1$2$3`)
+              .replace(/\n(intercept(?:Function|Method|Attribute|ConstrucorMethod|ElementAttribute|EventHandlerAttribute)\([^\)]+\);)/g, "//$1")
+              ;
           }
         }
       }
     }
-  ]
+  ],
+  treeshake: "smallest"
 })
