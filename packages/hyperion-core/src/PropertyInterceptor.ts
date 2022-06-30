@@ -26,8 +26,9 @@ export abstract class PropertyInterceptor {
 }
 
 
-interface ExtendedPropertyDescriptor extends PropertyDescriptor {
+export interface ExtendedPropertyDescriptor<T = any> extends PropertyDescriptor {
   container: Object;
+  interceptor?: T | undefined | null
 }
 
 /**
@@ -35,10 +36,10 @@ interface ExtendedPropertyDescriptor extends PropertyDescriptor {
   * and the actual object that has the property is stores in the .container
   * field.
   */
-export function getExtendedPropertyDescriptor(obj: Object, propName: string): ExtendedPropertyDescriptor | undefined {
-  let desc: ExtendedPropertyDescriptor | undefined;
+export function getExtendedPropertyDescriptor<T = never>(obj: Object, propName: string): ExtendedPropertyDescriptor<T> | undefined {
+  let desc: ExtendedPropertyDescriptor<T> | undefined;
   while (obj && !desc) {
-    desc = Object.getOwnPropertyDescriptor(obj, propName) as ExtendedPropertyDescriptor;
+    desc = Object.getOwnPropertyDescriptor(obj, propName) as ExtendedPropertyDescriptor<T>;
     if (desc) {
       desc.container = obj;
     }

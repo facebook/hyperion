@@ -3,8 +3,8 @@
  */
 
 import { FunctionInterceptor, InterceptableObjectType, interceptFunction } from "./FunctionInterceptor";
-import { MethodInterceptor } from "./MethodInterceptor";
-import { copyOwnProperties } from "./PropertyInterceptor";
+import { getMethodInterceptor, MethodInterceptor } from "./MethodInterceptor";
+import { copyOwnProperties, ExtendedPropertyDescriptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
 function createCtorInterceptor<
@@ -64,8 +64,8 @@ class ConstructorMethodInterceptor<
   FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<T[Name]>): T; }
   > extends MethodInterceptor<Name, T, FuncType> {
   private ctorInterceptor: FuncType | null = null;
-  constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
-    super(name, shadowPrototype, true); //If we intercept constructor, that means we want the output to be intercepted
+  constructor(name: Name, shadowPrototype: ShadowPrototype<T>, desc?: ExtendedPropertyDescriptor) {
+    super(name, shadowPrototype, true, desc); //If we intercept constructor, that means we want the output to be intercepted
   }
 
   public setOriginal(originalFunc: FuncType) {
@@ -83,4 +83,14 @@ export function interceptConstructorMethod<
 ): FunctionInterceptor<BaseType, Name, FuncType> {
 
   return new ConstructorMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype);
+}
+export function interceptConstrucorMethod<
+  Name extends string,
+  BaseType extends InterceptableObjectType,
+  FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<BaseType[Name]>): BaseType; }
+>(name: Name,
+  shadowPrototype: ShadowPrototype<BaseType>,
+): FunctionInterceptor<BaseType, Name, FuncType> {
+  const desc = getMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype);
+  return desc?.interceptor ?? new ConstructorMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype, desc);
 }

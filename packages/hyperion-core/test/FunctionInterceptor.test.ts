@@ -307,4 +307,53 @@ describe("test modern classes", () => {
     expect(result.join(",")).toBe("true,false,10,-10,21,42");
 
   });
+
+  test("test repeated interception of same methods", () => {
+    const { } = testSetup();
+
+    const testFn = jest.fn<void, [number]>();
+    class A {
+      foo(n: number) {
+        testFn(n);
+      }
+      bar() { }
+    }
+
+    class B extends A {
+      foo(n: number) {
+        super.foo(n * 10);
+      }
+    }
+
+    const IAShadow = new ShadowPrototype(A.prototype, null);
+    const IA_foo = interceptMethod("foo", IAShadow);
+    const IA_bar = interceptMethod("bar", IAShadow);
+
+    const IBShadow = new ShadowPrototype(B.prototype, IAShadow);
+    const IB_foo = interceptMethod('foo', IBShadow);
+    const IB_bar = interceptMethod("bar", IBShadow);
+
+    expect(IA_foo === IB_foo).toBe(false); // each have their own method
+    expect(IA_bar === IB_bar).toBe(true); // only one method, B inherits from A
+
+    const a = new A();
+    const b = new B();
+
+    const A_foo_observer = jest.fn();
+    IA_foo.onArgsObserverAdd(A_foo_observer);
+
+    const B_foo_observer = jest.fn();
+    IB_foo.onArgsObserverAdd(B_foo_observer);
+
+    a.foo(1);
+    expect(A_foo_observer.mock.calls.length).toBe(1);
+    expect(A_foo_observer.mock.calls[0][0]).toBe(1);
+    expect(B_foo_observer.mock.calls.length).toBe(0);
+
+    b.foo(1);
+    expect(A_foo_observer.mock.calls.length).toBe(2);
+    expect(A_foo_observer.mock.calls[1][0]).toBe(10);
+    expect(B_foo_observer.mock.calls.length).toBe(1);
+  });
+
 });

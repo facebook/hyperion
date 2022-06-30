@@ -3,8 +3,8 @@
  */
 
 import { assert } from "@hyperion/global";
-import { FunctionInterceptor, InterceptableFunction, InterceptableObjectType } from "./FunctionInterceptor";
-import { defineProperty, getExtendedPropertyDescriptor, InterceptionStatus } from "./PropertyInterceptor";
+import { FunctionInterceptor, getFunctionInterceptor, InterceptableFunction, InterceptableObjectType, setFunctionInterceptor } from "./FunctionInterceptor";
+import { defineProperty, ExtendedPropertyDescriptor, getExtendedPropertyDescriptor, InterceptionStatus } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
 export class MethodInterceptor<
@@ -14,18 +14,18 @@ export class MethodInterceptor<
   >
   extends FunctionInterceptor<T, Name, FuncType>  {
 
-  constructor(name: Name, shadowPrototype: ShadowPrototype<T>, interceptOutput: boolean = false) {
+  constructor(name: Name, shadowPrototype: ShadowPrototype<T>, interceptOutput: boolean = false, desc?: ExtendedPropertyDescriptor) {
     super(name, void 0, interceptOutput);
 
-    this.interceptProperty(shadowPrototype.targetPrototype, false);
+    this.interceptProperty(shadowPrototype.targetPrototype, false, desc);
 
     if (this.status !== InterceptionStatus.Intercepted) {
       shadowPrototype.addPendingPropertyInterceptor(this);
     }
   }
 
-  private interceptProperty(obj: object, isOwnProperty: boolean) {
-    let desc = getExtendedPropertyDescriptor(obj, this.name);
+  private interceptProperty(obj: object, isOwnProperty: boolean, desc?: ExtendedPropertyDescriptor) {
+    desc = desc ?? getExtendedPropertyDescriptor(obj, this.name);
     if (isOwnProperty) {
       let virtualProperty: any; // TODO: we should do this on the object itself
       if (desc) {
@@ -68,6 +68,7 @@ export class MethodInterceptor<
             }
             return that.interceptor;
           };
+          setFunctionInterceptor(desc.get, <any>that);
         }
         if (set) {
           desc.set = function (value) {
@@ -78,6 +79,7 @@ export class MethodInterceptor<
             }
             return that.interceptor;
           }
+          setFunctionInterceptor(desc.set, <any>that);
         }
         defineProperty(desc.container, this.name, desc);
         this.status = desc.configurable ? InterceptionStatus.Intercepted : InterceptionStatus.NotConfigurable;
@@ -95,6 +97,36 @@ export class MethodInterceptor<
   }
 }
 
+export function getMethodInterceptor<
+  Name extends string,
+  BaseType extends InterceptableObjectType,
+  FuncType extends InterceptableFunction = (this: BaseType, ...args: Parameters<BaseType[Name]>) => ReturnType<BaseType[Name]>,
+  >(
+    name: Name,
+    shadowPrototype: ShadowPrototype<BaseType>,
+): ExtendedPropertyDescriptor<FunctionInterceptor<BaseType, Name, FuncType>> | undefined {
+  type FuncInterceptorType = FunctionInterceptor<BaseType, Name, FuncType>;
+
+  const desc = getExtendedPropertyDescriptor<FuncInterceptorType>(shadowPrototype.targetPrototype, name);
+  let fi: FuncInterceptorType | undefined | null;
+  if (desc) {
+    fi = getFunctionInterceptor<FuncType>(desc.value);
+    if (!fi) {
+      /**
+       * let's try getter/setter as well.
+       * we know this is special case (see above) and interceptor is really about the actual func, not its getter/setters
+       * so, we need to supress the type of getter/setter
+       */
+      const getFI = getFunctionInterceptor<FuncType>(<any>desc.get);
+      const setFI = getFunctionInterceptor<FuncType>(<any>desc.set);
+      assert(!(getFI && setFI) || (getFI === setFI), `Getter/Setter of method ${name} have differnt interceptors`);
+      fi = getFI ?? setFI;
+    }
+    desc.interceptor = fi;
+  }
+  return desc;
+}
+
 export function interceptMethod<
   Name extends string,
   BaseType extends InterceptableObjectType,
@@ -104,5 +136,6 @@ export function interceptMethod<
   shadowPrototype: ShadowPrototype<BaseType>,
   interceptOutput: boolean = false
 ): FunctionInterceptor<BaseType, Name, FuncType> {
-  return new MethodInterceptor(name, shadowPrototype, interceptOutput);
+  const desc = getMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype);
+  return desc?.interceptor ?? new MethodInterceptor(name, shadowPrototype, interceptOutput, desc);
 }

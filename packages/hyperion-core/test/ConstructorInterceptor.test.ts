@@ -4,7 +4,7 @@
 
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
-import { interceptConstrucor, interceptConstructorMethod } from "../src/ConstructorInterceptor";
+import { interceptConstructor, interceptConstructorMethod } from "../src/ConstructorInterceptor";
 import { AttributeInterceptor } from "../src/AttributeInterceptor";
 import * as intercept from "../src/intercept";
 
@@ -63,7 +63,7 @@ describe("test Constructor Interceptor", () => {
       }
     }
 
-    const IBCtor = interceptConstrucor(B);
+    const IBCtor = interceptConstructor(B);
 
     let result: any[] = [];
     let observer = <T>(value: T) => { result.push(value) };

@@ -3,9 +3,11 @@
  */
 
 import { assert } from "@hyperion/global";
-import { FunctionInterceptor, InterceptableFunction } from "./FunctionInterceptor";
-import { defineProperty, getExtendedPropertyDescriptor, hasOwnProperty, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
+import { FunctionInterceptor, getFunctionInterceptor, InterceptableFunction } from "./FunctionInterceptor";
+import { defineProperty, ExtendedPropertyDescriptor, getExtendedPropertyDescriptor, hasOwnProperty, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
+
+const ATTRIBUTE_INTERCEPTOR_PROP_NAME = "__attributeInterceptor";
 
 export class AttributeInterceptorBase<
   BaseType extends { [key: string]: any },
@@ -22,6 +24,8 @@ export class AttributeInterceptorBase<
     this.getter = new FunctionInterceptor<BaseType, Name, GetterType>(name, getter);
     this.setter = new FunctionInterceptor<BaseType, Name, SetterType>(name, setter);
 
+    this.getter.setData(ATTRIBUTE_INTERCEPTOR_PROP_NAME, this);
+    this.setter.setData(ATTRIBUTE_INTERCEPTOR_PROP_NAME, this);
   }
 }
 
@@ -36,18 +40,18 @@ export class AttributeInterceptor<
   (this: BaseType) => GetAttrType,
   (this: BaseType, value: SetAttrType) => void
   > {
-  constructor(name: Name, shadowPrototype: ShadowPrototype<BaseType>) {
+  constructor(name: Name, shadowPrototype: ShadowPrototype<BaseType>, desc?: ExtendedPropertyDescriptor) {
     super(name);
 
-    this.interceptProperty(shadowPrototype.targetPrototype, false);
+    this.interceptProperty(shadowPrototype.targetPrototype, false, desc);
 
     if (this.status !== InterceptionStatus.Intercepted) {
       shadowPrototype.addPendingPropertyInterceptor(this);
     }
   }
 
-  private interceptProperty(obj: object, isOwnProperty: boolean) {
-    let desc = getExtendedPropertyDescriptor(obj, this.name);
+  private interceptProperty(obj: object, isOwnProperty: boolean, desc?: ExtendedPropertyDescriptor) {
+    desc = desc ?? getExtendedPropertyDescriptor(obj, this.name);
     if (isOwnProperty) {
       let virtualProperty: any; // TODO: we should do this on the object itself
       const get = function () {
@@ -118,7 +122,33 @@ export class AttributeInterceptor<
 
 }
 
+export function getAttributeInterceptor<
+  BaseType extends { [key: string]: any },
+  Name extends string,
+  GetAttrType = BaseType[Name],
+  SetAttrType = GetAttrType,
+  AttrInterceptorType = AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType>,
+  >(
+    name: Name,
+    shadowPrototype: ShadowPrototype<BaseType>,
+): ExtendedPropertyDescriptor<AttrInterceptorType> | undefined {
+  const desc = getExtendedPropertyDescriptor<AttrInterceptorType>(shadowPrototype.targetPrototype, name);
+  if (desc) {
+    /**
+     * let's try getter/setter as well.
+     * we know this is special case (see above) and interceptor is really about the actual func, not its getter/setters
+     * so, we need to supress the type of getter/setter
+     */
+    const getFI = getFunctionInterceptor(desc.get);
+    const setFI = getFunctionInterceptor(desc.set);
+    const getAI = getFI?.getData<AttrInterceptorType | undefined | null>(ATTRIBUTE_INTERCEPTOR_PROP_NAME);
+    const setAI = setFI?.getData<AttrInterceptorType | undefined | null>(ATTRIBUTE_INTERCEPTOR_PROP_NAME);
 
+    assert(!(getAI && setAI) || (getAI === setAI), `Getter/Setter of attribute ${name} have differnt interceptors`);
+    desc.interceptor = getAI ?? setAI;
+  }
+  return desc;
+}
 
 export function interceptAttribute<
   BaseType extends { [key: string]: any },
@@ -129,5 +159,6 @@ export function interceptAttribute<
     name: Name,
     shadowPrototype: ShadowPrototype<BaseType>
   ): AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType> {
-  return new AttributeInterceptor(name, shadowPrototype);
+  const desc = getAttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType>(name, shadowPrototype);
+  return desc?.interceptor ?? new AttributeInterceptor(name, shadowPrototype, desc);
 }
