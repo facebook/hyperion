@@ -134,11 +134,7 @@ export class FunctionInterceptor<
      * Note that copyOwnProperties will skip properties that destination already has
      * therefore we might have to copy some properties manually
      */
-    copyOwnProperties(originalFunc, this.interceptor);
-    this.interceptor.toString = function () {
-      return originalFunc.toString();
-    };
-
+    copyOwnProperties(originalFunc, this.interceptor, true);
     setFunctionInterceptor(originalFunc, this);
     this.updateDispatcherFunc();
   }

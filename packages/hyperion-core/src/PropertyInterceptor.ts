@@ -64,7 +64,8 @@ export function hasOwnProperty(obj: Object, propName: string): boolean {
 }
 
 type ObjectOrFunction = Object & Partial<Pick<Function, "prototype" | "name">>;
-export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T) {
+export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T, copySpecials = false) {
+
   if (!src || !dest) {
     // Not much to copy. This can legitimately happen if for example function/attribute value is undefined during interception.
     return;
@@ -80,6 +81,17 @@ export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T) {
         Object.defineProperty(dest, propName, desc);
       } catch (e) {
         __DEV__ && console.error("Adding property ", propName, " throws exception: ", e);
+      }
+    }
+  }
+
+  if (copySpecials) {
+    dest.toString = function () {
+      return src.toString();
+    }
+    if (Object.hasOwn(src, 'valueOf')) {
+      dest.valueOf = function () {
+        return src.valueOf();
       }
     }
   }

@@ -83,6 +83,29 @@ describe("test modern classes", () => {
     expect(fi.getData(testPropName)).toBe(true);
   });
 
+  test("Ensure props are carried over", () => {
+    {
+      const func = (i: number, s: string) => i + s.length;
+      func.x = 42;
+      func.toString = () => "SECRET";
+      const fi = interceptFunction(func);
+
+      expect(fi.getOriginal()).toStrictEqual(func);
+      expect(fi.interceptor.x).toBe(func.x);
+      expect(fi.interceptor.toString()).toBe(func.toString());
+      expect(fi.interceptor + "").toBe("SECRET"); // check .toString
+    }
+    {
+      const func = function () { return 1; };
+      func.toString = () => "BAR";
+      func.valueOf = () => 42;
+      const fi = interceptFunction(func);
+      expect(fi.interceptor.toString()).toBe(func.toString());
+      expect(fi.interceptor + "").toBe("42"); // check .valueOf
+      expect(<any>func == 42).toBe(true); // check .valueOf
+      expect(<any>fi.interceptor == 42).toBe(true); // check .valueOf
+    }
+  });
 
   test("test .original", () => {
     const { IBShadow, IA, IB, B } = testSetup();
