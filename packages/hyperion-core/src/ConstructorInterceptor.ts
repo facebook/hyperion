@@ -48,7 +48,7 @@ class ConstructorInterceptor<
   }
 }
 
-export function interceptConstrucor<
+export function interceptConstructor<
   BaseType extends InterceptableObjectType,
   FuncType extends { new(...args: any): BaseType; }
 >(

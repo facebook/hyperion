@@ -91,7 +91,7 @@ export default defineConfig({
             b.code = b.code
               .replace(/@generated <<SignedSource::[^>]+>>/, `@generated <<SignedSource::${signature}>>`)
               .replace(/(import [^']*from ')[.]\/([^.]+)[.]js(';)/g, `$1$2$3`)
-              .replace(/\n(intercept(?:Function|Method|Attribute|ConstrucorMethod|ElementAttribute|EventHandlerAttribute)\([^\)]+\);)/g, "//$1")
+              .replace(/\n(intercept(?:Function|Method|Attribute|Constructor|ConstructorMethod|ElementAttribute|EventHandlerAttribute)\([^\)]+\);)/g, "//$1")
               ;
           }
         }

@@ -4,6 +4,9 @@
 
 
 export { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
+export { interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+export { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
+export { interceptConstructor, interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
 
 export { trackElementsWithAttributes } from "@hyperion/hyperion-util/src/trackElementsWithAttributes";
 
