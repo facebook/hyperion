@@ -26,6 +26,14 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   readonly onPush = new Hook<(flowlet: T, reason?: string) => void>();
 
   /**
+  * Pops all the flowlets that match a certain filter condition
+  * @param filter : function to select which flowlets to be popped
+  */
+  popIf(filter: (flowlet: T) => boolean) {
+    this.flowletStack = this.flowletStack.filter(filter);
+  }
+
+  /**
    * pop and return top of stack
    * @param flowlet if passed, asserts top matches the input
    * @returns top of the stack or null
@@ -39,7 +47,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     if (currTop === flowlet) {
       this.flowletStack.pop();
     } else {
-      this.flowletStack = this.flowletStack.filter(f => f !== flowlet);
+      this.popIf(f => f !== flowlet);
     }
     this.onPop.call(flowlet, reason);
     return currTop;
