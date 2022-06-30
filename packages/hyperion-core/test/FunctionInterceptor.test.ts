@@ -6,6 +6,7 @@ import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
 import { interceptFunction } from "../src/FunctionInterceptor";
 import { interceptMethod } from "../src/MethodInterceptor";
+import { registerShadowPrototype } from "../src/intercept";
 
 describe("test modern classes", () => {
 
@@ -57,7 +58,7 @@ describe("test modern classes", () => {
   test("test direct interception", () => {
     const func = (i: number, s: string) => i + s.length;
     func.x = 42;
-    const fi = interceptFunction(func, null, "tester");
+    const fi = interceptFunction(func, false, null, "tester");
     const argObserver = fi.onArgsObserverAdd(jest.fn());
     const valueObserver = fi.onValueObserverAdd(jest.fn());
     expect(fi.getOriginal()).toStrictEqual(func);
@@ -68,8 +69,8 @@ describe("test modern classes", () => {
     expect(argObserver).toBeCalledWith(10, "12345");
     expect(valueObserver).toBeCalledWith(15);
 
-    const fi2 = interceptFunction(func, null, "test2");
-    const fi3 = interceptFunction(fi.interceptor, null, "test3");
+    const fi2 = interceptFunction(func, false, null, "test2");
+    const fi3 = interceptFunction(fi.interceptor, false, null, "test3");
     expect(fi2).toStrictEqual(fi);
     expect(fi3).toStrictEqual(fi);
   });
@@ -77,7 +78,7 @@ describe("test modern classes", () => {
   test("test function interceptor data", () => {
     const func = (i: number, s: string) => i + s.length;
     func.x = 42;
-    const fi = interceptFunction(func, null, "tester");
+    const fi = interceptFunction(func, false, null, "tester");
     const testPropName = 'randomProp';
     fi.setData(testPropName, true);
     expect(fi.getData(testPropName)).toBe(true);
@@ -105,6 +106,23 @@ describe("test modern classes", () => {
       expect(<any>func == 42).toBe(true); // check .valueOf
       expect(<any>fi.interceptor == 42).toBe(true); // check .valueOf
     }
+  });
+
+  test("test output interception", () => {
+    class A { };
+    const AShadow = new ShadowPrototype(A.prototype, null);
+    registerShadowPrototype(A.prototype, AShadow);
+
+    const func = () => new A();
+    const fi = interceptFunction(func, true);
+
+    const observer = jest.fn();
+    AShadow.onAfterInterceptObj.add(observer);
+
+    const o = fi.interceptor();
+    expect(o instanceof A).toBe(true);
+    expect(observer.mock.calls.length).toBe(1);
+    expect(observer.mock.calls[0][0]).toStrictEqual(o);
   });
 
   test("test .original", () => {

@@ -3,7 +3,6 @@
  */
 
 import { FunctionInterceptor, InterceptableObjectType, interceptFunction } from "./FunctionInterceptor";
-import { intercept } from "./intercept";
 import { MethodInterceptor } from "./MethodInterceptor";
 import { copyOwnProperties } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
@@ -27,7 +26,7 @@ function createCtorInterceptor<
       case 6: result = new ctorFunc(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]); break;
       default: throw "Unsupported case!";
     }
-    return intercept(result);
+    return result;
   }
   copyOwnProperties(ctorFunc, ctorInterceptor, true);
   return ctorInterceptor;
@@ -40,7 +39,7 @@ class ConstructorInterceptor<
   > extends FunctionInterceptor<BaseType, Name, FuncType> {
   private ctorInterceptor: FuncType | null = null;
   constructor(name: Name, originalCtor: FuncType) {
-    super(name, originalCtor/* , true */); //If we intercept constructor, that means we want the output to be intercepted
+    super(name, originalCtor, true); //If we intercept constructor, that means we want the output to be intercepted
   }
 
   public setOriginal(originalFunc: FuncType) {
@@ -56,7 +55,7 @@ export function interceptConstrucor<
   ctor: FuncType,
   name: string = `_annonymousCtor`
 ): FunctionInterceptor<BaseType, string, FuncType> {
-  return interceptFunction<FuncType>(ctor/* , true */, ConstructorInterceptor, name);
+  return interceptFunction<FuncType>(ctor, true, ConstructorInterceptor, name);
 }
 
 class ConstructorMethodInterceptor<
@@ -66,7 +65,7 @@ class ConstructorMethodInterceptor<
   > extends MethodInterceptor<Name, T, FuncType> {
   private ctorInterceptor: FuncType | null = null;
   constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
-    super(name, shadowPrototype/* , true */); //If we intercept constructor, that means we want the output to be intercepted
+    super(name, shadowPrototype, true); //If we intercept constructor, that means we want the output to be intercepted
   }
 
   public setOriginal(originalFunc: FuncType) {

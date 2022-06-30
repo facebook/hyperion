@@ -4,6 +4,7 @@
 
 import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
+import { intercept } from "./intercept";
 import { copyOwnProperties, PropertyInterceptor } from "./PropertyInterceptor";
 
 const FuncExtensionPropName = "__ext";
@@ -97,16 +98,23 @@ export class FunctionInterceptor<
    */
   private data?: { [index: string | symbol]: any };
 
-  constructor(name: Name, originalFunc: FuncType = unknownFunc) {
+  constructor(name: Name, originalFunc: FuncType = unknownFunc, interceptOutput: boolean = false) {
     super(name);
 
     const that = this;
-    this.interceptor = <FuncType>function (this: BaseType) {
-      // In all cases we are dealing with methods, we handle constructors separately.
-      // It is too cumbersome (and perf inefficient) to separate classes for methods and constructors.
-      // TODO: is there a runtime check we can do to ensure this? e.g. checking func.prototype? Some constructors are functions too! 
-      return (<InterceptableMethod>(that.dispatcherFunc)).apply(this, <any>arguments);
-    };
+    // In all cases we are dealing with methods, we handle constructors separately.
+    // It is too cumbersome (and perf inefficient) to separate classes for methods and constructors.
+    // TODO: is there a runtime check we can do to ensure this? e.g. checking func.prototype? Some constructors are functions too! 
+    this.interceptor = !interceptOutput
+      ? <FuncType>function (this: BaseType) {
+        const result = (<InterceptableMethod>(that.dispatcherFunc)).apply(this, <any>arguments);
+        return result;
+      }
+      : <FuncType>function (this: BaseType) {
+        const result = (<InterceptableMethod>(that.dispatcherFunc)).apply(this, <any>arguments);
+        return intercept(result);
+      }
+      ;
     setFunctionInterceptor(this.interceptor, this);
     this.implementation = originalFunc;
     this.dispatcherFunc = this.original; // By default just pass on to original
@@ -411,13 +419,16 @@ export function setFunctionInterceptor<FuncType extends InterceptableFunction>(
 
 export function interceptFunction<FuncType extends InterceptableFunction>(
   func: ExtendedFuncType<FuncType>,
-  fiCtor?: null | (new (name: string, originalFunc: FuncType) => GenericFunctionInterceptor<ExtendedFuncType<FuncType>>),
+  interceptOutput: boolean = false,
+  fiCtor?: null | (new (name: string, originalFunc: FuncType, interceptOutput?: boolean) => GenericFunctionInterceptor<ExtendedFuncType<FuncType>>),
   name: string = `_annonymous`
 ): GenericFunctionInterceptor<FuncType> {
   assert(typeof func === "function", `cannot intercept non-function input`);
   let funcInterceptor = getFunctionInterceptor(func);
   if (!funcInterceptor) {
-    funcInterceptor = fiCtor ? new fiCtor(name, func) : new FunctionInterceptor(name, func);
+    funcInterceptor = fiCtor
+      ? new fiCtor(name, func, interceptOutput)
+      : new FunctionInterceptor(name, func, interceptOutput);
   }
   return funcInterceptor;
 }

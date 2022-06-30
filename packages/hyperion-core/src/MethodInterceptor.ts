@@ -14,8 +14,8 @@ export class MethodInterceptor<
   >
   extends FunctionInterceptor<T, Name, FuncType>  {
 
-  constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
-    super(name);
+  constructor(name: Name, shadowPrototype: ShadowPrototype<T>, interceptOutput: boolean = false) {
+    super(name, void 0, interceptOutput);
 
     this.interceptProperty(shadowPrototype.targetPrototype, false);
 
@@ -99,6 +99,10 @@ export function interceptMethod<
   Name extends string,
   BaseType extends InterceptableObjectType,
   FuncType extends InterceptableFunction = (this: BaseType, ...args: Parameters<BaseType[Name]>) => ReturnType<BaseType[Name]>
->(name: Name, shadowPrototype: ShadowPrototype<BaseType>): FunctionInterceptor<BaseType, Name, FuncType> {
-  return new MethodInterceptor(name, shadowPrototype);
+>(
+  name: Name,
+  shadowPrototype: ShadowPrototype<BaseType>,
+  interceptOutput: boolean = false
+): FunctionInterceptor<BaseType, Name, FuncType> {
+  return new MethodInterceptor(name, shadowPrototype, interceptOutput);
 }
