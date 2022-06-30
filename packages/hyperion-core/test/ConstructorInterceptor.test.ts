@@ -4,7 +4,7 @@
 
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
-import { interceptConstructorMethod } from "../src/ConstructorInterceptor";
+import { interceptConstrucor, interceptConstructorMethod } from "../src/ConstructorInterceptor";
 import { AttributeInterceptor } from "../src/AttributeInterceptor";
 import * as intercept from "../src/intercept";
 
@@ -56,6 +56,46 @@ describe("test Constructor Interceptor", () => {
 
     return { IAShadow, IBShadow, IA, IB, Ctors, IBCtor }
   }
+
+  test("test direct constructor interceptor", () => {
+    class B {
+      constructor(public n: number, public s: string) {
+      }
+    }
+
+    const IBCtor = interceptConstrucor(B);
+
+    let result: any[] = [];
+    let observer = <T>(value: T) => { result.push(value) };
+    const expectResultTobe = (id: any, expected: any[]) => {
+      result.push(id);
+      expected.push(id);
+      expect(result).toStrictEqual(expected);
+      result = [];
+    }
+
+    IBCtor.onArgsMapperAdd(function (this, args) {
+      observer([...args]);
+      args[0] += 1;
+      args[1] += "-world";
+      return args;
+    })
+    IBCtor.onArgsObserverAdd(function (this, n, s) {
+      observer([n, s]);
+    })
+
+    IBCtor.onValueMapperAdd(function (this, value) {
+      observer(value);
+      return value;
+    })
+
+    IBCtor.onValueObserverAdd(function (this, value) {
+      observer(value);
+    })
+
+    const o = new IBCtor.interceptor(20, "Hello");
+    expectResultTobe("ctor", [[20, "Hello"], [21, "Hello-world"], o, o]);
+  });
 
   test("test ctor interceptor", () => {
     const { IBShadow, IAShadow, IA, IB, IBCtor, Ctors } = testSetup();

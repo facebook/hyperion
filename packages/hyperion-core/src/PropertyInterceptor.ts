@@ -64,7 +64,7 @@ export function hasOwnProperty(obj: Object, propName: string): boolean {
 }
 
 type ObjectOrFunction = Object & Partial<Pick<Function, "prototype" | "name">>;
-export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T, copySpecials = false) {
+export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T, copySpecials: boolean) {
 
   if (!src || !dest) {
     // Not much to copy. This can legitimately happen if for example function/attribute value is undefined during interception.
