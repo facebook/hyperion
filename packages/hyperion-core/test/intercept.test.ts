@@ -5,7 +5,7 @@
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
 import { AttributeInterceptor } from "../src/AttributeInterceptor";
-import { FunctionInterceptor } from "../src/FunctionInterceptor";
+import { interceptMethod } from "../src/MethodInterceptor";
 import { getVirtualPropertyValue, intercept, isIntercepted, registerShadowPrototype, registerShadowPrototypeGetter, setVirtualPropertyValue } from "../src/intercept";
 
 describe("test interception mechanism", () => {
@@ -53,10 +53,10 @@ describe("test interception mechanism", () => {
       a2: new AttributeInterceptor('a2', IAShadow),
       a3: new AttributeInterceptor('a3', IAShadow),
       a4: new AttributeInterceptor('a4', IAShadow),
-      f1: new FunctionInterceptor('f1', IAShadow),
-      f2: new FunctionInterceptor('f2', IAShadow),
-      f3: new FunctionInterceptor('f3', IAShadow),
-      f4: new FunctionInterceptor('f4', IAShadow),
+      f1: interceptMethod('f1', IAShadow),
+      f2: interceptMethod('f2', IAShadow),
+      f3: interceptMethod('f3', IAShadow),
+      f4: interceptMethod('f4', IAShadow),
     };
 
     const IBShadow = new ShadowPrototype(B.prototype, IAShadow);
@@ -135,7 +135,7 @@ describe("test interception mechanism", () => {
     IAShadow.onAfterInterceptObj.add(expectObjIntercepted);
     IBShadow.onAfterInterceptObj.add(expectObjIntercepted);
 
-    let result = [];
+    let result: any[] = [];
     const observer = <T>(value: T) => {
       result.push(value);
     };

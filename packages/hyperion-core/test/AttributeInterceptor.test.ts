@@ -4,7 +4,7 @@
 
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
-import { AttributeInterceptor } from "../src/AttributeInterceptor";
+import { interceptAttribute } from "../src/AttributeInterceptor";
 
 describe("test Attribute Interceptor", () => {
 
@@ -31,15 +31,15 @@ describe("test Attribute Interceptor", () => {
 
     const IAShadow = new ShadowPrototype(A.prototype, null);
     const IA = {
-      a: new AttributeInterceptor('a', IAShadow),
-      foo: new AttributeInterceptor('foo', IAShadow),
-      baz: new AttributeInterceptor('baz', IAShadow),
-      bar: new AttributeInterceptor('bar', IAShadow),
+      a: interceptAttribute('a', IAShadow),
+      foo: interceptAttribute('foo', IAShadow),
+      baz: interceptAttribute('baz', IAShadow),
+      bar: interceptAttribute('bar', IAShadow),
     };
 
     const IBShadow = new ShadowPrototype(B.prototype, IAShadow);
     const IB = {
-      b: new AttributeInterceptor('b', IBShadow),
+      b: interceptAttribute('b', IBShadow),
     }
 
     return { IAShadow, IBShadow, IA, IB, A, B }
@@ -51,7 +51,7 @@ describe("test Attribute Interceptor", () => {
     const o = new B();
     IBShadow.interceptObject(o);
 
-    let result = [];
+    let result: any[] = [];
 
     const argsObserver = <T>(value: T) => {
       result.push(value);

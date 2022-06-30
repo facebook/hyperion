@@ -3,15 +3,15 @@
  */
 
 import { AttributeInterceptor } from "@hyperion/hyperion-core/src/AttributeInterceptor";
-import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 import { DOMShadowPrototype } from "./DOMShadowPrototype";
 import { EventHandlerAttributeInterceptor } from "./EventHandlerAttributeInterceptor";
 import { IEventTargetPrototype } from "./IEventTarget";
 
 export const IXMLHttpRequestPrototype = new DOMShadowPrototype(XMLHttpRequest, IEventTargetPrototype, { sampleObject: new XMLHttpRequest(), registerOnPrototype: true });
 
-export const open = new FunctionInterceptor("open", IXMLHttpRequestPrototype);
-export const send = new FunctionInterceptor("send", IXMLHttpRequestPrototype);
+export const open = interceptMethod("open", IXMLHttpRequestPrototype);
+export const send = interceptMethod("send", IXMLHttpRequestPrototype);
 export const withCredentials = new AttributeInterceptor("withCredentials", IXMLHttpRequestPrototype);
 
 export const onabort = new EventHandlerAttributeInterceptor("onabort", IXMLHttpRequestPrototype);

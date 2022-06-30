@@ -6,7 +6,7 @@
 
 import "jest";
 import * as IPromise from "../src/IPromise";
-import { interceptFunction } from "@hyperion/hyperion-core/src/intercept";
+import { interceptFunction } from "../src/FunctionInterceptor";
 
 describe('test Promise', () => {
   test('test promise.then', async () => {

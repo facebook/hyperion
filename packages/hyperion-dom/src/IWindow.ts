@@ -2,22 +2,22 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { ConstructorInterceptor } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
-import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
+import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 import { DOMShadowPrototype } from "./DOMShadowPrototype";
 import { EventHandlerAttributeInterceptor } from "./EventHandlerAttributeInterceptor";
 import { IEventTargetPrototype } from "./IEventTarget";
 
 export const IWindowPrototype = new DOMShadowPrototype(Window, IEventTargetPrototype, { sampleObject: window, registerOnPrototype: true });
 
-export const fetch = new FunctionInterceptor("fetch", IWindowPrototype);
-export const requestAnimationFrame = new FunctionInterceptor("requestAnimationFrame", IWindowPrototype);
-export const requestIdleCallback = new FunctionInterceptor("requestIdleCallback", IWindowPrototype);
-export const setInterval = new FunctionInterceptor("setInterval", IWindowPrototype);
-export const setTimeout = new FunctionInterceptor("setTimeout", IWindowPrototype);
-export const IntersectionObserver = new ConstructorInterceptor("IntersectionObserver", IWindowPrototype);
-export const MutationObserver = new ConstructorInterceptor("MutationObserver", IWindowPrototype);
-export const XMLHttpRequest = new ConstructorInterceptor("XMLHttpRequest", IWindowPrototype);
+export const fetch = interceptMethod("fetch", IWindowPrototype);
+export const requestAnimationFrame = interceptMethod("requestAnimationFrame", IWindowPrototype);
+export const requestIdleCallback = interceptMethod("requestIdleCallback", IWindowPrototype);
+export const setInterval = interceptMethod("setInterval", IWindowPrototype);
+export const setTimeout = interceptMethod("setTimeout", IWindowPrototype);
+export const IntersectionObserver = interceptConstructorMethod("IntersectionObserver", IWindowPrototype);
+export const MutationObserver = interceptConstructorMethod("MutationObserver", IWindowPrototype);
+export const XMLHttpRequest = interceptConstructorMethod("XMLHttpRequest", IWindowPrototype);
 
 
 //#region Event Handlers https://developer.mozilla.org/en-US/docs/Web/API/Window#event_handlers

@@ -3,10 +3,10 @@
  */
 
 import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
-import { FunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor"
+import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 
 export const IEventTargetPrototype = new DOMShadowPrototype(EventTarget, null, { sampleObject: sampleHTMLElement });
 
-export const addEventListener = new FunctionInterceptor('addEventListener', IEventTargetPrototype);
-export const dispatchEvent = new FunctionInterceptor('dispatchEvent', IEventTargetPrototype);
-export const removeEventListener = new FunctionInterceptor('removeEventListener', IEventTargetPrototype);
+export const addEventListener = interceptMethod('addEventListener', IEventTargetPrototype);
+export const dispatchEvent = interceptMethod('dispatchEvent', IEventTargetPrototype);
+export const removeEventListener = interceptMethod('removeEventListener', IEventTargetPrototype);

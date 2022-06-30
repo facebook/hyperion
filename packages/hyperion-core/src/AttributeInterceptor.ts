@@ -3,7 +3,7 @@
  */
 
 import { assert } from "@hyperion/global";
-import { FunctionInterceptorBase, InterceptableFunction } from "./FunctionInterceptor";
+import { FunctionInterceptor, InterceptableFunction } from "./FunctionInterceptor";
 import { defineProperty, getExtendedPropertyDescriptor, hasOwnProperty, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
@@ -13,14 +13,14 @@ export class AttributeInterceptorBase<
   GetterType extends InterceptableFunction = (this: BaseType) => BaseType[Name],
   SetterType extends InterceptableFunction = (this: BaseType, value: BaseType[Name]) => void
   > extends PropertyInterceptor {
-  public readonly getter: FunctionInterceptorBase<BaseType, Name, GetterType>;
-  public readonly setter: FunctionInterceptorBase<BaseType, Name, SetterType>;
+  public readonly getter: FunctionInterceptor<BaseType, Name, GetterType>;
+  public readonly setter: FunctionInterceptor<BaseType, Name, SetterType>;
 
   constructor(name: Name, getter?: GetterType, setter?: SetterType) {
     super(name);
 
-    this.getter = new FunctionInterceptorBase<BaseType, Name, GetterType>(name, getter);
-    this.setter = new FunctionInterceptorBase<BaseType, Name, SetterType>(name, setter);
+    this.getter = new FunctionInterceptor<BaseType, Name, GetterType>(name, getter);
+    this.setter = new FunctionInterceptor<BaseType, Name, SetterType>(name, setter);
 
   }
 }
@@ -116,4 +116,18 @@ export class AttributeInterceptor<
     return this.interceptProperty(obj, true);
   }
 
+}
+
+
+
+export function interceptAttribute<
+  BaseType extends { [key: string]: any },
+  Name extends string,
+  GetAttrType = BaseType[Name],
+  SetAttrType = GetAttrType,
+  >(
+    name: Name,
+    shadowPrototype: ShadowPrototype<BaseType>
+  ): AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType> {
+  return new AttributeInterceptor(name, shadowPrototype);
 }

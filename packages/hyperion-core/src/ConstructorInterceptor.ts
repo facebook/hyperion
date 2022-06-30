@@ -4,13 +4,14 @@
 
 import { FunctionInterceptor, InterceptableObjectType } from "./FunctionInterceptor";
 import { intercept } from "./intercept";
+import { MethodInterceptor } from "./MethodInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 
-export class ConstructorInterceptor<
+class ConstructorMethodInterceptor<
   Name extends string,
   T extends InterceptableObjectType,
   FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<T[Name]>): T; }
-  > extends FunctionInterceptor<Name, T, FuncType> {
+  > extends MethodInterceptor<Name, T, FuncType> {
   private ctorInterceptor: FuncType | null = null;
   constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
     super(name, shadowPrototype/* , true */); //If we intercept constructor, that means we want the output to be intercepted
@@ -34,4 +35,15 @@ export class ConstructorInterceptor<
     }
     return super.setOriginal(this.ctorInterceptor);
   }
+}
+
+export function interceptConstructorMethod<
+  Name extends string,
+  BaseType extends InterceptableObjectType,
+  FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<BaseType[Name]>): BaseType; }
+>(name: Name,
+  shadowPrototype: ShadowPrototype<BaseType>,
+): FunctionInterceptor<BaseType, Name, FuncType> {
+
+  return new ConstructorMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype);
 }

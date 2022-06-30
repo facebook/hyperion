@@ -4,7 +4,7 @@
 
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
-import { ConstructorInterceptor } from "../src/ConstructorInterceptor";
+import { interceptConstructorMethod } from "../src/ConstructorInterceptor";
 import { AttributeInterceptor } from "../src/AttributeInterceptor";
 import * as intercept from "../src/intercept";
 
@@ -49,7 +49,7 @@ describe("test Constructor Interceptor", () => {
 
     const Ctors = { A, B };
     const ICtorsShadow = new ShadowPrototype(Ctors, null);
-    const IBCtor = new ConstructorInterceptor<'B', typeof Ctors, { new(i: number): B }>('B', ICtorsShadow);
+    const IBCtor = interceptConstructorMethod<'B', typeof Ctors, { new(i: number): B }>('B', ICtorsShadow);
 
     type T1 = { new(i: number): B };
     type T2 = ConstructorParameters<T1>
@@ -61,7 +61,7 @@ describe("test Constructor Interceptor", () => {
     const { IBShadow, IAShadow, IA, IB, IBCtor, Ctors } = testSetup();
 
 
-    let result = [];
+    let result: any[] = [];
     let observer = <T>(value: T) => { result.push(value) };
     const expectResultTobe = (id: any, expected: any[]) => {
       result.push(id);

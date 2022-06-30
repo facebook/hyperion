@@ -3,11 +3,11 @@
  */
 
 import { InterceptableFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
-import { GenericFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/intercept";
+import { GenericFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 // import { DOMShadowPrototype } from "./DOMShadowPrototype";
 
 // export const IEventListenertPrototype = new DOMShadowPrototype<EventListenerObject, Object>(null, null);
-// export const handleEvent = new FunctionInterceptor('handleEvent', IEventListenertPrototype);
+// export const handleEvent = interceptMethod('handleEvent', IEventListenertPrototype);
 
 export type CallbackType = EventListenerOrEventListenerObject | EventListener | InterceptableFunction;
 type FuncTypeOf<T extends CallbackType> = T extends EventListenerObject ? EventListenerObject['handleEvent'] : T;

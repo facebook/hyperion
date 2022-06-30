@@ -4,8 +4,8 @@
 
 import "jest";
 import { ShadowPrototype } from "../src/ShadowPrototype";
-import { FunctionInterceptor } from "../src/FunctionInterceptor";
-import { interceptFunction } from "../src/intercept";
+import { interceptFunction } from "../src/FunctionInterceptor";
+import { interceptMethod } from "../src/MethodInterceptor";
 
 describe("test modern classes", () => {
 
@@ -40,15 +40,15 @@ describe("test modern classes", () => {
 
     const IAShadow = new ShadowPrototype(A.prototype, null);
     const IA = {
-      a: new FunctionInterceptor('a', IAShadow),
-      foo: new FunctionInterceptor('foo', IAShadow),
-      baz: new FunctionInterceptor('baz', IAShadow),
-      bar: new FunctionInterceptor('bar', IAShadow),
+      a: interceptMethod('a', IAShadow),
+      foo: interceptMethod('foo', IAShadow),
+      baz: interceptMethod('baz', IAShadow),
+      bar: interceptMethod('bar', IAShadow),
     };
 
     const IBShadow = new ShadowPrototype(B.prototype, IAShadow);
     const IB = {
-      b: new FunctionInterceptor('b', IBShadow),
+      b: interceptMethod('b', IBShadow),
     }
 
     return { IAShadow, IBShadow, IA, IB, A, B }

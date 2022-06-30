@@ -4,8 +4,9 @@
 
 import { assert } from "@hyperion/global";
 import { Hook } from "@hyperion/hook";
-import { copyOwnProperties, defineProperty, getExtendedPropertyDescriptor, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
-import { ShadowPrototype } from "./ShadowPrototype";
+import { copyOwnProperties, PropertyInterceptor } from "./PropertyInterceptor";
+
+const FuncExtensionPropName = "__ext";
 
 // One-hot coding for state of the interceptor
 const enum InterceptorState {
@@ -73,7 +74,7 @@ class OnValueMapper<FuncType extends InterceptableFunction> extends Hook<OnValue
 type OnValueObserverFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => void;
 class OnValueObserver<FuncType extends InterceptableFunction> extends Hook<OnValueObserverFunc<FuncType>> { }
 
-export class FunctionInterceptorBase<
+export class FunctionInterceptor<
   BaseType,
   Name extends string,
   FuncType extends InterceptableFunction
@@ -106,6 +107,7 @@ export class FunctionInterceptorBase<
       // TODO: is there a runtime check we can do to ensure this? e.g. checking func.prototype? Some constructors are functions too! 
       return (<InterceptableMethod>(that.dispatcherFunc)).apply(this, <any>arguments);
     };
+    setFunctionInterceptor(this.interceptor, this);
     this.implementation = originalFunc;
     this.dispatcherFunc = this.original; // By default just pass on to original
     this.setOriginal(originalFunc); // to perform any extra bookkeeping
@@ -137,7 +139,7 @@ export class FunctionInterceptorBase<
       return originalFunc.toString();
     };
 
-
+    setFunctionInterceptor(originalFunc, this);
     this.updateDispatcherFunc();
   }
 
@@ -152,7 +154,7 @@ export class FunctionInterceptorBase<
   private static dispatcherCtors = (() => {
     // type T = { "foo": InterceptableFunction };
     // const ctors: { [index: number]: (fi: FunctionInterceptor<"foo", T>) => Function } = {
-    const ctors: { [index: number]: <FI extends FunctionInterceptorBase<any, any, any>>(fi: FI) => Function } = {
+    const ctors: { [index: number]: <FI extends FunctionInterceptor<any, any, any>>(fi: FI) => Function } = {
       [InterceptorState.Has_____________]: fi => fi.customFunc ?? fi.original,
 
       [InterceptorState.Has___________VO]: fi => function (this: any) {
@@ -311,7 +313,7 @@ export class FunctionInterceptorBase<
     state |= this.onValueMapper ? InterceptorState.HasValueMapper : 0;
     state |= this.onValueObserver ? InterceptorState.HasValueObserver : 0;
     //TODO: Check a cached version first
-    const dispatcherCtor = FunctionInterceptorBase.dispatcherCtors[state];
+    const dispatcherCtor = FunctionInterceptor.dispatcherCtors[state];
     assert(!!dispatcherCtor, `unhandled interceptor state ${state}`);
     this.dispatcherFunc = <FuncType>dispatcherCtor(this);
   }
@@ -386,87 +388,40 @@ export class FunctionInterceptorBase<
   }
 }
 
-export class FunctionInterceptor<
-  Name extends string,
-  T extends InterceptableObjectType,
-  FuncType extends InterceptableFunction = (this: T, ...args: Parameters<T[Name]>) => ReturnType<T[Name]>
-  >
-  extends FunctionInterceptorBase<T, Name, FuncType>  {
+type ExtendedFuncType<FuncType extends InterceptableFunction> =
+  FuncType &
+  { [FuncExtensionPropName]?: GenericFunctionInterceptor<ExtendedFuncType<FuncType>> };
 
-  constructor(name: Name, shadowPrototype: ShadowPrototype<T>) {
-    super(name);
+export type GenericFunctionInterceptor<FuncType extends InterceptableFunction> =
+  FunctionInterceptor<FuncThisType<FuncType>, string, FuncType> &
+  { [index: string]: any };
 
-    this.interceptProperty(shadowPrototype.targetPrototype, false);
+export function getFunctionInterceptor<FuncType extends InterceptableFunction>(
+  func: ExtendedFuncType<FuncType> | null | undefined
+): GenericFunctionInterceptor<FuncType> | null | undefined {
+  return func?.[FuncExtensionPropName];
+}
+export function setFunctionInterceptor<FuncType extends InterceptableFunction>(
+  func: ExtendedFuncType<FuncType>,
+  funcInterceptor: GenericFunctionInterceptor<ExtendedFuncType<FuncType>>
+) {
+  __DEV__ && assert(
+    typeof func === "function" &&
+    !getFunctionInterceptor(func), `Function already has an interceptor assigned to it`,
+    { logger: { error() { debugger; } } }
+  );
+  func[FuncExtensionPropName] = funcInterceptor;
+}
 
-    if (this.status !== InterceptionStatus.Intercepted) {
-      shadowPrototype.addPendingPropertyInterceptor(this);
-    }
+export function interceptFunction<FuncType extends InterceptableFunction>(
+  func: ExtendedFuncType<FuncType>,
+  fiCtor?: null | (new (name: string, originalFunc: FuncType) => GenericFunctionInterceptor<ExtendedFuncType<FuncType>>),
+  name: string = `_annonymous`
+): GenericFunctionInterceptor<FuncType> {
+  assert(typeof func === "function", `cannot intercept non-function input`);
+  let funcInterceptor = getFunctionInterceptor(func);
+  if (!funcInterceptor) {
+    funcInterceptor = fiCtor ? new fiCtor(name, func) : new FunctionInterceptor(name, func);
   }
-
-  private interceptProperty(obj: object, isOwnProperty: boolean) {
-    let desc = getExtendedPropertyDescriptor(obj, this.name);
-    if (isOwnProperty) {
-      let virtualProperty: any; // TODO: we should do this on the object itself
-      if (desc) {
-        if (desc.value && desc.writable) { // it has value and can change
-          virtualProperty = desc.value;
-          delete desc.value;
-          delete desc.writable;
-          desc.get = function () { return virtualProperty; };
-          desc.set = function (value) { virtualProperty = value; }
-          desc.configurable = true;
-        }
-      } else {
-        desc = {
-          get: function () { return virtualProperty; },
-          set: function (value) { virtualProperty = value; },
-          enumerable: true,
-          configurable: true,
-          container: obj
-        };
-      }
-    }
-
-    if (desc) {
-      if (desc.value) {
-        this.setOriginal(desc.value);
-        desc.value = this.interceptor;
-        defineProperty(desc.container, this.name, desc);
-        this.status = InterceptionStatus.Intercepted;
-      } else if (desc.get || desc.set) {
-        const that = this;
-        const { get, set } = desc;
-        if (get) {
-          desc.get = function () {
-            const originalFunc = get.call(this);
-            if (originalFunc !== that.interceptor) {
-              that.setOriginal(originalFunc);
-            }
-            return that.interceptor;
-          };
-        }
-        if (set) {
-          desc.set = function (value) {
-            // set.call(this, value);
-            set.call(this, that.interceptor);
-            if (value !== that.interceptor && value !== that.original) {
-              that.setOriginal(value);
-            }
-            return that.interceptor;
-          }
-        }
-        defineProperty(desc.container, this.name, desc);
-        this.status = desc.configurable ? InterceptionStatus.Intercepted : InterceptionStatus.NotConfigurable;
-      } else {
-        __DEV__ && assert(false, `unexpected situation! PropertyDescriptor does not have value or get/set!`);
-      }
-    } else {
-      this.status = InterceptionStatus.NotFound;
-    }
-
-  }
-
-  interceptObjectOwnProperties(obj: object) {
-    this.interceptProperty(obj, true);
-  }
+  return funcInterceptor;
 }
