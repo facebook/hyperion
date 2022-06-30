@@ -90,6 +90,12 @@ export class FunctionInterceptorBase<
   public readonly interceptor: FuncType;
   private dispatcherFunc: FuncType;
 
+  /**
+   * The following allows the users of this class add additional information to the instances.
+   * One common usecase is checking if certain aspect is added via various callback mechanisms.
+   */
+  private data?: { [index: string | symbol]: any };
+
   constructor(name: Name, originalFunc: FuncType = unknownFunc) {
     super(name);
 
@@ -368,6 +374,16 @@ export class FunctionInterceptorBase<
   }
 
   //#endregion
+
+  public getData<T>(dataPropName: string): T | undefined {
+    return this.data?.[dataPropName];
+  }
+  public setData<T>(dataPropName: string, value: T) {
+    if (!this.data) {
+      this.data = {};
+    }
+    this.data[dataPropName] = value;
+  }
 }
 
 export class FunctionInterceptor<

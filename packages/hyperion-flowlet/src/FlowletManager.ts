@@ -8,7 +8,7 @@ import { CallbackType, interceptEventListener, isEventListenerObject } from "@hy
 import { Flowlet } from "./Flowlet";
 
 
-const IS_SETUP_PROP_NAME = `__isSetup`;
+const IS_FLOWLET_SETUP_PROP_NAME = `__isFlowletSetup`;
 
 export class FlowletManager<T extends Flowlet = Flowlet> {
   private flowletStack: T[] = [];
@@ -58,8 +58,8 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     }
 
     const funcInterceptor = interceptEventListener(listener);
-    if (!funcInterceptor[IS_SETUP_PROP_NAME]) {
-      funcInterceptor[IS_SETUP_PROP_NAME] = true;
+    if (!funcInterceptor.getData(IS_FLOWLET_SETUP_PROP_NAME)) {
+      funcInterceptor.setData(IS_FLOWLET_SETUP_PROP_NAME, true);
       // funcInterceptor.onArgsObserverAdd(() => {
       //   this.push(currentFLowlet);
       // });

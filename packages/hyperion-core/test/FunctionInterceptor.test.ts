@@ -74,6 +74,16 @@ describe("test modern classes", () => {
     expect(fi3).toStrictEqual(fi);
   });
 
+  test("test function interceptor data", () => {
+    const func = (i: number, s: string) => i + s.length;
+    func.x = 42;
+    const fi = interceptFunction(func, null, "tester");
+    const testPropName = 'randomProp';
+    fi.setData(testPropName, true);
+    expect(fi.getData(testPropName)).toBe(true);
+  });
+
+
   test("test .original", () => {
     const { IBShadow, IA, IB, B } = testSetup();
 
@@ -236,7 +246,7 @@ describe("test modern classes", () => {
     const o = new B();
     IBShadow.interceptObject(o);
 
-    let result = [];
+    let result: any[] = [];
 
     const argsObserver = <T>(value: T) => {
       result.push(value);
