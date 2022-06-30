@@ -9,6 +9,9 @@ export default defineConfig({
     dir: './dist',
     manualChunks: {
       "hyperionCore": [
+        "@hyperion/hyperion-core/src/FunctionInterceptor",
+        "@hyperion/hyperion-core/src/ConstructorInterceptor",
+        "@hyperion/hyperion-core/src/AttributeInterceptor",
         "@hyperion/hyperion-core/src/intercept",
         "@hyperion/hyperion-dom/src/INode",
         "@hyperion/hyperion-dom/src/IElement_",
@@ -25,10 +28,12 @@ export default defineConfig({
         "@hyperion/hyperion-dom/src/IXMLHttpRequest",
         "@hyperion/hyperion-util/src/onNetworkRequest",
       ],
-      "hyperionFlowlet": [
-        "@hyperion/hyperion-flowlet/src/Index",
+      "hyperionFlowletCore": [
         "@hyperion/hyperion-flowlet/src/Flowlet",
         "@hyperion/hyperion-flowlet/src/FlowletManager",
+      ],
+      "hyperionFlowlet": [
+        "@hyperion/hyperion-flowlet/src/Index",
       ],
     },
     chunkFileNames: "[name].js",
