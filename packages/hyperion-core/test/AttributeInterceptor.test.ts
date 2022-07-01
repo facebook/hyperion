@@ -51,33 +51,41 @@ describe("test Attribute Interceptor", () => {
     const o = new B();
     IBShadow.interceptObject(o);
 
-    let result: any[] = [];
+    const observer = jest.fn();
+    function expectGetSet(getValue, setValue) {
+      expect(observer.mock.calls.length).toBe(2);
+      expect(observer.mock.calls[0][0]).toBe(getValue);
+      expect(observer.mock.calls[1][0]).toBe(setValue);
+      observer.mockClear();
+    }
 
-    const argsObserver = <T>(value: T) => {
-      result.push(value);
-    };
+    IA.a.getter.onValueObserverAdd(observer);
+    IA.a.setter.onArgsObserverAdd(observer);
 
-    IA.a.getter.onValueObserverAdd(argsObserver);
-    IA.a.setter.onArgsObserverAdd(argsObserver);
+    IA.foo.getter.onValueObserverAdd(observer);
+    IA.foo.setter.onArgsObserverAdd(observer);
 
-    IA.foo.getter.onValueObserverAdd(argsObserver);
-    IA.foo.setter.onArgsObserverAdd(argsObserver);
+    IA.bar.getter.onValueObserverAdd(observer);
+    IA.bar.setter.onArgsObserverAdd(observer);
 
-    IA.bar.getter.onValueObserverAdd(argsObserver);
-    IA.bar.setter.onArgsObserverAdd(argsObserver);
+    IA.baz.getter.onValueObserverAdd(observer);
+    IA.baz.setter.onArgsObserverAdd(observer);
 
-    IA.baz.getter.onValueObserverAdd(argsObserver);
-    IA.baz.setter.onArgsObserverAdd(argsObserver);
-
-    IB.b.getter.onValueObserverAdd(argsObserver);
-    IB.b.setter.onArgsObserverAdd(argsObserver);
+    IB.b.getter.onValueObserverAdd(observer);
+    IB.b.setter.onArgsObserverAdd(observer);
 
     // a sequence of read/writes
     o.a = o.a + 20;
+    expectGetSet(10, 30);
+
     o.foo = !o.foo;
+    expectGetSet(void 0, true);
+
     o.baz *= 2;
+    expectGetSet(21, 42);
+
     o.b = o.b + "world";
-    expect(result.join()).toBe("10,30,,true,21,42,hello,helloworld");
+    expectGetSet("hello", "helloworld");
   });
 
   test("test repeated interception of same attribute", () => {
