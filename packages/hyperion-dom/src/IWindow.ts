@@ -5,7 +5,7 @@
 import { interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
 import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 import { DOMShadowPrototype } from "./DOMShadowPrototype";
-import { EventHandlerAttributeInterceptor } from "./EventHandlerAttributeInterceptor";
+import { interceptEventHandlerAttribute } from "./EventHandlerAttributeInterceptor";
 import { IEventTargetPrototype } from "./IEventTarget";
 
 export const IWindowPrototype = new DOMShadowPrototype(Window, IEventTargetPrototype, { sampleObject: window, registerOnPrototype: true });
@@ -19,9 +19,9 @@ export const XMLHttpRequest = interceptConstructorMethod("XMLHttpRequest", IWind
 
 
 //#region Event Handlers https://developer.mozilla.org/en-US/docs/Web/API/Window#event_handlers
-export const onerror = new EventHandlerAttributeInterceptor("onerror", IWindowPrototype);
+export const onerror = interceptEventHandlerAttribute("onerror", IWindowPrototype);
 
-export const ondevicemotion = new EventHandlerAttributeInterceptor("ondevicemotion", IWindowPrototype);
-export const ondeviceorientation = new EventHandlerAttributeInterceptor("ondeviceorientation", IWindowPrototype);
-export const onorientationchange = new EventHandlerAttributeInterceptor("onorientationchange", IWindowPrototype);
+export const ondevicemotion = interceptEventHandlerAttribute("ondevicemotion", IWindowPrototype);
+export const ondeviceorientation = interceptEventHandlerAttribute("ondeviceorientation", IWindowPrototype);
+export const onorientationchange = interceptEventHandlerAttribute("onorientationchange", IWindowPrototype);
 //#endretion

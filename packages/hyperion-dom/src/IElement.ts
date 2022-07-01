@@ -2,10 +2,10 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { AttributeInterceptor } from "@hyperion/hyperion-core/src/AttributeInterceptor";
+import { interceptAttribute } from "@hyperion/hyperion-core/src/AttributeInterceptor";
 import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 // import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
-import { ElementAttributeInterceptor } from "./ElementAttributeInterceptor";
+import { interceptElementAttribute } from "./ElementAttributeInterceptor";
 // import { INodePrototype } from "./INode";
 import * as IElememt_ from "./IElement_";
 export * from "./IElement_";
@@ -45,5 +45,5 @@ export const removeAttributeNode = interceptMethod('removeAttributeNode', IEleme
 // export const setAttributeNodeNS = interceptMethod('setAttributeNodeNS', IElementtPrototype);
 export const toggleAttribute = interceptMethod('toggleAttribute', IElementtPrototype);
 
-export const id = new ElementAttributeInterceptor("id", IElementtPrototype);
-export const innerHTML = new AttributeInterceptor("innerHTML", IElementtPrototype);
+export const id = interceptElementAttribute("id", IElementtPrototype);
+export const innerHTML = interceptAttribute("innerHTML", IElementtPrototype);
