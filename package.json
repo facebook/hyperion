@@ -14,7 +14,7 @@
     "_start": "tsdx watch",
     "_build": "tsdx build",
     "install-packages": "npm install --workspaces",
-    "build": "tsc & npm run build --workspaces & rollup -c",
+    "build": "tsc && npm run build --workspaces && rollup -c",
     "test": "npm test --workspaces",
     "_lint": "tsdx lint",
     "_prepare": "tsdx build",
