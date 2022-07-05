@@ -72,6 +72,11 @@ export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T, c
     return;
   }
 
+  __DEV__ && assert(
+    (typeof dest === "function" && typeof src === "function") || (typeof dest === "object" && typeof src === "object"),
+    "Can only copy own properties of functions and objects"
+  );
+
   const ownProps = Object.getOwnPropertyNames(src);
   for (let i = 0, length = ownProps.length; i < length; ++i) {
     const propName = ownProps[i];
@@ -90,10 +95,11 @@ export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T, c
     dest.toString = function () {
       return src.toString();
     }
-    if (Object.hasOwn(src, 'valueOf')) {
+    if (src.hasOwnProperty('valueOf')) {
       dest.valueOf = function () {
         return src.valueOf();
       }
     }
+    dest.prototype = src.prototype;
   }
 }

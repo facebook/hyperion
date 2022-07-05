@@ -29,7 +29,7 @@ export class MethodInterceptor<
     if (isOwnProperty) {
       let virtualProperty: any; // TODO: we should do this on the object itself
       if (desc) {
-        if (desc.value && desc.writable) { // it has value and can change
+        if (desc.writable && (desc.value || desc.hasOwnProperty("value"))) { // it has value and can change
           virtualProperty = desc.value;
           delete desc.value;
           delete desc.writable;
@@ -83,6 +83,17 @@ export class MethodInterceptor<
         }
         defineProperty(desc.container, this.name, desc);
         this.status = desc.configurable ? InterceptionStatus.Intercepted : InterceptionStatus.NotConfigurable;
+      } else if (desc.hasOwnProperty("value")) {
+        /**
+         * There was a .value = null on the prototype chain. We can assume this value will not change and just
+         * ignore it.
+         * We could also treat this just like the (isOwnProperty && desc.hasOwnProperty('value')) above, but
+         * that does not seem to provide any value.
+         * Also, since this is supposed to be a function, we would not expect other falsy values here (i.e. "", 0, ...)
+         * Only null would be fine
+         *  */
+        __DEV__ && assert(desc.value === null, `unexpected situation! PropertyDescriptor.value must be function or null!`);
+        this.status = InterceptionStatus.Intercepted;
       } else {
         __DEV__ && assert(false, `unexpected situation! PropertyDescriptor does not have value or get/set!`);
       }
