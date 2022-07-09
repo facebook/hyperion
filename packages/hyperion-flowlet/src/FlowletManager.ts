@@ -13,6 +13,8 @@ const IS_FLOWLET_SETUP_PROP_NAME = `__isFlowletSetup`;
 export class FlowletManager<T extends Flowlet = Flowlet> {
   private flowletStack: T[] = [];
 
+  constructor(public flowletCtor?: new (flowletName: string, parent?: T) => T) { }
+
   top(): T | null {
     const last = this.flowletStack.length - 1;
     return last >= 0 ? this.flowletStack[last] : null;
