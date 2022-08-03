@@ -68,7 +68,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     }
 
     const funcInterceptor = interceptEventListener(listener);
-    if (!funcInterceptor.getData(IS_FLOWLET_SETUP_PROP_NAME)) {
+    if (funcInterceptor && !funcInterceptor.getData(IS_FLOWLET_SETUP_PROP_NAME)) {
       funcInterceptor.setData(IS_FLOWLET_SETUP_PROP_NAME, true);
       // funcInterceptor.onArgsObserverAdd(() => {
       //   this.push(currentFLowlet);
@@ -93,13 +93,15 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
         return res;
       });
     }
-    return isEventListenerObject(listener) ? listener : <T>funcInterceptor.interceptor;
+    return isEventListenerObject(listener) || !funcInterceptor ? listener : <T>funcInterceptor.interceptor;
   }
 
   unwrap<T extends CallbackType | undefined | null>(listener: T): T {
     if (listener && !isEventListenerObject(listener) && isIntercepted(listener)) {
       const funcInterceptor = interceptEventListener(listener);
-      return <T>funcInterceptor.getOriginal();
+      if (funcInterceptor) {
+        return <T>funcInterceptor.getOriginal();
+      }
     }
     return listener;
   }

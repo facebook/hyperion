@@ -15,16 +15,22 @@ type FuncTypeOf<T extends CallbackType> = T extends EventListenerObject ? EventL
 type EventListenerFunctionInterceptor<FuncType extends InterceptableFunction> = GenericFunctionInterceptor<FuncType>;
 
 export function isEventListenerObject(func: CallbackType): func is EventListenerObject {
-  return typeof func === "object" && typeof func.handleEvent == "function";
+  return typeof func === "object" && (!func.handleEvent || typeof func.handleEvent == "function");
 }
 
-export function interceptEventListener<T extends CallbackType>(listener: T): EventListenerFunctionInterceptor<FuncTypeOf<T>> {
+export function interceptEventListener<T extends CallbackType>(listener: T | undefined | null): EventListenerFunctionInterceptor<FuncTypeOf<T>> | null | undefined {
   let funcInterceptor;
+  if (!listener) {
+    return;
+  }
+
   if (isEventListenerObject(listener)) {
-    funcInterceptor = interceptFunction(listener.handleEvent);
-    listener.handleEvent = funcInterceptor.interceptor;
+    if (listener.handleEvent) {
+      funcInterceptor = interceptFunction(listener.handleEvent);
+      listener.handleEvent = funcInterceptor.interceptor;
+    }
   } else {
     funcInterceptor = interceptFunction(listener);
   }
-  return <EventListenerFunctionInterceptor<FuncTypeOf<T>>>funcInterceptor;
+  return <EventListenerFunctionInterceptor<FuncTypeOf<T>> | null | undefined>funcInterceptor;
 }
