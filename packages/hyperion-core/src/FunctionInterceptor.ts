@@ -68,8 +68,8 @@ class OnArgsMapper<FuncType extends InterceptableFunction> extends Hook<OnArgsMa
   protected createMultiCallbackCall(callbacks: OnArgsMapperFunc<FuncType>[]): OnArgsMapperFunc<FuncType> {
     return function (this, args) {
       let result = args;
-      for (const cb of callbacks) {
-        result = cb.call(this, result);
+      for (let i = 0, len = callbacks.length; i < len; ++i) {
+        result = callbacks[i].call(this, result);
       }
       return result;
     }
@@ -84,8 +84,8 @@ class OnValueMapper<FuncType extends InterceptableFunction> extends Hook<OnValue
   protected createMultiCallbackCall(callbacks: OnValueMapperFunc<FuncType>[]): OnValueMapperFunc<FuncType> {
     return function (this, value) {
       let result = value;
-      for (const cb of callbacks) {
-        result = cb.call(this, result);
+      for (let i = 0, len = callbacks.length; i < len; ++i) {
+        result = callbacks[i].call(this, result);
       }
       return result;
     }

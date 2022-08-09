@@ -31,8 +31,8 @@ export class Hook<CallbackType extends Function> {
   protected createMultiCallbackCall(callbacks: CallbackType[]): CallbackType {
     const call = function (this: unknown): void {
       const currentCallbacks = callbacks; // We could also use this._callbacks
-      for (const cb of currentCallbacks) {
-        cb.apply(this, arguments);
+      for (let i = 0, len = currentCallbacks.length; i < len; ++i) {
+        currentCallbacks[i].apply(this, arguments);
       }
     }
     return <CallbackType>(<Function>call);

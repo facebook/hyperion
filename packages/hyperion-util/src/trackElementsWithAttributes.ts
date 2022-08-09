@@ -11,7 +11,8 @@ type ResultHook = Hook<(elem: Element, attrbuteName: string, attrbuteValue: stri
 export function trackElementsWithAttributes(attributeNames: string[]): ResultHook {
   const hook: ResultHook = new Hook();
 
-  for (const attr of attributeNames) {
+  for (let i = 0, len = attributeNames.length; i < len; ++i) {
+    const attr = attributeNames[i];
     const vattr = interceptElementAttribute(attr, IElementtPrototype);
     vattr.raw.setter.onArgsObserverAdd(function (this, value) {
       hook.call(this, attr, value);
