@@ -77,10 +77,20 @@ export class Hook<CallbackType extends Function> {
      * expensive than .call (e.g. detecting when a .call is running)
      */
     if (this._callbacks) {
-      const previousList = this._callbacks;
-      this._callbacks = previousList.filter(l => !condition(l));
+      const newList = this._callbacks.filter(l => !condition(l));
       // Alternatively we can find the index of cb and just replace it with EmptyCallback
-      return previousList.length > this._callbacks.length;
+
+      /**
+       * We must have changed .call to close on this._callbacks before, we update the .call
+       * now, and if we are in the middle of a .call already, it is safe, and we'll correct
+       * it next time.
+       */
+      const changed = this._callbacks.length > newList.length;
+      if (changed) {
+        this._callbacks = newList;
+        this.call = this.createMultiCallbackCall(this._callbacks);
+      }
+      return changed;
     } else if (condition(this.call)) {
       this.call = <CallbackType>EmptyCallback;
       return true;

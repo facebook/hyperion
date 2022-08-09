@@ -58,6 +58,45 @@ describe("test Hook", () => {
     expect(hook.remove(() => false)).toBe(false);
   });
 
+  test("remove multiple callbacks", () => {
+    const hook = new class extends Hook<(i: number) => number>{
+      protected createMultiCallbackCall(callbacks: ((i: number) => number)[]): (i: number) => number {
+        return function (i: number): number {
+          let result = i;
+          // read len first to ensure removing callbacks in the middle continue to work. 
+          for (let i = 0, len = callbacks.length; i < len; i++) {
+            const cb = callbacks[i];
+            result = cb.call(this, result);
+          }
+          return result;
+        }
+      }
+    }();
+
+    const cbs = [
+      hook.add(i => i * 2),
+      hook.add(i => i * 3),
+    ];
+
+    expect(hook.hasCallback(cbs[0])).toBe(true);
+    expect(hook.hasCallback(cbs[1])).toBe(true);
+    expect(hook.hasCallback()).toBe(true);
+
+    expect(hook.call(1)).toBe(6);
+
+    cbs.forEach(cb => hook.remove(cb));
+    expect(hook.hasCallback()).toBe(false);
+    expect(hook.call(20)).toBe(20);
+
+    hook.add(i => i * 5);
+    hook.add(i => i * 7, true);
+    hook.add(i => i * 11);
+
+    // make sure removing in the middle works!
+    expect(hook.call(1)).toBe(5 * 7 * 11);
+    expect(hook.call(1)).toBe(5 * 11);
+  });
+
   test("one once callback", () => {
     const hook = new Hook<(i: number) => boolean>();
     const cb = hook.add(i => i > 10, true);
