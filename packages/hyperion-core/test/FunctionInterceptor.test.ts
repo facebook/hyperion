@@ -356,4 +356,41 @@ describe("test modern classes", () => {
     expect(B_foo_observer.mock.calls.length).toBe(1);
   });
 
+  test("test multiple mappers", () => {
+    const observer = jest.fn<number, [number]>(i => i);
+    const fi = interceptFunction(observer);
+    const argMappers = [
+      fi.onArgsMapperAdd(([i]) => [i * 2]),
+      fi.onArgsMapperAdd(([i]) => [i * 3]),
+    ];
+
+    const input = 1;
+    let output = fi.interceptor(input);
+    expect(output).toBe(6);
+    expect(observer).toBeCalledTimes(1);
+    expect(observer.mock.calls[0][0]).toBe(output);
+    expect(observer.mock.results[0].value).toBe(output);
+
+    argMappers.forEach(h => fi.onArgsMapperRemove(h));
+
+    const valueMappers = [
+      fi.onValueMapperAdd(i => i * 5),
+      fi.onValueMapperAdd(i => i * 7),
+    ];
+
+    output = fi.interceptor(input);
+    expect(output).toBe(35);
+    expect(observer).toBeCalledTimes(2);
+    expect(observer.mock.calls[1][0]).toBe(input);
+    expect(observer.mock.results[1].value).toBe(input);
+
+    valueMappers.forEach(h => fi.onValueMapperRemove(h));
+
+    output = fi.interceptor(input);
+    expect(output).toBe(input);
+    expect(observer).toBeCalledTimes(3);
+    expect(observer.mock.calls[1][0]).toBe(input);
+    expect(observer.mock.results[1].value).toBe(output);
+  });
+
 });

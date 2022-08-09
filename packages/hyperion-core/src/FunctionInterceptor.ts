@@ -64,13 +64,33 @@ type FuncReturnType<T extends InterceptableFunction> =
   never;
 
 type OnArgsMapperFunc<FuncType extends InterceptableFunction> = ((this: FuncThisType<FuncType>, args: FuncParameters<FuncType>) => FuncParameters<FuncType>)
-class OnArgsMapper<FuncType extends InterceptableFunction> extends Hook<OnArgsMapperFunc<FuncType>> { }
+class OnArgsMapper<FuncType extends InterceptableFunction> extends Hook<OnArgsMapperFunc<FuncType>> {
+  protected createMultiCallbackCall(callbacks: OnArgsMapperFunc<FuncType>[]): OnArgsMapperFunc<FuncType> {
+    return function (this, args) {
+      let result = args;
+      for (const cb of callbacks) {
+        result = cb.call(this, result);
+      }
+      return result;
+    }
+  }
+}
 
 type OnArgsObserverFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, ...args: FuncParameters<FuncType>) => void | boolean | undefined;
 class OnArgsObserver<FuncType extends InterceptableFunction> extends Hook<OnArgsObserverFunc<FuncType>> { }
 
 type OnValueMapperFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => typeof value;
-class OnValueMapper<FuncType extends InterceptableFunction> extends Hook<OnValueMapperFunc<FuncType>> { }
+class OnValueMapper<FuncType extends InterceptableFunction> extends Hook<OnValueMapperFunc<FuncType>> {
+  protected createMultiCallbackCall(callbacks: OnValueMapperFunc<FuncType>[]): OnValueMapperFunc<FuncType> {
+    return function (this, value) {
+      let result = value;
+      for (const cb of callbacks) {
+        result = cb.call(this, result);
+      }
+      return result;
+    }
+  }
+}
 
 type OnValueObserverFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => void;
 class OnValueObserver<FuncType extends InterceptableFunction> extends Hook<OnValueObserverFunc<FuncType>> { }
