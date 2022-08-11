@@ -12,18 +12,25 @@ const IS_FLOWLET_SETUP_PROP_NAME = `__isFlowletSetup`;
 
 export class FlowletManager<T extends Flowlet = Flowlet> {
   private flowletStack: T[] = [];
+  private _top: T | null = null; // To optimize for faster reading of top;
 
   constructor(public flowletCtor?: new (flowletName: string, parent?: T) => T) { }
 
   top(): T | null {
-    const last = this.flowletStack.length - 1;
-    return last >= 0 ? this.flowletStack[last] : null;
+    return this._top;
   }
 
-  push(flowlet: T, reason?: string): T {
-    this.onPush.call(flowlet, reason);
-    this.flowletStack.push(flowlet);
-    return flowlet;
+  private updateTop() {
+    const last = this.flowletStack.length - 1;
+    this._top = last >= 0 ? this.flowletStack[last] : null;
+  }
+
+  push(flowlet: T, forkReason?: string): T {
+    const newFlowlet = forkReason && this.flowletCtor ? new this.flowletCtor(forkReason, flowlet) : flowlet;
+    this.onPush.call(flowlet, forkReason);
+    this.flowletStack.push(newFlowlet);
+    this.updateTop();
+    return newFlowlet;
   }
   readonly onPush = new Hook<(flowlet: T, reason?: string) => void>();
 
@@ -33,6 +40,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   */
   popIf(filter: (flowlet: T) => boolean) {
     this.flowletStack = this.flowletStack.filter(filter);
+    this.updateTop();
   }
 
   /**
@@ -48,6 +56,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     // __DEV__ && assert(!!flowlet, `Cannot pop undefined flowlet from top of the stack: ${currTop?.fullName()}`);
     if (currTop === flowlet) {
       this.flowletStack.pop();
+      this.updateTop();
     } else {
       this.popIf(f => f !== flowlet);
     }

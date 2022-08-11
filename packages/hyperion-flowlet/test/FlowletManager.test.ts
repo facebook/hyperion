@@ -125,4 +125,33 @@ describe("test FlowletManager", () => {
     expect(wrapped).toThrow(ExceptionText);
   });
 
+  test("push with fork reason", () => {
+    const manager = new FlowletManager(Flowlet);
+
+    const f1 = manager.push(new Flowlet("f1"));
+    expect(manager.top()).toStrictEqual(f1);
+    const f2 = new Flowlet("f2");
+    const f2_child = manager.push(f2, "reason1");
+    expect(f2_child.parent === f2).toBe(true);
+  });
+
+
+  test("Extending Flowlet & FlowletManager", () => {
+    class TestFlowlet extends Flowlet {
+    }
+    class TestFlowletManager extends FlowletManager<TestFlowlet> {
+    }
+    const manager = new TestFlowletManager(TestFlowlet);
+
+    const f1 = new TestFlowlet("f1");
+    expect(f1 instanceof TestFlowlet).toBe(true);
+
+    const f2 = manager.flowletCtor ? new manager.flowletCtor("f2") : null;
+    expect(f2 instanceof TestFlowlet).toBe(true);
+
+    const f3 = manager.push(f1, "reason1");
+    expect(f3 instanceof TestFlowlet).toBe(true);
+  });
+
+
 });
