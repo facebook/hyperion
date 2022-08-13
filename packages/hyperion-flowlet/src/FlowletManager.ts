@@ -3,7 +3,7 @@
  */
 
 import { Hook } from "@hyperion/hook";
-import { isIntercepted } from "@hyperion/hyperion-core/src/intercept";
+import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { CallbackType, interceptEventListener, isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
 import { Flowlet } from "./Flowlet";
 
@@ -105,11 +105,18 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     return isEventListenerObject(listener) || !funcInterceptor ? listener : <T>funcInterceptor.interceptor;
   }
 
-  unwrap<T extends CallbackType | undefined | null>(listener: T): T {
-    if (listener && !isEventListenerObject(listener) && isIntercepted(listener)) {
-      const funcInterceptor = interceptEventListener(listener);
+  getWrappedOrOriginal<T extends CallbackType | undefined | null>(listener: T): T {
+    /**
+     * During wrapping, we replace a function with its intercepted version, which they might be passed
+     * to other api (such as browser api). In all other cases, wrapping returns the same original listener
+     *
+     * When we try to call the reverse an api (e.g. removeEventListener after calling addEventListener), application
+     * may pass the original listener again, and we need to ensure the wrapped version is sent back.
+     */
+    if (listener && !isEventListenerObject(listener)) {
+      const funcInterceptor = getFunctionInterceptor(listener);
       if (funcInterceptor) {
-        return <T>funcInterceptor.getOriginal();
+        return <T>funcInterceptor.interceptor;
       }
     }
     return listener;

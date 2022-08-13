@@ -170,7 +170,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     return args;
   });
   IEventTarget.removeEventListener.onArgsMapperAdd(args => {
-    args[1] = flowletManager.unwrap(args[1]);
+    args[1] = flowletManager.getWrappedOrOriginal(args[1]);
     return args;
   });
 

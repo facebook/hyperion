@@ -74,4 +74,49 @@ describe("test flow of flowlets", () => {
     clearInterval(id);
     expect(r).toBe(0);
   });
+
+  test("add/remove listeners", async () => {
+    const manager = new FlowletManager();
+    const main = manager.push(new Flowlet("main"));
+    initFlowletTrackers(manager);
+
+    const div = window.document.createElement("div");
+    div.id = main.fullName;
+    window.document.body.appendChild(div);
+
+
+    const counter1 = new AsyncCounter(2);
+    const listener0 = {
+      handleEvent() {
+        counter1.countUp();
+      }
+    }
+    const listener1 = () => {
+      counter1.countUp();
+    };
+
+    const counter2 = new AsyncCounter(2);
+    const listener2 = () => {
+      counter2.countUp();
+    };
+
+    div.addEventListener("click", listener0);
+    div.addEventListener("click", listener1);
+    div.addEventListener("click", listener2);
+
+    div.dispatchEvent(new MouseEvent("click"));
+    const r1 = await counter1.reachTarget();
+    expect(r1).toBe(2);
+    expect(counter1.getCount()).toBe(2);
+    expect(counter2.getCount()).toBe(1);
+
+    div.removeEventListener("click", listener0);
+    div.removeEventListener("click", listener1);
+
+    div.dispatchEvent(new MouseEvent("click"));
+    const r2 = await counter2.reachTarget();
+    expect(r2).toBe(2);
+    expect(counter1.getCount()).toBe(2); // Should not have run again
+    expect(counter2.getCount()).toBe(2);
+  })
 });
