@@ -393,4 +393,16 @@ describe("test modern classes", () => {
     expect(observer.mock.results[1].value).toBe(output);
   });
 
+  test("test name prop copied to interceptor", () => {
+    function someFuncName(a: string, b: number) {
+      return a + b;
+    };
+    expect(someFuncName.name).toStrictEqual('someFuncName');
+
+    const fi = interceptFunction(someFuncName, false, null, "tester");
+
+    expect(someFuncName.name).toStrictEqual('someFuncName');
+    expect(fi.interceptor.name).toStrictEqual(someFuncName.name);
+  });
+
 });

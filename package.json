@@ -34,6 +34,9 @@
   },
   "author": "Mehrdad Reshadi",
   "module": "dist/.esm.js",
+  "engines": {
+    "npm": ">= 7.14.0"
+  },
   "size-limit": [
     {
       "path": "dist/.cjs.production.min.js",
