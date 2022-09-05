@@ -86,7 +86,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       //   this.pop(currentFLowlet);
       // })
       const flowletManager = this;
-      funcInterceptor.setCustom(function (this: any) {
+      funcInterceptor.setCustom(<any>function (this: any) {
         const handler: Function = funcInterceptor.getOriginal();
         if (flowletManager.top() === currentFLowlet) {
           return handler.apply(this, <any>arguments);
