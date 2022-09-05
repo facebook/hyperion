@@ -96,7 +96,7 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
   public getVirtualProperty<T>(name: string): T & VirtualProperty {
     const vtable = this.extension;
     const canonicalName = getVirtualPropertyName(name, vtable);
-    return <T>vtable[canonicalName];
+    return <T & VirtualProperty>vtable[canonicalName];
   }
 
   public setVirtualProperty<T>(name: string, virtualProp: T & VirtualProperty): T {
