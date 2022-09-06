@@ -100,11 +100,12 @@ export function copyOwnProperties<T extends ObjectOrFunction>(src: T, dest: T, c
         return src.valueOf();
       }
     }
-    const nameProp = 'name';
-    // should always be true, but just in case
-    if (ownProps.includes(nameProp)) {
-      const nameDesc = Object.getOwnPropertyDescriptor(src, nameProp) as PropertyDescriptor;
-      Object.defineProperty(dest, nameProp, nameDesc || {});
+    dest.prototype = src.prototype;
+    const nameDesc = Object.getOwnPropertyDescriptor(src, 'name') as PropertyDescriptor;
+    try {
+      Object.defineProperty(dest, 'name', nameDesc);
+    } catch (e) {
+      __DEV__ && console.error("Adding property name threw exception: ", e);
     }
   }
 }
