@@ -10,38 +10,69 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'Enhanced observability',
+    Svg: require('@site/static/img/observability.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Intercept and <i>Observe</i> the input outputs of any API automatically
+        without needing to modify the original source code.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Enhanced controlibility',
+    Svg: require('@site/static/img/control.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Intercept and <i>Control</i> the behavior of any API automatically
+        without modifiying the original source code.
       </>
     ),
   },
   {
-    title: 'Powered by React',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: 'Layered Architecture',
+    Svg: require('@site/static/img/layered.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Separated packages for each feature to simplify
+        usage and maximize testability.
       </>
     ),
   },
+  {
+    title: 'High performance',
+    Svg: require('@site/static/img/performance.svg').default,
+    description: (
+      <>
+        Highest performance (JIT friendly, tree-shaking friendly)
+      </>
+    )
+  },
+  {
+    title: 'Browser DOM interception',
+    Svg: require('@site/static/img/cross-browser.svg').default,
+    description: (
+      <>
+        Cross browser DOM API interception, handling deep & inconstent
+        prototype chains in browsers.
+      </>
+    )
+  },
+  {
+    title: 'Type Safety for scale',
+    Svg: require('@site/static/img/safety.svg').default,
+    description: (
+      <>
+        Fully typesafe API interception, enabling safe ussage
+        and modification of behavior.
+      </>
+    )
+  },
+
+
 ];
 
-function Feature({title, Svg, description}: FeatureItem) {
+function Feature({ title, Svg, description }: FeatureItem) {
   return (
     <div className={clsx('col col--4')}>
       <div className="text--center">
