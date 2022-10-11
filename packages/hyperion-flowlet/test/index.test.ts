@@ -35,7 +35,7 @@ describe("test flow of flowlets", () => {
         const currFlow = manager.push(main.fork("flow_" + counter.countUp().getCount())); // start a new flow
         {
           const div = window.document.createElement("div");
-          div.id = currFlow.fullName;
+          div.id = currFlow.fullName();
           window.document.body.appendChild(div);
 
           function createFlow(flowName: string) {
@@ -81,7 +81,7 @@ describe("test flow of flowlets", () => {
     initFlowletTrackers(manager);
 
     const div = window.document.createElement("div");
-    div.id = main.fullName;
+    div.id = main.fullName();
     window.document.body.appendChild(div);
 
 

@@ -23,7 +23,7 @@ describe("test FlowletManager", () => {
     const p1 = manager.pop(f2);
     const f1_1 = manager.push(f1.fork("f1.1"));
 
-    expect(f1_1.fullName).toBe("/main/f1/f1.1");
+    expect(f1_1.fullName()).toBe("/main/f1/f1.1");
 
     expect(manager.top()).toStrictEqual(f1_1);
     expect(manager.pop(f1_1)).toStrictEqual(f1_1);

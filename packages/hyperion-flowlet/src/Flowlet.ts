@@ -4,13 +4,19 @@
 
 export class Flowlet<T extends {} = {}> {
   readonly data: T;
-  readonly fullName: string;
+  private _fullName: string | null = null;
   constructor(
     public readonly name: string,
     public readonly parent?: Flowlet<T>
   ) {
-    this.fullName = `${this.parent?.fullName ?? ""}/${this.name}`;
     this.data = Object.create(parent?.data ?? null);
+  }
+
+  fullName(): string {
+    if (!this._fullName) {
+      this._fullName = `${this.parent?.fullName() ?? ""}/${this.name}`;
+    }
+    return this._fullName;
   }
 
   fork(name: string): Flowlet<T> {
