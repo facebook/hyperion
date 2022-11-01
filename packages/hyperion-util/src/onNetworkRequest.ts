@@ -9,6 +9,7 @@ import * as intercept from "@hyperion/hyperion-core/src/intercept";
 import { assert } from "@hyperion/global";
 
 type NetworkRequest = {
+  readonly body?: Document | BodyInit | null,
   readonly method: string;
   readonly url: string | URL; // TODO: should we always send on of the types?
 }
@@ -24,11 +25,13 @@ IWindow.fetch.onArgsObserverAdd((input, init) => {
   let request: NetworkRequest;
   if (typeof input === "string") {
     request = {
+      body: init?.body,
       method: init?.method ?? "get",
       url: input,
     };
   } else if (input instanceof Request) {
     request = {
+      body: input.body,
       method: input.method,
       url: input.url,
     }
@@ -48,11 +51,11 @@ IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
   intercept.setVirtualPropertyValue<NetworkRequest>(this, XHR_REQUEST_INFO_PROP, { method, url });
 });
 
-IXMLHttpRequest.send.onArgsObserverAdd(function (this, _body) {
+IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
   const request = intercept.getVirtualPropertyValue<NetworkRequest>(this, XHR_REQUEST_INFO_PROP);
   assert(request != null, `Unexpected situation! Request info is missing from xhr object`);
-  onNetworkRequest.call(request); // assert already ensures request is not undefined
+  onNetworkRequest.call({...request, body}); // assert already ensures request is not undefined
 });
 //#endregion
 
-//TODO: do we care about sendBeacon as well? 
+//TODO: do we care about sendBeacon as well?
