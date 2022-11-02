@@ -53,7 +53,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     if (!flowlet) {
       return currTop;
     }
-    // __DEV__ && assert(!!flowlet, `Cannot pop undefined flowlet from top of the stack: ${currTop?.fullName()}`);
+    // __DEV__ && assert(!!flowlet, `Cannot pop undefined flowlet from top of the stack: ${currTop?.getFullName()}`);
     if (currTop === flowlet) {
       this.flowletStack.pop();
       this.updateTop();

@@ -12,9 +12,9 @@ export class Flowlet<T extends {} = {}> {
     this.data = Object.create(parent?.data ?? null);
   }
 
-  fullName(): string {
+  getFullName(): string {
     if (!this._fullName) {
-      this._fullName = `${this.parent?.fullName() ?? ""}/${this.name}`;
+      this._fullName = `${this.parent?.getFullName() ?? ""}/${this.name}`;
     }
     return this._fullName;
   }
