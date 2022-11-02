@@ -9,7 +9,7 @@ import * as intercept from "@hyperion/hyperion-core/src/intercept";
 import { assert } from "@hyperion/global";
 
 type NetworkRequest = {
-  readonly body?: Document | BodyInit | null,
+  readonly body?: RequestInit['body'],
   readonly method: string;
   readonly url: string | URL; // TODO: should we always send on of the types?
 }
@@ -54,7 +54,7 @@ IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
 IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
   const request = intercept.getVirtualPropertyValue<NetworkRequest>(this, XHR_REQUEST_INFO_PROP);
   assert(request != null, `Unexpected situation! Request info is missing from xhr object`);
-  onNetworkRequest.call({...request, body}); // assert already ensures request is not undefined
+  onNetworkRequest.call((body instanceof Document) ? request : {...request, body}); // assert already ensures request is not undefined
 });
 //#endregion
 
