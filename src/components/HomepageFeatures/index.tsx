@@ -20,7 +20,7 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Enhanced controlibility',
+    title: 'Enhanced controllability',
     Svg: require('@site/static/img/control.svg').default,
     description: (
       <>
