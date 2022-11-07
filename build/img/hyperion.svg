@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 388.26 448.32">
+    <defs>
+        <style>
+            .cls-1,.cls-3{fill:none;stroke-miterlimit:10;}.cls-1{stroke:#bd1730;stroke-width:5.55px;}.cls-2{fill:#50585f;}.cls-3{stroke:#50585f;stroke-width:10px;}.cls-4{fill:#bd1730;}
+            @keyframes rotate {
+                0% {
+                    transform: rotate(0deg) scaleX(1);
+                }
+                50% {
+                    transform: rotate(180deg) scaleX(0);
+                }
+                100% {
+                    transform: rotate(360deg) scaleX(1);
+                }
+            }
+            @keyframes rotate2 {
+                0% {
+                    transform: rotate(360deg) scaleX(1);
+                }
+                50% {
+                    transform: rotate(180deg) scaleX(0);
+                }
+                100% {
+                    transform: rotate(0deg) scaleX(1);
+                }
+            }
+            #orbit1, #orbit2 {
+                animation: rotate 7s infinite;
+                animation-timing-function: linear;
+                transform-origin: 50%;
+            }
+            #orbit2 {
+                animation-duration: 4s;
+            }
+            #orbit3, #orbit4 {
+                animation: rotate2 10s infinite;
+                animation-timing-function: linear;
+                transform-origin: 50%;
+            }
+            #orbit4 {
+                animation-duration: 6s;
+            }
+        </style>
+    </defs>
+    <g id="Layer_2" data-name="Layer 2">
+        <g id="Hyperium_Logo" data-name="Hyperium Logo">
+            <g id="orbits">
+                <filter id="blur">
+                    <feGaussianBlur stdDeviation="3" />
+                </filter>
+                <ellipse id="orbit4" class="cls-1" cx="194.13" cy="224.16" rx="142" ry="82.78" filter="url(#blur)"/>
+                <ellipse id="orbit3" class="cls-1" cx="194.13" cy="224.16" rx="82.78" ry="142" filter="url(#blur)"/>
+                <ellipse id="orbit2" class="cls-1" cx="194.13" cy="224.16" rx="142" ry="82.78"
+                         transform="translate(-101.65 202.93) rotate(-45)" filter="url(#blur)"/>
+                <ellipse id="orbit1" class="cls-1" cx="194.13" cy="224.16" rx="82.78" ry="142"
+                         transform="translate(-101.65 202.93) rotate(-45)" filter="url(#blur)"/>
+            </g>
+            <g id="corners">
+                <polygon class="cls-2"
+                         points="230.63 21.07 230.63 38.39 194.13 17.32 157.63 38.39 157.63 21.07 194.13 0 230.63 21.07"/>
+                <polygon class="cls-2"
+                         points="230.63 409.93 230.63 427.25 194.13 448.32 157.63 427.25 157.63 409.93 194.13 431 230.63 409.93"/>
+                <polygon class="cls-2" points="51.5 99.67 15 120.74 15 162.89 0 154.23 0 112.08 36.5 91.01 51.5 99.67"/>
+                <polygon class="cls-2"
+                         points="388.26 294.09 388.26 336.24 351.76 357.31 336.76 348.65 373.26 327.58 373.26 285.43 388.26 294.09"/>
+                <polygon class="cls-2"
+                         points="51.5 348.65 36.5 357.31 0 336.24 0 294.09 15 285.43 15 327.58 51.5 348.65"/>
+                <polygon class="cls-2"
+                         points="388.26 112.08 388.26 154.23 373.26 162.89 373.26 120.74 336.76 99.67 351.76 91.01 388.26 112.08"/>
+            </g>
+            <polygon id="core-frame" class="cls-3"
+                     points="233.63 246.97 233.63 201.35 194.13 178.55 154.63 201.35 154.63 246.97 194.13 269.77 233.63 246.97"/>
+            <circle id="core" class="cls-4" cx="194.13" cy="224.16" r="15" filter="url(#blur)"/>
+        </g>
+    </g>
+</svg>
