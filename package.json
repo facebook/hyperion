@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion",
+  "name": "hyperionjs",
   "description": "Hyperion library to extend objects with 'aspects' automatically",
   "version": "0.1.0",
   "license": "MIT",
