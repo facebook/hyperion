@@ -13,7 +13,7 @@ import type {
 import * as IReactConsts from './IReactConsts';
 
 import React from "react";
-import { mixed } from './FlowToTsTypes';
+import { mixed, $Values } from './FlowToTsTypes';
 
 declare function FBLogger(prj: string): any;
 
@@ -23,18 +23,52 @@ type ReactElementNode = {
   props: ReactComponentObjectProps & { children?: ReactNode },
 };
 
+// type VisitorFunc<
+//   ComponentType,
+//   PropsType,
+//   VisitorParamType,
+//   VisitorReturnType,
+//   NodeType
+// > = ((
+//   component: ComponentType,
+//   props: PropsType,
+//   param: VisitorParamType,
+//   node?: NodeType,
+// ) => VisitorReturnType | null | undefined) | null | undefined;
+
 type VisitorFunc<
-  ComponentType,
-  PropsType,
-  VisitorParamType,
-  VisitorReturnType,
-  NodeType
+  in ComponentType,
+  in PropsType,
+  in VisitorParamType,
+  out VisitorReturnType,
+  in NodeType
 > = ((
   component: ComponentType,
   props: PropsType,
   param: VisitorParamType,
-  node: NodeType,
-) => VisitorReturnType | null | undefined) | null | undefined;
+  node?: NodeType,
+) => VisitorReturnType | null | undefined);
+
+
+type VisitorComponentTypes<ComponentPropsType> = {
+  domElement: string,
+  component: ReactElementComponentType<ComponentPropsType>,
+  forwardRef: ReactForwardRefType<ComponentPropsType>,
+  memo: ReactMemoType<ComponentPropsType>,
+  provider: ReactSpecialComponent,
+  context: ReactSpecialComponent,
+  fragment: symbol,
+};
+
+type VisitorComponentPropsTypes<DomPropsType, ComponentPropsType> = {
+  domElement: DomPropsType,
+  component: ComponentPropsType,
+  forwardRef: ComponentPropsType,
+  memo: ComponentPropsType,
+  provider: ComponentPropsType,
+  context: ComponentPropsType,
+  fragment: { children: ReactNode },
+};
 
 type ALReactElementVisitor<
   DomPropsType,
@@ -42,76 +76,23 @@ type ALReactElementVisitor<
   VisitorParamType,
   VisitorReturnType,
   NodeType,
-> = {
-  domElement?: VisitorFunc<
-    string,
-    DomPropsType,
-    VisitorParamType,
-    VisitorReturnType,
-    NodeType
-  >,
-
-  component?: VisitorFunc<
-    ReactElementComponentType<ComponentPropsType>,
-    ComponentPropsType,
-    VisitorParamType,
-    VisitorReturnType,
-    NodeType
-  >,
-
-  forwardRef?: VisitorFunc<
-    ReactForwardRefType<ComponentPropsType>,
-    ComponentPropsType,
-    VisitorParamType,
-    VisitorReturnType,
-    NodeType
-  >,
-
-  memo?: VisitorFunc<
-    ReactMemoType<ComponentPropsType>,
-    ComponentPropsType,
-    VisitorParamType,
-    VisitorReturnType,
-    NodeType
-  >,
-
-  provider?: VisitorFunc<
-    ReactSpecialComponent,
-    ComponentPropsType,
-    VisitorParamType,
-    VisitorReturnType,
-    NodeType
-  >,
-
-  context?: VisitorFunc<
-    ReactSpecialComponent,
-    ComponentPropsType,
-    VisitorParamType,
-    VisitorReturnType,
-    NodeType
-  >,
-
-  fragment?: VisitorFunc<
-    symbol,
-    { children: ReactNode },
-    VisitorParamType,
-    VisitorReturnType,
-    NodeType
-  >,
-
-  __default?: VisitorFunc<
-    | string
-    | ReactElementComponentType<ComponentPropsType>
-    | ReactForwardRefType<ComponentPropsType>
-    | ReactMemoType<ComponentPropsType>
-    | ReactSpecialComponent
-    | symbol,
-    DomPropsType | ComponentPropsType | { children: ReactNode },
-    VisitorParamType,
-    VisitorReturnType,
-    NodeType
-  >,
-};
+> =
+  {
+    [Key in keyof VisitorComponentTypes<ComponentPropsType>]?: VisitorFunc<
+      VisitorComponentTypes<ComponentPropsType>[Key],
+      VisitorComponentPropsTypes<DomPropsType, ComponentPropsType>[Key],
+      VisitorParamType,
+      VisitorReturnType,
+      NodeType>;
+  } & {
+    __default?: VisitorFunc<
+      $Values<VisitorComponentTypes<ComponentPropsType>>,
+      $Values<VisitorComponentPropsTypes<DomPropsType, ComponentPropsType>>,
+      VisitorParamType,
+      VisitorReturnType,
+      NodeType
+    >;
+  };
 
 function getVisitor<
   DomPropsType,
@@ -128,13 +109,13 @@ function getVisitor<
     VisitorReturnType,
     NodeType
   >,
-): VisitorFunc<
-  mixed,
-  DomPropsType | ComponentPropsType | { children: ReactNode },
+): $Values<ALReactElementVisitor<
+  DomPropsType,
+  ComponentPropsType,
   VisitorParamType,
   VisitorReturnType,
   NodeType
-> {
+>> {
   let visitor;
 
   switch (typeof component) {
@@ -224,8 +205,6 @@ function getVisitor<
 
   visitor = visitor ?? visitors.__default;
 
-  // $FlowIgnore[incompatible-return] 
-  // @ts-ignore
   return visitor;
 }
 
@@ -251,9 +230,8 @@ function visitElement<
   const visitor = getVisitor(component, visitors);
 
   return visitor?.(
-    component,
-    // $FlowIgnore[incompatible-call]
     // @ts-ignore
+    component,
     props,
     param,
     node,
@@ -311,9 +289,6 @@ function visitNode<
       visitNode(node[i], param, visitors);
     }
   } else {
-    // $FlowIgnore[incompatible-exact]
-    // $FlowIgnore[prop-missing]
-    // $FlowIgnore[incompatible-variance]
     // @ts-ignore
     const element: ReactElementNode = node;
 
