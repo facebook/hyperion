@@ -1,9 +1,9 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
-import * as IReact from "./IReact";
-import LargeComp from './LargeComponent';
-import Counter from "./Counter";
+import LargeComp from './component/LargeComponent';
+import Counter from "./component/Counter";
+import NestedComponent from './component/NestedComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -23,8 +23,6 @@ function InitComp() {
   </div>);
 }
 
-// IReact.init();
-
 function App() {
 
   const maxDepth = 1000;
@@ -32,10 +30,10 @@ function App() {
   return (
     <div className="App">
       <div>
-        <Counter></Counter>
+        {/* <Counter></Counter> */}
       </div>
       <div>
-        <InitComp></InitComp>
+        <NestedComponent></NestedComponent>
       </div>
 
 
@@ -49,6 +47,7 @@ export default App;
 {/* <h1>Large tree without interception:</h1>
       <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
 
+        <InitComp></InitComp>
 
       <h1>Interception enabled</h1>
 

@@ -15,11 +15,11 @@ export function init() {
   let funcCount = 0;
   IReactComponent.onReactFunctionComponentElement.add(component => {
     funcCount++;
-    // console.log(component);
+    console.log(component);
   });
 
-  // IReactRuntime.jsxDEV.onArgsObserverAdd((type, props, children) => {
-  //   console.log(type);
-  // })
+  IReactRuntime.jsxDEV.onArgsObserverAdd((type, props, children) => {
+    console.log(type);
+  })
 
 }
