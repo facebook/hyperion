@@ -1,5 +1,5 @@
 import { intercept, interceptRuntime } from "@hyperion/hyperion-react/src/IReact";
-// import { createReactNodeVisitor } from "@hyperion/hyperion-react/src/IReactElementVisitor";
+import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import React from 'react';
 import ReactDev from "react/jsx-dev-runtime";
@@ -12,12 +12,15 @@ export function init() {
   const IReactRuntime = interceptRuntime(ReactDev as any);
   IReactComponent.init(IReact, IReactRuntime)
 
-  IReactComponent.onReactFunctionComponentElement.add(component => {
-    console.log('func comp', component.displayName);
+  let extId = 0;
+  const extensionGetter = IReactPropsExtension.init(IReact, IReactRuntime, () => ({ id: extId++ }));
+
+  IReactComponent.onReactFunctionComponentElement.add((component, props) => {
+    console.log('func comp', component.displayName, extensionGetter(props));
   });
 
-  IReactComponent.onReactClassComponentElement.add(component => {
-    console.log('class comp', component.name);
+  IReactComponent.onReactClassComponentElement.add((component, props) => {
+    console.log('class comp', component.name, extensionGetter(props));
   });
 
   IReactComponent.onReactDOMElement.add(component => {
