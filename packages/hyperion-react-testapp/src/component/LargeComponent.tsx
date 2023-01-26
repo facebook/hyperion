@@ -1,5 +1,5 @@
 import React from "react";
-import { interceptionStatus } from "./IReact";
+import { interceptionStatus } from "../IReact";
 
 class Timer {
   private startTime: number = performance.now();

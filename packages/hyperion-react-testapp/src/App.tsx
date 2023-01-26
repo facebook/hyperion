@@ -34,6 +34,7 @@ function App() {
       </div>
       <div>
         <NestedComponent></NestedComponent>
+        <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
       </div>
 
 
@@ -45,7 +46,7 @@ function App() {
 export default App;
 
 {/* <h1>Large tree without interception:</h1>
-      <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
+     
 
         <InitComp></InitComp>
 
