@@ -20,6 +20,7 @@ import { createReactElementVisitor } from './IReactElementVisitor';
 import { assert } from '@hyperion/global';
 import * as React from 'react';
 import { Class, mixed } from './FlowToTsTypes';
+import TestAndSet from './TestAndSet';
 
 // $FlowIgnore[unclear-type]
 type IAny = any;
@@ -96,12 +97,11 @@ export const onReactSpecialObjectElement: Hook<
   (component: ReactSpecialComponentTypes<IAny>, props: IAny) => void
 > = new Hook();
 
-let initialized = false;
+const initialized = new TestAndSet();
 export function init(IReactModule: IReact.IReactModuleExports, IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports): void {
-  if (initialized) {
+  if (initialized.testAndSet()) {
     return;
   }
-  initialized = true;
 
   const interceptionInfo = new Map<
     TReactClassComponent | Class<TReactClassComponent>,
