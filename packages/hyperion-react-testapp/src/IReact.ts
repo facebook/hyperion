@@ -12,14 +12,32 @@ export function init() {
   const IReactRuntime = interceptRuntime(ReactDev as any);
   IReactComponent.init(IReact, IReactRuntime)
 
-  let funcCount = 0;
   IReactComponent.onReactFunctionComponentElement.add(component => {
-    funcCount++;
-    console.log(component);
+    console.log('func comp', component.displayName);
   });
 
-  IReactRuntime.jsxDEV.onArgsObserverAdd((type, props, children) => {
-    console.log(type);
-  })
+  IReactComponent.onReactClassComponentElement.add(component => {
+    console.log('class comp', component.name);
+  });
+
+  IReactComponent.onReactDOMElement.add(component => {
+    console.log('dom comp', component);
+  });
+
+  IReactComponent.onReactSpecialObjectElement.add(component => {
+    console.log('special comp', component);
+  });
+
+  IReactComponent.onReactFunctionComponentIntercept.add(component => {
+    console.log('func comp intercept', component);
+  });
+
+  IReactComponent.onReactClassComponentIntercept.add(component => {
+    console.log('class comp intercept', component);
+  });
+
+  // IReactRuntime.jsxDEV.onArgsObserverAdd((type, props, children) => {
+  //   console.log(type);
+  // })
 
 }
