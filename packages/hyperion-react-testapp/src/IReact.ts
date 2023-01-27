@@ -1,8 +1,11 @@
 import { intercept, interceptRuntime } from "@hyperion/hyperion-react/src/IReact";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
+import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import React from 'react';
 import ReactDev from "react/jsx-dev-runtime";
+import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
+import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 
 export let interceptionStatus = "disabled";
 export function init() {
@@ -10,7 +13,12 @@ export function init() {
   interceptionStatus = "enabled";
   const IReact = intercept(React)
   const IReactRuntime = interceptRuntime(ReactDev as any);
-  IReactComponent.init(IReact, IReactRuntime)
+  IReactComponent.init(IReact, IReactRuntime);
+
+  const flowletManager = new FlowletManager(Flowlet);
+  flowletManager.push(new Flowlet("top"));
+
+  IReactFlowlet.init(IReact, IReactRuntime, flowletManager);
 
   let extId = 0;
   const extensionGetter = IReactPropsExtension.init(IReact, IReactRuntime, () => ({ id: extId++ }));

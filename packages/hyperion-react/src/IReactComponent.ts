@@ -30,7 +30,7 @@ interface ReactClassComponent<PropsType> extends React.Component<PropsType> {
   name?: string,
 };
 
-type ReactFunctionComponent<PropsType> = IReact.ReactStatelessFunctionalComponent<PropsType>;
+export type ReactFunctionComponent<PropsType> = IReact.ReactStatelessFunctionalComponent<PropsType>;
 
 export type GenericReactComponent = ReactComponentType<IAny>;
 
@@ -78,7 +78,7 @@ export const onReactClassComponentIntercept: Hook<
 > = new Hook();
 
 export const onReactFunctionComponentIntercept: Hook<
-  <PropsType> (fi: FunctionInterceptor<ReactFunctionComponent<PropsType>, 'render', ReactFunctionComponent<PropsType>>) => void
+  <PropsType extends {}> (fi: FunctionInterceptor<ReactFunctionComponent<PropsType>, 'render', ReactFunctionComponent<PropsType>>) => void
 > = new Hook();
 
 export const onReactDOMElement: Hook<
