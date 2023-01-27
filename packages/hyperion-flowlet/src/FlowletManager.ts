@@ -14,7 +14,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   private flowletStack: T[] = [];
   private _top: T | null = null; // To optimize for faster reading of top;
 
-  constructor(public flowletCtor?: new (flowletName: string, parent?: T) => T) { }
+  constructor(public flowletCtor: new (flowletName: string, parent?: T) => T) { }
 
   top(): T | null {
     return this._top;
