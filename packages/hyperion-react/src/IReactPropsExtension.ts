@@ -6,7 +6,7 @@ import * as IReact from "./IReact";
 import TestAndSet from "./TestAndSet";
 import * as IReactComponent from "./IReactComponent";
 
-interface ExtendedProps<T> {
+export interface ExtendedProps<T> extends React.PropsWithChildren {
   __ext?: T;
 }
 
