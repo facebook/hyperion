@@ -4,8 +4,8 @@ import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import React from 'react';
 import ReactDev from "react/jsx-dev-runtime";
-import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
-import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
+import { FlowletManager } from "./FlowletManager";
+import * as  Surface from "./component/Surface";
 
 export let interceptionStatus = "disabled";
 export function init() {
@@ -15,10 +15,8 @@ export function init() {
   const IReactRuntime = interceptRuntime(ReactDev as any);
   IReactComponent.init(IReact, IReactRuntime);
 
-  const flowletManager = new FlowletManager(Flowlet);
-  flowletManager.push(new Flowlet("top"));
-
-  IReactFlowlet.init(IReact, IReactRuntime, flowletManager);
+  IReactFlowlet.init(IReact, IReactRuntime, FlowletManager);
+  Surface.init(IReact, IReactRuntime);
 
   let extId = 0;
   const extensionGetter = IReactPropsExtension.init(IReact, IReactRuntime, () => ({ id: extId++ }));
