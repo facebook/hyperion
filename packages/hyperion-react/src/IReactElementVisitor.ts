@@ -67,7 +67,7 @@ type VisitorComponentPropsTypes<DomPropsType, ComponentPropsType> = {
   memo: ComponentPropsType,
   provider: ComponentPropsType,
   context: ComponentPropsType,
-  fragment: { children: ReactNode },
+  fragment: { children: ReactNode; __ext: never },
 };
 
 type ALReactElementVisitor<

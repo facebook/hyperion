@@ -10,6 +10,7 @@ import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
+import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElementVisitor';
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import type * as React from 'react';
@@ -60,11 +61,19 @@ type InitOptions<
 
 const SURFACE_SEPARATOR = "/";
 
-// type InitFunction<R> = <
-//   DataType extends FlowletDataType,
-//   FlowletType extends Flowlet<DataType>,
-//   FlowletManagerType extends FlowletManager<FlowletType>
-// >(options: InitOptions<DataType, FlowletType, FlowletManagerType>) => R;
+class SurfaceDOMString<
+  DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>
+> extends IReactFlowlet.PropsExtension<DataType, FlowletType> {
+  surface: string | undefined;
+  getSurface(): string | undefined {
+    return this.surface;
+  }
+
+  toString(): string {
+    return this.getSurface() ?? '';
+  }
+}
 
 function setupDomElementSurfaceAttribute<
   DataType extends FlowletDataType,
@@ -80,16 +89,6 @@ function setupDomElementSurfaceAttribute<
   */
   const UNKNOWN_FLOWLET = new flowletManager.flowletCtor('UNKNOWN');
 
-  class SurfaceDOMString extends IReactFlowlet.PropsExtension<DataType, FlowletType> {
-    surface: string | undefined;
-    getSurface(): string | undefined {
-      return this.surface;
-    }
-
-    toString(): string {
-      return this.getSurface() ?? '';
-    }
-  }
   const allowedTags = new Set(['div', 'span', 'li', 'button']);
 
   IReactComponent.onReactDOMElement.add((component, props) => {
@@ -151,24 +150,6 @@ function setupDomElementSurfaceAttribute<
   });
 }
 
-
-
-// function setupSurfaceComponent<
-//   DataType extends FlowletDataType,
-//   FlowletType extends Flowlet<DataType>,
-//   FlowletManagerType extends FlowletManager<FlowletType>,
-// >(
-//   flowletManager: FlowletManagerType,
-//   domSurfaceAttributeName: string = "data-sruface",
-//   domFlowletAttributeName?: string,
-// ): React.FunctionComponent<IReactPropsExtension.ExtendedProps<IReactFlowlet.PropsExtension<DataType, FlowletType>> & {
-//   flowlet: FlowletType,
-//   flowletManager: FlowletManagerType,
-// }> {
-
-//   return Surface;
-// }
-
 export function init<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
@@ -176,7 +157,7 @@ export function init<
 // ALChannelEventType extends ALChannelSurfaceEvent,
 // ALChannel extends  FastEventEmitter<ALChannelEventType>,
 >(options: InitOptions<DataType, FlowletType, FlowletManagerType>): ALSurfaceHOC {
-  const { ReactModule, IReactModule, IJsxRuntimeModule, flowletManager } = options;
+  const { ReactModule, IReactModule, IJsxRuntimeModule, flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
 
   IReactFlowlet.init<DataType, FlowletType, FlowletManagerType>(
     IReactModule,
@@ -212,10 +193,6 @@ export function init<
       return this.flowlet?.data.surface;
     }
   }
-
-  // interface IDomElementExtendedProps extends IExtendedProps {
-  //   [index: 'data-surfaceid']: ?SurfaceDOMString;
-  // }
 
   function Surface(props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension> & {
     flowlet: FlowletType,
@@ -268,77 +245,83 @@ export function init<
     return result;
   }
 
-  // function updateFlowlet(
-  //   ext: ?PropsExtension,
-  //   flowlet: FlowletType,
-  //   children: React.Node,
-  //   deep: boolean,
-  // ): ?boolean {
-  //   if (!ext || !(ext instanceof PropsExtension)) {
-  //     return;
-  //   }
+  function updateFlowlet(
+    ext: IReactFlowlet.PropsExtension<DataType, FlowletType> | undefined,
+    flowlet: FlowletType,
+    children: React.ReactNode,
+    deep: boolean,
+  ): boolean | undefined | null {
+    if (!ext || !(ext instanceof IReactFlowlet.PropsExtension<DataType, FlowletType>)) {
+      return;
+    }
 
-  //   const extFlowlet = ext.getFlowlet();
-  //   if (!extFlowlet) {
-  //     return;
-  //   }
+    const extFlowlet = ext.flowlet;
+    if (!extFlowlet) {
+      return;
+    }
 
-  //   if (extFlowlet.data.surface !== flowlet.data.surface) {
-  //     ext.setFlowlet(flowlet);
-  //   }
-  //   if (deep) {
-  //     return propagateFlowletDown(children, flowlet);
-  //   }
-  // }
+    if (extFlowlet.data.surface !== flowlet.data.surface) {
+      ext.flowlet = flowlet;
+    }
+    if (deep) {
+      return propagateFlowletDown(children, flowlet);
+    }
+    return;
+  }
 
-  const propagateFlowletDown = (_children: any, _flowlet: any) => void 0;
-  // const propagateFlowletDown = createReactNodeVisitor<
-  //   IDomElementExtendedProps,
-  //   IExtendedProps,
-  //   FlowletType,
-  //   ?boolean,
-  // >({
-  //   domElement: (_component, props, flowlet, _node) => {
-  //     const ext = props[AUTO_LOGGING_SURFACE];
-  //     if (ext instanceof SurfaceDOMString) {
-  //       ext.surface = flowlet.data.surface;
-  //     }
-  //     updateFlowlet(ext, flowlet, props.children, false);
-  //     return true;
-  //   },
-  //   component: (component, props, flowlet, _node) => {
-  //     if (component !== Surface) {
-  //       return updateFlowlet(props.__ext, flowlet, props.children, true);
-  //     }
-  //   },
-  //   memo: (_component, _props, flowlet, node) => {
-  //     let result: ?boolean;
-  //     for (
-  //       // $FlowIgnore[prop-missing]
-  //       let fiberNode = node?._owner;
-  //       fiberNode;
-  //       fiberNode = fiberNode.sibling
-  //     ) {
-  //       const memoized = fiberNode.memoizedProps;
-  //       const pending = fiberNode.pendingProps;
-  //       if (memoized) {
-  //         result =
-  //           updateFlowlet(memoized.__ext, flowlet, memoized.children, true) ||
-  //           result;
-  //       }
 
-  //       if (memoized !== pending && pending) {
-  //         result =
-  //           updateFlowlet(pending.__ext, flowlet, pending.children, true) ||
-  //           result;
-  //       }
-  //     }
-  //     return result;
-  //   },
-  //   __default: (_component, props, flowlet, _node) => {
-  //     return updateFlowlet(props.__ext, flowlet, props.children, true);
-  //   },
-  // });
+  type IDomElementExtendedProps = IReactPropsExtension.ExtendedProps<SurfacePropsExtension> & {
+    [index: string]: SurfaceDOMString<DataType, FlowletType>;
+  }
+
+  const propagateFlowletDown = IReactElementVisitor.createReactNodeVisitor<
+    IDomElementExtendedProps,
+    IReactPropsExtension.ExtendedProps<SurfacePropsExtension>,
+    FlowletType,
+    boolean | undefined
+  >({
+    domElement: (_component, props, flowlet, _node) => {
+      const ext = props[domSurfaceAttributeName];
+      if (ext instanceof SurfaceDOMString) {
+        ext.surface = flowlet.data.surface;
+      }
+      updateFlowlet(ext, flowlet, props.children, false);
+      return true;
+    },
+    component: (component, props, flowlet, _node) => {
+      if (component !== Surface) {
+        return updateFlowlet(props.__ext, flowlet, props.children, true);
+      }
+      return;
+    },
+    memo: (_component, _props, flowlet, node) => {
+      let result: boolean | undefined;
+      for (
+        // @ts-ignore
+        let fiberNode = node?._owner;
+        fiberNode;
+        fiberNode = fiberNode.sibling
+      ) {
+        const memoized = fiberNode.memoizedProps;
+        const pending = fiberNode.pendingProps;
+        if (memoized) {
+          result =
+            updateFlowlet(memoized.__ext, flowlet, memoized.children, true) ||
+            result;
+        }
+
+        if (memoized !== pending && pending) {
+          result =
+            updateFlowlet(pending.__ext, flowlet, pending.children, true) ||
+            result;
+        }
+      }
+      return result;
+    },
+    __default: (_component, props, flowlet, _node) => {
+      return updateFlowlet(props.__ext, flowlet, props.children, true);
+    },
+  });
 
   return ({ surface }, renderer) => {
     const topFlowlet = flowletManager.top();
