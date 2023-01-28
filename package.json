@@ -55,6 +55,7 @@
     "./packages/hyperion-dom",
     "./packages/hyperion-flowlet",
     "./packages/hyperion-react",
+    "./packages/hyperion-autologging",
     "./packages/hyperion-util"
   ],
   "dependencies": {
@@ -64,6 +65,7 @@
     "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-flowlet": "*",
     "@hyperion/hyperion-react": "*",
+    "@hyperion/hyperion-autologging": "*",
     "@hyperion/hyperion-util": "*"
   },
   "devDependencies": {
