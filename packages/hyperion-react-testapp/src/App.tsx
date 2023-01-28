@@ -4,6 +4,7 @@ import './App.css';
 import LargeComp from './component/LargeComponent';
 import Counter from "./component/Counter";
 import NestedComponent from './component/NestedComponent';
+import * as IReact from "./IReact";
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -24,6 +25,7 @@ function InitComp() {
 }
 
 function App() {
+  IReact.init();
 
   const maxDepth = 1000;
 
