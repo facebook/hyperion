@@ -7,7 +7,7 @@ export class Flowlet<T extends {} = {}> {
   private _fullName: string | null = null;
   constructor(
     public readonly name: string,
-    public readonly parent?: Flowlet<T>
+    public readonly parent?: Flowlet<T> | null
   ) {
     this.data = Object.create(parent?.data ?? null);
   }
