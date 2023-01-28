@@ -16,9 +16,27 @@ import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
  * from the data type is the `surface` field. Sonce, ALFlowlet may change
  * overtime, we don't want to create an uncessary dependency on that.
  */
-interface FlowletDataType {
+export interface FlowletDataType {
   surface?: string,
 };
+
+
+let _globalExtId = 0;
+export class PropsExtension<
+  DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>
+> {
+  readonly id: number = _globalExtId++; // Useful for debugging
+  flowlet: FlowletType;
+
+  constructor(flowlet: FlowletType) {
+    this.flowlet = flowlet;
+  }
+
+  toString(): string {
+    return this.flowlet.getFullName();
+  }
+}
 
 
 let initialized = new TestAndSet();
@@ -40,26 +58,13 @@ export function init<
     '[AL]FlowletManager does not have a flowlet constructor.',
   );
 
-  let _globalExtId = 0;
-  class PropsExtension {
-    readonly id: number = _globalExtId++; // Useful for debugging
-    flowlet: FlowletType;
-
-    constructor(flowlet: FlowletType) {
-      this.flowlet = flowlet;
-    }
-
-    toString(): string {
-      return this.flowlet.getFullName();
-    }
-  }
 
   const extensionGetter = IReactPropsExtension.init(IReactModule, IJsxRuntimeModule, () => {
     const top = flowletManager.top();
     return top ? new PropsExtension(top) : null
   });
 
-  type ExtendedProps = IReactPropsExtension.ExtendedProps<PropsExtension>;
+  type ExtendedProps = IReactPropsExtension.ExtendedProps<PropsExtension<DataType, FlowletType>>;
   type InterceptedProps = IReact.ReactComponentObjectProps & ExtendedProps;
   type ComponentWithFlowlet = React.Component<InterceptedProps>;
 
