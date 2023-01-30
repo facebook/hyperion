@@ -6,7 +6,7 @@ import type { InterceptedModuleExports, ModuleExportsKeys } from './IRequire';
 
 import { interceptModuleExports } from './IRequire';
 
-import React from "react";
+import type React from "react";
 import { Class } from './FlowToTsTypes';
 
 export type ReactComponentObjectProps = {
@@ -83,7 +83,7 @@ type JsxRuntimeModuleExports = {
 }
 
 type ReactModuleExports = {
-  createElement: (typeof React)['createElement'];
+  createElement: typeof React.createElement;
 }
 
 export type IJsxRuntimeModuleExports = InterceptedModuleExports<JsxRuntimeModuleExports>;
