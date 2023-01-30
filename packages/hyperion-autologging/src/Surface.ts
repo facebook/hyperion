@@ -4,7 +4,6 @@
 
 'use strict';
 
-import { assert } from '@hyperion/global';
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
@@ -15,6 +14,7 @@ import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import type * as React from 'react';
 import { AUTO_LOGGING_SURFACE } from './SurfaceConsts';
+import * as ALSurfaceContext from "./ALSurfaceContext";
 
 type ALChannelSurfaceData = Readonly<{
   surface: string,
@@ -45,10 +45,8 @@ type InitOptions<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>
-> = Readonly<{
+> = Readonly<ALSurfaceContext.InitOptions & {
   ReactModule: {
-    createContext: typeof React.createContext;
-    useContext: typeof React.useContext;
     createElement: typeof React.createElement;
   };
   IReactModule: IReact.IReactModuleExports;
@@ -166,27 +164,7 @@ export function init<
   ); // extensionCtor
 
   setupDomElementSurfaceAttribute<DataType, FlowletType, FlowletManagerType>(options);
-
-  //#region useALSurfaceContext
-  type ALSurfaceContextValue = Readonly<{
-    surface: string,
-  }>;
-
-  const DefaultSurfaceContext: ALSurfaceContextValue = {
-    surface: '',
-  };
-
-  const ALSurfaceContext = ReactModule.createContext(
-    DefaultSurfaceContext,
-  );
-
-  function useALSurfaceContext(): ALSurfaceContextValue {
-    // return DefaultSurfaceContext;
-    const context = ReactModule.useContext(ALSurfaceContext);
-    assert(!!context, 'useALSurfaceContext must be used within an ALSurface',);
-    return context ?? DefaultSurfaceContext;
-  }
-  //#endregion
+  const SurfaceContext = ALSurfaceContext.init(options);
 
   class SurfacePropsExtension extends IReactFlowlet.PropsExtension<DataType, FlowletType>  {
     getSurface(): string | undefined {
@@ -204,7 +182,7 @@ export function init<
     }
 
     const surface = flowlet.name;
-    const { surface: parentSurface } = useALSurfaceContext();
+    const { surface: parentSurface } = ALSurfaceContext.useALSurfaceContext();
     const fullSurfaceString =
       (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
 
@@ -240,7 +218,7 @@ export function init<
 
     // We want to override the intercepted values
     flowletManager.push(flowlet);
-    const result = ReactModule.createElement(ALSurfaceContext.Provider, { value: { surface: fullSurfaceString } }, children);
+    const result = ReactModule.createElement(SurfaceContext.Provider, { value: { surface: fullSurfaceString } }, children);
     flowletManager.pop(flowlet);
     return result;
   }
