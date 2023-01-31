@@ -1,25 +1,32 @@
-import { intercept, interceptRuntime } from "@hyperion/hyperion-react/src/IReact";
-import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
+import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
+import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import React from 'react';
 import ReactDev from "react/jsx-dev-runtime";
+import * as Surface from "./component/Surface";
 import { FlowletManager } from "./FlowletManager";
-import * as  Surface from "./component/Surface";
 
 export let interceptionStatus = "disabled";
 export function init() {
 
   interceptionStatus = "enabled";
-  const IReact = intercept(React)
-  const IReactRuntime = interceptRuntime(ReactDev as any);
-  IReactComponent.init(IReact, IReactRuntime);
+  const IReactModule = IReact.intercept(React)
+  const IJsxRuntimeModule = IReact.interceptRuntime(ReactDev as any);
 
-  IReactFlowlet.init(IReact, IReactRuntime, FlowletManager);
-  Surface.init(IReact, IReactRuntime);
+  IReactComponent.init({ IReactModule, IJsxRuntimeModule });
+
+  IReactFlowlet.init({ IReactModule, IJsxRuntimeModule, flowletManager: FlowletManager });
+  Surface.init({
+    ReactModule: React,
+    IReactModule,
+    IJsxRuntimeModule,
+    flowletManager: FlowletManager
+  });
+
 
   let extId = 0;
-  const extensionGetter = IReactPropsExtension.init(IReact, IReactRuntime, () => ({ id: extId++ }));
+  const extensionGetter = IReactPropsExtension.init({ IReactModule, IJsxRuntimeModule, extensionCtor: () => ({ id: extId++ }) });
 
   IReactComponent.onReactFunctionComponentElement.add((component, props) => {
     console.log('func comp', component.displayName, extensionGetter(props));
