@@ -15,6 +15,7 @@ import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsE
 import type * as React from 'react';
 import { AUTO_LOGGING_SURFACE } from './SurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
+import * as SurfaceProxy from "./SurfaceProxy";
 
 type ALChannelSurfaceData = Readonly<{
   surface: string,
@@ -47,6 +48,7 @@ export type InitOptions<
   FlowletManagerType extends FlowletManager<FlowletType>
 > = Readonly<
   ALSurfaceContext.InitOptions &
+  SurfaceProxy.InitOptions &
   {
     ReactModule: {
       createElement: typeof React.createElement;
@@ -163,6 +165,7 @@ export function init<
 
   setupDomElementSurfaceAttribute<DataType, FlowletType, FlowletManagerType>(options);
   const SurfaceContext = ALSurfaceContext.init(options);
+  SurfaceProxy.init(options);
 
   class SurfacePropsExtension extends IReactFlowlet.PropsExtension<DataType, FlowletType>  {
     getSurface(): string | undefined {

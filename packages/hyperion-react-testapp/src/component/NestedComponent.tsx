@@ -5,6 +5,7 @@ import { useState } from 'react';
 import ClassComponent from './ClassComponent';
 import ForwardRefComponent from './ForwardRefComponent';
 import FuncComponent from './FuncComponent';
+import PortalComponent from './PortalComponent';
 import { Props, Surface } from './Surface';
 
 class EmptyClassComponent extends React.Component<{}> {
@@ -34,7 +35,10 @@ export default function AdsSpeedLabAutoLoggingImpl(_props: {}): React.ReactEleme
       <FuncComponent message={`1st comp: ${count}`}>
         <ClassComponent message={`2nd comp: ${count}`} />
         {Surface({ surface: 'LocalSub' })(
-          <ClassComponent message="nested surface" />,
+          <>
+            <ClassComponent message="nested surface" />
+            <PortalComponent message='This is portal'></PortalComponent>
+          </>
         )}
       </FuncComponent>
       <p>
