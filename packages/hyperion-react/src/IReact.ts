@@ -91,9 +91,9 @@ export type IReactModuleExports = InterceptedModuleExports<ReactModuleExports>;
 let IJsxRuntimeModule: IJsxRuntimeModuleExports | null = null;
 let IReactModule: IReactModuleExports | null = null;
 
-export function interceptRuntime(moduleExports: JsxRuntimeModuleExports, failedExportsKeys?: ModuleExportsKeys<typeof moduleExports>): IJsxRuntimeModuleExports {
+export function interceptRuntime(moduleId: string, moduleExports: JsxRuntimeModuleExports, failedExportsKeys?: ModuleExportsKeys<typeof moduleExports>): IJsxRuntimeModuleExports {
   if (!IJsxRuntimeModule) {
-    IJsxRuntimeModule = interceptModuleExports("react", moduleExports, ['jsx', 'jsxs', 'jsxDEV'], failedExportsKeys);
+    IJsxRuntimeModule = interceptModuleExports(moduleId, moduleExports, ['jsx', 'jsxs', 'jsxDEV'], failedExportsKeys);
 
     /**
      * https://github.com/facebook/react/blob/cae635054e17a6f107a39d328649137b83f25972/packages/react/src/jsx/ReactJSX.js#L19
@@ -110,9 +110,9 @@ export function interceptRuntime(moduleExports: JsxRuntimeModuleExports, failedE
   return IJsxRuntimeModule;
 }
 
-export function intercept(moduleExports: ReactModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactModuleExports>): IReactModuleExports {
+export function intercept(moduleId: string, moduleExports: ReactModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactModuleExports>): IReactModuleExports {
   if (!IReactModule) {
-    IReactModule = interceptModuleExports("react", moduleExports, ['createElement'], failedExportsKeys);
+    IReactModule = interceptModuleExports(moduleId, moduleExports, ['createElement'], failedExportsKeys);
   }
   return IReactModule;
 }
