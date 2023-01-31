@@ -11,8 +11,8 @@ export let interceptionStatus = "disabled";
 export function init() {
 
   interceptionStatus = "enabled";
-  const IReactModule = IReact.intercept(React)
-  const IJsxRuntimeModule = IReact.interceptRuntime(ReactDev as any);
+  const IReactModule = IReact.intercept("react", React)
+  const IJsxRuntimeModule = IReact.interceptRuntime("react/jsx-dev-runtime", ReactDev as any);
 
   IReactComponent.init({ IReactModule, IJsxRuntimeModule });
 
