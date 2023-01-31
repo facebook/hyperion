@@ -1,7 +1,4 @@
-import React from "react";
 import * as ALSurface from "@hyperion/hyperion-autologging/src/Surface";
-import { FlowletManager } from "../FlowletManager";
-import * as IReact from "@hyperion/hyperion-react/src/IReact";
 
 export type Props = {
   message: string,
@@ -20,14 +17,6 @@ export const Surface = (props: ALSurface.ALSurfaceProps) =>
     </div>
   ));
 
-export function init(
-  IReactModule: IReact.IReactModuleExports,
-  IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports
-) {
-  SurfaceRenderer = ALSurface.init({
-    ReactModule: React,
-    IReactModule,
-    IJsxRuntimeModule,
-    flowletManager: FlowletManager
-  });
+export function init(options: Parameters<typeof ALSurface.init>[0]) {
+  SurfaceRenderer = ALSurface.init(options);
 }

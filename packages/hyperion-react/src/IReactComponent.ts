@@ -97,11 +97,17 @@ export const onReactSpecialObjectElement: Hook<
   (component: ReactSpecialComponentTypes<IAny>, props: IAny) => void
 > = new Hook();
 
+export type InitOptions = {
+  IReactModule: IReact.IReactModuleExports;
+  IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
+}
+
 const initialized = new TestAndSet();
-export function init(IReactModule: IReact.IReactModuleExports, IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports): void {
+export function init(options: InitOptions): void {
   if (initialized.testAndSet()) {
     return;
   }
+  const { IReactModule, IJsxRuntimeModule } = options;
 
   const interceptionInfo = new Map<
     TReactClassComponent | Class<TReactClassComponent>,

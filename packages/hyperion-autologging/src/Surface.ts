@@ -41,21 +41,23 @@ export type ALChannelSurfaceEvent = Readonly<{
   al_surface_unmount: [ALChannelSurfaceData],
 }>;
 
-type InitOptions<
+export type InitOptions<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>
-> = Readonly<ALSurfaceContext.InitOptions & {
-  ReactModule: {
-    createElement: typeof React.createElement;
-  };
-  IReactModule: IReact.IReactModuleExports;
-  IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
-  flowletManager: FlowletManagerType;
-  domSurfaceAttributeName?: string;
-  domFlowletAttributeName?: string;
-  // channel?: ALChannel,
-}>;
+> = Readonly<
+  ALSurfaceContext.InitOptions &
+  {
+    ReactModule: {
+      createElement: typeof React.createElement;
+    };
+    IReactModule: IReact.IReactModuleExports;
+    IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
+    flowletManager: FlowletManagerType;
+    domSurfaceAttributeName?: string;
+    domFlowletAttributeName?: string;
+    // channel?: ALChannel,
+  }>;
 
 const SURFACE_SEPARATOR = "/";
 
@@ -155,13 +157,9 @@ export function init<
 // ALChannelEventType extends ALChannelSurfaceEvent,
 // ALChannel extends  FastEventEmitter<ALChannelEventType>,
 >(options: InitOptions<DataType, FlowletType, FlowletManagerType>): ALSurfaceHOC {
-  const { ReactModule, IReactModule, IJsxRuntimeModule, flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
+  const { ReactModule, flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
 
-  IReactFlowlet.init<DataType, FlowletType, FlowletManagerType>(
-    IReactModule,
-    IJsxRuntimeModule,
-    flowletManager
-  ); // extensionCtor
+  IReactFlowlet.init<DataType, FlowletType, FlowletManagerType>(options); // extensionCtor
 
   setupDomElementSurfaceAttribute<DataType, FlowletType, FlowletManagerType>(options);
   const SurfaceContext = ALSurfaceContext.init(options);

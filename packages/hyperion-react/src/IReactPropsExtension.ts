@@ -2,9 +2,8 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as IReact from "./IReact";
-import TestAndSet from "./TestAndSet";
 import * as IReactComponent from "./IReactComponent";
+import TestAndSet from "./TestAndSet";
 
 export interface ExtendedProps<T> extends React.PropsWithChildren {
   __ext?: T;
@@ -12,12 +11,14 @@ export interface ExtendedProps<T> extends React.PropsWithChildren {
 
 type ExtensionGetter<T> = (props: ExtendedProps<T> | undefined) => T | undefined;
 
-let initialized = new TestAndSet();
-export function init<T>(
-  IReactModule: IReact.IReactModuleExports,
-  IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports,
+
+export type InitOptions<T> = IReactComponent.InitOptions & {
   extensionCtor: () => T
-): ExtensionGetter<T> {
+}
+
+
+let initialized = new TestAndSet();
+export function init<T>(options: InitOptions<T>): ExtensionGetter<T> {
 
   const extensionGetter: ExtensionGetter<T> = props => props?.__ext;
 
@@ -25,8 +26,9 @@ export function init<T>(
     return extensionGetter;
   }
 
-  IReactComponent.init(IReactModule, IJsxRuntimeModule);
+  IReactComponent.init(options);
 
+  const { extensionCtor } = options;
 
   function updatePropsExtension(
     _component: unknown,

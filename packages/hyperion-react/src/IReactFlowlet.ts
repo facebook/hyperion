@@ -39,19 +39,26 @@ export class PropsExtension<
 }
 
 
+export type InitOptions<
+  DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>,
+  FlowletManagerType extends FlowletManager<FlowletType>,
+> = {
+  IReactModule: IReact.IReactModuleExports;
+  IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
+  flowletManager: FlowletManagerType;
+}
+
 let initialized = new TestAndSet();
 export function init<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>,
->(
-  IReactModule: IReact.IReactModuleExports,
-  IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports,
-  flowletManager: FlowletManagerType,
-) {
+>(options: InitOptions<DataType, FlowletType, FlowletManagerType>) {
   if (initialized.testAndSet()) {
     return;
   }
+  const { flowletManager } = options;
 
   assert(
     flowletManager.flowletCtor != null,
@@ -59,9 +66,12 @@ export function init<
   );
 
 
-  const extensionGetter = IReactPropsExtension.init(IReactModule, IJsxRuntimeModule, () => {
-    const top = flowletManager.top();
-    return top ? new PropsExtension(top) : null
+  const extensionGetter = IReactPropsExtension.init({
+    ...options,
+    extensionCtor: () => {
+      const top = flowletManager.top();
+      return top ? new PropsExtension(top) : null
+    }
   });
 
   type ExtendedProps = IReactPropsExtension.ExtendedProps<PropsExtension<DataType, FlowletType>>;
