@@ -5,6 +5,7 @@ import './index.css';
 import * as IReact from "./IReact";
 import reportWebVitals from './reportWebVitals';
 
+IReact.init();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

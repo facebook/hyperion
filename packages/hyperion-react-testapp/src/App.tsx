@@ -25,7 +25,6 @@ function InitComp() {
 }
 
 function App() {
-  IReact.init();
 
   const maxDepth = 1000;
 
