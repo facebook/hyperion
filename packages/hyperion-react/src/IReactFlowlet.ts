@@ -38,11 +38,13 @@ export type InitOptions<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>,
-> = {
-  IReactModule: IReact.IReactModuleExports;
-  IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
-  flowletManager: FlowletManagerType;
-}
+> =
+  IReactComponent.InitOptions &
+  Readonly<{
+    IReactModule: IReact.IReactModuleExports;
+    IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
+    flowletManager: FlowletManagerType;
+  }>;
 
 let initialized = new TestAndSet();
 export function init<

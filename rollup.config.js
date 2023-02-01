@@ -35,6 +35,9 @@ export default defineConfig({
       "hyperionFlowlet": [
         "@hyperion/hyperion-flowlet/src/Index",
       ],
+      "hyperionAutoLogging": [
+        "@hyperion/hyperion-autologging/src/Surface",
+      ]
     },
     chunkFileNames: "[name].js",
     minifyInternalExports: false,

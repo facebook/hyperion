@@ -40,11 +40,12 @@ import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 //   return props.children;
 // }
 
-export type InitOptions = Readonly<{
-  ReactModule: { createElement: typeof React.createElement };
-  IReactDOMModule: IReactDOM.IReactDOMModuleExports;
-  domSurfaceAttributeName?: string;
-}>;
+export type InitOptions =
+  Readonly<{
+    ReactModule: { createElement: typeof React.createElement };
+    IReactDOMModule: IReactDOM.IReactDOMModuleExports;
+    domSurfaceAttributeName?: string;
+  }>;
 
 export function init(options: InitOptions): void {
   const { domSurfaceAttributeName = AUTO_LOGGING_SURFACE, IReactDOMModule } = options;
