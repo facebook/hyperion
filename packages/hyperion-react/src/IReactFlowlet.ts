@@ -11,13 +11,8 @@ import * as IReactPropsExtension from "./IReactPropsExtension";
 import { assert } from "@hyperion/global";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 
-/**
- * We want to allow type of flowlet to be passed here. the only thing we need
- * from the data type is the `surface` field. Sonce, ALFlowlet may change
- * overtime, we don't want to create an uncessary dependency on that.
- */
 export interface FlowletDataType {
-  surface?: string,
+  // Technically anyone else can extend this interface for their expected data
 };
 
 

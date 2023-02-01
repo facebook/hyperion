@@ -39,8 +39,6 @@ class WebpackModuleRuntime extends ModuleRuntimeBase {
   getExports<T>(moduleId: string) {
     const modulePath = new RegExp(`${moduleId}(?:/index)?[.]js$`);
     const wexports = Object.keys(this._cache).filter(m => modulePath.test(m)).map(m => this._cache[m]);
-    console.log('web pack exports', wexports);
-    // Object.getOwnPropertyDescriptor(Object.keys(cache).filter(m => /react-dom/.test(m)).map(m => cache[m])[0].exports
     return wexports[0].exports as unknown as T;
   }
 }
