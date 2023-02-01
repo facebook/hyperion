@@ -30,7 +30,7 @@ export type ALSurfaceProps = Readonly<{
  * from the data type is the `surface` field. Sonce, ALFlowlet may change
  * overtime, we don't want to create an uncessary dependency on that.
  */
-interface FlowletDataType {
+export interface FlowletDataType extends IReactFlowlet.FlowletDataType {
   surface?: string,
 };
 
