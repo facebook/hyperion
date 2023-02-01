@@ -16,6 +16,7 @@ import type * as React from 'react';
 import { AUTO_LOGGING_SURFACE } from './SurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import * as SurfaceProxy from "./SurfaceProxy";
+import type { Channel } from "@hyperion/hook/src/Channel";
 
 type ALChannelSurfaceData = Readonly<{
   surface: string,
@@ -45,22 +46,25 @@ export type ALChannelSurfaceEvent = Readonly<{
 export type InitOptions<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
-  FlowletManagerType extends FlowletManager<FlowletType>
+  FlowletManagerType extends FlowletManager<FlowletType>,
+  ALChannelEventType extends ALChannelSurfaceEvent,
+  ALChannel extends Channel<ALChannelEventType>,
 > =
   IReactFlowlet.InitOptions<DataType, FlowletType, FlowletManagerType> &
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
-  Readonly<{
+  {
     ReactModule: {
       createElement: typeof React.createElement;
+      useLayoutEffect: typeof React.useLayoutEffect;
     };
     IReactModule: IReact.IReactModuleExports;
     IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     flowletManager: FlowletManagerType;
     domSurfaceAttributeName?: string;
     domFlowletAttributeName?: string;
-    // channel?: ALChannel,
-  }>;
+    channel?: ALChannel,
+  };
 
 const SURFACE_SEPARATOR = "/";
 
@@ -82,7 +86,9 @@ function setupDomElementSurfaceAttribute<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>,
->(options: InitOptions<DataType, FlowletType, FlowletManagerType>): void {
+  ALChannelEventType extends ALChannelSurfaceEvent,
+  ALChannel extends Channel<ALChannelEventType>,
+>(options: InitOptions<DataType, FlowletType, FlowletManagerType, ALChannelEventType, ALChannel>): void {
   const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName } = options;
   /**
   * if flowlets are disabled, but we still want to extend the props, we use
@@ -157,14 +163,14 @@ export function init<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>,
-// ALChannelEventType extends ALChannelSurfaceEvent,
-// ALChannel extends  FastEventEmitter<ALChannelEventType>,
->(options: InitOptions<DataType, FlowletType, FlowletManagerType>): ALSurfaceHOC {
+  ALChannelEventType extends ALChannelSurfaceEvent,
+  ALChannel extends Channel<ALChannelEventType>,
+>(options: InitOptions<DataType, FlowletType, FlowletManagerType, ALChannelEventType, ALChannel>): ALSurfaceHOC {
   const { ReactModule, flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
 
   IReactFlowlet.init<DataType, FlowletType, FlowletManagerType>(options); // extensionCtor
 
-  setupDomElementSurfaceAttribute<DataType, FlowletType, FlowletManagerType>(options);
+  setupDomElementSurfaceAttribute<DataType, FlowletType, FlowletManagerType, ALChannelEventType, ALChannel>(options);
   const SurfaceContext = ALSurfaceContext.init(options);
   SurfaceProxy.init(options);
 
@@ -185,17 +191,18 @@ export function init<
 
     const surface = flowlet.name;
     const { surface: parentSurface } = ALSurfaceContext.useALSurfaceContext();
-    const fullSurfaceString =
-      (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
+    const fullSurfaceString = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
 
-    // // Emit surface mutation events on mount/unmount
-    // React.useLayoutEffect(() => {
-    //   if (gkx('am_al_surface_mutation_v2')) {
-    //     channel?.emit('al_surface_mount', { surface: fullSurfaceString });
-    //     return () =>
-    //       channel?.emit('al_surface_unmount', { surface: fullSurfaceString });
-    //   }
-    // }, [fullSurfaceString]);
+    if (options.channel) {
+      const { channel } = options;
+      // Emit surface mutation events on mount/unmount
+      ReactModule.useLayoutEffect(() => {
+        channel.emit('al_surface_mount', { surface: fullSurfaceString });
+        return () => {
+          channel.emit('al_surface_unmount', { surface: fullSurfaceString });
+        }
+      }, [fullSurfaceString]);
+    }
 
     flowlet.data.surface = fullSurfaceString;
     let children = props.children;
