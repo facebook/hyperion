@@ -12,7 +12,7 @@ import type {
 
 import * as IReactConsts from './IReactConsts';
 
-import React from "react";
+import type React from "react";
 import { mixed, $Values } from './FlowToTsTypes';
 
 declare function FBLogger(prj: string): any;
@@ -93,6 +93,18 @@ type ALReactElementVisitor<
       NodeType
     >;
   };
+
+export type InitOptions =
+  Readonly<{
+    ReactModule: {
+      Children: typeof React.Children;
+    }
+  }>;
+
+let ReactModule: InitOptions['ReactModule'] | null = null;
+export function init(options: InitOptions) {
+  ReactModule = options.ReactModule;
+}
 
 function getVisitor<
   DomPropsType,
@@ -328,7 +340,7 @@ function visitNode<
          */
         let visited = false;
         try {
-          React.Children.forEach(node, child => {
+          ReactModule?.Children.forEach(node, child => {
             visited = true;
             visitNode(child, param, visitors);
           });

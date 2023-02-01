@@ -8,12 +8,13 @@ import { assert } from '@hyperion/global';
 import type * as React from 'react';
 
 
-export type InitOptions = Readonly<{
-  ReactModule: {
-    createContext: typeof React.createContext;
-    useContext: typeof React.useContext;
-  }
-}>;
+export type InitOptions =
+  Readonly<{
+    ReactModule: {
+      createContext: typeof React.createContext;
+      useContext: typeof React.useContext;
+    }
+  }>;
 
 
 type ALSurfaceContextValue = Readonly<{

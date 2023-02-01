@@ -12,9 +12,11 @@ export interface ExtendedProps<T> extends React.PropsWithChildren {
 type ExtensionGetter<T> = (props: ExtendedProps<T> | undefined) => T | undefined;
 
 
-export type InitOptions<T> = IReactComponent.InitOptions & {
-  extensionCtor: () => T
-}
+export type InitOptions<T> =
+  IReactComponent.InitOptions &
+  Readonly<{
+    extensionCtor: () => T
+  }>;
 
 
 let initialized = new TestAndSet();

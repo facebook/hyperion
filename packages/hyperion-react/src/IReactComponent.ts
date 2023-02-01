@@ -15,10 +15,10 @@ import type {
 
 import { Hook } from '@hyperion/hook/src/Hook';
 import * as IReact from './IReact';
-import { createReactElementVisitor } from './IReactElementVisitor';
+import * as IReactElementVisitor from './IReactElementVisitor';
 
 import { assert } from '@hyperion/global';
-import * as React from 'react';
+import type * as React from 'react';
 import { Class, mixed } from './FlowToTsTypes';
 import TestAndSet from './TestAndSet';
 
@@ -97,18 +97,24 @@ export const onReactSpecialObjectElement: Hook<
   (component: ReactSpecialComponentTypes<IAny>, props: IAny) => void
 > = new Hook();
 
-export type InitOptions = {
-  IReactModule: IReact.IReactModuleExports;
-  IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
-}
+export type InitOptions =
+  IReactElementVisitor.InitOptions &
+  Readonly<{
+    ReactModule: {
+      Component: typeof React.Component;
+    };
+    IReactModule: IReact.IReactModuleExports;
+    IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
+  }>;
 
 const initialized = new TestAndSet();
 export function init(options: InitOptions): void {
   if (initialized.testAndSet()) {
     return;
   }
-  const { IReactModule, IJsxRuntimeModule } = options;
+  const { ReactModule, IReactModule, IJsxRuntimeModule } = options;
 
+  IReactElementVisitor.init(options);
   const interceptionInfo = new Map<
     TReactClassComponent | Class<TReactClassComponent>,
     ReactClassComponentShadowPrototype<PropsType> | null
@@ -162,7 +168,7 @@ export function init(options: InitOptions): void {
     return fi.interceptor;
   }
 
-  const processComponent = createReactElementVisitor<
+  const processComponent = IReactElementVisitor.createReactElementVisitor<
     ReactComponentType<PropsType>,
     mixed,
     void,
@@ -190,7 +196,7 @@ export function init(options: InitOptions): void {
       const classComponentParentClass = component.prototype;
 
       if (
-        classComponentParentClass instanceof React.Component ||
+        classComponentParentClass instanceof ReactModule.Component ||
         typeof classComponentParentClass?.render === 'function' // possibly created via React.createClass
       ) {
         // $FlowIgnore[incompatible-exact]

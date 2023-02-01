@@ -46,10 +46,11 @@ export type InitOptions<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>
-> = Readonly<
+> =
+  IReactFlowlet.InitOptions<DataType, FlowletType, FlowletManagerType> &
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
-  {
+  Readonly<{
     ReactModule: {
       createElement: typeof React.createElement;
     };

@@ -18,3 +18,5 @@ export { onNetworkRequest } from "@hyperion/hyperion-util/src/onNetworkRequest";
 export { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
 export { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 export { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
+
+export * as Surface from "@hyperion/hyperion-autologging/src/Surface";
