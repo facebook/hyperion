@@ -35,8 +35,14 @@ export default defineConfig({
       "hyperionFlowlet": [
         "@hyperion/hyperion-flowlet/src/Index",
       ],
+      "hyperionReact": [
+        "@hyperion/hyperion-react/src/IRequire",
+        "@hyperion/hyperion-react/src/IReact",
+        "@hyperion/hyperion-react/src/IReactDOM",
+      ],
       "hyperionAutoLogging": [
         "@hyperion/hyperion-autologging/src/Surface",
+        "@hyperion/hook/src/Channel"
       ]
     },
     chunkFileNames: "[name].js",
