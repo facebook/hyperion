@@ -3,20 +3,34 @@
  */
 
 
+// hyperionCore
 export { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
 export { interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 export { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 export { interceptConstructor, interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
-
 export * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
+
+// hyperionTrackElementsWithAttributes
 export { trackElementsWithAttributes } from "@hyperion/hyperion-util/src/trackElementsWithAttributes";
 
+// hyperionSyncMutationObserver
 export * as SyncMutationObserver from "@hyperion/hyperion-util/src/SyncMutationObserver";
 
+// hyperionOnNetworkRequest
 export { onNetworkRequest } from "@hyperion/hyperion-util/src/onNetworkRequest";
 
-export { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
+// hyperionFlowletCore
 export { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 export { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 
+// hyperionFlowlet
+export { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
+
+// hyperionReact
+export * as IRequire from "@hyperion/hyperion-react/src/IRequire";
+export * as IReact from "@hyperion/hyperion-react/src/IReact";
+export * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
+
+// hyperionAutoLogging
 export * as Surface from "@hyperion/hyperion-autologging/src/Surface";
+export { Channel } from "@hyperion/hook/src/Channel";
