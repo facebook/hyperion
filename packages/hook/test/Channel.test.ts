@@ -48,4 +48,21 @@ describe("test Channel", () => {
     expect(fn2.mock.calls[0]).toEqual([20, "hi"]);
   });
 
+  test("multiple callbacks - simpler api", () => {
+    const channel = new Channel<ChannelEvents>();
+    const fn1 = jest.fn<void, ChannelEvents['ev3']>();
+    const fn2 = jest.fn<void, ChannelEvents['ev3']>();
+
+    channel.addListener('ev3', fn1);
+    channel.addListener('ev3', fn2);
+
+    channel.emit('ev3', 20, "hi");
+
+    expect(fn1).toBeCalledTimes(1);
+    expect(fn1.mock.calls[0]).toEqual([20, "hi"]);
+
+    expect(fn2).toBeCalledTimes(1);
+    expect(fn2.mock.calls[0]).toEqual([20, "hi"]);
+  });
+
 });

@@ -28,6 +28,21 @@ export class Channel<TEventToListenerArgsMap extends { [key: string]: any[] }> {
     return this._getOrAddHandler(eventType);
   }
 
+  addListener<TEvent extends keyof TEventToListenerArgsMap>(
+    eventType: TEvent,
+    listener: Listener<TEventToListenerArgsMap[TEvent]>,
+  ): Listener<TEventToListenerArgsMap[TEvent]> {
+    return this.on(eventType).add(listener);
+  }
+
+  removeListener<TEvent extends keyof TEventToListenerArgsMap>(
+    eventType: TEvent,
+    listener: Listener<TEventToListenerArgsMap[TEvent]>,
+  ): Listener<TEventToListenerArgsMap[TEvent]> {
+    this.on(eventType).remove(listener);
+    return listener;
+  }
+
   emit<
     TEvent extends keyof TEventToListenerArgsMap,
     TArgs extends TEventToListenerArgsMap[TEvent]
