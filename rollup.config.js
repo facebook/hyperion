@@ -41,7 +41,7 @@ export default defineConfig({
         "@hyperion/hyperion-react/src/IReactDOM",
       ],
       "hyperionAutoLogging": [
-        "@hyperion/hyperion-autologging/src/Surface",
+        "@hyperion/hyperion-autologging/src/ALSurface",
         "@hyperion/hook/src/Channel"
       ]
     },

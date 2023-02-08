@@ -13,9 +13,9 @@ import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElemen
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import type * as React from 'react';
-import { AUTO_LOGGING_SURFACE } from './SurfaceConsts';
+import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
-import * as SurfaceProxy from "./SurfaceProxy";
+import * as SurfaceProxy from "./ALSurfaceProxy";
 import type { Channel } from "@hyperion/hook/src/Channel";
 
 type ALChannelSurfaceData = Readonly<{

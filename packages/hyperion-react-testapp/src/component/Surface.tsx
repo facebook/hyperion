@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as ALSurface from "@hyperion/hyperion-autologging/src/Surface";
+import * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
 
 export type Props = {
   message: string,
