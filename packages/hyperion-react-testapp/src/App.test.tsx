@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';

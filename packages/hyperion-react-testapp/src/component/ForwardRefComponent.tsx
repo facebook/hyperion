@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import * as React from "react";
 import FuncComponent from "./FuncComponent";
 import { Surface } from "./Surface";
