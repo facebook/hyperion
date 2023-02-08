@@ -10,7 +10,7 @@ import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import * as Surface from "./component/Surface";
 import { FlowletManager } from "./FlowletManager";
-import type * as ALSurface from "@hyperion/hyperion-autologging/src/Surface";
+import type * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
 
 export let interceptionStatus = "disabled";
 export function init() {

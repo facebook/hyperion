@@ -7,7 +7,7 @@
 
 import type * as React from 'react';
 import { useALSurfaceContext } from './ALSurfaceContext';
-import { AUTO_LOGGING_SURFACE } from "./SurfaceConsts";
+import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 
 
