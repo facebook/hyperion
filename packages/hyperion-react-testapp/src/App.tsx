@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';

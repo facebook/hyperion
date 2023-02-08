@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import { Channel } from "@hyperion/hook/src/Channel";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import { FlowletManager as BaseFlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 
