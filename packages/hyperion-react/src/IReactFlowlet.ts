@@ -10,6 +10,7 @@ import * as IReact from "./IReact";
 import * as IReactPropsExtension from "./IReactPropsExtension";
 import { assert } from "@hyperion/global";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
+import type * as Types from "@hyperion/hyperion-util/src/Types";
 
 export interface FlowletDataType {
   // Technically anyone else can extend this interface for their expected data
@@ -38,13 +39,15 @@ export type InitOptions<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>,
-> =
-  IReactComponent.InitOptions &
-  Readonly<{
+> = Types.Options<
+  Omit<IReactPropsExtension.InitOptions<any>, "extensionCtor"> &
+  {
     IReactModule: IReact.IReactModuleExports;
     IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     flowletManager: FlowletManagerType;
-  }>;
+    disableReactFlowlet?: boolean;
+  }
+>;
 
 let initialized = new TestAndSet();
 export function init<
@@ -52,7 +55,7 @@ export function init<
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>,
 >(options: InitOptions<DataType, FlowletType, FlowletManagerType>) {
-  if (initialized.testAndSet()) {
+  if (initialized.testAndSet() || options.disableReactFlowlet) {
     return;
   }
   const { flowletManager } = options;

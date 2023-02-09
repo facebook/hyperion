@@ -89,6 +89,13 @@ function setupDomElementSurfaceAttribute<
   ALChannelEventType extends ALChannelSurfaceEvent,
   ALChannel extends Channel<ALChannelEventType>,
 >(options: InitOptions<DataType, FlowletType, FlowletManagerType, ALChannelEventType, ALChannel>): void {
+  if (options.disableReactPropsExtension) {
+    return;
+  }
+
+  // We should make sure the following enabled for our particular usage in this function.
+  IReactComponent.init(options);
+
   const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName } = options;
   /**
   * if flowlets are disabled, but we still want to extend the props, we use
@@ -207,22 +214,33 @@ export function init<
     flowlet.data.surface = fullSurfaceString;
     let children = props.children;
 
-    const foundDomElement = propagateFlowletDown(props.children, flowlet);
+    if (!options.disableReactPropsExtension) {
+      const foundDomElement = propagateFlowletDown(props.children, flowlet);
 
-    if (foundDomElement !== true) {
-      /**
-       * We could not find a dom node to safely add the attribute to it.
-       *
-       * We wrap the content in a dom node ourselves. Note that this will trigger
-       * all the right logic and automatically add the attributes for us, and
-       * this time we should succeed propagating surface/flowlet down.
-       * This option works in almost all cases, but later we add an option to
-       * the surface to prevent this option and fall back to the more expensive
-       * algorithm as before (will add later)
-       *
-       */
-      children = ReactModule.createElement("span", { style: { display: 'contents' } }, props.children);
-      propagateFlowletDown(children, flowlet);
+      if (foundDomElement !== true) {
+        /**
+         * We could not find a dom node to safely add the attribute to it.
+         *
+         * We wrap the content in a dom node ourselves. Note that this will trigger
+         * all the right logic and automatically add the attributes for us, and
+         * this time we should succeed propagating surface/flowlet down.
+         * This option works in almost all cases, but later we add an option to
+         * the surface to prevent this option and fall back to the more expensive
+         * algorithm as before (will add later)
+         *
+         */
+        children = ReactModule.createElement("span", { style: { display: 'contents' } }, props.children);
+        propagateFlowletDown(children, flowlet);
+      }
+    } else {
+      children = ReactModule.createElement(
+        "span",
+        {
+          style: { display: 'contents' },
+          [domSurfaceAttributeName]: fullSurfaceString,
+        },
+        props.children
+      );
     }
 
     // We want to override the intercepted values
