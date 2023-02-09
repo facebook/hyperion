@@ -18,6 +18,7 @@ import * as IReact from './IReact';
 import * as IReactElementVisitor from './IReactElementVisitor';
 
 import { assert } from '@hyperion/global';
+import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 import { Class, mixed } from './FlowToTsTypes';
 import TestAndSet from './TestAndSet';
@@ -97,15 +98,16 @@ export const onReactSpecialObjectElement: Hook<
   (component: ReactSpecialComponentTypes<IAny>, props: IAny) => void
 > = new Hook();
 
-export type InitOptions =
+export type InitOptions = Types.Options<
   IReactElementVisitor.InitOptions &
-  Readonly<{
+  {
     ReactModule: {
       Component: typeof React.Component;
     };
     IReactModule: IReact.IReactModuleExports;
     IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
-  }>;
+  }
+>;
 
 const initialized = new TestAndSet();
 export function init(options: InitOptions): void {

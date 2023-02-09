@@ -12,8 +12,9 @@ import type {
 
 import * as IReactConsts from './IReactConsts';
 
+import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type React from "react";
-import { mixed, $Values } from './FlowToTsTypes';
+import { $Values, mixed } from './FlowToTsTypes';
 
 declare function FBLogger(prj: string): any;
 
@@ -94,12 +95,13 @@ type ALReactElementVisitor<
     >;
   };
 
-export type InitOptions =
-  Readonly<{
+export type InitOptions = Types.Options<
+  {
     ReactModule: {
       Children: typeof React.Children;
     }
-  }>;
+  }
+>;
 
 let ReactModule: InitOptions['ReactModule'] | null = null;
 export function init(options: InitOptions) {
