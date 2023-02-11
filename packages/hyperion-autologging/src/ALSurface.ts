@@ -154,11 +154,15 @@ function setupDomElementSurfaceAttribute<
   IElement.setAttribute.onArgsObserverAdd(function (
     this: Element,
     attrName,
-    attrValue,
+    attrValue: any,
   ) {
     if (
       attrName === domSurfaceAttributeName &&
-      (attrValue === 'null' || attrValue === '')
+      (
+        attrValue === '' ||
+        attrValue === 'null' ||
+        (attrValue instanceof SurfaceDOMString && attrValue.toString() === '')
+      )
     ) {
       return true;
     }
