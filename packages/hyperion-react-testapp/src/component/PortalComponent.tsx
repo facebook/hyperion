@@ -6,7 +6,7 @@ import React from "react";
 import * as ReactDOM from "react-dom";
 
 
-export default function (props: React.PropsWithChildren<{ message: string }>): React.ReactPortal | null {
+export function PortalComponent(props: React.PropsWithChildren<{ message: string }>): React.ReactPortal | null {
   const container = document.getElementById("portal");
 
   if (container instanceof HTMLElement) {
@@ -17,4 +17,11 @@ export default function (props: React.PropsWithChildren<{ message: string }>): R
   }
 
   return null;
+}
+
+export function PortalBodyContainerComponent(props: React.PropsWithChildren<{ message: string }>): React.ReactPortal | null {
+  return ReactDOM.createPortal(
+      <div>{props.message}</div>,
+      document.body
+    );
 }

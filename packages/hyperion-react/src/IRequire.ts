@@ -29,7 +29,7 @@ class ModuleRuntimeBase {
 
 /**
  * If the app is build with Webpack, we can find the following variable that hosts the exports
- * That way, we can get access to the behind the scene objects and update them with intercepted values. 
+ * That way, we can get access to the behind the scene objects and update them with intercepted values.
  */
 declare var __webpack_module_cache__: { [key: string]: { exports: object } } | undefined;
 class WebpackModuleRuntime extends ModuleRuntimeBase {

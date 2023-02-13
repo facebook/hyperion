@@ -5,7 +5,9 @@
 'use strict';
 
 import { assert } from '@hyperion/global';
+import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import type * as React from 'react';
+import { FlowletDataType } from './ALSurface';
 
 
 export type InitOptions =
@@ -17,37 +19,55 @@ export type InitOptions =
   }>;
 
 
-type ALSurfaceContextValue = Readonly<{
+type ALSurfaceContextValue<
+  DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>
+> = Readonly<{
   surface: string,
+  flowlet: FlowletType | null,
 }>;
 
-const DefaultSurfaceContext: ALSurfaceContextValue = {
-  surface: '',
+
+
+function getDefaultSurfaceContext<
+  DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>
+>(): ALSurfaceContextValue<DataType, FlowletType> {
+  return {
+    surface: '',
+    flowlet: null,
+  };
 };
 
-export let ALSurfaceContext: React.Context<ALSurfaceContextValue> | null = null;
+export let ALSurfaceContext: React.Context<any> | null = null;
 
 
 let ReactModule: InitOptions['ReactModule'] | null = null;
 
-export function init(options: InitOptions): React.Context<ALSurfaceContextValue> {
+export function init<
+  DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>
+>(options: InitOptions): React.Context<ALSurfaceContextValue<DataType, FlowletType>> {
   assert(!ReactModule && !ALSurfaceContext, "Already initilized");
 
   ReactModule = options.ReactModule;
   ALSurfaceContext = ReactModule.createContext(
-    DefaultSurfaceContext,
+    getDefaultSurfaceContext<DataType, FlowletType>(),
   );
 
   return ALSurfaceContext;
 };
 
 
-export function useALSurfaceContext(): ALSurfaceContextValue {
+export function useALSurfaceContext<
+  DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>
+>(): ALSurfaceContextValue<DataType, FlowletType> {
   if (!ReactModule || !ALSurfaceContext) {
-    return DefaultSurfaceContext;
+    return getDefaultSurfaceContext<DataType, FlowletType>();
   }
 
   const context = ReactModule?.useContext(ALSurfaceContext);
   assert(!!context, 'useALSurfaceContext must be used within an ALSurface',);
-  return context ?? DefaultSurfaceContext;
+  return context ?? getDefaultSurfaceContext<DataType, FlowletType>();
 }
