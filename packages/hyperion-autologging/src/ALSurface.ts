@@ -4,19 +4,19 @@
 
 'use strict';
 
+import type { Channel } from "@hyperion/hook/src/Channel";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
-import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElementVisitor';
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import type * as React from 'react';
+import { ALFlowletManager, ALFlowletDataType } from "./ALFlowletManager";
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import type { Channel } from "@hyperion/hook/src/Channel";
 
 type ALChannelSurfaceData = Readonly<{
   surface: string,
@@ -26,15 +26,6 @@ export type ALSurfaceProps = Readonly<{
   surface: string,
 }>;
 
-/**
- * We want to allow type of flowlet to be passed here. the only thing we need
- * from the data type is the `surface` field. Sonce, ALFlowlet may change
- * overtime, we don't want to create an uncessary dependency on that.
- */
-export interface FlowletDataType extends IReactFlowlet.FlowletDataType {
-  surface?: string,
-};
-
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
 export type ALSurfaceHOC = (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
 
@@ -43,14 +34,14 @@ export type ALChannelSurfaceEvent = Readonly<{
   al_surface_unmount: [ALChannelSurfaceData],
 }>;
 
-export type InitOptions<
-  DataType extends FlowletDataType,
-  FlowletType extends Flowlet<DataType>,
-  FlowletManagerType extends FlowletManager<FlowletType>,
-  ALChannelEventType extends ALChannelSurfaceEvent,
-  ALChannel extends Channel<ALChannelEventType>,
-> =
-  IReactFlowlet.InitOptions<DataType, FlowletType, FlowletManagerType> &
+type DataType = ALFlowletDataType;
+type FlowletType = Flowlet<DataType>;
+type FlowletManagerType = ALFlowletManager<ALFlowletDataType>;
+type ALChannelEventType = ALChannelSurfaceEvent;
+type ALChannel = Channel<ALChannelEventType>;
+
+export type InitOptions =
+  IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
   {
@@ -69,7 +60,7 @@ export type InitOptions<
 const SURFACE_SEPARATOR = "/";
 
 class SurfaceDOMString<
-  DataType extends FlowletDataType,
+  DataType extends ALFlowletDataType,
   FlowletType extends Flowlet<DataType>
 > extends IReactFlowlet.PropsExtension<DataType, FlowletType> {
   surface: string | undefined;
@@ -82,13 +73,7 @@ class SurfaceDOMString<
   }
 }
 
-function setupDomElementSurfaceAttribute<
-  DataType extends FlowletDataType,
-  FlowletType extends Flowlet<DataType>,
-  FlowletManagerType extends FlowletManager<FlowletType>,
-  ALChannelEventType extends ALChannelSurfaceEvent,
-  ALChannel extends Channel<ALChannelEventType>,
->(options: InitOptions<DataType, FlowletType, FlowletManagerType, ALChannelEventType, ALChannel>): void {
+function setupDomElementSurfaceAttribute(options: InitOptions): void {
   if (options.disableReactPropsExtension) {
     return;
   }
@@ -170,18 +155,12 @@ function setupDomElementSurfaceAttribute<
   });
 }
 
-export function init<
-  DataType extends FlowletDataType,
-  FlowletType extends Flowlet<DataType>,
-  FlowletManagerType extends FlowletManager<FlowletType>,
-  ALChannelEventType extends ALChannelSurfaceEvent,
-  ALChannel extends Channel<ALChannelEventType>,
->(options: InitOptions<DataType, FlowletType, FlowletManagerType, ALChannelEventType, ALChannel>): ALSurfaceHOC {
+export function init(options: InitOptions): ALSurfaceHOC {
   const { ReactModule, flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
 
   IReactFlowlet.init<DataType, FlowletType, FlowletManagerType>(options); // extensionCtor
 
-  setupDomElementSurfaceAttribute<DataType, FlowletType, FlowletManagerType, ALChannelEventType, ALChannel>(options);
+  setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
   SurfaceProxy.init(options);
 
