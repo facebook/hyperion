@@ -5,10 +5,12 @@
 'use strict';
 
 
-import type * as React from 'react';
+import * as React from 'react';
 import { useALSurfaceContext } from './ALSurfaceContext';
-import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
+import { FlowletDataType, SurfaceComponent, SurfacePropsExtension } from './Types';
+import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
+import { FlowletManager } from '@hyperion/hyperion-flowlet/src/FlowletManager';
 
 
 /**
@@ -40,15 +42,29 @@ import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 //   return props.children;
 // }
 
-export type InitOptions =
+export type InitOptions<DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>,
+  FlowletManagerType extends FlowletManager<FlowletType>> =
   Readonly<{
     ReactModule: { createElement: typeof React.createElement };
     IReactDOMModule: IReactDOM.IReactDOMModuleExports;
-    domSurfaceAttributeName?: string;
+    surfaceComponent?: SurfaceComponent<DataType, FlowletType, FlowletManagerType>;
+    flowletManager: FlowletManagerType;
   }>;
 
-export function init(options: InitOptions): void {
-  const { domSurfaceAttributeName = AUTO_LOGGING_SURFACE, IReactDOMModule } = options;
+export function init<DataType extends FlowletDataType,
+  FlowletType extends Flowlet<DataType>,
+  FlowletManagerType extends FlowletManager<FlowletType>>(options: InitOptions<DataType, FlowletType, FlowletManagerType>): void {
+  const { IReactDOMModule, ReactModule, flowletManager } = options;
+
+  /**
+   * When createPortal is called, the react components will be added to a
+   * separate container DOM node and shown in place later.
+   * Although DOM tree hierarchy is broken, the React Context hierarchy will
+   * continue to work. So, we use that fact and assign the right surface attribute
+   * to the container node. This way, when we walk up the DOM tree, we find the
+   * right surface value.
+   */
 
   /**
    * When createPortal is called, the react components will be added to a
@@ -59,12 +75,34 @@ export function init(options: InitOptions): void {
    * right surface value.
    */
   IReactDOMModule.createPortal.onArgsMapperAdd(args => {
-    const [_node, container] = args;
-    if (container instanceof HTMLElement) {
-      // args[0] = options.ReactModule.createElement(SurfaceProxy, { container }, node);
-      const { surface } = useALSurfaceContext();
+    const [node, _container] = args;
+
+    if (node != null && React.isValidElement(node)) {
+      const { surface, flowlet: surfaceFlowlet } = useALSurfaceContext<DataType, FlowletType>();
       if (surface != null) {
-        container.setAttribute(domSurfaceAttributeName, surface);
+        // If the surface of the flowlet is the same surface as the one we are proxy wrapping
+        // because of portal, pass that to this wrapping surface component.
+        let flowlet = surfaceFlowlet;
+        if (flowlet == null) {
+          const topFlowlet = flowletManager.top();
+          if (topFlowlet == null || topFlowlet?.name !== surface) {
+            flowlet = flowletManager.push(new flowletManager.flowletCtor(surface, topFlowlet));
+          } else {
+            flowlet = topFlowlet;
+          }
+        }
+        if (options.surfaceComponent) {
+          args[0] = ReactModule.createElement(
+            options.surfaceComponent,
+            {
+              __ext: new SurfacePropsExtension<FlowletDataType, FlowletType>(flowlet),
+              flowlet: flowlet,
+              flowletManager: flowletManager,
+              fullSurfaceString: surface,
+            },
+            node
+          );
+        }
       }
     }
     return args;

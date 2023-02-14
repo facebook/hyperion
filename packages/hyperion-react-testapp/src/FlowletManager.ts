@@ -9,6 +9,6 @@ interface FlowletDataType extends ALFlowletDataType {
   i?: number
 }
 
-export const FlowletManager = new ALFlowletManager<FlowletDataType>;
+export const FlowletManager = new ALFlowletManager<FlowletDataType>();
 
 FlowletManager.push(new Flowlet("top"));
