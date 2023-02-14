@@ -7,7 +7,7 @@
 import { assert } from '@hyperion/global';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import type * as React from 'react';
-import { FlowletDataType } from './ALSurface';
+import { FlowletDataType } from './Types';
 
 
 export type InitOptions =

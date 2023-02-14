@@ -4,7 +4,6 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hook/src/Channel";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
@@ -17,6 +16,9 @@ import { ALFlowletManager, ALFlowletDataType } from "./ALFlowletManager";
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import * as SurfaceProxy from "./ALSurfaceProxy";
+import type { Channel } from "@hyperion/hook/src/Channel";
+import { SurfaceComponent, SurfacePropsExtension } from "./Types";
+
 
 type ALChannelSurfaceData = Readonly<{
   surface: string,
@@ -43,7 +45,7 @@ type ALChannel = Channel<ALChannelEventType>;
 export type InitOptions =
   IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
   ALSurfaceContext.InitOptions &
-  SurfaceProxy.InitOptions &
+  SurfaceProxy.InitOptions<DataType, FlowletType, FlowletManagerType> &
   {
     ReactModule: {
       createElement: typeof React.createElement;
@@ -155,6 +157,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   });
 }
 
+
 export function init(options: InitOptions): ALSurfaceHOC {
   const { ReactModule, flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
 
@@ -164,21 +167,18 @@ export function init(options: InitOptions): ALSurfaceHOC {
   const SurfaceContext = ALSurfaceContext.init(options);
   SurfaceProxy.init(options);
 
-  class SurfacePropsExtension extends IReactFlowlet.PropsExtension<DataType, FlowletType>  {
-    getSurface(): string | undefined {
-      return this.flowlet?.data.surface;
-    }
-  }
 
-  function Surface(props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension> & {
+
+  const Surface: SurfaceComponent<DataType, FlowletType, FlowletManagerType> = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
     flowlet: FlowletType,
     flowletManager: FlowletManagerType,
     /** The incoming surface that we are re-wrapping via a proxy.
      * If this is provided,  then we won't emit mutations for this surface as we are
      * doubly wrapping that surface, for surface attribution purposes.
      */
-     fullSurfaceString?: string,
-  }): React.ReactElement {
+    fullSurfaceString?: string
+  }
+  ) => {
     const { __ext, flowlet, flowletManager } = props;
     if (__ext && __ext.flowlet !== flowlet) {
       __ext.flowlet = flowlet;
@@ -187,7 +187,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     const incomingSurfaceString = props.fullSurfaceString ?? '';
     const isPassedSurface = incomingSurfaceString !== '';
     let fullSurfaceString = incomingSurfaceString;
-    const {surface: parentSurface} =  ALSurfaceContext.useALSurfaceContext();
+    const { surface: parentSurface } = ALSurfaceContext.useALSurfaceContext();
     if (fullSurfaceString === '') {
       const surface = flowlet.name;
       fullSurfaceString = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
@@ -243,47 +243,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     return result;
   }
 
-  /**
-   * When createPortal is called, the react components will be added to a
-   * separate container DOM node and shown in place later.
-   * Although DOM tree hierarchy is broken, the React Context hierarchy will
-   * continue to work. So, we use that fact and assign the right surface attribute
-   * to the container node. This way, when we walk up the DOM tree, we find the
-   * right surface value.
-   */
-   IReactDOMModule.createPortal.onArgsMapperAdd(args => {
-    const [node, _container] = args;
-
-    console.log('Wrap proxy');
-    if (node != null && React.isValidElement(node)) {
-      const { surface, flowlet: surfaceFlowlet } = ALSurfaceContext.useALSurfaceContext<DataType, FlowletType>();
-      if (surface != null) {
-        // If the surface of the flowlet is the same surface as the one we are proxy wrapping
-        // because of portal, pass that to this wrapping surface component.
-        let flowlet = surfaceFlowlet;
-        if (flowlet == null) {
-          const topFlowlet = flowletManager.top();
-          if (topFlowlet == null || topFlowlet?.name !== surface) {
-            flowlet = flowletManager.push(new flowletManager.flowletCtor(surface, topFlowlet));
-          } else {
-            flowlet = topFlowlet;
-          }
-        }
-        console.log('Wrap proxy', surface);
-        args[0] = ReactModule.createElement(
-          Surface,
-          {
-            __ext:new SurfacePropsExtension(flowlet),
-            flowlet: flowlet,
-            flowletManager: flowletManager,
-            fullSurfaceString: surface,
-          },
-          node
-        );
-      }
-    }
-    return args;
-  });
+  SurfaceProxy.init({ ...options, surfaceComponent: Surface });
 
   function updateFlowlet(
     ext: IReactFlowlet.PropsExtension<DataType, FlowletType> | undefined,
@@ -310,13 +270,13 @@ export function init(options: InitOptions): ALSurfaceHOC {
   }
 
 
-  type IDomElementExtendedProps = IReactPropsExtension.ExtendedProps<SurfacePropsExtension> & {
+  type IDomElementExtendedProps = IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
     [index: string]: SurfaceDOMString<DataType, FlowletType>;
   }
 
   const propagateFlowletDown = IReactElementVisitor.createReactNodeVisitor<
     IDomElementExtendedProps,
-    IReactPropsExtension.ExtendedProps<SurfacePropsExtension>,
+    IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>>,
     FlowletType,
     boolean | undefined
   >({
