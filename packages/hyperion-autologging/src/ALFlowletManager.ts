@@ -13,7 +13,7 @@ import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
  * overtime, we don't want to create an uncessary dependency on that.
  */
 export interface ALFlowletDataType {
-  surface?: string;
+  surface?: string,
 };
 
 class ALFlowlet<DataType extends ALFlowletDataType> extends Flowlet<DataType>{

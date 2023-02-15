@@ -38,6 +38,6 @@ export function init() {
     console.log('mounted', ev, performance.now());
   });
   channel.on('al_surface_unmount').add(ev => {
-    console.log('mounted', ev, performance.now());
+    console.log('unmounted', ev, performance.now());
   });
 }
