@@ -7,7 +7,8 @@
 import { assert } from '@hyperion/global';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import type * as React from 'react';
-import { FlowletDataType } from './Types';
+import { ALFlowletDataType } from './ALFlowletManager';
+
 
 
 export type InitOptions =
@@ -20,7 +21,7 @@ export type InitOptions =
 
 
 type ALSurfaceContextValue<
-  DataType extends FlowletDataType,
+  DataType extends ALFlowletDataType,
   FlowletType extends Flowlet<DataType>
 > = Readonly<{
   surface: string,
@@ -30,7 +31,7 @@ type ALSurfaceContextValue<
 
 
 function getDefaultSurfaceContext<
-  DataType extends FlowletDataType,
+  DataType extends ALFlowletDataType,
   FlowletType extends Flowlet<DataType>
 >(): ALSurfaceContextValue<DataType, FlowletType> {
   return {
@@ -45,7 +46,7 @@ export let ALSurfaceContext: React.Context<any> | null = null;
 let ReactModule: InitOptions['ReactModule'] | null = null;
 
 export function init<
-  DataType extends FlowletDataType,
+  DataType extends ALFlowletDataType,
   FlowletType extends Flowlet<DataType>
 >(options: InitOptions): React.Context<ALSurfaceContextValue<DataType, FlowletType>> {
   assert(!ReactModule && !ALSurfaceContext, "Already initilized");
@@ -60,11 +61,11 @@ export function init<
 
 
 export function useALSurfaceContext<
-  DataType extends FlowletDataType,
+  DataType extends ALFlowletDataType,
   FlowletType extends Flowlet<DataType>
 >(): ALSurfaceContextValue<DataType, FlowletType> {
   if (!ReactModule || !ALSurfaceContext) {
-    return getDefaultSurfaceContext<DataType, FlowletType>();
+    return getDefaultSurfaceContext<ALFlowletDataType, FlowletType>();
   }
 
   const context = ReactModule?.useContext(ALSurfaceContext);

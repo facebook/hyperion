@@ -4,6 +4,7 @@
 
 'use strict';
 
+import type { Channel } from "@hyperion/hook/src/Channel";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
@@ -16,7 +17,6 @@ import { ALFlowletManager, ALFlowletDataType } from "./ALFlowletManager";
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import type { Channel } from "@hyperion/hook/src/Channel";
 import { SurfaceComponent, SurfacePropsExtension } from "./Types";
 
 
@@ -165,9 +165,6 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
   setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
-  SurfaceProxy.init(options);
-
-
 
   const Surface: SurfaceComponent<DataType, FlowletType, FlowletManagerType> = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
     flowlet: FlowletType,

@@ -8,9 +8,10 @@
 import * as React from 'react';
 import { useALSurfaceContext } from './ALSurfaceContext';
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
-import { FlowletDataType, SurfaceComponent, SurfacePropsExtension } from './Types';
+import { SurfaceComponent, SurfacePropsExtension } from './Types';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { FlowletManager } from '@hyperion/hyperion-flowlet/src/FlowletManager';
+import { ALFlowletDataType } from '@hyperion/hyperion-autologging/src/ALFlowletManager';
 
 
 /**
@@ -42,7 +43,8 @@ import { FlowletManager } from '@hyperion/hyperion-flowlet/src/FlowletManager';
 //   return props.children;
 // }
 
-export type InitOptions<DataType extends FlowletDataType,
+export type InitOptions<
+  DataType extends ALFlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>> =
   Readonly<{
@@ -52,27 +54,17 @@ export type InitOptions<DataType extends FlowletDataType,
     flowletManager: FlowletManagerType;
   }>;
 
-export function init<DataType extends FlowletDataType,
+export function init<
+  DataType extends ALFlowletDataType,
   FlowletType extends Flowlet<DataType>,
   FlowletManagerType extends FlowletManager<FlowletType>>(options: InitOptions<DataType, FlowletType, FlowletManagerType>): void {
   const { IReactDOMModule, ReactModule, flowletManager } = options;
-
   /**
    * When createPortal is called, the react components will be added to a
    * separate container DOM node and shown in place later.
    * Although DOM tree hierarchy is broken, the React Context hierarchy will
-   * continue to work. So, we use that fact and assign the right surface attribute
-   * to the container node. This way, when we walk up the DOM tree, we find the
-   * right surface value.
-   */
-
-  /**
-   * When createPortal is called, the react components will be added to a
-   * separate container DOM node and shown in place later.
-   * Although DOM tree hierarchy is broken, the React Context hierarchy will
-   * continue to work. So, we use that fact and assign the right surface attribute
-   * to the container node. This way, when we walk up the DOM tree, we find the
-   * right surface value.
+   * continue to work. So, we use that fact and wrap the node in another Surface
+   * with the same flowlet and surface from the original surface context.
    */
   IReactDOMModule.createPortal.onArgsMapperAdd(args => {
     const [node, _container] = args;
@@ -95,7 +87,7 @@ export function init<DataType extends FlowletDataType,
           args[0] = ReactModule.createElement(
             options.surfaceComponent,
             {
-              __ext: new SurfacePropsExtension<FlowletDataType, FlowletType>(flowlet),
+              __ext: new SurfacePropsExtension(flowlet),
               flowlet: flowlet,
               flowletManager: flowletManager,
               fullSurfaceString: surface,
