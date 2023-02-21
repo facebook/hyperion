@@ -5,9 +5,8 @@
 'use strict';
 
 import { assert } from '@hyperion/global';
-import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import type * as React from 'react';
-import { ALFlowletDataType } from './ALFlowletManager';
+import { FlowletType } from './ALSurface';
 
 
 
@@ -19,56 +18,39 @@ export type InitOptions =
     }
   }>;
 
-
-type ALSurfaceContextValue<
-  DataType extends ALFlowletDataType,
-  FlowletType extends Flowlet<DataType>
-> = Readonly<{
-  surface: string,
-  flowlet: FlowletType | null,
-}>;
+type ALSurfaceContextValue = {
+  surface: string, flowlet: FlowletType
+} | { surface: null, flowlet: null };
 
 
-
-function getDefaultSurfaceContext<
-  DataType extends ALFlowletDataType,
-  FlowletType extends Flowlet<DataType>
->(): ALSurfaceContextValue<DataType, FlowletType> {
-  return {
-    surface: '',
-    flowlet: null,
-  };
+const DefaultSurfaceContext: ALSurfaceContextValue = {
+  surface: null,
+  flowlet: null,
 };
 
-export let ALSurfaceContext: React.Context<any> | null = null;
+export let ALSurfaceContext: React.Context<ALSurfaceContextValue> | null = null;
 
 
 let ReactModule: InitOptions['ReactModule'] | null = null;
 
-export function init<
-  DataType extends ALFlowletDataType,
-  FlowletType extends Flowlet<DataType>
->(options: InitOptions): React.Context<ALSurfaceContextValue<DataType, FlowletType>> {
+export function init(options: InitOptions): React.Context<ALSurfaceContextValue> {
   assert(!ReactModule && !ALSurfaceContext, "Already initilized");
 
   ReactModule = options.ReactModule;
   ALSurfaceContext = ReactModule.createContext(
-    getDefaultSurfaceContext<DataType, FlowletType>(),
+    DefaultSurfaceContext,
   );
 
   return ALSurfaceContext;
 };
 
 
-export function useALSurfaceContext<
-  DataType extends ALFlowletDataType,
-  FlowletType extends Flowlet<DataType>
->(): ALSurfaceContextValue<DataType, FlowletType> {
+export function useALSurfaceContext(): ALSurfaceContextValue {
   if (!ReactModule || !ALSurfaceContext) {
-    return getDefaultSurfaceContext<ALFlowletDataType, FlowletType>();
+    return DefaultSurfaceContext;
   }
 
   const context = ReactModule?.useContext(ALSurfaceContext);
   assert(!!context, 'useALSurfaceContext must be used within an ALSurface',);
-  return context ?? getDefaultSurfaceContext<DataType, FlowletType>();
+  return context ?? DefaultSurfaceContext;
 }
