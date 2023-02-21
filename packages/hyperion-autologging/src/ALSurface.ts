@@ -12,12 +12,12 @@ import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElementVisitor';
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
-import * as React from 'react';
+import type * as React from 'react';
 import { ALFlowletManager, ALFlowletDataType } from "./ALFlowletManager";
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import { SurfaceComponent, SurfacePropsExtension } from "./Types";
+import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 
 
 type ALChannelSurfaceData = Readonly<{
@@ -36,16 +36,26 @@ export type ALChannelSurfaceEvent = Readonly<{
   al_surface_unmount: [ALChannelSurfaceData],
 }>;
 
-type DataType = ALFlowletDataType;
-type FlowletType = Flowlet<DataType>;
-type FlowletManagerType = ALFlowletManager<ALFlowletDataType>;
+export type DataType = ALFlowletDataType;
+export type FlowletType = Flowlet<DataType>;
+export type FlowletManagerType = ALFlowletManager<ALFlowletDataType>;
 type ALChannelEventType = ALChannelSurfaceEvent;
 type ALChannel = Channel<ALChannelEventType>;
+
+
+
+export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
+  flowlet: FlowletType,
+  flowletManager: FlowletManagerType,
+  fullSurfaceString?: string
+}
+) => React.ReactElement;
+
 
 export type InitOptions =
   IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
   ALSurfaceContext.InitOptions &
-  SurfaceProxy.InitOptions<DataType, FlowletType, FlowletManagerType> &
+  SurfaceProxy.InitOptions &
   {
     ReactModule: {
       createElement: typeof React.createElement;
@@ -166,7 +176,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
   setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
 
-  const Surface: SurfaceComponent<DataType, FlowletType, FlowletManagerType> = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
+  const Surface: SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
     flowlet: FlowletType,
     flowletManager: FlowletManagerType,
     /** The incoming surface that we are re-wrapping via a proxy.
@@ -185,7 +195,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     const isPassedSurface = incomingSurfaceString !== '';
     let fullSurfaceString = incomingSurfaceString;
     const { surface: parentSurface } = ALSurfaceContext.useALSurfaceContext();
-    if (fullSurfaceString === '') {
+    if (!isPassedSurface) {
       const surface = flowlet.name;
       fullSurfaceString = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
     }

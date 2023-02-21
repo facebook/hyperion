@@ -32,6 +32,7 @@ function IndirectSurface(props: Props) {
 }
 
 export default function AdsSpeedLabAutoLoggingImpl(_props: {}): React.ReactElement {
+  console.log('Root render');
   const [count, setCount] = useState(0);
   return Surface({ surface: 'RootComp' })(
     <div data-comptype="root">
