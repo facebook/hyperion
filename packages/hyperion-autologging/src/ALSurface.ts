@@ -47,6 +47,10 @@ type ALChannel = Channel<ALChannelEventType>;
 export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
   flowlet: FlowletType,
   flowletManager: FlowletManagerType,
+  /** The optional incoming surface that we are re-wrapping via a proxy.
+   * If this is provided,  then we won't emit mutations for this surface as we are
+   * doubly wrapping that surface, for surface attribution purposes.
+   */
   fullSurfaceString?: string
 }
 ) => React.ReactElement;
@@ -176,16 +180,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
   setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
 
-  const Surface: SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
-    flowlet: FlowletType,
-    flowletManager: FlowletManagerType,
-    /** The incoming surface that we are re-wrapping via a proxy.
-     * If this is provided,  then we won't emit mutations for this surface as we are
-     * doubly wrapping that surface, for surface attribution purposes.
-     */
-    fullSurfaceString?: string
-  }
-  ) => {
+  const Surface: SurfaceComponent = props => {
     const { __ext, flowlet, flowletManager } = props;
     if (__ext && __ext.flowlet !== flowlet) {
       __ext.flowlet = flowlet;
