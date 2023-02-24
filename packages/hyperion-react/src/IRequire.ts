@@ -47,9 +47,11 @@ class WebpackModuleRuntime extends ModuleRuntimeBase {
  * For internal Meta apps, we use a custom runtime to manage modules and can access the exports
  * via the following global variable.
  */
-declare var __debug: { modulesMap: { [key: string]: { defaultExport: object } } } | undefined;
+type __debug = { modulesMap: { [key: string]: { defaultExport: object } } } | undefined;
+declare var require: ((name: "__debug") => __debug) | undefined;
+
 class MetaModuleRuntime extends ModuleRuntimeBase {
-  constructor(private _cache: NonNullable<typeof __debug>) {
+  constructor(private _cache: NonNullable<__debug>) {
     super();
   }
   updateExports<TModuleExports extends InterceptableObjectType>(
@@ -75,9 +77,14 @@ const ModuleRuntime: ModuleRuntimeBase = (() => {
   if (typeof __webpack_module_cache__ === 'object') {
     // In webpack world
     return new WebpackModuleRuntime(__webpack_module_cache__);
-  } else if (typeof __debug === "object") {
-    // In Meta custom runtime world
-    return new MetaModuleRuntime(__debug);
+  } else if (typeof require === "function") {
+    try {
+      const __debug = require("__debug");
+      if (typeof __debug === "object") {
+        // In Meta custom runtime world
+        return new MetaModuleRuntime(__debug);
+      }
+    } catch (e) { }
   }
   return new ModuleRuntimeBase();
 })();
