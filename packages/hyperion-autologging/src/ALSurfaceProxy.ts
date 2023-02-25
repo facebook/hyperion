@@ -13,35 +13,6 @@ import { FlowletManagerType, SurfaceComponent } from './ALSurface';
 import { assert } from '@hyperion/global';
 
 
-/**
- * We need to use a hook to get the surface value, but the rules of using
- * hooks won't allow us to call it outside of a react component.
- * So, the following proxy component is purely for getting around this
- * limitation and reading the current surface value during rendering.
- * If we can find a way around this limitation, we can use a simpler logic
- * like the following:
- *
- *  ALIReactDOM.createPortal.onArgsObserverAdd((_node, container) => {
- *    if (container instanceof HTMLElement) {
- *      const {surface} = useALSurfaceContext();
- *      if (surface != null) {
- *        container.setAttribute(AUTO_LOGGING_SURFACE, surface);
- *      }
- *    }
- *  });
- */
-// function SurfaceProxy(props: React.PropsWithChildren<{
-//   container: HTMLElement,
-// }>) {
-//   const { container } = props;
-//   const { surface } = useALSurfaceContext();
-//   if (surface != null) {
-//     container.setAttribute(AUTO_LOGGING_SURFACE, surface);
-//   }
-
-//   return props.children;
-// }
-
 export type InitOptions =
   Readonly<{
     ReactModule: { createElement: typeof React.createElement };
@@ -56,8 +27,33 @@ type ProxyInitOptions =
     surfaceComponent: SurfaceComponent;
   }>;
 
+/**
+ * We need to use a hook to get the surface value, but the rules of using
+ * hooks won't allow us to call it outside of a react component.
+ * So, the following proxy component is purely for getting around this
+ * limitation and reading the current surface value during rendering.
+ * If we can find a way around this limitation, we can use a simpler logic
+ * like the following:
+ */
+function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions>) {
+  const { ReactModule, surfaceComponent, flowletManager, children } = props;
+  const { surface, flowlet } = useALSurfaceContext();
+  assert(surface != null, 'Surface cannot be null when proxying Surface.');
+  assert(flowlet != null, 'Flowlet cannot be null when proxying Surface.');
+  return ReactModule.createElement(
+    surfaceComponent,
+    {
+      __ext: new SurfacePropsExtension(flowlet),
+      flowlet: flowlet,
+      flowletManager: flowletManager,
+      fullSurfaceString: surface,
+    },
+    children
+  );
+}
+
 export function init(options: ProxyInitOptions): void {
-  const { IReactDOMModule, ReactModule, flowletManager } = options;
+  const { IReactDOMModule, ReactModule } = options;
   /**
    * When createPortal is called, the react components will be added to a
    * separate container DOM node and shown in place later.
@@ -69,19 +65,7 @@ export function init(options: ProxyInitOptions): void {
     const [node, _container] = args;
 
     if (node != null) {
-      const { surface, flowlet } = useALSurfaceContext();
-      assert(surface != null, 'Surface cannot be null when proxying Surface.');
-      assert(flowlet != null, 'Flowlet cannot be null when proxying Surface.');
-      args[0] = ReactModule.createElement(
-        options.surfaceComponent,
-        {
-          __ext: new SurfacePropsExtension(flowlet),
-          flowlet: flowlet,
-          flowletManager: flowletManager,
-          fullSurfaceString: surface,
-        },
-        node
-      );
+      args[0] = ReactModule.createElement(SurfaceProxy, options, node);
     }
     return args;
   });
