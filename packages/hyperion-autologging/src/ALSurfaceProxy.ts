@@ -10,12 +10,11 @@ import { useALSurfaceContext } from './ALSurfaceContext';
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 import { SurfacePropsExtension } from './ALSurfacePropsExtension';
 import { FlowletManagerType, SurfaceComponent } from './ALSurface';
-import { assert } from '@hyperion/global';
 
 
 export type InitOptions =
   Readonly<{
-    ReactModule: { createElement: typeof React.createElement };
+    ReactModule: { createElement: typeof React.createElement, Fragment: typeof React.Fragment };
     IReactDOMModule: IReactDOM.IReactDOMModuleExports;
     flowletManager: FlowletManagerType;
   }>;
@@ -35,21 +34,23 @@ type ProxyInitOptions =
  * If we can find a way around this limitation, we can use a simpler logic
  * like the following:
  */
-function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions>) {
+function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions>): React.ReactElement {
   const { ReactModule, surfaceComponent, flowletManager, children } = props;
   const { surface, flowlet } = useALSurfaceContext();
-  assert(surface != null, 'Surface cannot be null when proxying Surface.');
-  assert(flowlet != null, 'Flowlet cannot be null when proxying Surface.');
-  return ReactModule.createElement(
-    surfaceComponent,
-    {
-      __ext: new SurfacePropsExtension(flowlet),
-      flowlet: flowlet,
-      flowletManager: flowletManager,
-      fullSurfaceString: surface,
-    },
-    children
-  );
+  if (surface != null && flowlet != null) {
+    return ReactModule.createElement(
+      surfaceComponent,
+      {
+        __ext: new SurfacePropsExtension(flowlet),
+        flowlet: flowlet,
+        flowletManager: flowletManager,
+        fullSurfaceString: surface,
+      },
+      children
+    );
+  } else {
+    return ReactModule.createElement(ReactModule.Fragment, {}, children);
+  }
 }
 
 export function init(options: ProxyInitOptions): void {

@@ -9,6 +9,7 @@ import LargeComp from './component/LargeComponent';
 import Counter from "./component/Counter";
 import NestedComponent from './component/NestedComponent';
 import * as IReact from "./IReact";
+import { PortalBodyContainerComponent } from './component/PortalComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -41,6 +42,9 @@ function App() {
         <NestedComponent></NestedComponent>
         <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
       </div>
+      <div>
+       <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
+      </div>
 
 
 
@@ -51,7 +55,7 @@ function App() {
 export default App;
 
 {/* <h1>Large tree without interception:</h1>
-     
+
 
         <InitComp></InitComp>
 
