@@ -40,7 +40,7 @@ export type DataType = ALFlowletDataType;
 export type FlowletType = Flowlet<DataType>;
 export type FlowletManagerType = ALFlowletManager<ALFlowletDataType>;
 type ALChannelEventType = ALChannelSurfaceEvent;
-type ALChannel = Channel<ALChannelEventType>;
+export type ALChannel = Channel<ALChannelEventType>;
 
 
 
