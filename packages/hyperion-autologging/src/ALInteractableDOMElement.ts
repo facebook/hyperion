@@ -162,7 +162,7 @@ const extractInnerText = (element: HTMLElement | null): string | null => {
   );
   if (isTruthy(innerText)) {
     const innerTextArray = innerText?.split(/\r\n|\r|\n/);
-    const name = (innerTextArray?.length != undefined && innerTextArray?.length > 0) ? innerTextArray[0] : null;
+    const name = (innerTextArray && innerTextArray.length > 0) ? innerTextArray[0] : null;
     if (name != null) {
       return name;
     }
