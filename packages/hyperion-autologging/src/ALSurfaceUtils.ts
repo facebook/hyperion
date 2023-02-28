@@ -3,9 +3,17 @@ import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 const SURFACE_SELECTOR = `[${AUTO_LOGGING_SURFACE}]`;
 
 export function getSurfacePath(node: HTMLElement | null): string| null {
-  return getAncestralSurfaceNode(node)?.getAttribute(AUTO_LOGGING_SURFACE);
+  const surfacePath = getAncestralSurfaceNode(node)?.getAttribute(AUTO_LOGGING_SURFACE);
+  if (surfacePath != undefined) {
+    return surfacePath;
+  }
+  return null;
 }
 
 export function getAncestralSurfaceNode(node: Element| null): Element| null {
-  return node?.closest(SURFACE_SELECTOR);
+  const surfaceNode = node?.closest(SURFACE_SELECTOR);
+  if (surfaceNode != undefined) {
+    return surfaceNode;
+  }
+  return null;
 }

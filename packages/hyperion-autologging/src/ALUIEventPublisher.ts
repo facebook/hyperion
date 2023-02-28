@@ -1,18 +1,12 @@
 /**
- * (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
- *
- * @flow strict-local
- * @format
- * @oncall am_logging
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
 'use strict';
-import { Hook } from "@hyperion/hook";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
-import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 import {TimedTrigger} from "@hyperion/hyperion-util/src/TimedTrigger";
 import { getElementName, getInteractable, trackInteractable, trackSynthetic } from "./ALInteractableDOMElement";
-import { DataType, FlowletManagerType, FlowletType } from "./ALSurface";
+import { FlowletManagerType, FlowletType } from "./ALSurface";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import {getOrSetAutoLoggingID} from "@hyperion/hyperion-util/src/ALIDUtils";
 import { Channel } from "@hyperion/hook/src/Channel";
@@ -51,13 +45,6 @@ export type ALChannelUIEvent = Readonly<{
   al_ui_event: [ALUIEventData],
 }>;
 
-export const onALUIEventCapture: Hook<(ALUIEventCaptureData) => void> =
-  new Hook();
-export const onALUIEventBubble: Hook<(ALUIEventBubbleData) => void> =
-  new Hook();
-export const onALUIEvent: Hook<(ALUIEventData) => void> =
-  new Hook();
-
 const MAX_CAPTURE_TO_BUBBLE_DELAY_MS = 500;
 
 type CurrentUIEvent = {
@@ -71,7 +58,7 @@ type ALChannel = Channel<ALChannelUIEvent>;
 export function publish(
   uiEvents: Array<string>,
   FlowletManager: FlowletManagerType,
-  channel?: ALChannel,
+  channel: ALChannel,
 ): void {
   const newEventsToPublish = uiEvents.filter(
     event => !PUBLISHED_EVENTS.has(event),
@@ -80,7 +67,7 @@ export function publish(
   trackInteractable(newEventsToPublish);
 
   let lastUIEvent: CurrentUIEvent | null;
-  let flowlet: FlowletType | null;
+  let flowlet: FlowletType;
 
   newEventsToPublish.forEach(eventName => {
     trackSynthetic(eventName);
@@ -115,7 +102,7 @@ export function publish(
           surface: getSurfacePath(element),
           elementName: getElementName(element),
         };
-        onALUIEventCapture.call(eventData);
+        channel?.emit('al_ui_event_capture', eventData);
         updateLastUIEvent(eventData);
       },
       true, // useCapture
@@ -126,7 +113,7 @@ export function publish(
       (event: Event) => {
         const element = getInteractable(event.target, eventName);
         if (element != null) {
-          onALUIEventBubble.call({
+          channel?.emit('al_ui_event_bubble', {
             event: eventName,
             element,
             bubbleTimestamp: Date.now(),
@@ -175,17 +162,17 @@ export function publish(
     lastUIEvent = {
       data,
       timedEmitter: new TimedTrigger(timerFired => {
-        onALUIEvent.call(data);
+        channel?.emit('al_ui_event', data);
         lastUIEvent = null;
       }, MAX_CAPTURE_TO_BUBBLE_DELAY_MS),
     };
   }
 
-  if (channel) {
-    onALUIEventCapture.add(event => channel.emit('al_ui_event_capture', event));
-    onALUIEventBubble.add(event => channel.emit('al_ui_event_bubble', event));
-    onALUIEvent.add(event => channel.emit('al_ui_event', event));
-  }
+  // if (channel) {
+  //   onALUIEventCapture.add(event => channel.emit('al_ui_event_capture', event));
+  //   onALUIEventBubble.add(event => channel.emit('al_ui_event_bubble', event));
+  //   onALUIEvent.add(event => channel.emit('al_ui_event', event));
+  // }
 
   newEventsToPublish.forEach(event => PUBLISHED_EVENTS.add(event));
 }
