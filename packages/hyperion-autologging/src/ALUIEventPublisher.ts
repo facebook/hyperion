@@ -142,7 +142,7 @@ export function publish(
     const {event, captureTimestamp, element, isTrusted} = eventData;
 
     if (lastUIEvent != null) {
-      const {data, timedEmitter} = lastUIEvent;
+      const {timedEmitter} = lastUIEvent;
       timedEmitter.run();
     }
 
@@ -161,7 +161,7 @@ export function publish(
 
     lastUIEvent = {
       data,
-      timedEmitter: new TimedTrigger(timerFired => {
+      timedEmitter: new TimedTrigger(_ => {
         channel?.emit('al_ui_event', data);
         lastUIEvent = null;
       }, MAX_CAPTURE_TO_BUBBLE_DELAY_MS),
