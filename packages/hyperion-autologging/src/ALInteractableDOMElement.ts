@@ -1,19 +1,16 @@
 /**
- * (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
- *
- * This module provides utility functions used by Auto Logging to work with surfaces
- *
- * @flow strict-local
- * @format
- * @oncall am_logging
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
-import {addEventListener, removeEventListener} from "@hyperion/hyperion-dom/src/IEventTarget";
+
+import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
 import {onReactDOMElement} from "@hyperion/hyperion-react/src/IReactComponent";
 
 'use strict';
 
-const eventNamesMap = {
+const eventNamesMap: {
+  [key: string]: (arg0: HTMLElement) => ((this: GlobalEventHandlers, ev: MouseEvent) => any) | null;
+} = {
   click: (node: HTMLElement) => {
     return node.onclick;
   },
@@ -31,7 +28,9 @@ const eventNamesMap = {
   },
 };
 
-const SYNTHETIC_MOUSE_EVENT_HANDLER_MAP = {
+const SYNTHETIC_MOUSE_EVENT_HANDLER_MAP: {
+  [key: string]: string;
+} = {
   click: 'onClick',
   contextmenu: 'onContextMenu',
   dblclick: 'onDoubleClick',
@@ -53,7 +52,7 @@ const SYNTHETIC_MOUSE_EVENT_HANDLER_MAP = {
 };
 
 export function getInteractable(
-  node: EventTarget,
+  node: EventTarget | null,
   eventName: string,
   returnInteractableNode: boolean = false,
 ): HTMLElement | null {
@@ -77,6 +76,7 @@ export function getInteractable(
       }
     }
   }
+  return null;
 }
 
 function getClosestHandler(node: EventTarget, eventName: string): HTMLElement | null {
@@ -108,7 +108,7 @@ function ignoreInteractiveElement(node: HTMLElement) {
 }
 
 export function trackInteractable(events: Array<string>): void {
-  addEventListener.onArgsObserverAdd(function (
+  IEventTarget.addEventListener.onArgsObserverAdd(function (
     this: EventTarget,
     event,
     _listener,
@@ -121,7 +121,7 @@ export function trackInteractable(events: Array<string>): void {
       }
     }
   });
-  removeEventListener.onArgsObserverAdd(function (
+  IEventTarget.removeEventListener.onArgsObserverAdd(function (
     this: EventTarget,
     event,
     _listener,
@@ -145,13 +145,15 @@ export function trackSynthetic(event: string): void {
     },
   );
 }
-export default function isTruthy(value: any): boolean {
+
+function isTruthy(value: any): boolean {
   return (
     /* Although Boolean(value) also captures null/undefined we need to add this
       check so that Flow refines value as non-nullable */
     value != null && Boolean(value)
   );
 }
+
 const extractInnerText = (element: HTMLElement | null): string | null => {
   const innerText = element?.innerText?.replace(
     // Remove zero-width invisible Unicode characters (https://stackoverflow.com/a/11305926)
@@ -159,8 +161,8 @@ const extractInnerText = (element: HTMLElement | null): string | null => {
     '',
   );
   if (isTruthy(innerText)) {
-    const innerTextArray = innerText.split(/\r\n|\r|\n/);
-    const name = innerTextArray.length > 0 ? innerTextArray[0] : null;
+    const innerTextArray = innerText?.split(/\r\n|\r|\n/);
+    const name = (innerTextArray?.length != undefined && innerTextArray?.length > 0) ? innerTextArray[0] : null;
     if (name != null) {
       return name;
     }
@@ -171,9 +173,8 @@ const extractInnerText = (element: HTMLElement | null): string | null => {
 export function getElementName(
   element: HTMLElement,
   // Whether to try to resolve if element name is a result of Fbt translation
-  includeFbtLookup: boolean = false,
-): string {
-  let nextElement: HTMLElement = element;
+): string | null{
+  let nextElement: HTMLElement | null = element;
   while (nextElement && nextElement.nodeType === Node.ELEMENT_NODE) {
     const name = extractInnerText(nextElement);
     if (name != null) {

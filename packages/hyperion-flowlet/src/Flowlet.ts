@@ -23,7 +23,3 @@ export class Flowlet<T extends {} = {}> {
     return new Flowlet<T>(name, this);
   }
 }
-
-export type ALFlowletData = {
-  surface?: string | null,
-};
