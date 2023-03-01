@@ -28,10 +28,12 @@
       // "cwd": "${workspaceRoot}/packages/devtools",
       // "cwd": "${workspaceRoot}/packages/global",
       // "cwd": "${workspaceRoot}/packages/hook",
+      "cwd": "${workspaceRoot}/packages/hyperion-autologging",
       // "cwd": "${workspaceRoot}/packages/hyperion-core",
       // "cwd": "${workspaceRoot}/packages/hyperion-dom",
+      // "cwd": "${workspaceRoot}/packages/hyperion-flowlet",
+      // "cwd": "${workspaceRoot}/packages/hyperion-react",
       // "cwd": "${workspaceRoot}/packages/hyperion-util",
-      "cwd": "${workspaceRoot}/packages/hyperion-flowlet",
       "runtimeArgs": [
         "--preserve-symlinks",
         "--inspect-brk",

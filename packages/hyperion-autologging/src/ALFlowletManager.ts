@@ -16,11 +16,12 @@ export interface ALFlowletDataType {
   surface?: string,
 };
 
-class ALFlowlet<DataType extends ALFlowletDataType> extends Flowlet<DataType>{
-
+export class ALFlowlet<DataType extends ALFlowletDataType = ALFlowletDataType>
+  extends Flowlet<DataType>{
 }
 
-export class ALFlowletManager<DataType extends ALFlowletDataType> extends BaseFlowletManager<ALFlowlet<DataType>>{
+export class ALFlowletManager<DataType extends ALFlowletDataType = ALFlowletDataType>
+  extends BaseFlowletManager<ALFlowlet<DataType>>{
   constructor() {
     super(ALFlowlet);
   }

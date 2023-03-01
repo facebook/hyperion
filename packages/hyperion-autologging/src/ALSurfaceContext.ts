@@ -6,22 +6,24 @@
 
 import { assert } from '@hyperion/global';
 import type * as React from 'react';
-import { FlowletType } from './ALSurface';
+import { ALFlowlet } from './ALFlowletManager';
+import * as Types from "@hyperion/hyperion-util/src/Types";
 
 
-
-export type InitOptions =
-  Readonly<{
-    ReactModule: {
-      createContext: typeof React.createContext;
-      useContext: typeof React.useContext;
-    }
-  }>;
+export type InitOptions = Types.Options<{
+  ReactModule: {
+    createContext: typeof React.createContext;
+    useContext: typeof React.useContext;
+  }
+}>;
 
 type ALSurfaceContextValue = {
-  surface: string, flowlet: FlowletType
-} | { surface: null, flowlet: null };
-
+  surface: string;
+  flowlet: ALFlowlet;
+} | {
+  surface: null;
+  flowlet: null;
+};
 
 const DefaultSurfaceContext: ALSurfaceContextValue = {
   surface: null,
