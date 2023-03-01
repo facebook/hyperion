@@ -4,7 +4,7 @@
 
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
-import {onReactDOMElement} from "@hyperion/hyperion-react/src/IReactComponent";
+import { onReactDOMElement } from "@hyperion/hyperion-react/src/IReactComponent";
 
 'use strict';
 
@@ -107,13 +107,15 @@ function ignoreInteractiveElement(node: HTMLElement) {
   );
 }
 
-export function trackInteractable(events: Array<string>): void {
+const TrackedEvents = new Set<string>();
+
+let installHandlers = () => {
   IEventTarget.addEventListener.onArgsObserverAdd(function (
     this: EventTarget,
     event,
     _listener,
   ) {
-    if (events.indexOf(event) > -1 && this instanceof HTMLElement) {
+    if (TrackedEvents.has(event) && this instanceof HTMLElement) {
       if (!ignoreInteractiveElement(this)) {
         const attribute = `data-${event}able`;
 
@@ -121,6 +123,7 @@ export function trackInteractable(events: Array<string>): void {
       }
     }
   });
+
   IEventTarget.removeEventListener.onArgsObserverAdd(function (
     this: EventTarget,
     event,
@@ -132,18 +135,23 @@ export function trackInteractable(events: Array<string>): void {
       this.removeAttribute(attribute);
     }
   });
-}
-export function trackSynthetic(event: string): void {
-  onReactDOMElement.add(
-    (_component, props: ReactComponentObjectProps) => {
-      if (
-        props != null &&
-        props[SYNTHETIC_MOUSE_EVENT_HANDLER_MAP[event]] != null
-      ) {
-        props[`data-${event}able`] = '1';
+
+  onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
+    if (props != null) {
+      for (const event of TrackedEvents) {
+        if (props[SYNTHETIC_MOUSE_EVENT_HANDLER_MAP[event]] != null) {
+          props[`data-${event}able`] = '1';
+        }
       }
-    },
-  );
+    }
+  });
+
+  installHandlers = () => { }; // Done doing stuff! 
+}
+
+export function trackInteractable(events: Array<string>): void {
+  installHandlers();
+  events.forEach(event => TrackedEvents.add(event));
 }
 
 function isTruthy(value: any): boolean {
@@ -173,7 +181,7 @@ const extractInnerText = (element: HTMLElement | null): string | null => {
 export function getElementName(
   element: HTMLElement,
   // Whether to try to resolve if element name is a result of Fbt translation
-): string | null{
+): string | null {
   let nextElement: HTMLElement | null = element;
   while (nextElement && nextElement.nodeType === Node.ELEMENT_NODE) {
     const name = extractInnerText(nextElement);
