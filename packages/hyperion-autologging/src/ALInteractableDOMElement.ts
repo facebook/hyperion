@@ -146,7 +146,7 @@ let installHandlers = () => {
     }
   });
 
-  installHandlers = () => { }; // Done doing stuff! 
+  installHandlers = () => { }; // Done doing stuff!
 }
 
 export function trackInteractable(events: Array<string>): void {

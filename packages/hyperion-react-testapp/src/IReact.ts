@@ -5,6 +5,7 @@
 import { Channel } from "@hyperion/hook/src/Channel";
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/";
 import * as ALHeartbeat from "@hyperion/hyperion-autologging/src/ALHeartbeat";
+import * as ALSurfaceMutationPublisher from "@hyperion/hyperion-autologging/src/ALSurfaceMutationPublisher";
 import type * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
 import * as ALUIEventPublisher from "@hyperion/hyperion-autologging/src/ALUIEventPublisher";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
@@ -27,6 +28,7 @@ export function init() {
     ALSurface.ALChannelSurfaceEvent &
     ALUIEventPublisher.ALChannelUIEvent &
     ALHeartbeat.ALChannelHeartbeatEvent &
+    ALSurfaceMutationPublisher.ALChannelSurfaceMutationEvent &
     { test: [number, string] }
   >;
   channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
@@ -51,21 +53,30 @@ export function init() {
     heartbeat: {
       channel,
       heartbeatInterval: 30 * 1000
+    },
+    surfaceMutationPublisher: {
+      channel,
+      flowletManager: FlowletManager,
+      cacheElementInfo: false,
+      domSurfaceAttributeName: 'data-surfaceid',
     }
   })
 
   Surface.init(surfaceRenderer);
 
   channel.on('al_surface_mount').add(ev => {
-    console.log('mounted', ev, performance.now());
+    console.log('surface_mounted', ev, performance.now());
   });
   channel.on('al_surface_unmount').add(ev => {
-    console.log('unmounted', ev, performance.now());
+    console.log('surface_unmounted', ev, performance.now());
   });
   channel.on('al_ui_event').add(ev => {
     console.log('ui_event', ev, performance.now());
   });
   channel.on('al_heartbeat').add(ev => {
     console.log('heartbeat', ev, performance.now());
+  });
+  channel.on('al_mutation_event').add(ev => {
+    console.log('surface_mutation_event', ev, performance.now());
   });
 }
