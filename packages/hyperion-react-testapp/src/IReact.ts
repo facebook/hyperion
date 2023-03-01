@@ -11,6 +11,8 @@ import ReactDev from "react/jsx-dev-runtime";
 import * as Surface from "./component/Surface";
 import { FlowletManager } from "./FlowletManager";
 import type * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
+import * as ALUIEventPublisher from "@hyperion/hyperion-autologging/src/ALUIEventPublisher";
+
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/";
 
 export let interceptionStatus = "disabled";
@@ -23,6 +25,7 @@ export function init() {
 
   const channel = new Channel<
     ALSurface.ALChannelSurfaceEvent &
+    ALUIEventPublisher.ALChannelUIEvent &
     { test: [number, string] }
   >;
   channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
@@ -39,6 +42,11 @@ export function init() {
       channel,
       domSurfaceAttributeName: 'data-surfaceid'
     },
+    uiEventPublisher: {
+      uiEvents: ['click'],
+      flowletManager: FlowletManager,
+      channel
+    },
   })
 
   Surface.init(surfaceRenderer);
@@ -49,4 +57,8 @@ export function init() {
   channel.on('al_surface_unmount').add(ev => {
     console.log('unmounted', ev, performance.now());
   });
+  channel.on('al_ui_event').add(ev => {
+    console.log('ui_event', ev, performance.now());
+  });
+
 }

@@ -3,19 +3,20 @@
  */
 
 'use strict';
-import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
+import { Channel } from "@hyperion/hook/src/Channel";
+import { getOrSetAutoLoggingID } from "./ALID";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
-import { getElementName, getInteractable, trackInteractable, trackSynthetic } from "./ALInteractableDOMElement";
+import * as Types from "@hyperion/hyperion-util/src/Types";
+import { getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ALFlowletManager, ALFlowlet } from "./ALFlowletManager";
 import { getSurfacePath } from "./ALSurfaceUtils";
-import { getOrSetAutoLoggingID } from "@hyperion/hyperion-util/src/ALIDUtils";
-import { Channel } from "@hyperion/hook/src/Channel";
+import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 
 export type ALUIEventCaptureData = Readonly<{
   event: string,
   element: Element,
   isTrusted: boolean,
-  flowlet: Flowlet,
+  flowlet: ALFlowlet,
   captureTimestamp: number,
   surface: string | null,
   elementName: string | null,
@@ -32,7 +33,7 @@ export type ALUIEventData = Readonly<{
   event: string,
   element: Element,
   isTrusted: boolean,
-  flowlet: Flowlet,
+  flowlet: ALFlowlet,
   eventIndex: number,
   eventTimestamp: number,
   autoLoggingID: string,
@@ -55,11 +56,15 @@ type CurrentUIEvent = {
 const PUBLISHED_EVENTS = new Set<string>();
 type ALChannel = Channel<ALChannelUIEvent>;
 
-export function publish(
-  uiEvents: Array<string>,
-  FlowletManager: ALFlowletManager,
-  channel: ALChannel,
-): void {
+export type InitOptions = Types.Options<{
+  uiEvents: Array<string>;
+  flowletManager: ALFlowletManager;
+  channel: ALChannel;
+}>;
+
+export function publish(options: InitOptions): void {
+  const { uiEvents, flowletManager, channel } = options;
+
   const newEventsToPublish = uiEvents.filter(
     event => !PUBLISHED_EVENTS.has(event),
   );
@@ -70,53 +75,51 @@ export function publish(
   let flowlet: ALFlowlet;
 
   newEventsToPublish.forEach(eventName => {
-    trackSynthetic(eventName);
     // Track event in the capturing phase
-    window.document.addEventListener(
-      eventName,
-      (event: Event) => {
-        const element = getInteractable(event.target, eventName);
+    window.document.addEventListener(eventName, (event: Event) => {
+      const element = getInteractable(event.target, eventName);
 
-        if (element == null) {
-          return;
-        }
-        const captureTimestamp = Date.now();
+      if (element == null) {
+        return;
+      }
+      const captureTimestamp = performanceAbsoluteNow();
 
-        /**
-         * Regardless of element, we want to set the flowlet on this event.
-         * If we do have an element, we include its id in the flowlet.
-         * Since it is possible to interact with the same exact element multiple times,
-         * we need yet another distinguishing fact, for which we use timestamp
-         */
-        const ALFlowlet = FlowletManager.flowletCtor;
-        flowlet = new ALFlowlet(eventName, FlowletManager.top());
-        flowlet = new ALFlowlet(`ts${captureTimestamp}`, flowlet);
-        flowlet = FlowletManager.push(flowlet);
+      /**
+       * Regardless of element, we want to set the flowlet on this event.
+       * If we do have an element, we include its id in the flowlet.
+       * Since it is possible to interact with the same exact element multiple times,
+       * we need yet another distinguishing fact, for which we use timestamp
+       */
+      const ALFlowlet = flowletManager.flowletCtor;
+      flowlet = new ALFlowlet(eventName, flowletManager.top());
+      flowlet = new ALFlowlet(`ts${captureTimestamp}`, flowlet);
+      flowlet = flowletManager.push(flowlet);
 
-        const eventData: ALUIEventCaptureData = {
-          event: eventName,
-          element,
-          captureTimestamp,
-          flowlet,
-          isTrusted: event.isTrusted,
-          surface: getSurfacePath(element),
-          elementName: getElementName(element),
-        };
-        channel?.emit('al_ui_event_capture', eventData);
-        updateLastUIEvent(eventData);
-      },
+      const eventData: ALUIEventCaptureData = {
+        event: eventName,
+        element,
+        captureTimestamp,
+        flowlet,
+        isTrusted: event.isTrusted,
+        surface: getSurfacePath(element),
+        elementName: getElementName(element),
+      };
+      channel.emit('al_ui_event_capture', eventData);
+      updateLastUIEvent(eventData);
+    },
       true, // useCapture
     );
+
     // Track event in the bubbling phase
     window.document.addEventListener(
       eventName,
       (event: Event) => {
         const element = getInteractable(event.target, eventName);
         if (element != null) {
-          channel?.emit('al_ui_event_bubble', {
+          channel.emit('al_ui_event_bubble', {
             event: eventName,
             element,
-            bubbleTimestamp: Date.now(),
+            bubbleTimestamp: performanceAbsoluteNow(),
             isTrusted: event.isTrusted,
           });
 
@@ -132,7 +135,7 @@ export function publish(
             }
           }
         }
-        FlowletManager.pop(flowlet);
+        flowletManager.pop(flowlet);
       },
       false, // useCapture
     );
@@ -153,26 +156,22 @@ export function publish(
       autoLoggingID: getOrSetAutoLoggingID(element),
       flowlet,
       isTrusted,
+      /**
+       * eventIndex will be overridden in the subscriber, we are passing in a value here because
+       * Flow requires it but because some al_ui_events will be filtered out before emitting
+       * events to Falco, we can't generate the event_index here
+       */
       eventIndex: 0,
-      // This will be overridden in the subscriber, we are passing in a value here because
-      // Flow requires it but because some al_ui_events will be filtered out before emitting
-      // events to Falco, we can't generate the event_index here
     };
 
     lastUIEvent = {
       data,
       timedEmitter: new TimedTrigger(_ => {
-        channel?.emit('al_ui_event', data);
+        channel.emit('al_ui_event', data);
         lastUIEvent = null;
       }, MAX_CAPTURE_TO_BUBBLE_DELAY_MS),
     };
   }
-
-  // if (channel) {
-  //   onALUIEventCapture.add(event => channel.emit('al_ui_event_capture', event));
-  //   onALUIEventBubble.add(event => channel.emit('al_ui_event_bubble', event));
-  //   onALUIEvent.add(event => channel.emit('al_ui_event', event));
-  // }
 
   newEventsToPublish.forEach(event => PUBLISHED_EVENTS.add(event));
 }
