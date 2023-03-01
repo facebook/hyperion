@@ -22,7 +22,11 @@ export function getEventIndex(): number {
 
 /**
  * getLastUsedEventIndex:
+<<<<<<< HEAD
  * Returns the event index without incrementing, this is for passing the AL event index into PEEv2 logging in AdsInterfacesLogger.js
+=======
+ * Returns the event index without incrementing, this is useful for linking to AutoLogging events externally
+>>>>>>> 97bd69e (Added Heartbeat support)
  */
 export function getLastUsedEventIndex(): number {
   return _eventIndex;
