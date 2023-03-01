@@ -96,10 +96,10 @@ export function start(options: InitOptions): void {
       }
     }
   }
-  document.addEventListener(VISIBILITY_CHANE_EVENT, pageVisibilityListener);
+  document.addEventListener(VISIBILITY_CHANGE_EVENT, pageVisibilityListener);
 
   _releaseListeners = () => {
-    document.removeEventListener(VISIBILITY_CHANE_EVENT, pageVisibilityListener);
+    document.removeEventListener(VISIBILITY_CHANGE_EVENT, pageVisibilityListener);
     channel.removeListener('al_ui_event', userActionListener);
   }
   _logHeartbeat(ALHeartbeatType.START);
