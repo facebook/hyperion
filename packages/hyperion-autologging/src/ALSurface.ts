@@ -12,12 +12,13 @@ import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElementVisitor';
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
+import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
-import { ALFlowletManager, ALFlowletDataType } from "./ALFlowletManager";
+import { ALFlowletDataType, ALFlowletManager } from "./ALFlowletManager";
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
-import * as SurfaceProxy from "./ALSurfaceProxy";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
+import * as SurfaceProxy from "./ALSurfaceProxy";
 
 
 type ALChannelSurfaceData = Readonly<{
@@ -36,12 +37,11 @@ export type ALChannelSurfaceEvent = Readonly<{
   al_surface_unmount: [ALChannelSurfaceData],
 }>;
 
-export type DataType = ALFlowletDataType;
-export type FlowletType = Flowlet<DataType>;
-export type FlowletManagerType = ALFlowletManager<ALFlowletDataType>;
+type DataType = ALFlowletDataType;
+type FlowletType = Flowlet<DataType>;
+type FlowletManagerType = ALFlowletManager<ALFlowletDataType>;
 type ALChannelEventType = ALChannelSurfaceEvent;
 type ALChannel = Channel<ALChannelEventType>;
-
 
 
 export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
@@ -55,8 +55,7 @@ export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<Surfac
 }
 ) => React.ReactElement;
 
-
-export type InitOptions =
+export type InitOptions = Types.Options<
   IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
@@ -71,7 +70,8 @@ export type InitOptions =
     domSurfaceAttributeName?: string;
     domFlowletAttributeName?: string;
     channel?: ALChannel,
-  };
+  }
+>;
 
 const SURFACE_SEPARATOR = "/";
 

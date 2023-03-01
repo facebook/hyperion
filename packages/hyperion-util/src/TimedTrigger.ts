@@ -4,7 +4,7 @@
 
 'use strict';
 
-type TimeoutID = number;
+type TimeoutID = number | any /* React expects Timeout?! */;
 
 /**
  * This class can be used when we want to run a function once either by calling

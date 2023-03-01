@@ -9,7 +9,7 @@ import { MutationEvent, onDOMMutation } from "../src/SyncMutationObserver";
 
 describe('test sync mutation observer', () => {
   test('test sync mutation observer', () => {
-    let events = [];
+    let events: MutationEvent[] = [];
     onDOMMutation.add(event => {
       events.push(event);
     })
