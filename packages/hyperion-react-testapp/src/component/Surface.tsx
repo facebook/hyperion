@@ -21,6 +21,6 @@ export const Surface = (props: ALSurface.ALSurfaceProps) =>
     </div>
   ));
 
-export function init(options: Parameters<typeof ALSurface.init>[0]) {
-  SurfaceRenderer = ALSurface.init(options);
+export function init(renderer: ALSurface.ALSurfaceHOC) {
+  SurfaceRenderer = renderer;
 }

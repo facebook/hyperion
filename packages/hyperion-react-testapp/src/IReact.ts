@@ -11,6 +11,7 @@ import ReactDev from "react/jsx-dev-runtime";
 import * as Surface from "./component/Surface";
 import { FlowletManager } from "./FlowletManager";
 import type * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
+import * as AutoLogging from "@hyperion/hyperion-autologging/src/";
 
 export let interceptionStatus = "disabled";
 export function init() {
@@ -20,19 +21,27 @@ export function init() {
   const IJsxRuntimeModule = IReact.interceptRuntime("react/jsx-dev-runtime", ReactDev as any, []);
   const IReactDOMModule = IReactDOM.intercept("react-dom", ReactDOM, []);
 
-  const channel = new Channel<ALSurface.ALChannelSurfaceEvent & { test: [number, string] }>;
-  channel.on("test").add((i, s) => {
+  const channel = new Channel<
+    ALSurface.ALChannelSurfaceEvent &
+    { test: [number, string] }
+  >;
+  channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
 
+  });
+
+  const surfaceRenderer = AutoLogging.init({
+    surface: {
+      ReactModule: React as any,
+      IReactDOMModule,
+      IReactModule,
+      IJsxRuntimeModule,
+      flowletManager: FlowletManager,
+      channel,
+      domSurfaceAttributeName: 'data-surfaceid'
+    },
   })
 
-  Surface.init({
-    ReactModule: React as any,
-    IReactDOMModule,
-    IReactModule,
-    IJsxRuntimeModule,
-    flowletManager: FlowletManager,
-    channel
-  });
+  Surface.init(surfaceRenderer);
 
   channel.on('al_surface_mount').add(ev => {
     console.log('mounted', ev, performance.now());
