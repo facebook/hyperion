@@ -4,41 +4,51 @@
 
 'use strict';
 import { Channel } from "@hyperion/hook/src/Channel";
-import { getOrSetAutoLoggingID } from "./ALID";
+import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import { getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ALFlowletManager, ALFlowlet } from "./ALFlowletManager";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import { ALFlowletEvent, ALLoggableEvent } from "./ALType";
 
-export type ALUIEventCaptureData = Readonly<{
+export type ALUIEvent = Readonly<{
   event: string,
   element: Element,
   isTrusted: boolean,
-  flowlet: ALFlowlet,
-  captureTimestamp: number,
-  surface: string | null,
-  elementName: string | null,
 }>;
 
-export type ALUIEventBubbleData = Readonly<{
-  event: string,
-  element: Element,
-  isTrusted: boolean,
-  bubbleTimestamp: number,
-}>;
+export type ALUIEventCaptureData = Readonly<
+  ALUIEvent &
+  {
+    flowlet: ALFlowlet,
+    captureTimestamp: number,
+    surface: string | null,
+    elementName: string | null,
+  }
+>;
 
-export type ALUIEventData = Readonly<{
-  event: string,
-  element: Element,
-  isTrusted: boolean,
-  flowlet: ALFlowlet,
-  eventIndex: number,
-  eventTimestamp: number,
-  autoLoggingID: string,
-  surface?: string,
-}>;
+export type ALUIEventBubbleData = Readonly<
+  ALUIEvent &
+  {
+    bubbleTimestamp: number,
+  }
+>;
+
+type ALLoggableUIEvent = Readonly<
+  ALUIEvent &
+  ALFlowletEvent &
+  ALLoggableEvent &
+  {
+    autoLoggingID: ALID,
+    surface?: string,
+  }
+>;
+
+export type ALUIEventData = Readonly<
+  ALLoggableUIEvent
+>;
 
 export type ALChannelUIEvent = Readonly<{
   al_ui_event_capture: [ALUIEventCaptureData],

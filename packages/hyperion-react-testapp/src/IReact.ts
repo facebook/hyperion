@@ -3,6 +3,10 @@
  */
 
 import { Channel } from "@hyperion/hook/src/Channel";
+import * as AutoLogging from "@hyperion/hyperion-autologging/src/";
+import * as ALHeartbeat from "@hyperion/hyperion-autologging/src/ALHeartbeat";
+import type * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
+import * as ALUIEventPublisher from "@hyperion/hyperion-autologging/src/ALUIEventPublisher";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 import React from 'react';
@@ -10,10 +14,6 @@ import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import * as Surface from "./component/Surface";
 import { FlowletManager } from "./FlowletManager";
-import type * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
-import * as ALUIEventPublisher from "@hyperion/hyperion-autologging/src/ALUIEventPublisher";
-
-import * as AutoLogging from "@hyperion/hyperion-autologging/src/";
 
 export let interceptionStatus = "disabled";
 export function init() {
@@ -26,6 +26,7 @@ export function init() {
   const channel = new Channel<
     ALSurface.ALChannelSurfaceEvent &
     ALUIEventPublisher.ALChannelUIEvent &
+    ALHeartbeat.ALChannelHeartbeatEvent &
     { test: [number, string] }
   >;
   channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
@@ -47,6 +48,10 @@ export function init() {
       flowletManager: FlowletManager,
       channel
     },
+    heartbeat: {
+      channel,
+      heartbeatInterval: 30 * 1000
+    }
   })
 
   Surface.init(surfaceRenderer);
@@ -60,5 +65,7 @@ export function init() {
   channel.on('al_ui_event').add(ev => {
     console.log('ui_event', ev, performance.now());
   });
-
+  channel.on('al_heartbeat').add(ev => {
+    console.log('heartbeat', ev, performance.now());
+  });
 }
