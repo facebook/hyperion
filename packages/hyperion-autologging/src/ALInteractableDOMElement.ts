@@ -138,11 +138,11 @@ let installHandlers = () => {
 
   onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
     if (props != null) {
-      for (const event of TrackedEvents) {
+      TrackedEvents.forEach(event => {
         if (props[SYNTHETIC_MOUSE_EVENT_HANDLER_MAP[event]] != null) {
           props[`data-${event}able`] = '1';
         }
-      }
+      });
     }
   });
 

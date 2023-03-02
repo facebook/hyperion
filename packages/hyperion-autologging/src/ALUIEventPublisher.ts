@@ -11,7 +11,9 @@ import { getElementName, getInteractable, trackInteractable } from "./ALInteract
 import { ALFlowletManager, ALFlowlet } from "./ALFlowletManager";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
-import { ALFlowletEvent, ALLoggableEvent } from "./ALType";
+import { ALFlowletEvent, ALLoggableEvent, ALReactElementEvent } from "./ALType";
+import { ComponentNameValidator, getReactComponentData_THIS_CAN_BREAK, ReactComponentData } from "./ALReactUtils";
+import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 
 export type ALUIEvent = Readonly<{
   event: string,
@@ -21,6 +23,7 @@ export type ALUIEvent = Readonly<{
 
 export type ALUIEventCaptureData = Readonly<
   ALUIEvent &
+  ALReactElementEvent &
   {
     flowlet: ALFlowlet,
     captureTimestamp: number,
@@ -40,6 +43,7 @@ type ALLoggableUIEvent = Readonly<
   ALUIEvent &
   ALFlowletEvent &
   ALLoggableEvent &
+  ALReactElementEvent &
   {
     autoLoggingID: ALID,
     surface?: string,
@@ -70,10 +74,13 @@ export type InitOptions = Types.Options<{
   uiEvents: Array<string>;
   flowletManager: ALFlowletManager;
   channel: ALChannel;
+  cacheElementReactInfo: boolean;
+  domSurfaceAttributeName?: string;
+  componentNameValidator?: ComponentNameValidator;
 }>;
 
 export function publish(options: InitOptions): void {
-  const { uiEvents, flowletManager, channel } = options;
+  const { uiEvents, flowletManager, channel, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, cacheElementReactInfo, componentNameValidator = null } = options;
 
   const newEventsToPublish = uiEvents.filter(
     event => !PUBLISHED_EVENTS.has(event),
@@ -105,14 +112,20 @@ export function publish(options: InitOptions): void {
       flowlet = new ALFlowlet(`ts${captureTimestamp}`, flowlet);
       flowlet = flowletManager.push(flowlet);
 
+      let reactComponentData: ReactComponentData | null = null;
+      if (cacheElementReactInfo) {
+        reactComponentData = getReactComponentData_THIS_CAN_BREAK(element, componentNameValidator);
+      }
       const eventData: ALUIEventCaptureData = {
         event: eventName,
         element,
         captureTimestamp,
         flowlet,
         isTrusted: event.isTrusted,
-        surface: getSurfacePath(element),
+        surface: getSurfacePath(element, domSurfaceAttributeName),
         elementName: getElementName(element),
+        reactComponentName: reactComponentData?.name,
+        reactComponentStack: reactComponentData?.stack,
       };
       channel.emit('al_ui_event_capture', eventData);
       updateLastUIEvent(eventData);
@@ -152,7 +165,7 @@ export function publish(options: InitOptions): void {
   });
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
-    const { event, captureTimestamp, element, isTrusted } = eventData;
+    const { event, captureTimestamp, element, isTrusted, reactComponentName, reactComponentStack } = eventData;
 
     if (lastUIEvent != null) {
       const { timedEmitter } = lastUIEvent;
@@ -172,6 +185,8 @@ export function publish(options: InitOptions): void {
        * events to Falco, we can't generate the event_index here
        */
       eventIndex: 0,
+      reactComponentName,
+      reactComponentStack,
     };
 
     lastUIEvent = {
