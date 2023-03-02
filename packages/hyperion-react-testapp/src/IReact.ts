@@ -48,6 +48,8 @@ export function init() {
     uiEventPublisher: {
       uiEvents: ['click'],
       flowletManager: FlowletManager,
+      cacheElementReactInfo: true,
+      componentNameValidator: (name: string) => !name.match(/(^Surface(Proxy)?)/),
       channel
     },
     heartbeat: {
@@ -57,7 +59,8 @@ export function init() {
     surfaceMutationPublisher: {
       channel,
       flowletManager: FlowletManager,
-      cacheElementInfo: false,
+      cacheElementReactInfo: true,
+      componentNameValidator: (name: string) => !name.match(/(^Surface(Proxy)?)/),
       domSurfaceAttributeName: 'data-surfaceid',
     }
   })
@@ -65,10 +68,10 @@ export function init() {
   Surface.init(surfaceRenderer);
 
   channel.on('al_surface_mount').add(ev => {
-    console.log('surface_mounted', ev, performance.now());
+    console.log('surface_mount', ev, performance.now());
   });
   channel.on('al_surface_unmount').add(ev => {
-    console.log('surface_unmounted', ev, performance.now());
+    console.log('surface_unmount', ev, performance.now());
   });
   channel.on('al_ui_event').add(ev => {
     console.log('ui_event', ev, performance.now());
@@ -76,7 +79,7 @@ export function init() {
   channel.on('al_heartbeat').add(ev => {
     console.log('heartbeat', ev, performance.now());
   });
-  channel.on('al_mutation_event').add(ev => {
+  channel.on('al_surface_mutation_event').add(ev => {
     console.log('surface_mutation_event', ev, performance.now());
   });
 }

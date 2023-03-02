@@ -12,11 +12,32 @@ import { ALLoggableEvent } from "./ALType";
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import * as ALID from './ALID';
 import * as ALEventIndex from './ALEventIndex';
-// import {getAutoLoggingQPLEvent, onInteraction} from 'AdsALProfiler';
-// import AdsALUIState from 'AdsALUIState';
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
+import { ComponentNameValidator, getReactComponentData_THIS_CAN_BREAK, ReactComponentData } from './ALReactUtils';
+import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
+import { getElementName } from './ALInteractableDOMElement';
 
+type ALMutationEvent =  Readonly<{
+  event: 'mount_component' | 'unmount_component';
+  element: HTMLElement,
+  elementName: string | null,
+  mountedDuration?: number;
+  flowlet?: ALFlowlet | null;
+  reactComponentName?: string | null,
+  reactComponentStack?: string[] | null,
+}>;
 
+export type AdsALSurfaceMutationEventData = Readonly<
+  ALLoggableEvent &
+  ALMutationEvent
+>;
+
+export type ALChannelSurfaceMutationEvent = Readonly<{
+  al_surface_mutation_event: [AdsALSurfaceMutationEventData],
+}
+>;
+
+export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>;
 
 type SurfaceInfo = {
   surface: string,
@@ -25,39 +46,23 @@ type SurfaceInfo = {
   removeTime?: number,
   addFlowlet: ALFlowlet | null,
   removeFlowlet?: ALFlowlet | null,
+  reactComponentName?: string | null,
+  reactComponentStack?: string[] | null,
+  elementName: string | null,
 };
 
-
 const activeSurfaces = new Map<string, SurfaceInfo>();
-
-export type AdsALSurfaceMutationEventData = Readonly<
-  ALLoggableEvent &
-  {
-    event: 'mount_component' | 'unmount_component';
-    element: HTMLElement,
-    mountedDuration?: number;
-    mutationImpl: 'surface';
-    flowlet?: ALFlowlet | null;
-  }
->;
-
-export type ALChannelSurfaceMutationEvent = Readonly<{
-  al_mutation_event: [AdsALSurfaceMutationEventData],
-}
->;
-
-export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>;
 
 export type InitOptions = Types.Options<{
   channel: ALSurfaceMutationChannel;
   flowletManager: ALFlowletManager;
-  cacheElementInfo: boolean;
-  domSurfaceAttributeName: string;
+  cacheElementReactInfo: boolean;
+  domSurfaceAttributeName?: string;
+  componentNameValidator?: ComponentNameValidator;
 }>;
 
-
 export function publish(options: InitOptions): void {
-  const { domSurfaceAttributeName, channel, flowletManager, cacheElementInfo } = options;
+  const { domSurfaceAttributeName = AUTO_LOGGING_SURFACE, channel, flowletManager, cacheElementReactInfo, componentNameValidator = null } = options;
 
   function processNode(node: Node, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
@@ -72,19 +77,25 @@ export function publish(options: InitOptions): void {
     }
     switch (action) {
       case 'added': {
-        if (cacheElementInfo) {
-          // AdsALUIState.getOrCreateCachedInfo(node);
-        }
         let info = activeSurfaces.get(surface);
         if (!info) {
+          let reactComponentData: ReactComponentData | null = null;
+          let elementName: string | null = null;
+          if (cacheElementReactInfo) {
+            reactComponentData = getReactComponentData_THIS_CAN_BREAK(node, componentNameValidator);
+            elementName = getElementName(node);
+          }
           info = {
             surface,
             element: node,
             addTime: timestamp,
             addFlowlet: flowlet,
+            reactComponentName: reactComponentData?.name,
+            reactComponentStack: reactComponentData?.stack,
+            elementName,
           };
           activeSurfaces.set(surface, info);
-          emitSurfaceMutation(action, info);
+          emitMutationEvent(action, info);
         } else if (node != info.element && node.contains(info.element)) {
           /**
           * This means we are seeing a node that is higher in the DOM
@@ -103,7 +114,7 @@ export function publish(options: InitOptions): void {
           info.removeFlowlet = flowlet;
           info.removeTime = timestamp;
           activeSurfaces.delete(surface);
-          emitSurfaceMutation(action, info);
+          emitMutationEvent(action, info);
         }
         break;
       }
@@ -127,40 +138,44 @@ export function publish(options: InitOptions): void {
   });
 
 
-  function emitSurfaceMutation(
+  function emitMutationEvent(
     action: 'added' | 'removed',
-    info: SurfaceInfo
+    surfaceInfo: SurfaceInfo
   ): void {
-    const { removeTime, element } = info;
+    const { surface, removeTime, element, elementName } = surfaceInfo;
     switch (action) {
       case 'added': {
-        channel.emit('al_mutation_event', {
+        channel.emit('al_surface_mutation_event', {
           event: 'mount_component',
-          eventTimestamp: info.addTime,
+          eventTimestamp: surfaceInfo.addTime,
           eventIndex: ALEventIndex.getEventIndex(),
-          element: info.element,
+          element,
+          elementName,
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
-          flowlet: info.addFlowlet,
-          surface: info.surface,
-          mutationImpl: 'surface',
+          flowlet: surfaceInfo.addFlowlet,
+          surface,
+          reactComponentName: surfaceInfo.reactComponentName,
+          reactComponentStack: surfaceInfo.reactComponentStack,
         });
         break;
       }
       case 'removed': {
         if (removeTime == null) {
-          // Not expect to happen, error
+          // Not expected to happen,  but to assert
           break;
         }
-        channel.emit('al_mutation_event', {
+        channel.emit('al_surface_mutation_event', {
           event: 'unmount_component',
           eventTimestamp: removeTime,
           eventIndex: ALEventIndex.getEventIndex(),
           element,
+          elementName,
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
-          mountedDuration: (removeTime - info.addTime) / 1000,
-          flowlet: info.removeFlowlet,
-          surface: info.surface,
-          mutationImpl: 'surface',
+          mountedDuration: (removeTime - surfaceInfo.addTime) / 1000,
+          flowlet: surfaceInfo.removeFlowlet,
+          surface,
+          reactComponentName: surfaceInfo.reactComponentName,
+          reactComponentStack: surfaceInfo.reactComponentStack,
         });
         break;
       }

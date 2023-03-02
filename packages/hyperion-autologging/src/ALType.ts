@@ -15,3 +15,7 @@ export type ALLoggableEvent = Readonly<{
   eventTimestamp: number,
 }>;
 
+export type ALReactElementEvent = Readonly<{
+  reactComponentName?: string | null,
+  reactComponentStack?: string[] | null,
+}>;
