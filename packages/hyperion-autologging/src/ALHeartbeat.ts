@@ -39,7 +39,7 @@ export type InitOptions = Types.Options<{
 
 const HEARTBEAT_INTERVAL = 30 * 1000 /* DateConsts.MS_PER_SEC */;
 const MAX_USER_INACTIVITY_DURATION = 4 * HEARTBEAT_INTERVAL;
-const VISIBILITY_CHANE_EVENT = "visibilitychange";
+const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 
 let _lastHeartbeatTime: number = 0;
 let _lastUserActionTime: number = performanceAbsoluteNow();
