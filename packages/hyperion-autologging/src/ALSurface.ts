@@ -69,7 +69,7 @@ export type InitOptions = Types.Options<
     flowletManager: FlowletManagerType;
     domSurfaceAttributeName?: string;
     domFlowletAttributeName?: string;
-    channel?: ALChannel,
+    channel: ALChannel,
   }
 >;
 

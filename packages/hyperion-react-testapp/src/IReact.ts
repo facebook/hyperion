@@ -3,11 +3,7 @@
  */
 
 import { Channel } from "@hyperion/hook/src/Channel";
-import * as AutoLogging from "@hyperion/hyperion-autologging/src/";
-import * as ALHeartbeat from "@hyperion/hyperion-autologging/src/ALHeartbeat";
-import * as ALSurfaceMutationPublisher from "@hyperion/hyperion-autologging/src/ALSurfaceMutationPublisher";
-import type * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
-import * as ALUIEventPublisher from "@hyperion/hyperion-autologging/src/ALUIEventPublisher";
+import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 import React from 'react';
@@ -25,10 +21,7 @@ export function init() {
   const IReactDOMModule = IReactDOM.intercept("react-dom", ReactDOM, []);
 
   const channel = new Channel<
-    ALSurface.ALChannelSurfaceEvent &
-    ALUIEventPublisher.ALChannelUIEvent &
-    ALHeartbeat.ALChannelHeartbeatEvent &
-    ALSurfaceMutationPublisher.ALChannelSurfaceMutationEvent &
+    AutoLogging.ALChannelEvent &
     { test: [number, string] }
   >();
   channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
@@ -37,7 +30,7 @@ export function init() {
 
   const testCompValidator = (name: string) => !name.match(/(^Surface(Proxy)?)/);
 
-  const surfaceRenderer = AutoLogging.init({
+  AutoLogging.init({
     surface: {
       ReactModule: React as any,
       IReactDOMModule,
@@ -65,9 +58,9 @@ export function init() {
       componentNameValidator: testCompValidator,
       domSurfaceAttributeName: 'data-surfaceid',
     }
-  })
+  });
 
-  Surface.init(surfaceRenderer);
+  Surface.init(AutoLogging.getSurfaceRenderer());
 
   channel.on('al_surface_mount').add(ev => {
     console.log('surface_mount', ev, performance.now());
