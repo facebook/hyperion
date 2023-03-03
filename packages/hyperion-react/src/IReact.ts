@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import type { InterceptedModuleExports, ModuleExportsKeys } from './IRequire';
+import { InterceptedModuleExports, ModuleExportsKeys, validateModuleInterceptor } from './IRequire';
 
 import { interceptModuleExports } from './IRequire';
 
@@ -93,7 +93,7 @@ let IReactModule: IReactModuleExports | null = null;
 
 export function interceptRuntime(moduleId: string, moduleExports: JsxRuntimeModuleExports, failedExportsKeys?: ModuleExportsKeys<typeof moduleExports>): IJsxRuntimeModuleExports {
   if (!IJsxRuntimeModule) {
-    IJsxRuntimeModule = interceptModuleExports(moduleId, moduleExports, ['jsx', 'jsxs', 'jsxDEV'], failedExportsKeys);
+    IJsxRuntimeModule = interceptModuleExports(moduleId, moduleExports, ['jsx', 'jsxs', 'jsxDEV']);
 
     /**
      * https://github.com/facebook/react/blob/cae635054e17a6f107a39d328649137b83f25972/packages/react/src/jsx/ReactJSX.js#L19
@@ -101,11 +101,20 @@ export function interceptRuntime(moduleId: string, moduleExports: JsxRuntimeModu
      * function, but in production, it points to '.jsx'.
      * Hyperion does not reintercept the same function intentionally to ensure
      * developer is aware of how the hooks are intalled on the function.
+     * 
+     * Therefore, we first call the interceptModuleExport without the failedExportsKeys which prevents validation
+     * then we do the following patch up and then call the validation explicitly.
      */
-    if (IJsxRuntimeModule.jsxs && moduleExports.jsxs !== IJsxRuntimeModule.jsxs.interceptor) {
-      moduleExports.jsxs = IJsxRuntimeModule.jsxs.interceptor;
+    if (!__DEV__) {
+      if (moduleExports.jsxs !== IJsxRuntimeModule.jsxs.interceptor) {
+        moduleExports.jsxs = IJsxRuntimeModule.jsxs.interceptor;
+      }
+      if (moduleExports.jsxDEV !== IJsxRuntimeModule.jsxDEV.interceptor) {
+        moduleExports.jsxDEV = IJsxRuntimeModule.jsxDEV.interceptor;
+      }
     }
 
+    validateModuleInterceptor(moduleId, moduleExports, IJsxRuntimeModule, failedExportsKeys);
   }
   return IJsxRuntimeModule;
 }
