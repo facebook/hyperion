@@ -30,10 +30,12 @@ export function init() {
     ALHeartbeat.ALChannelHeartbeatEvent &
     ALSurfaceMutationPublisher.ALChannelSurfaceMutationEvent &
     { test: [number, string] }
-  >;
+  >();
   channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
 
   });
+
+  const testCompValidator = (name: string) => !name.match(/(^Surface(Proxy)?)/);
 
   const surfaceRenderer = AutoLogging.init({
     surface: {
@@ -49,7 +51,7 @@ export function init() {
       uiEvents: ['click'],
       flowletManager: FlowletManager,
       cacheElementReactInfo: true,
-      componentNameValidator: (name: string) => !name.match(/(^Surface(Proxy)?)/),
+      componentNameValidator: testCompValidator,
       channel
     },
     heartbeat: {
@@ -60,7 +62,7 @@ export function init() {
       channel,
       flowletManager: FlowletManager,
       cacheElementReactInfo: true,
-      componentNameValidator: (name: string) => !name.match(/(^Surface(Proxy)?)/),
+      componentNameValidator: testCompValidator,
       domSurfaceAttributeName: 'data-surfaceid',
     }
   })
