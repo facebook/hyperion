@@ -41,8 +41,9 @@ export default defineConfig({
         "@hyperion/hyperion-react/src/IReactDOM",
       ],
       "hyperionAutoLogging": [
+        "@hyperion/hook/src/Channel",
         "@hyperion/hyperion-autologging/src/ALSurface",
-        "@hyperion/hook/src/Channel"
+        "@hyperion/hyperion-autologging/src/AutoLogging",
       ]
     },
     chunkFileNames: "[name].js",
