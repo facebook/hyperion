@@ -2,8 +2,6 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-'use strict';
-
 import * as React from 'react';
 import { useState } from 'react';
 import ClassComponent from './ClassComponent';
@@ -11,6 +9,7 @@ import ForwardRefComponent from './ForwardRefComponent';
 import FuncComponent from './FuncComponent';
 import {PortalBodyContainerComponent, PortalComponent} from './PortalComponent';
 import { Props, Surface } from './Surface';
+import { ToggleSurfaceComponent } from './ToggleSurfaceComponent';
 
 class EmptyClassComponent extends React.Component<{}> {
   render(): React.ReactElement {
@@ -59,6 +58,7 @@ export default function AdsSpeedLabAutoLoggingImpl(_props: {}): React.ReactEleme
       <IndirectSurface message="indirect">
         <span>Indirect-child</span>
       </IndirectSurface>
+      <ToggleSurfaceComponent/>
     </div>,
   );
 }

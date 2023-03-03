@@ -7,7 +7,7 @@
 import type { ALChannelSurfaceEvent } from './ALSurface';
 import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import { ALLoggableEvent } from "./ALType";
+import { ALLoggableEvent, ALReactElementEvent } from "./ALType";
 
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import * as ALID from './ALID';
@@ -17,14 +17,12 @@ import { ComponentNameValidator, getReactComponentData_THIS_CAN_BREAK, ReactComp
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import { getElementName } from './ALInteractableDOMElement';
 
-type ALMutationEvent =  Readonly<{
+type ALMutationEvent = ALReactElementEvent & Readonly<{
   event: 'mount_component' | 'unmount_component';
   element: HTMLElement,
   elementName: string | null,
   mountedDuration?: number;
   flowlet?: ALFlowlet | null;
-  reactComponentName?: string | null,
-  reactComponentStack?: string[] | null,
 }>;
 
 export type AdsALSurfaceMutationEventData = Readonly<
@@ -39,15 +37,13 @@ export type ALChannelSurfaceMutationEvent = Readonly<{
 
 export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>;
 
-type SurfaceInfo = {
+type SurfaceInfo = ALReactElementEvent & {
   surface: string,
   element: HTMLElement,
   addTime: number,
   removeTime?: number,
   addFlowlet: ALFlowlet | null,
   removeFlowlet?: ALFlowlet | null,
-  reactComponentName?: string | null,
-  reactComponentStack?: string[] | null,
   elementName: string | null,
 };
 
