@@ -32,5 +32,6 @@ export * as IReact from "@hyperion/hyperion-react/src/IReact";
 export * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 
 // hyperionAutoLogging
+export * as ALInteractableDOMElement from "@hyperion/hyperion-autologging/src/ALInteractableDOMElement";
 export * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 export { Channel } from "@hyperion/hook/src/Channel";

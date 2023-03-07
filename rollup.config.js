@@ -43,6 +43,7 @@ export default defineConfig({
       "hyperionAutoLogging": [
         "@hyperion/hook/src/Channel",
         "@hyperion/hyperion-autologging/src/ALSurface",
+        "@hyperion/hyperion-autologging/src/ALInteractableDOMElement",
         "@hyperion/hyperion-autologging/src/AutoLogging",
       ]
     },
