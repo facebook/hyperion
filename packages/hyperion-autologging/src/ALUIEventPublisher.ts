@@ -109,7 +109,7 @@ export function publish(options: InitOptions): void {
        * we need yet another distinguishing fact, for which we use timestamp
        */
       const autoLoggingID = getOrSetAutoLoggingID(element);
-      if (event.isTrusted) {
+      if (event.isTrusted && event.bubbles) {
         const ALFlowlet = flowletManager.flowletCtor;
         flowlet = new ALFlowlet(eventName, flowletManager.top());
         flowlet = new ALFlowlet(autoLoggingID, flowlet);
