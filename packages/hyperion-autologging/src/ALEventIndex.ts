@@ -15,7 +15,7 @@ let _eventIndex = -1;
  * each time an index is requested,
  * it must be consumed
  */
-export function getEventIndex(): number {
+export function getNextEventIndex(): number {
   _eventIndex++;
   return _eventIndex;
 }

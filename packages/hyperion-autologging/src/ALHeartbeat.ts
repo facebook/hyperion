@@ -122,7 +122,7 @@ function _logHeartbeat(heartbeatType: ALHeartbeatType): void {
   if (timestamp - _lastUserActionTime <= MAX_USER_INACTIVITY_DURATION) {
     _options?.channel.emit('al_heartbeat', {
       event: 'heartbeat',
-      eventIndex: ALEventIndex.getEventIndex(),
+      eventIndex: ALEventIndex.getNextEventIndex(),
       eventTimestamp: timestamp,
       // flowlet: AdsALFlowletManager.top(),
       heartbeatType,

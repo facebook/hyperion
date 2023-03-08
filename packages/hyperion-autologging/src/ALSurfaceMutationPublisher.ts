@@ -144,7 +144,7 @@ export function publish(options: InitOptions): void {
         channel.emit('al_surface_mutation_event', {
           event: 'mount_component',
           eventTimestamp: surfaceInfo.addTime,
-          eventIndex: ALEventIndex.getEventIndex(),
+          eventIndex: ALEventIndex.getNextEventIndex(),
           element,
           elementName,
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
@@ -163,7 +163,7 @@ export function publish(options: InitOptions): void {
         channel.emit('al_surface_mutation_event', {
           event: 'unmount_component',
           eventTimestamp: removeTime,
-          eventIndex: ALEventIndex.getEventIndex(),
+          eventIndex: ALEventIndex.getNextEventIndex(),
           element,
           elementName,
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
