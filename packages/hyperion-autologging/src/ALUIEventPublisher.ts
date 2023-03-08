@@ -4,16 +4,16 @@
 
 'use strict';
 import { Channel } from "@hyperion/hook/src/Channel";
-import { ALID, getOrSetAutoLoggingID } from "./ALID";
+import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
+import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
+import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
-import { ALFlowletManager, ALFlowlet } from "./ALFlowletManager";
-import { getSurfacePath } from "./ALSurfaceUtils";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
-import { ALFlowletEvent, ALLoggableEvent, ALReactElementEvent } from "./ALType";
 import { ComponentNameValidator, getReactComponentData_THIS_CAN_BREAK, ReactComponentData } from "./ALReactUtils";
 import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
+import { getSurfacePath } from "./ALSurfaceUtils";
+import { ALFlowletEvent, ALReactElementEvent, ALTimedEvent } from "./ALType";
 
 export type ALUIEvent = Readonly<{
   event: string,
@@ -24,6 +24,7 @@ export type ALUIEvent = Readonly<{
 
 export type ALUIEventCaptureData = Readonly<
   ALUIEvent &
+  ALFlowletEvent &
   ALReactElementEvent &
   ALFlowletEvent &
   {
@@ -41,9 +42,9 @@ export type ALUIEventBubbleData = Readonly<
 >;
 
 type ALLoggableUIEvent = Readonly<
+  ALTimedEvent &
   ALUIEvent &
   ALFlowletEvent &
-  ALLoggableEvent &
   ALReactElementEvent &
   {
     autoLoggingID: ALID,
@@ -187,12 +188,6 @@ export function publish(options: InitOptions): void {
       autoLoggingID: getOrSetAutoLoggingID(element),
       flowlet,
       isTrusted,
-      /**
-       * eventIndex will be overridden in the subscriber, we are passing in a value here because
-       * Flow requires it but because some al_ui_events will be filtered out before emitting
-       * events to Falco, we can't generate the event_index here
-       */
-      eventIndex: 0,
       reactComponentName,
       reactComponentStack,
     };
