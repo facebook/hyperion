@@ -18,17 +18,17 @@ import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 export type ALUIEvent = Readonly<{
   event: string,
   element: Element,
+  elementName?: string | null,
   isTrusted: boolean,
 }>;
 
 export type ALUIEventCaptureData = Readonly<
   ALUIEvent &
   ALReactElementEvent &
+  ALFlowletEvent &
   {
-    flowlet: ALFlowlet,
     captureTimestamp: number,
     surface: string | null,
-    elementName: string | null,
     autoLoggingID: ALID
   }
 >;
@@ -172,7 +172,7 @@ export function publish(options: InitOptions): void {
   });
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
-    const { event, captureTimestamp, element, isTrusted, reactComponentName, reactComponentStack } = eventData;
+    const { event, captureTimestamp, element, elementName, isTrusted, reactComponentName, reactComponentStack } = eventData;
 
     if (lastUIEvent != null) {
       const { timedEmitter } = lastUIEvent;
@@ -182,6 +182,7 @@ export function publish(options: InitOptions): void {
     const data: ALUIEventData = {
       event,
       element,
+      elementName,
       eventTimestamp: captureTimestamp,
       autoLoggingID: getOrSetAutoLoggingID(element),
       flowlet,
