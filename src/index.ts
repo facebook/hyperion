@@ -3,6 +3,8 @@
  */
 
 
+
+
 // hyperionCore
 export { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
 export { interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
@@ -32,6 +34,8 @@ export * as IReact from "@hyperion/hyperion-react/src/IReact";
 export * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 
 // hyperionAutoLogging
+export { Channel } from "@hyperion/hook/src/Channel";
+export { ALFlowlet, ALFlowletManager } from "@hyperion/hyperion-autologging/src/ALFlowletManager";
+export { useALSurfaceContext } from "@hyperion/hyperion-autologging/src/ALSurfaceContext";
 export * as ALInteractableDOMElement from "@hyperion/hyperion-autologging/src/ALInteractableDOMElement";
 export * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
-export { Channel } from "@hyperion/hook/src/Channel";
