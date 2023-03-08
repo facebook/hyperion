@@ -29,6 +29,7 @@ export type ALUIEventCaptureData = Readonly<
     captureTimestamp: number,
     surface: string | null,
     elementName: string | null,
+    autoLoggingID: ALID
   }
 >;
 
@@ -107,11 +108,14 @@ export function publish(options: InitOptions): void {
        * Since it is possible to interact with the same exact element multiple times,
        * we need yet another distinguishing fact, for which we use timestamp
        */
-      const ALFlowlet = flowletManager.flowletCtor;
-      flowlet = new ALFlowlet(eventName, flowletManager.top());
-      flowlet = new ALFlowlet(`ts${captureTimestamp}`, flowlet);
-      flowlet = flowletManager.push(flowlet);
-
+      const autoLoggingID = getOrSetAutoLoggingID(element);
+      if (event.isTrusted) {
+        const ALFlowlet = flowletManager.flowletCtor;
+        flowlet = new ALFlowlet(eventName, flowletManager.top());
+        flowlet = new ALFlowlet(autoLoggingID, flowlet);
+        flowlet = new ALFlowlet(`ts${captureTimestamp}`, flowlet);
+        flowlet = flowletManager.push(flowlet);
+      }
       let reactComponentData: ReactComponentData | null = null;
       if (cacheElementReactInfo) {
         reactComponentData = getReactComponentData_THIS_CAN_BREAK(element, componentNameValidator);
@@ -126,6 +130,7 @@ export function publish(options: InitOptions): void {
         elementName: getElementName(element),
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
+        autoLoggingID
       };
       channel.emit('al_ui_event_capture', eventData);
       updateLastUIEvent(eventData);
@@ -158,7 +163,9 @@ export function publish(options: InitOptions): void {
             }
           }
         }
-        flowletManager.pop(flowlet);
+        if (event.isTrusted) {
+          flowletManager.pop(flowlet);
+        }
       },
       false, // useCapture
     );
