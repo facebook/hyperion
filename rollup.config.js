@@ -13,6 +13,7 @@ export default defineConfig({
         "@hyperion/hyperion-core/src/ConstructorInterceptor",
         "@hyperion/hyperion-core/src/AttributeInterceptor",
         "@hyperion/hyperion-core/src/intercept",
+        "@hyperion/hyperion-core/src/IRequire",
         "@hyperion/hyperion-dom/src/INode",
         "@hyperion/hyperion-dom/src/IElement_",
       ],
@@ -36,9 +37,9 @@ export default defineConfig({
         "@hyperion/hyperion-flowlet/src/Index",
       ],
       "hyperionReact": [
-        "@hyperion/hyperion-react/src/IRequire",
         "@hyperion/hyperion-react/src/IReact",
         "@hyperion/hyperion-react/src/IReactDOM",
+        "@hyperion/hyperion-react/src/IReactComponent",
       ],
       "hyperionAutoLogging": [
         "@hyperion/hook/src/Channel",
@@ -67,7 +68,9 @@ export default defineConfig({
  * - npm run install-packages
  * - <make necessary modifications>
  * - npm run build
- * - <copy the 'hyperion/dist/' folder
+ * - npm test
+ * - <copy the 'hyperion/dist/' folder>
+ * - e.g. 'scp -r  ./dist/hyperion* $USER@my-od.facebook.com:www/html/js/hyperion/dist/'
  *
  * @generated <<SignedSource::08411d9f4a630be70617b13b3a5bcc0e>>
  */
