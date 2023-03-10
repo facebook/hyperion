@@ -2,9 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { InterceptedModuleExports, ModuleExportsKeys, validateModuleInterceptor } from './IRequire';
-
-import { interceptModuleExports } from './IRequire';
+import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys, validateModuleInterceptor } from '@hyperion/hyperion-core/src/IRequire';
 
 import type React from "react";
 import { Class } from './FlowToTsTypes';

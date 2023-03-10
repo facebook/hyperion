@@ -11,6 +11,7 @@ export { interceptFunction } from "@hyperion/hyperion-core/src/FunctionIntercept
 export { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 export { interceptConstructor, interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
 export * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
+export * as IRequire from "@hyperion/hyperion-core/src/IRequire";
 
 // hyperionTrackElementsWithAttributes
 export { trackElementsWithAttributes } from "@hyperion/hyperion-util/src/trackElementsWithAttributes";
@@ -29,9 +30,9 @@ export { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 export { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
 
 // hyperionReact
-export * as IRequire from "@hyperion/hyperion-react/src/IRequire";
 export * as IReact from "@hyperion/hyperion-react/src/IReact";
 export * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
+export * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent"
 
 // hyperionAutoLogging
 export { Channel } from "@hyperion/hook/src/Channel";

@@ -2,10 +2,10 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import type { FunctionInterceptor, InterceptableObjectType } from '@hyperion/hyperion-core/src/FunctionInterceptor';
+import type { FunctionInterceptor, InterceptableObjectType } from './FunctionInterceptor';
 
-import { ShadowPrototype, } from '@hyperion/hyperion-core/src/ShadowPrototype';
-import { interceptMethod } from '@hyperion/hyperion-core/src/MethodInterceptor';
+import { ShadowPrototype, } from './ShadowPrototype';
+import { interceptMethod } from './MethodInterceptor';
 import { assert } from '@hyperion/global';
 
 export type InterceptedModuleExports<TModuleExports extends InterceptableObjectType> = {

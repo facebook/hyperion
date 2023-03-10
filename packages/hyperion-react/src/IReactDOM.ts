@@ -2,9 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import type { InterceptedModuleExports, ModuleExportsKeys } from './IRequire';
-
-import { interceptModuleExports } from './IRequire';
+import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys } from '@hyperion/hyperion-core/src/IRequire';
 
 import type ReactDOM from "react-dom";
 
