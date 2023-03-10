@@ -16,26 +16,17 @@ import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type React from "react";
 import { $Values, mixed } from './FlowToTsTypes';
 
-declare function FBLogger(prj: string): any;
+function warn(msg: string): void {
+  if (__DEV__) {
+    console.warn(msg);
+  }
+}
 
 type ReactElementNode = {
   $$typeof: symbol,
   type: mixed,
   props: ReactComponentObjectProps & { children?: ReactNode },
 };
-
-// type VisitorFunc<
-//   ComponentType,
-//   PropsType,
-//   VisitorParamType,
-//   VisitorReturnType,
-//   NodeType
-// > = ((
-//   component: ComponentType,
-//   props: PropsType,
-//   param: VisitorParamType,
-//   node?: NodeType,
-// ) => VisitorReturnType | null | undefined) | null | undefined;
 
 type VisitorFunc<
   in ComponentType,
@@ -93,7 +84,109 @@ type ALReactElementVisitor<
       VisitorReturnType,
       NodeType
     >;
+
+    _get?: (
+      component: mixed,
+      visitors: ALReactElementVisitor<
+        DomPropsType,
+        ComponentPropsType,
+        VisitorParamType,
+        VisitorReturnType,
+        NodeType
+      >,
+    ) => $Values<ALReactElementVisitor<
+      DomPropsType,
+      ComponentPropsType,
+      VisitorParamType,
+      VisitorReturnType,
+      NodeType
+    >>
   };
+
+function optimizeVisitors<
+  DomPropsType,
+  ComponentPropsType,
+  VisitorParamType,
+  VisitorReturnType,
+  NodeType,
+>(
+  visitors: ALReactElementVisitor<
+    DomPropsType,
+    ComponentPropsType,
+    VisitorParamType,
+    VisitorReturnType,
+    NodeType
+  >,
+): void {
+  type Visitors = ALReactElementVisitor<
+    DomPropsType,
+    ComponentPropsType,
+    VisitorParamType,
+    VisitorReturnType,
+    NodeType
+  >;
+
+  function callVtable(
+    index: string | symbol,
+    component: mixed,
+    visitors: Visitors,
+  )/* : $Values<Visitors> | undefined  */ {
+    const getter = vtable[index];
+    if (getter) {
+      return getter(component, visitors);
+    } else {
+      warn(`optimized visitors missing entry for ${String(index)}`);
+    }
+    return;
+  }
+
+  type VisitorGetter<K extends keyof VisitorComponentTypes<ComponentPropsType>> = (
+    component: VisitorComponentTypes<ComponentPropsType>[K],
+    visitors: Visitors,
+  ) => Visitors[K] | undefined | null;
+
+  function ctor<K extends keyof VisitorComponentTypes<ComponentPropsType>>(
+    visitorName?: K,
+  ): VisitorGetter<K> {
+    if (visitorName != null && visitors[visitorName] != null) {
+      // This visitor exists, so we can use it
+      return (_, visitors) => visitors[visitorName];
+    } else {
+      // Use the __default visitor instead
+      return (_, visitors) => visitors.__default;
+    }
+  }
+
+  const vtable: {
+    string: VisitorGetter<'domElement'>,
+    function: VisitorGetter<'component'>,
+    object: VisitorGetter<'forwardRef' | 'memo' | 'provider' | 'context'>,
+    symbol: VisitorGetter<'fragment'>,
+    [key: string | symbol]:
+    (component: mixed, visitors: Visitors) => mixed
+    // VisitorGetter<Exclude<keyof Visitors, "__default" | "__get">>,
+  } = {
+    string: ctor('domElement'),
+    function: ctor('component'),
+    object: (component, visitors) =>
+      callVtable(component?.$$typeof, component, visitors),
+    symbol: (component, visitors) =>
+      callVtable(component, component, visitors),
+    [IReactConsts.REACT_FORWARD_REF_TYPE]: ctor('forwardRef'),
+    [IReactConsts.REACT_MEMO_TYPE]: ctor('memo'),
+    [IReactConsts.REACT_PROVIDER_TYPE]: ctor('provider'),
+    [IReactConsts.REACT_CONTEXT_TYPE]: ctor('context'),
+    [IReactConsts.REACT_FRAGMENT_TYPE]: ctor('fragment'),
+    [IReactConsts.REACT_SUSPENSE_TYPE]: ctor(),
+    [IReactConsts.REACT_PROFILER_TYPE]: ctor(),
+    [IReactConsts.REACT_LEGACY_HIDDEN_TYPE]: ctor(),
+    [IReactConsts.REACT_SCOPE_TYPE]: ctor(),
+    [IReactConsts.REACT_STRICT_MODE_TYPE]: ctor(),
+  };
+
+  visitors._get = (component, visitors) =>
+    callVtable(typeof component, component, visitors);
+}
 
 export type InitOptions = Types.Options<
   {
@@ -130,6 +223,14 @@ function getVisitor<
   VisitorReturnType,
   NodeType
 >> {
+  const optVisitor = visitors._get?.(component, visitors);
+
+  if (optVisitor || !visitors.__default) {
+    // either we found something, or there was no default.
+    return optVisitor;
+  }
+
+  // Otherwise, let's try the old way!
   let visitor;
 
   switch (typeof component) {
@@ -166,10 +267,7 @@ function getVisitor<
             visitor = visitors.context;
             break;
           default:
-            FBLogger('ads_manager_auto_logging').warn(
-              'skip object component $$type: %s',
-              String(specialComp.$$typeof),
-            );
+            warn(`skip object component $$type: ${String(specialComp.$$typeof)}`);
             break;
         }
       }
@@ -202,18 +300,12 @@ function getVisitor<
         case IReactConsts.REACT_STRICT_MODE_TYPE:
           break;
         default:
-          FBLogger('ads_manager_auto_logging').warn(
-            'skip special component $$type: %s',
-            String(component),
-          );
+          warn(`skip special component $$type: ${String(component)}`);
           break;
       }
       break;
     default: {
-      FBLogger('ads_manager_auto_logging').warn(
-        'Did not know how to handle component type %s',
-        typeof component,
-      );
+      warn(`Did not know how to handle component type ${typeof component}`);
     }
   }
 
@@ -243,6 +335,7 @@ function visitElement<
 ): VisitorReturnType | null | undefined {
   const visitor = getVisitor(component, visitors);
 
+  // @ts-ignore
   return visitor?.(
     // @ts-ignore
     component,
@@ -270,6 +363,8 @@ export function createReactElementVisitor<
   props: DomPropsType | ComponentPropsType,
   param: VisitorParamType,
 ) => VisitorReturnType | null | undefined {
+  optimizeVisitors(visitors);
+
   return (component, props, param) =>
     visitElement(component, props, param, visitors);
 }
@@ -325,10 +420,7 @@ function visitNode<
         // These component won't have children so safe to skip
         if (__DEV__) {
           if (typeof element.props === 'object') {
-            FBLogger('ads_manager_auto_logging').warn(
-              'Unexpected object props type when skiping: %s',
-              String($$typeof),
-            );
+            warn(`Unexpected object props type when skiping: ${String($$typeof)}`);
           }
         }
         return;
@@ -353,10 +445,7 @@ function visitNode<
         }
 
         if (!visited) {
-          FBLogger('ads_manager_auto_logging').warn(
-            'Unexpected child component type to skip: %s',
-            String($$typeof),
-          );
+          warn(`Unexpected child component type to skip: ${String($$typeof)}`);
         }
         break;
       }
@@ -392,5 +481,6 @@ export function createReactNodeVisitor<
     visitors.fragment = (_comp, props, param, _node) =>
       visitor(props.children, param);
   }
+  optimizeVisitors(visitors);
   return visitor;
 }
