@@ -60,8 +60,8 @@ export function init(options: InitOptions): InitResults {
   return cachedResults;
 }
 
-export function getSurfaceRenderer(): InitResults['surfaceRenderer'] {
-  const renderer = cachedResults?.surfaceRenderer;
+export function getSurfaceRenderer(defaultALSurfaceHOC?: ALSurface.ALSurfaceHOC): ALSurface.ALSurfaceHOC {
+  const renderer = cachedResults?.surfaceRenderer ?? defaultALSurfaceHOC;
   assert(
     renderer != null,
     "AutoLogging must have been initilized first. Did you forget to call .init() functions?",
@@ -74,6 +74,5 @@ export function getSurfaceRenderer(): InitResults['surfaceRenderer'] {
       }
     }
   );
-
   return renderer;
 }

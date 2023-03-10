@@ -3,6 +3,7 @@
  */
 
 import * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
+import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 
 export type Props = {
   message: string,
@@ -14,13 +15,9 @@ let SurfaceRenderer: ALSurface.ALSurfaceHOC = (props, render) => {
 }
 
 export const Surface = (props: ALSurface.ALSurfaceProps) =>
-  SurfaceRenderer(props, children => (
+  AutoLogging.getSurfaceRenderer(SurfaceRenderer)(props, children => (
     <div style={{ border: '1px solid red', marginLeft: '5px' }}>
       <div style={{ color: 'red' }}>{props.surface}</div>
       {children}
     </div>
   ));
-
-export function init(renderer: ALSurface.ALSurfaceHOC) {
-  SurfaceRenderer = renderer;
-}

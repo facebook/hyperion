@@ -60,8 +60,6 @@ export function init() {
     }
   });
 
-  Surface.init(AutoLogging.getSurfaceRenderer());
-
   channel.on('al_surface_mount').add(ev => {
     console.log('surface_mount', ev, performance.now());
   });
