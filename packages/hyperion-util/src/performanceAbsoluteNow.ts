@@ -33,13 +33,16 @@ function setFallback(fn: () => number) {
 }
 
 let navigationStart = -1;
-if (performance.timing && performance.timing.navigationStart) {
-  navigationStart = performance.timing.navigationStart;
-} else if (performance.timeOrigin) {
-  navigationStart = performance.timeOrigin
+const performanceIsDefined = typeof performance === "object";
+if (performanceIsDefined) {
+  if (performance.timing && performance.timing.navigationStart) {
+    navigationStart = performance.timing.navigationStart;
+  } else if (performance.timeOrigin) {
+    navigationStart = performance.timeOrigin
+  }
 }
 
-if (typeof performance.now === "function" && navigationStart !== -1) {
+if (performanceIsDefined && typeof performance.now === "function" && navigationStart !== -1) {
   performanceAbsoluteNow = () => performance.now() + navigationStart;
 } else {
   performanceAbsoluteNow = () => fallback();
