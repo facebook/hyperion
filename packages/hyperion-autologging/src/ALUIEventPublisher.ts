@@ -10,10 +10,11 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
-import { ComponentNameValidator, getReactComponentData_THIS_CAN_BREAK, ReactComponentData } from "./ALReactUtils";
+import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData } from "./ALReactUtils";
 import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALReactElementEvent, ALTimedEvent } from "./ALType";
+import ALElementInfo from './ALElementInfo';
 
 export type ALUIEvent = Readonly<{
   event: string,
@@ -82,7 +83,7 @@ export type InitOptions = Types.Options<{
 }>;
 
 export function publish(options: InitOptions): void {
-  const { uiEvents, flowletManager, channel, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, cacheElementReactInfo, componentNameValidator = null } = options;
+  const { uiEvents, flowletManager, channel, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, cacheElementReactInfo, componentNameValidator = defaultComponentNameValidator } = options;
 
   const newEventsToPublish = uiEvents.filter(
     event => !PUBLISHED_EVENTS.has(event),
@@ -119,7 +120,8 @@ export function publish(options: InitOptions): void {
       }
       let reactComponentData: ReactComponentData | null = null;
       if (cacheElementReactInfo) {
-        reactComponentData = getReactComponentData_THIS_CAN_BREAK(element, componentNameValidator);
+        const elementInfo = ALElementInfo.getOrCreate(element, componentNameValidator);
+        reactComponentData = elementInfo.getReactComponentData();
       }
       const eventData: ALUIEventCaptureData = {
         event: eventName,
@@ -188,6 +190,7 @@ export function publish(options: InitOptions): void {
       autoLoggingID: getOrSetAutoLoggingID(element),
       flowlet,
       isTrusted,
+      surface,
       reactComponentName,
       reactComponentStack,
       surface,

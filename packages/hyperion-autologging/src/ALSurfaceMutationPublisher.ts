@@ -13,9 +13,10 @@ import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import * as ALID from './ALID';
 import * as ALEventIndex from './ALEventIndex';
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
-import { ComponentNameValidator, getReactComponentData_THIS_CAN_BREAK, ReactComponentData } from './ALReactUtils';
+import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData } from './ALReactUtils';
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import { getElementName } from './ALInteractableDOMElement';
+import ALElementInfo from './ALElementInfo';
 
 type ALMutationEvent = ALReactElementEvent & Readonly<{
   event: 'mount_component' | 'unmount_component';
@@ -58,7 +59,7 @@ export type InitOptions = Types.Options<{
 }>;
 
 export function publish(options: InitOptions): void {
-  const { domSurfaceAttributeName = AUTO_LOGGING_SURFACE, channel, flowletManager, cacheElementReactInfo, componentNameValidator = null } = options;
+  const { domSurfaceAttributeName = AUTO_LOGGING_SURFACE, channel, flowletManager, cacheElementReactInfo, componentNameValidator = defaultComponentNameValidator } = options;
 
   function processNode(node: Node, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
@@ -78,7 +79,8 @@ export function publish(options: InitOptions): void {
           let reactComponentData: ReactComponentData | null = null;
           let elementName: string | null = null;
           if (cacheElementReactInfo) {
-            reactComponentData = getReactComponentData_THIS_CAN_BREAK(node, componentNameValidator);
+            const elementInfo = ALElementInfo.getOrCreate(node, componentNameValidator);
+            reactComponentData = elementInfo.getReactComponentData();
             elementName = getElementName(node);
           }
           info = {
