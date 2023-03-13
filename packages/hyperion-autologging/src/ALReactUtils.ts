@@ -11,7 +11,7 @@ export type ReactComponentData = Readonly<{
 
 export type ComponentNameValidator = (name: string) => boolean;
 
-const defaultComponentNameValidator: ComponentNameValidator = (_: string) => {
+export const defaultComponentNameValidator: ComponentNameValidator = (_: string) => {
   return true;
 };
 
