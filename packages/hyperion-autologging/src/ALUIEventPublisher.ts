@@ -48,7 +48,7 @@ type ALLoggableUIEvent = Readonly<
   ALReactElementEvent &
   {
     autoLoggingID: ALID,
-    surface?: string,
+    surface?: string | null,
   }
 >;
 
