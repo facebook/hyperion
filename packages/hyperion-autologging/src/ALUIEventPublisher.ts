@@ -173,7 +173,7 @@ export function publish(options: InitOptions): void {
   });
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
-    const { event, captureTimestamp, element, elementName, isTrusted, reactComponentName, reactComponentStack } = eventData;
+    const { event, captureTimestamp, element, elementName, isTrusted, reactComponentName, reactComponentStack, surface } = eventData;
 
     if (lastUIEvent != null) {
       const { timedEmitter } = lastUIEvent;
@@ -190,6 +190,7 @@ export function publish(options: InitOptions): void {
       isTrusted,
       reactComponentName,
       reactComponentStack,
+      surface,
     };
 
     lastUIEvent = {
