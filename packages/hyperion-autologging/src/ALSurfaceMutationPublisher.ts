@@ -16,7 +16,7 @@ import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsol
 import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData } from './ALReactUtils';
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import { getElementName } from './ALInteractableDOMElement';
-import ALElementInfo from './ALElementInfo';
+import { setComponentNameValidator, ALElementInfo } from './ALElementInfo';
 
 type ALMutationEvent = ALReactElementEvent & Readonly<{
   event: 'mount_component' | 'unmount_component';
@@ -61,6 +61,8 @@ export type InitOptions = Types.Options<{
 export function publish(options: InitOptions): void {
   const { domSurfaceAttributeName = AUTO_LOGGING_SURFACE, channel, flowletManager, cacheElementReactInfo, componentNameValidator = defaultComponentNameValidator } = options;
 
+  setComponentNameValidator(componentNameValidator);
+
   function processNode(node: Node, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
 
@@ -79,7 +81,7 @@ export function publish(options: InitOptions): void {
           let reactComponentData: ReactComponentData | null = null;
           let elementName: string | null = null;
           if (cacheElementReactInfo) {
-            const elementInfo = ALElementInfo.getOrCreate(node, componentNameValidator);
+            const elementInfo = ALElementInfo.getOrCreate(node);
             reactComponentData = elementInfo.getReactComponentData();
             elementName = getElementName(node);
           }

@@ -14,7 +14,7 @@ import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentDa
 import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALReactElementEvent, ALTimedEvent } from "./ALType";
-import ALElementInfo from './ALElementInfo';
+import { setComponentNameValidator, ALElementInfo } from './ALElementInfo';
 
 export type ALUIEvent = Readonly<{
   event: string,
@@ -85,6 +85,8 @@ export type InitOptions = Types.Options<{
 export function publish(options: InitOptions): void {
   const { uiEvents, flowletManager, channel, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, cacheElementReactInfo, componentNameValidator = defaultComponentNameValidator } = options;
 
+  setComponentNameValidator(componentNameValidator);
+
   const newEventsToPublish = uiEvents.filter(
     event => !PUBLISHED_EVENTS.has(event),
   );
@@ -120,7 +122,7 @@ export function publish(options: InitOptions): void {
       }
       let reactComponentData: ReactComponentData | null = null;
       if (cacheElementReactInfo) {
-        const elementInfo = ALElementInfo.getOrCreate(element, componentNameValidator);
+        const elementInfo = ALElementInfo.getOrCreate(element);
         reactComponentData = elementInfo.getReactComponentData();
       }
       const eventData: ALUIEventCaptureData = {
@@ -190,7 +192,6 @@ export function publish(options: InitOptions): void {
       autoLoggingID: getOrSetAutoLoggingID(element),
       flowlet,
       isTrusted,
-      surface,
       reactComponentName,
       reactComponentStack,
       surface,
