@@ -11,15 +11,24 @@ import { getVirtualPropertyValue, setVirtualPropertyValue } from '@hyperion/hype
 const AL_ELEMENT_INFO_PROPNAME = '__alInfo';
 const AUTO_LOGGING_COMPONENT_TYPE = 'data-auto-logging-component-type';
 
-export default class ALElementInfo {
+let componentNameValidator: ComponentNameValidator = defaultComponentNameValidator;
+/**
+ * Set a component validator function to use when extracting
+ * a component name for the event, utilized in ALElementInfo.
+ * The stack will remain unfiltered, but component name linked must be valid via validator.
+ * @param validator: callable passed a component name returning true if valid
+ */
+export function setComponentNameValidator(validator: ComponentNameValidator): void {
+  componentNameValidator = validator;
+}
+
+export class ALElementInfo {
   element: Element;
   private reactComponentData: ReactComponentData | null = null;
   private reactComponentType: string | null = null;
-  private componentNameValidator: ComponentNameValidator = defaultComponentNameValidator;
 
   constructor(
-    element: Element,
-    componentNameValidator?: ComponentNameValidator,
+    element: Element
   ) {
     this.element = element;
     setVirtualPropertyValue(
@@ -27,8 +36,6 @@ export default class ALElementInfo {
       AL_ELEMENT_INFO_PROPNAME,
       this,
     );
-
-    this.componentNameValidator = componentNameValidator ?? this.componentNameValidator;
     this._cacheInfo();
   }
 
@@ -44,15 +51,15 @@ export default class ALElementInfo {
     );
   }
 
-  static getOrCreate(element: Element, componentNameValidator?: ComponentNameValidator): ALElementInfo {
-    return ALElementInfo.get(element) ?? new ALElementInfo(element, componentNameValidator);
+  static getOrCreate(element: Element): ALElementInfo {
+    return ALElementInfo.get(element) ?? new ALElementInfo(element);
   }
 
   getReactComponentData(): ReactComponentData | null {
     if (!this.reactComponentData) {
       this.reactComponentData = getReactComponentData_THIS_CAN_BREAK(
         this.element,
-        this.componentNameValidator,
+        componentNameValidator,
       );
     }
     return this.reactComponentData;
