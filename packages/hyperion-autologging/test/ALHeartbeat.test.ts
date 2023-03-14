@@ -17,7 +17,7 @@ const channel = new Channel<
 >();
 
 const logHeartbeat = jest.fn();
-channel.on('al_heartbeat').add(logHeartbeat);
+channel.on('al_heartbeat_event').add(logHeartbeat);
 
 function simulateClick(eventTimestamp: number): void {
   const flowlet = new Flowlet("click");
@@ -58,7 +58,7 @@ describe('ALHeartbeat', () => {
   it('Start heartbeats at the beginning of a session, even if the user is not active yet', (done) => {
     let callCount = 0;
     let lastHeartbeatTime = 0;
-    const logger = channel.addListener('al_heartbeat', () => {
+    const logger = channel.addListener('al_heartbeat_event', () => {
       switch (++callCount) {
         case 1: {
           // Log heartbeat on session start
@@ -82,7 +82,7 @@ describe('ALHeartbeat', () => {
           lastHeartbeatTime = heartbeatTime;
 
           ALHeartbeat.stop();
-          channel.removeListener('al_heartbeat', logger);
+          channel.removeListener('al_heartbeat_event', logger);
           done();
           break;
         }

@@ -75,7 +75,7 @@ export default defineConfig({
  * @generated <<SignedSource::08411d9f4a630be70617b13b3a5bcc0e>>
  */
 
-    `,
+`,
     generatedCode: {
       preset: 'es2015',
       preferConst: true,

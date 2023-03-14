@@ -13,9 +13,9 @@ import * as ALEventIndex from "./ALEventIndex";
 import { ALLoggableEvent } from "./ALType";
 
 export enum ALHeartbeatType {
-  REGAIN_PAGE_VISIBILITY,
-  SCHEDULED,
-  START,
+  REGAIN_PAGE_VISIBILITY = "REGAIN_PAGE_VISIBILITY",
+  SCHEDULED = "SCHEDULED",
+  START = "START",
 }
 
 export type AdsALHeartbeatEventData = Readonly<
@@ -26,7 +26,7 @@ export type AdsALHeartbeatEventData = Readonly<
   }>;
 
 export type ALChannelHeartbeatEvent = Readonly<{
-  al_heartbeat: [AdsALHeartbeatEventData],
+  al_heartbeat_event: [AdsALHeartbeatEventData],
 }>;
 
 export type ALHeartbeatChannel = Channel<ALChannelHeartbeatEvent & ALChannelUIEvent>;
@@ -84,7 +84,7 @@ export function start(options: InitOptions): void {
       return; // Not interested in when page is hidden?
     }
 
-    // Reset timers on coming back to the page if past the heartbeat interval  
+    // Reset timers on coming back to the page if past the heartbeat interval
     const timestamp = performanceAbsoluteNow();
     if (timestamp - _lastHeartbeatTime >= HEARTBEAT_INTERVAL) {
       _lastUserActionTime = timestamp;
@@ -120,7 +120,7 @@ export function stop(): void {
 function _logHeartbeat(heartbeatType: ALHeartbeatType): void {
   const timestamp = performanceAbsoluteNow();
   if (timestamp - _lastUserActionTime <= MAX_USER_INACTIVITY_DURATION) {
-    _options?.channel.emit('al_heartbeat', {
+    _options?.channel.emit('al_heartbeat_event', {
       event: 'heartbeat',
       eventIndex: ALEventIndex.getNextEventIndex(),
       eventTimestamp: timestamp,
