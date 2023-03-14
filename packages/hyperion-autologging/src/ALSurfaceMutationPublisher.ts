@@ -25,13 +25,13 @@ type ALMutationEvent = ALReactElementEvent & Readonly<{
   flowlet?: ALFlowlet | null;
 }>;
 
-export type AdsALSurfaceMutationEventData = Readonly<
+export type ALSurfaceMutationEventData = Readonly<
   ALLoggableEvent &
   ALMutationEvent
 >;
 
 export type ALChannelSurfaceMutationEvent = Readonly<{
-  al_surface_mutation_event: [AdsALSurfaceMutationEventData],
+  al_surface_mutation_event: [ALSurfaceMutationEventData],
 }
 >;
 
