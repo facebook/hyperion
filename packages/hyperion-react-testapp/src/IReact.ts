@@ -9,7 +9,6 @@ import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 import React from 'react';
 import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
-import * as Surface from "./component/Surface";
 import { FlowletManager } from "./FlowletManager";
 
 export let interceptionStatus = "disabled";
@@ -69,7 +68,7 @@ export function init() {
   channel.on('al_ui_event').add(ev => {
     console.log('ui_event', ev, performance.now());
   });
-  channel.on('al_heartbeat').add(ev => {
+  channel.on('al_heartbeat_event').add(ev => {
     console.log('heartbeat', ev, performance.now());
   });
   channel.on('al_surface_mutation_event').add(ev => {
