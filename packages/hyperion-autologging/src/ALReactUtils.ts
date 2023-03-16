@@ -15,6 +15,18 @@ export const defaultComponentNameValidator: ComponentNameValidator = (_: string)
   return true;
 };
 
+
+let componentNameValidator: ComponentNameValidator = defaultComponentNameValidator;
+/**
+ * Set a component validator function to use when extracting
+ * a component name for the event's element, utilized in react component lookups.
+ * The component stack will remain unfiltered, but component name linked must be valid via validator.
+ * @param validator: callable passed a component name returning true if valid
+ */
+export function setComponentNameValidator(validator: ComponentNameValidator): void {
+  componentNameValidator = validator;
+}
+
 type ReactInternalFiber = Readonly<{
   key: string | null,
   // memoizedProps can be any object
@@ -50,15 +62,11 @@ const getReactComponentName = (
 
 export function getReactComponentData_THIS_CAN_BREAK(
   node: Element | null,
-  componentNameIsValid: ComponentNameValidator | null,
 ): ReactComponentData | null {
   if (node == null) {
     return null;
   }
 
-  const componentNameValidator = componentNameIsValid
-    ? componentNameIsValid
-    : defaultComponentNameValidator;
   const element: Element = node;
   try {
     let name: string | null = null;

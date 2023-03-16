@@ -13,10 +13,10 @@ import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import * as ALID from './ALID';
 import * as ALEventIndex from './ALEventIndex';
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
-import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData } from './ALReactUtils';
+import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData, setComponentNameValidator } from './ALReactUtils';
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import { getElementName } from './ALInteractableDOMElement';
-import { setComponentNameValidator, ALElementInfo } from './ALElementInfo';
+import ALElementInfo from './ALElementInfo';
 
 type ALMutationEvent = ALReactElementEvent & Readonly<{
   event: 'mount_component' | 'unmount_component';

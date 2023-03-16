@@ -10,11 +10,11 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
-import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData } from "./ALReactUtils";
+import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData, setComponentNameValidator } from "./ALReactUtils";
 import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALReactElementEvent, ALTimedEvent } from "./ALType";
-import { setComponentNameValidator, ALElementInfo } from './ALElementInfo';
+import ALElementInfo from './ALElementInfo';
 
 export type ALUIEvent = Readonly<{
   event: string,
