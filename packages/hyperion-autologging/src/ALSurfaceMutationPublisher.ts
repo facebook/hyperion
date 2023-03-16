@@ -20,10 +20,12 @@ import ALElementInfo from './ALElementInfo';
 
 type ALMutationEvent = ALReactElementEvent & Readonly<{
   event: 'mount_component' | 'unmount_component';
-  element: HTMLElement,
-  elementName: string | null,
+  surface: string;
+  element: HTMLElement;
+  elementName: string | null;
   mountedDuration?: number;
   flowlet?: ALFlowlet | null;
+  autoLoggingID: ALID.ALID;
 }>;
 
 export type ALSurfaceMutationEventData = Readonly<
