@@ -59,19 +59,16 @@ export function init() {
     }
   });
 
-  channel.on('al_surface_mount').add(ev => {
-    console.log('surface_mount', ev, performance.now());
-  });
-  channel.on('al_surface_unmount').add(ev => {
-    console.log('surface_unmount', ev, performance.now());
-  });
-  channel.on('al_ui_event').add(ev => {
-    console.log('ui_event', ev, performance.now());
-  });
-  channel.on('al_heartbeat_event').add(ev => {
-    console.log('heartbeat', ev, performance.now());
-  });
-  channel.on('al_surface_mutation_event').add(ev => {
-    console.log('surface_mutation_event', ev, performance.now());
+  ([
+    'al_surface_mount',
+    'al_surface_unmount',
+    'al_ui_event',
+    'al_heartbeat_event',
+    'al_surface_mutation_event',
+  ] as const).forEach(eventName => {
+    channel.on(eventName).add(ev => {
+      console.log(eventName, ev, performance.now());
+    });
+
   });
 }
