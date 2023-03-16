@@ -56,7 +56,7 @@ export type InitOptions = Types.Options<{
   channel: ALSurfaceMutationChannel;
   flowletManager: ALFlowletManager;
   cacheElementReactInfo: boolean;
-  domSurfaceAttributeName?: string;
+  domSurfaceAttributeName: string;
   componentNameValidator?: ComponentNameValidator;
 }>;
 
