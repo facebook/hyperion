@@ -19,6 +19,7 @@ import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
+import { ALSharedInitOptions } from "./ALType";
 
 
 type ALChannelSurfaceData = Readonly<{
@@ -56,6 +57,7 @@ export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<Surfac
 ) => React.ReactElement;
 
 export type InitOptions = Types.Options<
+  ALSharedInitOptions &
   IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
@@ -66,8 +68,6 @@ export type InitOptions = Types.Options<
     };
     IReactModule: IReact.IReactModuleExports;
     IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
-    flowletManager: FlowletManagerType;
-    domSurfaceAttributeName?: string;
     domFlowletAttributeName?: string;
     channel: ALChannel,
   }

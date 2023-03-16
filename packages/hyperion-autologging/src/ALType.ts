@@ -4,7 +4,8 @@
 
 'use strict';
 
-import { ALFlowlet } from './ALFlowletManager';
+import * as Types from "@hyperion/hyperion-util/src/Types";
+import { ALFlowlet, ALFlowletManager } from './ALFlowletManager';
 
 export type ALFlowletEvent = Readonly<{
   flowlet: ALFlowlet;
@@ -32,4 +33,9 @@ export type ALLoggableEvent = ALTimedEvent & Readonly<{
 export type ALReactElementEvent = Readonly<{
   reactComponentName?: string | null,
   reactComponentStack?: string[] | null,
+}>;
+
+export type ALSharedInitOptions = Types.Options<{
+  flowletManager: ALFlowletManager;
+  domSurfaceAttributeName: string;
 }>;

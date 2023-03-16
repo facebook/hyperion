@@ -7,14 +7,13 @@ import { Channel } from "@hyperion/hook/src/Channel";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
+import ALElementInfo from './ALElementInfo';
+import { ALFlowlet } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
-import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData, setComponentNameValidator } from "./ALReactUtils";
-import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
+import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
-import { ALFlowletEvent, ALReactElementEvent, ALTimedEvent } from "./ALType";
-import ALElementInfo from './ALElementInfo';
+import { ALFlowletEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 
 export type ALUIEvent = Readonly<{
   event: string,
@@ -73,19 +72,18 @@ type CurrentUIEvent = {
 const PUBLISHED_EVENTS = new Set<string>();
 type ALChannel = Channel<ALChannelUIEvent>;
 
-export type InitOptions = Types.Options<{
-  uiEvents: Array<string>;
-  flowletManager: ALFlowletManager;
-  channel: ALChannel;
-  cacheElementReactInfo: boolean;
-  domSurfaceAttributeName?: string;
-  componentNameValidator?: ComponentNameValidator;
-}>;
+export type InitOptions = Types.Options<
+  ALSharedInitOptions &
+  {
+    uiEvents: Array<string>;
+    channel: ALChannel;
+    cacheElementReactInfo: boolean;
+  }
+>;
 
 export function publish(options: InitOptions): void {
-  const { uiEvents, flowletManager, channel, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, cacheElementReactInfo, componentNameValidator = defaultComponentNameValidator } = options;
+  const { uiEvents, flowletManager, channel, domSurfaceAttributeName, cacheElementReactInfo } = options;
 
-  setComponentNameValidator(componentNameValidator);
 
   const newEventsToPublish = uiEvents.filter(
     event => !PUBLISHED_EVENTS.has(event),
