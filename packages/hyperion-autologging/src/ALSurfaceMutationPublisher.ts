@@ -21,7 +21,7 @@ import ALElementInfo from './ALElementInfo';
 type ALMutationEvent = ALReactElementEvent & Readonly<{
   event: 'mount_component' | 'unmount_component';
   surface: string;
-  element: HTMLElement;
+  element: HTMLElement | null;
   elementName: string | null;
   mountedDuration?: number;
   flowlet?: ALFlowlet | null;
@@ -42,7 +42,7 @@ export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & A
 
 type SurfaceInfo = ALReactElementEvent & {
   surface: string,
-  element: HTMLElement,
+  element: HTMLElement | null,
   addTime: number,
   removeTime?: number,
   addFlowlet: ALFlowlet | null,
@@ -56,33 +56,34 @@ export type InitOptions = Types.Options<{
   channel: ALSurfaceMutationChannel;
   flowletManager: ALFlowletManager;
   cacheElementReactInfo: boolean;
-  domSurfaceAttributeName?: string;
+  domSurfaceAttributeName: string;
   componentNameValidator?: ComponentNameValidator;
 }>;
+
+function validElement(node: Node | null): HTMLElement | null {
+  if (node != null && (node instanceof HTMLElement) && !/LINK|SCRIPT/.test(node.nodeName)) {
+    return node;
+  }
+  return null;
+}
 
 export function publish(options: InitOptions): void {
   const { domSurfaceAttributeName = AUTO_LOGGING_SURFACE, channel, flowletManager, cacheElementReactInfo, componentNameValidator = defaultComponentNameValidator } = options;
 
   setComponentNameValidator(componentNameValidator);
 
-  function processNode(node: Node, action: 'added' | 'removed') {
+  function processNode(node: HTMLElement | null, surface: string, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
 
     const flowlet = flowletManager.top();
-    if (!(node instanceof HTMLElement) || /LINK|SCRIPT/.test(node.nodeName)) {
-      return;
-    }
-    const surface = node.getAttribute(domSurfaceAttributeName);
-    if (surface == null) {
-      return;
-    }
+
     switch (action) {
       case 'added': {
         let info = activeSurfaces.get(surface);
         if (!info) {
           let reactComponentData: ReactComponentData | null = null;
           let elementName: string | null = null;
-          if (cacheElementReactInfo) {
+          if (node && cacheElementReactInfo) {
             const elementInfo = ALElementInfo.getOrCreate(node);
             reactComponentData = elementInfo.getReactComponentData();
             elementName = getElementName(node);
@@ -98,7 +99,7 @@ export function publish(options: InitOptions): void {
           };
           activeSurfaces.set(surface, info);
           emitMutationEvent(action, info);
-        } else if (node != info.element && node.contains(info.element)) {
+        } else if (node != info.element && node?.contains(info.element)) {
           /**
           * This means we are seeing a node that is higher in the DOM
           * and belongs to a surface that we have seen before.
@@ -127,15 +128,13 @@ export function publish(options: InitOptions): void {
     const element = document.querySelector(
       `[${domSurfaceAttributeName}='${event.surface}']`,
     );
-    if (element != null) {
-      processNode(element, 'added');
-    }
+    processNode(validElement(element), event.surface, 'added');
   });
 
   channel.addListener('al_surface_unmount', event => {
     const removeSurfaceNode = activeSurfaces.get(event.surface);
     if (removeSurfaceNode) {
-      processNode(removeSurfaceNode.element, 'removed');
+      processNode(removeSurfaceNode.element, event.surface, 'removed');
     }
   });
 
@@ -145,6 +144,7 @@ export function publish(options: InitOptions): void {
     surfaceInfo: SurfaceInfo
   ): void {
     const { surface, removeTime, element, elementName } = surfaceInfo;
+    const autoLoggingID = element ? ALID.getOrSetAutoLoggingID(element) : '';
     switch (action) {
       case 'added': {
         channel.emit('al_surface_mutation_event', {
@@ -153,7 +153,7 @@ export function publish(options: InitOptions): void {
           eventIndex: ALEventIndex.getNextEventIndex(),
           element,
           elementName,
-          autoLoggingID: ALID.getOrSetAutoLoggingID(element),
+          autoLoggingID,
           flowlet: surfaceInfo.addFlowlet,
           surface,
           reactComponentName: surfaceInfo.reactComponentName,
@@ -172,7 +172,7 @@ export function publish(options: InitOptions): void {
           eventIndex: ALEventIndex.getNextEventIndex(),
           element,
           elementName,
-          autoLoggingID: ALID.getOrSetAutoLoggingID(element),
+          autoLoggingID,
           mountedDuration: (removeTime - surfaceInfo.addTime) / 1000,
           flowlet: surfaceInfo.removeFlowlet,
           surface,
