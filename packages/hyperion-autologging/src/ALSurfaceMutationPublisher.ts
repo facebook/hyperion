@@ -4,19 +4,18 @@
 
 'use strict';
 
-import type { ALChannelSurfaceEvent } from './ALSurface';
 import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import { ALLoggableEvent, ALReactElementEvent } from "./ALType";
+import type { ALChannelSurfaceEvent } from './ALSurface';
+import { ALLoggableEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
-import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
-import * as ALID from './ALID';
-import * as ALEventIndex from './ALEventIndex';
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
-import { ComponentNameValidator, defaultComponentNameValidator, ReactComponentData, setComponentNameValidator } from './ALReactUtils';
-import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
-import { getElementName } from './ALInteractableDOMElement';
 import ALElementInfo from './ALElementInfo';
+import * as ALEventIndex from './ALEventIndex';
+import { ALFlowlet } from "./ALFlowletManager";
+import * as ALID from './ALID';
+import { getElementName } from './ALInteractableDOMElement';
+import { ReactComponentData } from './ALReactUtils';
 
 type ALMutationEvent = ALReactElementEvent & Readonly<{
   event: 'mount_component' | 'unmount_component';
@@ -52,18 +51,15 @@ type SurfaceInfo = ALReactElementEvent & {
 
 const activeSurfaces = new Map<string, SurfaceInfo>();
 
-export type InitOptions = Types.Options<{
-  channel: ALSurfaceMutationChannel;
-  flowletManager: ALFlowletManager;
-  cacheElementReactInfo: boolean;
-  domSurfaceAttributeName?: string;
-  componentNameValidator?: ComponentNameValidator;
-}>;
+export type InitOptions = Types.Options<
+  ALSharedInitOptions & {
+    channel: ALSurfaceMutationChannel;
+    cacheElementReactInfo: boolean;
+  }
+>;
 
 export function publish(options: InitOptions): void {
-  const { domSurfaceAttributeName = AUTO_LOGGING_SURFACE, channel, flowletManager, cacheElementReactInfo, componentNameValidator = defaultComponentNameValidator } = options;
-
-  setComponentNameValidator(componentNameValidator);
+  const { domSurfaceAttributeName, channel, flowletManager, cacheElementReactInfo } = options;
 
   function processNode(node: Node, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();

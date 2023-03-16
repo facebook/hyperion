@@ -30,20 +30,19 @@ export function init() {
   const testCompValidator = (name: string) => !name.match(/(^Surface(Proxy)?)/);
 
   AutoLogging.init({
+    flowletManager: FlowletManager,
+    domSurfaceAttributeName: 'data-surfaceid',
+    componentNameValidator: testCompValidator,
     surface: {
       ReactModule: React as any,
       IReactDOMModule,
       IReactModule,
       IJsxRuntimeModule,
-      flowletManager: FlowletManager,
       channel,
-      domSurfaceAttributeName: 'data-surfaceid'
     },
     uiEventPublisher: {
       uiEvents: ['click'],
-      flowletManager: FlowletManager,
       cacheElementReactInfo: true,
-      componentNameValidator: testCompValidator,
       channel
     },
     heartbeat: {
@@ -52,10 +51,7 @@ export function init() {
     },
     surfaceMutationPublisher: {
       channel,
-      flowletManager: FlowletManager,
       cacheElementReactInfo: true,
-      componentNameValidator: testCompValidator,
-      domSurfaceAttributeName: 'data-surfaceid',
     }
   });
 

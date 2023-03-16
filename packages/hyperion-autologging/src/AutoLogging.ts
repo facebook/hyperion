@@ -8,8 +8,10 @@ import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import * as ALHeartbeat from "./ALHeartbeat";
+import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
 import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
+import { ALSharedInitOptions } from "./ALType";
 import * as ALUIeventPublisher from "./ALUIEventPublisher";
 
 /**
@@ -23,12 +25,16 @@ export type ALChannelEvent = (
   ALSurfaceMutationPublisher.InitOptions['channel']
 ) extends Channel<infer EventType> ? EventType : never;
 
-export type InitOptions = Types.Options<{
-  surface: ALSurface.InitOptions;
-  uiEventPublisher?: ALUIeventPublisher.InitOptions;
-  heartbeat?: ALHeartbeat.InitOptions;
-  surfaceMutationPublisher?: ALSurfaceMutationPublisher.InitOptions;
-}>;
+export type InitOptions = Types.Options<
+  ALSharedInitOptions &
+  {
+    componentNameValidator: ComponentNameValidator;
+    surface: Omit<ALSurface.InitOptions, keyof ALSharedInitOptions>;
+    uiEventPublisher?: Omit<ALUIeventPublisher.InitOptions, keyof ALSharedInitOptions>;
+    heartbeat?: ALHeartbeat.InitOptions;
+    surfaceMutationPublisher?: Omit<ALSurfaceMutationPublisher.InitOptions, keyof ALSharedInitOptions>;
+  }
+>;
 
 export type InitResults = Readonly<{
   surfaceRenderer: ALSurface.ALSurfaceHOC;
@@ -41,8 +47,18 @@ export function init(options: InitOptions): InitResults {
     return cachedResults;
   }
 
+  setComponentNameValidator(options.componentNameValidator);
+
+  const sharedOptions: ALSharedInitOptions = {
+    flowletManager: options.flowletManager,
+    domSurfaceAttributeName: options.domSurfaceAttributeName,
+  }
+
   if (options.uiEventPublisher) {
-    ALUIeventPublisher.publish(options.uiEventPublisher);
+    ALUIeventPublisher.publish({
+      ...sharedOptions,
+      ...options.uiEventPublisher
+    });
   }
 
   if (options.heartbeat) {
@@ -50,11 +66,17 @@ export function init(options: InitOptions): InitResults {
   }
 
   if (options.surfaceMutationPublisher) {
-    ALSurfaceMutationPublisher.publish(options.surfaceMutationPublisher);
+    ALSurfaceMutationPublisher.publish({
+      ...sharedOptions,
+      ...options.surfaceMutationPublisher
+    });
   }
 
   cachedResults = {
-    surfaceRenderer: ALSurface.init(options.surface),
+    surfaceRenderer: ALSurface.init({
+      ...sharedOptions,
+      ...options.surface
+    }),
   };
 
   return cachedResults;
