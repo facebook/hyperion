@@ -53,6 +53,10 @@ export default class ALElementInfo {
     return this.reactComponentData;
   }
 
+  getReactComponentName(): string | null | undefined {
+    return this.getReactComponentData()?.name;
+  }
+
   getReactComponentType(): string | null {
     if (!this.reactComponentType) {
       this.reactComponentType = this.element.getAttribute(AUTO_LOGGING_COMPONENT_TYPE);

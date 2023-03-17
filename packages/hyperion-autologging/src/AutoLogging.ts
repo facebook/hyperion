@@ -28,7 +28,7 @@ export type ALChannelEvent = (
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
   {
-    componentNameValidator: ComponentNameValidator;
+    componentNameValidator?: ComponentNameValidator;
     surface: Omit<ALSurface.InitOptions, keyof ALSharedInitOptions>;
     uiEventPublisher?: Omit<ALUIeventPublisher.InitOptions, keyof ALSharedInitOptions>;
     heartbeat?: ALHeartbeat.InitOptions;
@@ -47,7 +47,9 @@ export function init(options: InitOptions): InitResults {
     return cachedResults;
   }
 
-  setComponentNameValidator(options.componentNameValidator);
+  if (options.componentNameValidator) {
+    setComponentNameValidator(options.componentNameValidator);
+  }
 
   const sharedOptions: ALSharedInitOptions = {
     flowletManager: options.flowletManager,

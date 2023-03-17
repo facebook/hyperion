@@ -41,7 +41,7 @@ export type ALUIEventBubbleData = Readonly<
   }
 >;
 
-type ALLoggableUIEvent = Readonly<
+export type ALLoggableUIEvent = Readonly<
   ALTimedEvent &
   ALUIEvent &
   ALFlowletEvent &
