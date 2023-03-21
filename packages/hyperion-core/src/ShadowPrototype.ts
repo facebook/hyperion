@@ -38,17 +38,17 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
 
   constructor(
     public readonly targetPrototype: ObjectType,
-    private readonly parentShadoPrototype: ShadowPrototype<ParentType> | null,
+    private readonly parentShadowPrototype: ShadowPrototype<ParentType> | null,
   ) {
     /**
      * TODO: if we could say <ObjectType extends ParentType> then may be we could avoid the casts
      * in the following methods
      */
-    this.extension = Object.create(parentShadoPrototype?.extension ?? null);
+    this.extension = Object.create(parentShadowPrototype?.extension ?? null);
 
-    if (/* __DEV__ && */ this.parentShadoPrototype) {
+    if (/* __DEV__ && */ this.parentShadowPrototype) {
       let obj: any = this.targetPrototype;
-      let proto = this.parentShadoPrototype.targetPrototype;
+      let proto = this.parentShadowPrototype.targetPrototype;
       let matched = false;
       while (obj && !matched) {
         matched = obj === proto;
@@ -59,17 +59,17 @@ export class ShadowPrototype<ObjectType extends Object = any, ParentType extends
   }
 
   private callOnBeforeInterceptObject(obj: ObjectType): void {
-    this.parentShadoPrototype?.callOnBeforeInterceptObject(obj as unknown as ParentType);
+    this.parentShadowPrototype?.callOnBeforeInterceptObject(obj as unknown as ParentType);
     this.onBeforInterceptObj?.call(obj);
   }
 
   private callOnAfterInterceptObject(obj: ObjectType): void {
-    this.parentShadoPrototype?.callOnAfterInterceptObject(obj as unknown as ParentType);
+    this.parentShadowPrototype?.callOnAfterInterceptObject(obj as unknown as ParentType);
     this.onAfterInterceptObj?.call(obj);
   }
 
   protected interceptObjectItself(obj: ObjectType): void {
-    this.parentShadoPrototype?.interceptObjectItself(obj as unknown as ParentType);
+    this.parentShadowPrototype?.interceptObjectItself(obj as unknown as ParentType);
     // We can make any necessary modificatio to the object itself here
     if (this.pendingPropertyInterceptors) {
       for (const pi of this.pendingPropertyInterceptors) {
