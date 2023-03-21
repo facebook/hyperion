@@ -52,6 +52,9 @@ export function init() {
     surfaceMutationPublisher: {
       channel,
       cacheElementReactInfo: true,
+    },
+    network: {
+      channel
     }
   });
 
@@ -61,6 +64,7 @@ export function init() {
     'al_ui_event',
     'al_heartbeat_event',
     'al_surface_mutation_event',
+    'al_network_request',
   ] as const).forEach(eventName => {
     channel.on(eventName).add(ev => {
       console.log(eventName, ev, performance.now());

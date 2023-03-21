@@ -8,6 +8,7 @@ import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import * as ALHeartbeat from "./ALHeartbeat";
+import * as ALNetworkPublisher from "./ALNetworkPublisher";
 import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
 import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
@@ -22,17 +23,21 @@ export type ALChannelEvent = (
   ALSurface.InitOptions['channel'] &
   ALUIeventPublisher.InitOptions['channel'] &
   ALHeartbeat.InitOptions['channel'] &
-  ALSurfaceMutationPublisher.InitOptions['channel']
+  ALSurfaceMutationPublisher.InitOptions['channel'] &
+  ALNetworkPublisher.InitOptions['channel']
 ) extends Channel<infer EventType> ? EventType : never;
+
+type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions>;
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
   {
     componentNameValidator?: ComponentNameValidator;
-    surface: Omit<ALSurface.InitOptions, keyof ALSharedInitOptions>;
-    uiEventPublisher?: Omit<ALUIeventPublisher.InitOptions, keyof ALSharedInitOptions>;
+    surface: PublicInitOptions<ALSurface.InitOptions>;
+    uiEventPublisher?: PublicInitOptions<ALUIeventPublisher.InitOptions>;
     heartbeat?: ALHeartbeat.InitOptions;
-    surfaceMutationPublisher?: Omit<ALSurfaceMutationPublisher.InitOptions, keyof ALSharedInitOptions>;
+    surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions>;
+    network?: PublicInitOptions<ALNetworkPublisher.InitOptions>;
   }
 >;
 
@@ -71,6 +76,13 @@ export function init(options: InitOptions): InitResults {
     ALSurfaceMutationPublisher.publish({
       ...sharedOptions,
       ...options.surfaceMutationPublisher
+    });
+  }
+
+  if (options.network) {
+    ALNetworkPublisher.publish({
+      ...sharedOptions,
+      ...options.network
     });
   }
 

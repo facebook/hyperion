@@ -10,6 +10,7 @@ import Counter from "./component/Counter";
 import NestedComponent from './component/NestedComponent';
 import * as IReact from "./IReact";
 import { PortalBodyContainerComponent } from './component/PortalComponent';
+import DynamicSvgComponent from './component/DynamicSvgComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -43,11 +44,11 @@ function App() {
         <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
       </div>
       <div>
-       <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
+        <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
       </div>
 
 
-
+      <DynamicSvgComponent></DynamicSvgComponent>
     </div>
   );
 }
