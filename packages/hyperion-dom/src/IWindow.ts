@@ -8,7 +8,7 @@ import { DOMShadowPrototype } from "./DOMShadowPrototype";
 import { interceptEventHandlerAttribute } from "./EventHandlerAttributeInterceptor";
 import { IEventTargetPrototype } from "./IEventTarget";
 
-export const IWindowPrototype = new DOMShadowPrototype(Window, IEventTargetPrototype, { sampleObject: window, registerOnPrototype: true });
+export const IWindowPrototype = new DOMShadowPrototype(Window, IEventTargetPrototype, { targetPrototype: window, registerOnPrototype: true });
 
 export const fetch = interceptMethod("fetch", IWindowPrototype);
 export const requestAnimationFrame = interceptMethod("requestAnimationFrame", IWindowPrototype);

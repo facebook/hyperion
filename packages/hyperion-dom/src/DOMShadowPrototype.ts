@@ -19,13 +19,14 @@ intercept.registerShadowPrototypeGetter(node => {
 
 export class DOMShadowPrototype<ClassType extends Object, ParentType extends Object>
   extends ShadowPrototype<ClassType, ParentType> {
-  constructor(targetPrototypeCtor: { prototype: ClassType }, parentShadoPrototype: ShadowPrototype<ParentType> | null, options?: {
+  constructor(targetPrototypeCtor: { prototype: ClassType }, parentShadowPrototype: ShadowPrototype<ParentType> | null, options?: {
     sampleObject?: ClassType;
     nodeName?: string,
     nodeType?: number,
     registerOnPrototype?: boolean,
+    targetPrototype?: ClassType
   }) {
-    let targetPrototype = targetPrototypeCtor?.prototype;
+    let targetPrototype = options?.targetPrototype ?? targetPrototypeCtor?.prototype;
     if (!targetPrototype && options) {
       const { sampleObject, nodeName, nodeType } = options;
       let obj: object | undefined = sampleObject;
@@ -62,7 +63,7 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
       }
     }
     assert(targetPrototype && typeof targetPrototype === "object", `Cannot create shadow prototype for undefined`);
-    super(targetPrototype, parentShadoPrototype);
+    super(targetPrototype, parentShadowPrototype);
 
     if (options) {
       const { nodeName, nodeType } = options;
