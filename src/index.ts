@@ -18,7 +18,7 @@ export { trackElementsWithAttributes } from "@hyperion/hyperion-util/src/trackEl
 export * as SyncMutationObserver from "@hyperion/hyperion-util/src/SyncMutationObserver";
 
 // hyperionOnNetworkRequest
-export { onNetworkRequest } from "@hyperion/hyperion-util/src/onNetworkRequest";
+// export { onNetworkRequest } from "@hyperion/hyperion-util/src/onNetworkRequest";
 
 // hyperionFlowletCore
 export { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
