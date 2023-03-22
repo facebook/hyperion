@@ -41,9 +41,25 @@ export function init() {
       channel,
     },
     uiEventPublisher: {
-      uiEvents: ['click'],
-      cacheElementReactInfo: true,
-      channel
+      channel,
+      uiEvents: [
+        {
+          eventName: 'click',
+          cacheElementReactInfo: true,
+        },
+        {
+          eventName: 'keydown',
+          cacheElementReactInfo: true,
+          interactableElementsOnly: true,
+          eventFilter: (domEvent: Event) => domEvent instanceof KeyboardEvent && domEvent?.code === 'Enter',
+        },
+        {
+          eventName: 'keyup',
+          cacheElementReactInfo: true,
+          interactableElementsOnly: true,
+          eventFilter: (domEvent: Event) => domEvent instanceof KeyboardEvent && domEvent?.code === 'Enter',
+        },
+      ]
     },
     heartbeat: {
       channel,

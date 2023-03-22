@@ -10,6 +10,7 @@ import FuncComponent from './FuncComponent';
 import {PortalBodyContainerComponent, PortalComponent} from './PortalComponent';
 import { Props, Surface } from './Surface';
 import { ToggleSurfaceComponent } from './ToggleSurfaceComponent';
+import { InputSurfaceComponent } from './InputSurfaceComponent';
 
 class EmptyClassComponent extends React.Component<{}> {
   render(): React.ReactElement {
@@ -59,6 +60,7 @@ export default function AdsSpeedLabAutoLoggingImpl(_props: {}): React.ReactEleme
         <span>Indirect-child</span>
       </IndirectSurface>
       <ToggleSurfaceComponent/>
+      <InputSurfaceComponent />
     </div>,
   );
 }
