@@ -12,6 +12,8 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import { ALFlowletEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 
 type ALNetworkEvent = ALTimedEvent & Readonly<{
+  event: "network";
+  initiatorType: "fetch" | "xmlhttprequest"; // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/initiatorType
   flowlet: ALFlowletEvent['flowlet'] | null;
 }>;
 
@@ -28,9 +30,23 @@ type RequestInfo = {
 }
 export type ALNetworkRequestEvent = ALNetworkEvent & Readonly<RequestInfo>;
 
-export type ALNetworkResponseEvent = ALNetworkEvent & Readonly<{
-
-}>;
+export type ALNetworkResponseEvent = ALNetworkEvent & Readonly<
+  {
+    requestEvent: ALNetworkRequestEvent | undefined;
+  }
+  &
+  (
+    {
+      initiatorType: "fetch";
+      response: Response;
+    }
+    |
+    {
+      initiatorType: "xmlhttprequest";
+      response: XMLHttpRequest;
+    }
+  )
+>;
 
 export type ALChannelNetworkEvent = Readonly<{
   al_network_request: [ALNetworkRequestEvent];
@@ -51,6 +67,7 @@ export type InitOptions = Types.Options<
 function captureFetch(options: InitOptions): void {
   const { channel, flowletManager } = options;
 
+  let requestEvent: ALNetworkResponseEvent['requestEvent'];
   IWindow.fetch.onArgsObserverAdd((input, init) => {
     let request: RequestInfo;
     if (typeof input === "string") {
@@ -73,13 +90,27 @@ function captureFetch(options: InitOptions): void {
       };
     }
 
-    channel.emit("al_network_request", {
-      ...request,
+    channel.emit("al_network_request", requestEvent = {
+      initiatorType: "fetch",
       event: "network",
       eventTimestamp: performanceAbsoluteNow(),
-      flowlet: flowletManager.top()
+      flowlet: flowletManager.top(),
+      ...request,
     });
   });
+
+  IWindow.fetch.onValueObserverAdd(value => {
+    value.then(response => {
+      channel.emit('al_network_response', {
+        initiatorType: "fetch",
+        event: "network",
+        eventTimestamp: performanceAbsoluteNow(),
+        flowlet: flowletManager.top(),
+        requestEvent,
+        response,
+      })
+    })
+  })
 }
 
 const XHR_REQUEST_INFO_PROP = 'requestInfo';
@@ -93,12 +124,34 @@ function captureXHR(options: InitOptions): void {
   IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
     const request = intercept.getVirtualPropertyValue<RequestInfo>(this, XHR_REQUEST_INFO_PROP);
     assert(request != null, `Unexpected situation! Request info is missing from xhr object`);
-    channel.emit("al_network_request", {
+
+    let requestEvent: ALNetworkResponseEvent['requestEvent'];
+
+    channel.emit("al_network_request", requestEvent = {
+      initiatorType: "xmlhttprequest",
       event: "network",
       eventTimestamp: performanceAbsoluteNow(),
       flowlet: flowletManager.top(),
       ...(body instanceof Document) ? request : { ...request, body }// assert already ensures request is not undefined
     });
+
+    this.addEventListener(
+      'loadend',
+      event => {
+        assert(event.target === this, "Invalid xhr target for loadend event");
+
+        channel.emit('al_network_response', {
+          initiatorType: "xmlhttprequest",
+          event: "network",
+          eventTimestamp: performanceAbsoluteNow(),
+          flowlet: flowletManager.top(),
+          requestEvent,
+          response: this,
+        })
+      },
+      { once: true }
+    );
+
   });
 
 }
