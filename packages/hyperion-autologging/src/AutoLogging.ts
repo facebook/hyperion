@@ -13,7 +13,7 @@ import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtil
 import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import { ALSharedInitOptions } from "./ALType";
-import * as ALUIeventPublisher from "./ALUIEventPublisher";
+import * as ALUIEventPublisher from "./ALUIEventPublisher";
 
 /**
  * This type extracts the union of all events types so that external modules
@@ -21,7 +21,7 @@ import * as ALUIeventPublisher from "./ALUIEventPublisher";
  */
 export type ALChannelEvent = (
   ALSurface.InitOptions['channel'] &
-  ALUIeventPublisher.InitOptions['channel'] &
+  ALUIEventPublisher.InitOptions['channel'] &
   ALHeartbeat.InitOptions['channel'] &
   ALSurfaceMutationPublisher.InitOptions['channel'] &
   ALNetworkPublisher.InitOptions['channel']
@@ -34,10 +34,10 @@ export type InitOptions = Types.Options<
   {
     componentNameValidator?: ComponentNameValidator;
     surface: PublicInitOptions<ALSurface.InitOptions>;
-    uiEventPublisher?: PublicInitOptions<ALUIeventPublisher.InitOptions> | null;
-    heartbeat?: ALHeartbeat.InitOptions | null;
-    surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions> | null;
-    network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
+    uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions>;
+    heartbeat?: ALHeartbeat.InitOptions;
+    surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions>;
+    network?: PublicInitOptions<ALNetworkPublisher.InitOptions>;
   }
 >;
 
@@ -48,7 +48,7 @@ export type InitResults = Readonly<{
 let cachedResults: InitResults | null = null;
 
 /**
- * 
+ *
  * @param options enables various features with their own init option
  * @returns true if initilized (the first time) or false if it is already initialized.
  */
@@ -67,7 +67,7 @@ export function init(options: InitOptions): boolean {
   }
 
   if (options.uiEventPublisher) {
-    ALUIeventPublisher.publish({
+    ALUIEventPublisher.publish({
       ...sharedOptions,
       ...options.uiEventPublisher
     });

@@ -28,7 +28,7 @@ const eventNamesMap: {
   },
 };
 
-const SYNTHETIC_MOUSE_EVENT_HANDLER_MAP: {
+const SYNTHETIC_EVENT_HANDLER_MAP: {
   [key: string]: string;
 } = {
   click: 'onClick',
@@ -42,6 +42,9 @@ const SYNTHETIC_MOUSE_EVENT_HANDLER_MAP: {
   dragover: 'onDragOver',
   dragstart: 'onDragStart',
   drop: 'onDrop',
+  keydown: 'onKeyDown',
+  keypress: 'onKeyPress',
+  keyup: 'onKeyUp',
   mousedown: 'onMouseDown',
   mouseenter: 'onMouseEnter',
   mouseleave: 'onMouseLeave',
@@ -49,6 +52,7 @@ const SYNTHETIC_MOUSE_EVENT_HANDLER_MAP: {
   mouseout: 'onMouseOut',
   mouseover: 'onMouseOver',
   mouseup: 'onMouseUp',
+  submit: 'onSubmit',
 };
 
 export function getInteractable(
@@ -139,7 +143,7 @@ let installHandlers = () => {
   onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
     if (props != null) {
       TrackedEvents.forEach(event => {
-        if (props[SYNTHETIC_MOUSE_EVENT_HANDLER_MAP[event]] != null) {
+        if (props[SYNTHETIC_EVENT_HANDLER_MAP[event]] != null) {
           props[`data-${event}able`] = '1';
         }
       });
