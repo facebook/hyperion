@@ -65,6 +65,7 @@ export function init() {
     'al_heartbeat_event',
     'al_surface_mutation_event',
     'al_network_request',
+    'al_network_response',
   ] as const).forEach(eventName => {
     channel.on(eventName).add(ev => {
       console.log(eventName, ev, performance.now());
