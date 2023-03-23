@@ -16,6 +16,8 @@ export default defineConfig({
         "@hyperion/hyperion-core/src/IRequire",
         "@hyperion/hyperion-dom/src/INode",
         "@hyperion/hyperion-dom/src/IElement_",
+        "@hyperion/hyperion-dom/src/IWindow",
+        "@hyperion/hyperion-dom/src/IXMLHttpRequest",
       ],
       "hyperionTrackElementsWithAttributes": [
         "@hyperion/hyperion-dom/src/IElement",
@@ -23,11 +25,6 @@ export default defineConfig({
       ],
       "hyperionSyncMutationObserver": [
         "@hyperion/hyperion-util/src/SyncMutationObserver",
-      ],
-      "hyperionOnNetworkRequest": [
-        "@hyperion/hyperion-dom/src/IWindow",
-        "@hyperion/hyperion-dom/src/IXMLHttpRequest",
-        "@hyperion/hyperion-util/src/onNetworkRequest",
       ],
       "hyperionFlowletCore": [
         "@hyperion/hyperion-flowlet/src/Flowlet",
