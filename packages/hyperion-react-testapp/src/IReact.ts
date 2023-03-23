@@ -54,7 +54,8 @@ export function init() {
       cacheElementReactInfo: true,
     },
     network: {
-      channel
+      channel,
+      requestFilter: request => !/robots/.test(request.url.toString())
     }
   });
 

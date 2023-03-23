@@ -3,47 +3,63 @@
  */
 
 import { useCallback, useRef, useState } from "react";
-import { Props } from "./Surface";
+import { Props, Surface } from "./Surface";
 
 export default function (/* props: Props */) {
 
   const ref = useRef<HTMLDivElement>(null);
   function loadText(text: string) {
     if (ref.current) {
-      ref.current.innerHTML = text
+      ref.current.innerHTML += text
     }
   }
-  let callId = 0;
 
   const clear = useCallback(() => {
-    loadText("Click on load button");
+    if (ref.current) {
+      ref.current.innerHTML = "Click on load button"
+    };
   }, []);
+
+  const links = [
+    "https://hyperionjs.com/img/hyperion.svg",
+    "robots.txt",
+    // "https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/facebook.svg",
+    // "https://www.svgrepo.com/show/4733/samples.svg",
+  ];
 
   const onCallbackFetch = useCallback(() => {
     loadText("Loading via fetch ...");
-    fetch(`https://hyperionjs.com/img/hyperion.svg?id=${callId++}`).then(response => response.text()).then(loadText);
+    for (const link of links) {
+      fetch(link).then(response => response.text()).then(loadText);
+    }
   }, []);
 
   const onCallbackXHR = useCallback(() => {
     loadText("Loading via xhr ...");
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", `https://hyperionjs.com/img/hyperion.svg?id=${callId++}`);
-    xhr.addEventListener("loadend", ev => {
-      loadText(xhr.responseText);
-    });
-    xhr.send();
+    for (const link of links) {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", link);
+      xhr.addEventListener("loadend", ev => {
+        loadText(xhr.responseText);
+      });
+      xhr.send();
+    }
   }, []);
 
-  return (
-    <table border={1}><tr>
-      <td>
-        <button onClick={clear}>Clear</button><br />
-        <button onClick={onCallbackFetch}>Load image (fetch)</button><br />
-        <button onClick={onCallbackXHR}>Load image (xhr)</button>
-      </td>
-      <td>
-        <div ref={ref} style={{ width: "100px" }} ></div>
-      </td>
-    </tr></table>
+  return Surface({ surface: "loader" })(
+    <table border={1}>
+      <tbody>
+        <tr>
+          <td>
+            <button onClick={clear}>Clear</button><br />
+            <button onClick={onCallbackFetch}>Load image (fetch)</button><br />
+            <button onClick={onCallbackXHR}>Load image (xhr)</button>
+          </td>
+          <td>
+            <div ref={ref} style={{ width: "100px" }} ></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
 }

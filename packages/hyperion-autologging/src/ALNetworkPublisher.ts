@@ -32,7 +32,7 @@ export type ALNetworkRequestEvent = ALNetworkEvent & Readonly<RequestInfo>;
 
 export type ALNetworkResponseEvent = ALNetworkEvent & Readonly<
   {
-    requestEvent: ALNetworkRequestEvent | undefined;
+    requestEvent: ALNetworkRequestEvent | undefined | null;
   }
   &
   (
@@ -60,6 +60,11 @@ export type InitOptions = Types.Options<
   ALSharedInitOptions &
   {
     channel: ALChannel;
+    /**
+     * if provided, only requests that pass the filter function
+     * will generate request/response events. 
+     */
+    requestFilter?: (request: RequestInfo) => boolean;
   }
 >;
 
@@ -73,7 +78,7 @@ function captureFetch(options: InitOptions): void {
     if (typeof input === "string") {
       request = {
         body: init?.body,
-        method: init?.method ?? "get",
+        method: init?.method ?? "GET",
         url: input,
       };
     } else if (input instanceof Request) {
@@ -90,27 +95,40 @@ function captureFetch(options: InitOptions): void {
       };
     }
 
-    channel.emit("al_network_request", requestEvent = {
-      initiatorType: "fetch",
-      event: "network",
-      eventTimestamp: performanceAbsoluteNow(),
-      flowlet: flowletManager.top(),
-      ...request,
-    });
-  });
-
-  IWindow.fetch.onValueObserverAdd(value => {
-    value.then(response => {
-      channel.emit('al_network_response', {
+    if (!options.requestFilter || options.requestFilter(request)) {
+      channel.emit("al_network_request", requestEvent = {
         initiatorType: "fetch",
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
         flowlet: flowletManager.top(),
-        requestEvent,
-        response,
-      })
-    })
-  })
+        ...request,
+      });
+    } else {
+      requestEvent = null;
+    }
+  });
+
+  IWindow.fetch.onValueObserverAdd(value => {
+    /**
+     * There might be many parallel fetch requests happening together.
+     * The argsObserver and valueObserver happen immediately before/after 
+     * the same fetch call. So, we make a copy of requestEvent here to 
+     * ensure each call gets its own instance.
+     */
+    const request = requestEvent;
+    if (request !== null) {
+      value.then(response => {
+        channel.emit('al_network_response', {
+          initiatorType: "fetch",
+          event: "network",
+          eventTimestamp: performanceAbsoluteNow(),
+          flowlet: flowletManager.top(),
+          requestEvent,
+          response,
+        });
+      });
+    }
+  });
 }
 
 const XHR_REQUEST_INFO_PROP = 'requestInfo';
@@ -122,36 +140,41 @@ function captureXHR(options: InitOptions): void {
   });
 
   IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
-    const request = intercept.getVirtualPropertyValue<RequestInfo>(this, XHR_REQUEST_INFO_PROP);
-    assert(request != null, `Unexpected situation! Request info is missing from xhr object`);
+    const requestRaw = intercept.getVirtualPropertyValue<RequestInfo>(this, XHR_REQUEST_INFO_PROP);
+    assert(requestRaw != null, `Unexpected situation! Request info is missing from xhr object`);
+    const request = body instanceof Document ? requestRaw : {
+      ...requestRaw,
+      body
+    };
 
     let requestEvent: ALNetworkResponseEvent['requestEvent'];
 
-    channel.emit("al_network_request", requestEvent = {
-      initiatorType: "xmlhttprequest",
-      event: "network",
-      eventTimestamp: performanceAbsoluteNow(),
-      flowlet: flowletManager.top(),
-      ...(body instanceof Document) ? request : { ...request, body }// assert already ensures request is not undefined
-    });
+    if (!options.requestFilter || options.requestFilter(request)) {
+      channel.emit("al_network_request", requestEvent = {
+        initiatorType: "xmlhttprequest",
+        event: "network",
+        eventTimestamp: performanceAbsoluteNow(),
+        flowlet: flowletManager.top(),
+        ...request // assert already ensures request is not undefined
+      });
 
-    this.addEventListener(
-      'loadend',
-      event => {
-        assert(event.target === this, "Invalid xhr target for loadend event");
+      this.addEventListener(
+        'loadend',
+        event => {
+          assert(event.target === this, "Invalid xhr target for loadend event");
 
-        channel.emit('al_network_response', {
-          initiatorType: "xmlhttprequest",
-          event: "network",
-          eventTimestamp: performanceAbsoluteNow(),
-          flowlet: flowletManager.top(),
-          requestEvent,
-          response: this,
-        })
-      },
-      { once: true }
-    );
-
+          channel.emit('al_network_response', {
+            initiatorType: "xmlhttprequest",
+            event: "network",
+            eventTimestamp: performanceAbsoluteNow(),
+            flowlet: flowletManager.top(),
+            requestEvent,
+            response: this,
+          })
+        },
+        { once: true }
+      );
+    }
   });
 
 }
