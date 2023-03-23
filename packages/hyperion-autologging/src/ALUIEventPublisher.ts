@@ -93,6 +93,7 @@ export function publish(options: InitOptions): void {
 
   let lastUIEvent: CurrentUIEvent | null;
   let flowlet: ALFlowlet;
+  const defaultTopFlowlet = new flowletManager.flowletCtor("/");
 
   newEventsToPublish.forEach(eventName => {
     // Track event in the capturing phase
@@ -103,7 +104,7 @@ export function publish(options: InitOptions): void {
         return;
       }
       const captureTimestamp = performanceAbsoluteNow();
-
+      const surface = getSurfacePath(element, domSurfaceAttributeName);
       /**
        * Regardless of element, we want to set the flowlet on this event.
        * If we do have an element, we include its id in the flowlet.
@@ -111,11 +112,12 @@ export function publish(options: InitOptions): void {
        * we need yet another distinguishing fact, for which we use timestamp
        */
       const autoLoggingID = getOrSetAutoLoggingID(element);
+      flowlet = flowletManager.top() ?? defaultTopFlowlet; // We want to ensure flowlet is always assigned
       if (event.isTrusted && event.bubbles) {
-        const ALFlowlet = flowletManager.flowletCtor;
-        flowlet = new ALFlowlet(eventName, flowletManager.top());
-        flowlet = new ALFlowlet(autoLoggingID, flowlet);
-        flowlet = new ALFlowlet(`ts${captureTimestamp}`, flowlet);
+        if (surface) {
+          flowlet = flowlet.fork(surface);
+        }
+        flowlet = flowlet.fork(eventName).fork(autoLoggingID).fork(`ts${captureTimestamp}`);
         flowlet = flowletManager.push(flowlet);
       }
       let reactComponentData: ReactComponentData | null = null;
@@ -129,7 +131,7 @@ export function publish(options: InitOptions): void {
         captureTimestamp,
         flowlet,
         isTrusted: event.isTrusted,
-        surface: getSurfacePath(element, domSurfaceAttributeName),
+        surface,
         elementName: getElementName(element),
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
