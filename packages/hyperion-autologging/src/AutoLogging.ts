@@ -47,9 +47,14 @@ export type InitResults = Readonly<{
 
 let cachedResults: InitResults | null = null;
 
-export function init(options: InitOptions): InitResults {
+/**
+ * 
+ * @param options enables various features with their own init option
+ * @returns true if initilized (the first time) or false if it is already initialized.
+ */
+export function init(options: InitOptions): boolean {
   if (cachedResults !== null) {
-    return cachedResults;
+    return false;
   }
 
   if (options.componentNameValidator) {
@@ -93,7 +98,7 @@ export function init(options: InitOptions): InitResults {
     }),
   };
 
-  return cachedResults;
+  return true;
 }
 
 export function getSurfaceRenderer(defaultALSurfaceHOC?: ALSurface.ALSurfaceHOC): ALSurface.ALSurfaceHOC {
