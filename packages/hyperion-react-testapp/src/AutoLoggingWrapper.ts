@@ -56,7 +56,8 @@ export function init() {
     },
     network: {
       channel,
-      requestFilter: request => !/robots/.test(request.url.toString())
+      requestFilter: request => !/robots/.test(request.url.toString()),
+      requestFlowletMarker: 'flowlet'
     }
   });
 
