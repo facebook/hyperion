@@ -65,12 +65,57 @@ export type InitOptions = Types.Options<
      * will generate request/response events. 
      */
     requestFilter?: (request: RequestInfo) => boolean;
+
+    /**
+     * If passed, it will enable marking all requests with 
+     * the value of current flowlet using the following as queryparam name
+     */
+    requestFlowletMarker?: string;
   }
 >;
 
+function urlAppendParam(url: string, paramName: string, paramValue: string): string {
+  // Note that it is not easy to use URL since we don't quite know the base of relative urls
+  const separator = url.indexOf("?") !== -1 ? "&" : "?";
+  return `${url}${separator}${paramName}=${paramValue}`;
+}
 
 function captureFetch(options: InitOptions): void {
-  const { channel, flowletManager } = options;
+  const { channel, flowletManager, requestFlowletMarker } = options;
+
+  if (requestFlowletMarker) {
+    /**
+     * Note that args mapper runs before args observer, so the following
+     * changes will be picked up by the next observers, which is what we want
+     */
+    IWindow.fetch.onArgsMapperAdd(args => {
+      const flowlet = flowletManager.top();
+      if (flowlet) {
+        const flowtletName = flowlet.getFullName();
+        let input = args[0];
+        if (typeof input === "string") {
+          args[0] = urlAppendParam(input, requestFlowletMarker, flowtletName);
+        } else if (input instanceof Request) {
+          args[0] = new Request(
+            urlAppendParam(input.url, requestFlowletMarker, flowtletName),
+            {
+              credentials: input.credentials,
+              headers: input.headers,
+              integrity: input.integrity,
+              keepalive: input.keepalive,
+              method: input.method,
+              mode: input.mode,
+              redirect: input.redirect,
+              referrer: input.referrer,
+              referrerPolicy: input.referrerPolicy,
+              signal: input.signal,
+            }
+          );
+        }
+      }
+      return args;
+    });
+  }
 
   let requestEvent: ALNetworkResponseEvent['requestEvent'];
   IWindow.fetch.onArgsObserverAdd((input, init) => {
@@ -133,7 +178,27 @@ function captureFetch(options: InitOptions): void {
 
 const XHR_REQUEST_INFO_PROP = 'requestInfo';
 function captureXHR(options: InitOptions): void {
-  const { channel, flowletManager } = options;
+  const { channel, flowletManager, requestFlowletMarker } = options;
+
+  if (requestFlowletMarker) {
+    /**
+     * Note that args mapper runs before args observer, so the following
+     * changes will be picked up by the next observers, which is what we want
+     */
+    IXMLHttpRequest.open.onArgsMapperAdd(args => {
+      const flowlet = flowletManager.top();
+      if (flowlet) {
+        const flowtletName = flowlet.getFullName();
+        let url = args[1];
+        if (typeof url === "string") {
+          args[1] = urlAppendParam(url, requestFlowletMarker, flowtletName);
+        } else if (url instanceof URL) {
+          url.searchParams.append(requestFlowletMarker, flowtletName);
+        }
+      }
+      return args;
+    });
+  }
 
   IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
     intercept.setVirtualPropertyValue<RequestInfo>(this, XHR_REQUEST_INFO_PROP, { method, url });

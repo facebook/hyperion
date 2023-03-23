@@ -22,7 +22,7 @@ export default function (/* props: Props */) {
 
   const links = [
     "https://hyperionjs.com/img/hyperion.svg",
-    "robots.txt",
+    "robots.txt?a=1",
     // "https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/facebook.svg",
     // "https://www.svgrepo.com/show/4733/samples.svg",
   ];
