@@ -10,7 +10,6 @@ import React from 'react';
 import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import { FlowletManager } from "./FlowletManager";
-
 export let interceptionStatus = "disabled";
 
 export function init() {
@@ -69,14 +68,23 @@ export function init() {
   ([
     'al_surface_mount',
     'al_surface_unmount',
-    'al_ui_event',
     'al_heartbeat_event',
-    'al_surface_mutation_event',
-    'al_network_request',
-    'al_network_response',
   ] as const).forEach(eventName => {
     channel.on(eventName).add(ev => {
       console.log(eventName, ev, performance.now());
+    });
+
+  });
+
+  ([
+    'al_ui_event',
+    'al_surface_mutation_event',
+    'al_network_request',
+    'al_network_response',
+    'al_network_response',
+  ] as const).forEach(eventName => {
+    channel.on(eventName).add(ev => {
+      console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
     });
 
   });
