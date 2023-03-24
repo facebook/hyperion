@@ -67,52 +67,61 @@ export type InitOptions = Types.Options<
     requestFilter?: (request: RequestInfo) => boolean;
 
     /**
-     * If passed, it will enable marking all requests with 
-     * the value of current flowlet using the following as queryparam name
+     * If passed, it will enable the app to mark any desired request with 
+     * extra information (e.g. flowlet)
      */
-    requestFlowletMarker?: string;
+    requestUrlMarker?: (request: RequestInfo, params: URLSearchParams) => void;
   }
 >;
 
-function urlAppendParam(url: string, paramName: string, paramValue: string): string {
+function urlAppendParam(url: string, params: URLSearchParams): string {
   // Note that it is not easy to use URL since we don't quite know the base of relative urls
   const separator = url.indexOf("?") !== -1 ? "&" : "?";
-  return `${url}${separator}${paramName}=${paramValue}`;
+  const rawParams = decodeURIComponent(params.toString()); // Which one do we prefer?
+  return `${url}${separator}${rawParams}`;
 }
 
 function captureFetch(options: InitOptions): void {
-  const { channel, flowletManager, requestFlowletMarker } = options;
+  const { channel, flowletManager, requestUrlMarker } = options;
 
-  if (requestFlowletMarker) {
+  if (requestUrlMarker) {
     /**
      * Note that args mapper runs before args observer, so the following
      * changes will be picked up by the next observers, which is what we want
      */
     IWindow.fetch.onArgsMapperAdd(args => {
-      const flowlet = flowletManager.top();
-      if (flowlet) {
-        const flowtletName = flowlet.getFullName();
-        let input = args[0];
-        if (typeof input === "string") {
-          args[0] = urlAppendParam(input, requestFlowletMarker, flowtletName);
-        } else if (input instanceof Request) {
-          args[0] = new Request(
-            urlAppendParam(input.url, requestFlowletMarker, flowtletName),
-            {
-              credentials: input.credentials,
-              headers: input.headers,
-              integrity: input.integrity,
-              keepalive: input.keepalive,
-              method: input.method,
-              mode: input.mode,
-              redirect: input.redirect,
-              referrer: input.referrer,
-              referrerPolicy: input.referrerPolicy,
-              signal: input.signal,
-            }
-          );
-        }
+      const urlParams = new URLSearchParams();
+
+      let input = args[0];
+      if (typeof input === "string") {
+        const init = args[1];
+        requestUrlMarker(
+          {
+            method: init?.method ?? "GET",
+            url: input
+          },
+          urlParams
+        );
+        args[0] = urlAppendParam(input, urlParams);
+      } else if (input instanceof Request) {
+        requestUrlMarker(input, urlParams)
+        args[0] = new Request(
+          urlAppendParam(input.url, urlParams),
+          {
+            credentials: input.credentials,
+            headers: input.headers,
+            integrity: input.integrity,
+            keepalive: input.keepalive,
+            method: input.method,
+            mode: input.mode,
+            redirect: input.redirect,
+            referrer: input.referrer,
+            referrerPolicy: input.referrerPolicy,
+            signal: input.signal,
+          }
+        );
       }
+
       return args;
     });
   }
@@ -178,24 +187,25 @@ function captureFetch(options: InitOptions): void {
 
 const XHR_REQUEST_INFO_PROP = 'requestInfo';
 function captureXHR(options: InitOptions): void {
-  const { channel, flowletManager, requestFlowletMarker } = options;
+  const { channel, flowletManager, requestUrlMarker } = options;
 
-  if (requestFlowletMarker) {
+  if (requestUrlMarker) {
     /**
      * Note that args mapper runs before args observer, so the following
      * changes will be picked up by the next observers, which is what we want
      */
     IXMLHttpRequest.open.onArgsMapperAdd(args => {
-      const flowlet = flowletManager.top();
-      if (flowlet) {
-        const flowtletName = flowlet.getFullName();
-        let url = args[1];
-        if (typeof url === "string") {
-          args[1] = urlAppendParam(url, requestFlowletMarker, flowtletName);
-        } else if (url instanceof URL) {
-          url.searchParams.append(requestFlowletMarker, flowtletName);
-        }
+      const urlParams = new URLSearchParams();
+
+      const [method, url] = args;
+
+      if (typeof url === "string") {
+        requestUrlMarker({ method, url }, urlParams);
+        args[1] = urlAppendParam(url, urlParams);
+      } else if (url instanceof URL) {
+        requestUrlMarker({ method, url }, url.searchParams);
       }
+
       return args;
     });
   }
