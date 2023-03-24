@@ -57,7 +57,12 @@ export function init() {
     network: {
       channel,
       requestFilter: request => !/robots/.test(request.url.toString()),
-      requestFlowletMarker: 'flowlet'
+      requestUrlMarker: (request, params) => {
+        const flowlet = FlowletManager.top();
+        if (flowlet) {
+          params.set('flowlet', flowlet.getFullName());
+        }
+      }
     }
   });
 
