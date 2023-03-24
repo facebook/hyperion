@@ -5,6 +5,7 @@
 import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
 import * as intercept from "@hyperion/hyperion-core/src/intercept";
+import "@hyperion/hyperion-core/src/IPromise";
 import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
@@ -80,6 +81,7 @@ function urlAppendParam(url: string, params: URLSearchParams): string {
   const rawParams = decodeURIComponent(params.toString()); // Which one do we prefer?
   return `${url}${separator}${rawParams}`;
 }
+const REQUEST_INFO_PROP_NAME = 'requestInfo';
 
 function captureFetch(options: InitOptions): void {
   const { channel, flowletManager, requestUrlMarker } = options;
@@ -126,7 +128,7 @@ function captureFetch(options: InitOptions): void {
     });
   }
 
-  let requestEvent: ALNetworkResponseEvent['requestEvent'];
+  let ephemeralRequestEvent: ALNetworkResponseEvent['requestEvent'];
   IWindow.fetch.onArgsObserverAdd((input, init) => {
     let request: RequestInfo;
     if (typeof input === "string") {
@@ -150,7 +152,7 @@ function captureFetch(options: InitOptions): void {
     }
 
     if (!options.requestFilter || options.requestFilter(request)) {
-      channel.emit("al_network_request", requestEvent = {
+      channel.emit("al_network_request", ephemeralRequestEvent = {
         initiatorType: "fetch",
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
@@ -158,7 +160,7 @@ function captureFetch(options: InitOptions): void {
         ...request,
       });
     } else {
-      requestEvent = null;
+      ephemeralRequestEvent = null;
     }
   });
 
@@ -166,17 +168,20 @@ function captureFetch(options: InitOptions): void {
     /**
      * There might be many parallel fetch requests happening together.
      * The argsObserver and valueObserver happen immediately before/after 
-     * the same fetch call. So, we make a copy of requestEvent here to 
-     * ensure each call gets its own instance.
+     * the same fetch call. So, we make a copy of requestEvent into the
+     * Promise value itself to ensure each call gets its own instance.
      */
-    const request = requestEvent;
-    if (request !== null) {
+
+    if (ephemeralRequestEvent) {
+      intercept.setVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME, ephemeralRequestEvent);
       value.then(response => {
+        const requestEvent = intercept.getVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME);
+        assert(requestEvent != null, `Unexpected situation! Request info missing from fetch promise object`);
         channel.emit('al_network_response', {
           initiatorType: "fetch",
           event: "network",
           eventTimestamp: performanceAbsoluteNow(),
-          flowlet: flowletManager.top(),
+          flowlet: requestEvent?.flowlet, // Reuse the same flowlet as request, since by now things have changed.
           requestEvent,
           response,
         });
@@ -185,7 +190,6 @@ function captureFetch(options: InitOptions): void {
   });
 }
 
-const XHR_REQUEST_INFO_PROP = 'requestInfo';
 function captureXHR(options: InitOptions): void {
   const { channel, flowletManager, requestUrlMarker } = options;
 
@@ -211,25 +215,27 @@ function captureXHR(options: InitOptions): void {
   }
 
   IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
-    intercept.setVirtualPropertyValue<RequestInfo>(this, XHR_REQUEST_INFO_PROP, { method, url });
+    intercept.setVirtualPropertyValue<RequestInfo>(this, REQUEST_INFO_PROP_NAME, { method, url });
   });
 
   IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
-    const requestRaw = intercept.getVirtualPropertyValue<RequestInfo>(this, XHR_REQUEST_INFO_PROP);
+    const requestRaw = intercept.getVirtualPropertyValue<RequestInfo>(this, REQUEST_INFO_PROP_NAME);
     assert(requestRaw != null, `Unexpected situation! Request info is missing from xhr object`);
     const request = body instanceof Document ? requestRaw : {
       ...requestRaw,
       body
     };
 
-    let requestEvent: ALNetworkResponseEvent['requestEvent'];
 
+    const flowlet = flowletManager.top(); // Befor calling requestFilter and losing current top flowlet
     if (!options.requestFilter || options.requestFilter(request)) {
+      let requestEvent: ALNetworkResponseEvent['requestEvent'];
+
       channel.emit("al_network_request", requestEvent = {
         initiatorType: "xmlhttprequest",
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
-        flowlet: flowletManager.top(),
+        flowlet,
         ...request // assert already ensures request is not undefined
       });
 
@@ -242,7 +248,7 @@ function captureXHR(options: InitOptions): void {
             initiatorType: "xmlhttprequest",
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
-            flowlet: flowletManager.top(),
+            flowlet, // should carry request flowlet forward
             requestEvent,
             response: this,
           })
