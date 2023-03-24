@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { interceptionStatus } from "../IReact";
+import { interceptionStatus } from "../AutoLoggingWrapper";
 
 class Timer {
   private startTime: number = performance.now();

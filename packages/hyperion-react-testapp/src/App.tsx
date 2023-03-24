@@ -8,7 +8,6 @@ import './App.css';
 import LargeComp from './component/LargeComponent';
 import Counter from "./component/Counter";
 import NestedComponent from './component/NestedComponent';
-import * as IReact from "./IReact";
 import { PortalBodyContainerComponent } from './component/PortalComponent';
 import DynamicSvgComponent from './component/DynamicSvgComponent';
 

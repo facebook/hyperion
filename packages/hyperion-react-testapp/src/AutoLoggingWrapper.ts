@@ -12,6 +12,7 @@ import ReactDev from "react/jsx-dev-runtime";
 import { FlowletManager } from "./FlowletManager";
 
 export let interceptionStatus = "disabled";
+
 export function init() {
   interceptionStatus = "enabled";
 

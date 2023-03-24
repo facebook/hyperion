@@ -6,10 +6,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import * as IReact from "./IReact";
+import * as AutoLoggingWrapper from "./AutoLoggingWrapper";
 import reportWebVitals from './reportWebVitals';
 
-IReact.init();
+AutoLoggingWrapper.init();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
