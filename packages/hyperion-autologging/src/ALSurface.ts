@@ -107,6 +107,7 @@ export type InitOptions = Types.Options<
 >;
 
 const SURFACE_SEPARATOR = "/";
+const SURFACE_WRAPPER_ATTRIBUTE_NAME = "data-surface-wrapper";
 
 class SurfaceDOMString<
   DataType extends ALFlowletDataType,
@@ -191,17 +192,34 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
     attrName,
     attrValue: any,
   ) {
-    if (
-      (
-        attrName === domSurfaceAttributeName ||
-        attrName === domNonInteractiveSurfaceAttributeName
-      ) && (
-        attrValue === '' ||
-        attrValue === 'null' ||
-        (attrValue instanceof SurfaceDOMString && attrValue.toString() === '')
-      )
-    ) {
-      return true;
+    switch (attrName) {
+      case domSurfaceAttributeName:
+      case domNonInteractiveSurfaceAttributeName:
+        if (
+          attrValue === '' ||
+          attrValue === 'null' ||
+          (attrValue instanceof SurfaceDOMString && attrValue.toString() === '')
+        ) {
+          return true;
+        }
+        break;
+      case 'data-testids':
+        /**
+         * This is manage JEST innerworking and assersions. When surface wrappers are added
+         * jest might mark them the same way as other elements on the page, but they are not
+         * actually part of the application.
+         * The following code prevents any such markings, to ensure normal application
+         * assertions work correctly.
+         */
+        if (
+          this.nodeName === 'SPAN' && (
+            this.hasAttribute(SURFACE_WRAPPER_ATTRIBUTE_NAME) ||
+            this.hasAttribute(domSurfaceAttributeName)
+          )
+        ) {
+          return true;
+        }
+        break;
     }
     return false;
   });
@@ -349,7 +367,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
           children = ReactModule.createElement(
             wrapperElementType,
             {
-              "data-surface-wrapper": "1",
+              [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
               style: { display: 'contents' },
             },
             props.children
@@ -360,7 +378,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         children = ReactModule.createElement(
           wrapperElementType,
           {
-            "data-surface-wrapper": "1",
+            [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
             style: { display: 'contents' },
             [domAttributeName]: domAttributeValue,
           },
