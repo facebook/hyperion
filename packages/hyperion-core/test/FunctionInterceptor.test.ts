@@ -405,10 +405,27 @@ describe("test modern classes", () => {
     expect(fi.interceptor.name).toStrictEqual(someFuncName.name);
     expect(fi.interceptor.prototype).toStrictEqual(someFuncName.prototype);
 
-    const noProto = () => {};
+    const noProto = () => { };
     expect(noProto.prototype).toBeUndefined();
     const fiNoProto = interceptFunction(noProto, false, null, "tester");
     expect(fiNoProto.interceptor.prototype).toBeUndefined();
   });
 
+  test("arg observers blocking call", () => {
+    const fn = jest.fn<void, [number]>(i => { });
+    const fi = interceptFunction(fn);
+    fi.onArgsObserverAdd(i => i === 0); // filters 0
+
+    fi.interceptor(0); // should be blocked
+    fi.interceptor(1); // should go through
+    expect(fn).toBeCalledTimes(1);
+    expect(fn.mock.calls[0][0]).toBe(1);
+
+    fi.onArgsObserverAdd(i => i === 1); // filters 1
+
+    fn.mockClear();
+    fi.interceptor(0); // should be blocked
+    fi.interceptor(1); // should be blocked
+    expect(fn).toBeCalledTimes(0);
+  });
 });

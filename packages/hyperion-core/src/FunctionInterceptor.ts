@@ -77,7 +77,24 @@ class OnArgsMapper<FuncType extends InterceptableFunction> extends Hook<OnArgsMa
 }
 
 type OnArgsObserverFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, ...args: FuncParameters<FuncType>) => void | boolean | undefined;
-class OnArgsObserver<FuncType extends InterceptableFunction> extends Hook<OnArgsObserverFunc<FuncType>> { }
+class OnArgsObserver<FuncType extends InterceptableFunction> extends Hook<OnArgsObserverFunc<FuncType>> {
+  protected createMultiCallbackCall(callbacks: OnArgsObserverFunc<FuncType>[]): OnArgsObserverFunc<FuncType> {
+    return function (this): boolean {
+      let skipApi = false;
+      for (let i = 0, len = callbacks.length; i < len; ++i) {
+        const cb = callbacks[i];
+        /**
+         * If any of the callbacks return true (truthy), then we should skip
+         * calling the original function.
+         * However, we want to ensure we call of the callbacks and hence should
+         * avoid short circuting the loop.
+         */
+        skipApi = cb.apply(this, <any>arguments) || skipApi;
+      }
+      return skipApi;
+    }
+  }
+}
 
 type OnValueMapperFunc<FuncType extends InterceptableFunction> = (this: FuncThisType<FuncType>, value: FuncReturnType<FuncType>) => typeof value;
 class OnValueMapper<FuncType extends InterceptableFunction> extends Hook<OnValueMapperFunc<FuncType>> {
@@ -99,7 +116,7 @@ export class FunctionInterceptor<
   BaseType,
   Name extends string,
   FuncType extends InterceptableFunction
-  > extends PropertyInterceptor {
+> extends PropertyInterceptor {
   protected onArgsMapper?: OnArgsMapper<FuncType>;
   protected onArgsObserver?: OnArgsObserver<FuncType>;
   protected onValueMapper?: OnValueMapper<FuncType>;
