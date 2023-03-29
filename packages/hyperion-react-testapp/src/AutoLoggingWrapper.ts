@@ -46,18 +46,19 @@ export function init() {
         {
           eventName: 'click',
           cacheElementReactInfo: true,
+          eventFilter: (domEvent: MouseEvent) => domEvent.isTrusted
         },
         {
           eventName: 'keydown',
           cacheElementReactInfo: true,
           interactableElementsOnly: true,
-          eventFilter: (domEvent: Event) => domEvent instanceof KeyboardEvent && domEvent?.code === 'Enter',
+          eventFilter: (domEvent: KeyboardEvent) => domEvent?.code === 'Enter',
         },
         {
           eventName: 'keyup',
           cacheElementReactInfo: true,
           interactableElementsOnly: true,
-          eventFilter: (domEvent: Event) => domEvent instanceof KeyboardEvent && domEvent?.code === 'Enter',
+          eventFilter: (domEvent: KeyboardEvent) => domEvent?.code === 'Enter',
         },
       ]
     },
@@ -102,6 +103,5 @@ export function init() {
     channel.on(eventName).add(ev => {
       console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
     });
-
   });
 }

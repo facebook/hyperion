@@ -15,14 +15,15 @@ import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 
-export type ALUIEvent = Readonly<{
-  domEvent: GlobalEventHandlersEventMap[ALUIEvent['event']],
-  event: keyof GlobalEventHandlersEventMap,
-  element: Element | null,
-  elementName?: string | null,
-  isTrusted: boolean,
-
-}>;
+export type ALUIEvent<T = EventHandlerMap> = {
+  [K in keyof T]: Readonly<{
+    domEvent:T[K],
+    event: K,
+    element: Element | null,
+    elementName?: string | null,
+    isTrusted: boolean,
+  }>
+}[keyof T];
 
 export type ALUIEventCaptureData = Readonly<
   ALUIEvent &
@@ -40,6 +41,7 @@ export type ALUIEventBubbleData = Readonly<
   ALUIEvent &
   {
     bubbleTimestamp: number,
+    autoLoggingID: ALID | null,
   }
 >;
 
@@ -74,15 +76,19 @@ type CurrentUIEvent = {
 const PUBLISHED_EVENTS = new Set<string>();
 type ALChannel = Channel<ALChannelUIEvent>;
 
-interface UIEventConfig {
-  readonly eventName: keyof GlobalEventHandlersEventMap,
-  // A callable filter for this event, returning true if the event should be emitted, or false if it should be discarded up front
-  eventFilter?: (domEvent: GlobalEventHandlersEventMap[UIEventConfig['eventName']]) => boolean;
-  // Whether to limit to elements that are "interactable", e.g. have event handlers registered to the element.  Defaults to true.
-  interactableElementsOnly?: boolean;
-  // Whether to cache element's react information on capture, defaults to false.
-  cacheElementReactInfo?: boolean;
-}
+type EventHandlerMap = DocumentEventMap;
+
+type UIEventConfig<T = EventHandlerMap> = {
+  [K in keyof T]: Readonly<{
+    eventName: K,
+    // A callable filter for this event, returning true if the event should be emitted, or false if it should be discarded up front
+    eventFilter?: (domEvent: T[K]) => boolean;
+    // Whether to limit to elements that are "interactable", e.g. have event handlers registered to the element.  Defaults to true.
+    interactableElementsOnly?: boolean;
+    // Whether to cache element's react information on capture, defaults to false.
+    cacheElementReactInfo?: boolean;
+  }>
+}[keyof T];
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
@@ -93,7 +99,7 @@ export type InitOptions = Types.Options<
 >;
 
 export function publish(options: InitOptions): void {
-  const { uiEvents, flowletManager, channel, domSurfaceAttributeName} = options;
+  const { uiEvents, flowletManager, channel, domSurfaceAttributeName } = options;
 
 
   const newEventsToPublish = uiEvents.filter(
@@ -107,12 +113,12 @@ export function publish(options: InitOptions): void {
   const defaultTopFlowlet = new flowletManager.flowletCtor("/");
 
   newEventsToPublish.forEach((eventConfig => {
-    const {eventName, eventFilter, cacheElementReactInfo = false, interactableElementsOnly = true } = eventConfig;
+    const { eventName, eventFilter, cacheElementReactInfo = false, interactableElementsOnly = true } = eventConfig;
     // Track event in the capturing phase
-    window.document.addEventListener(eventName, (event: GlobalEventHandlersEventMap[typeof eventConfig.eventName]) => {
+    window.document.addEventListener(eventName, (event) => {
       const captureTimestamp = performanceAbsoluteNow();
 
-      if(eventFilter && !eventFilter(event)) {
+      if (eventFilter && !eventFilter(event as any)) {
         return;
       }
 
@@ -155,7 +161,7 @@ export function publish(options: InitOptions): void {
       }
       const eventData: ALUIEventCaptureData = {
         domEvent: event,
-        event: eventName,
+        event: (eventName as any),
         element,
         captureTimestamp,
         flowlet,
@@ -175,10 +181,10 @@ export function publish(options: InitOptions): void {
     // Track event in the bubbling phase
     window.document.addEventListener(
       eventName,
-      (event: GlobalEventHandlersEventMap[typeof eventName]) => {
+      (event) => {
         const bubbleTimestamp = performanceAbsoluteNow();
 
-        if(eventFilter && !eventFilter(event)) {
+        if (eventFilter && !eventFilter(event as any)) {
           return;
         }
 
@@ -198,7 +204,7 @@ export function publish(options: InitOptions): void {
         if (element != null) {
           channel.emit('al_ui_event_bubble', {
             domEvent: event,
-            event: eventName,
+            event: (eventName as any),
             element,
             bubbleTimestamp,
             isTrusted: event.isTrusted,
@@ -236,7 +242,7 @@ export function publish(options: InitOptions): void {
     const data: ALUIEventData = {
       // Capture event, should we include bubble as well?
       domEvent: eventData.domEvent,
-      event,
+      event: (event as any),
       element,
       elementName,
       eventTimestamp: captureTimestamp,
