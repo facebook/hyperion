@@ -17,7 +17,7 @@ export type InitOptions<T> = Types.Options<
   IReactComponent.InitOptions &
   {
     extensionCtor: () => T;
-    disableReactPropsExtension?: boolean;
+    disableReactComponentPropsExtension?: boolean;
   }
 >;
 
@@ -27,7 +27,7 @@ export function init<T>(options: InitOptions<T>): ExtensionGetter<T> {
 
   const extensionGetter: ExtensionGetter<T> = props => props?.__ext;
 
-  if (initialized.testAndSet() || options.disableReactPropsExtension) {
+  if (initialized.testAndSet() || options.disableReactComponentPropsExtension) {
     return extensionGetter;
   }
 

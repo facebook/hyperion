@@ -70,6 +70,7 @@ export type InitOptions = Types.Options<
     IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     domFlowletAttributeName?: string;
     channel: ALChannel,
+    disableReactDomPropsExtension?: boolean
   }
 >;
 
@@ -90,7 +91,7 @@ class SurfaceDOMString<
 }
 
 function setupDomElementSurfaceAttribute(options: InitOptions): void {
-  if (options.disableReactPropsExtension) {
+  if (options.disableReactDomPropsExtension) {
     return;
   }
 
@@ -209,7 +210,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     flowlet.data.surface = fullSurfaceString;
     let children = props.children;
 
-    if (!options.disableReactPropsExtension) {
+    if (!options.disableReactDomPropsExtension) {
       const foundDomElement = propagateFlowletDown(props.children, flowlet);
 
       if (foundDomElement !== true) {
