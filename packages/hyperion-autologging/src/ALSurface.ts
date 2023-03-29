@@ -225,13 +225,21 @@ export function init(options: InitOptions): ALSurfaceHOC {
          * algorithm as before (will add later)
          *
          */
-        children = ReactModule.createElement("span", { style: { display: 'contents' } }, props.children);
+        children = ReactModule.createElement(
+          "span",
+          {
+            "data-surface-wrapper": "1",
+            style: { display: 'contents' }
+          },
+          props.children
+        );
         propagateFlowletDown(children, flowlet);
       }
     } else {
       children = ReactModule.createElement(
         "span",
         {
+          "data-surface-wrapper": "1",
           style: { display: 'contents' },
           [domSurfaceAttributeName]: fullSurfaceString,
         },
