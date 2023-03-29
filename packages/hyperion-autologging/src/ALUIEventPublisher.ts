@@ -118,7 +118,7 @@ export function publish(options: InitOptions): void {
   trackInteractable(newEventsToPublish.map(ev => ev.eventName));
 
   let lastUIEvent: CurrentUIEvent | null;
-  let flowlet: ALFlowlet;
+  let flowletMap = new Map<UIEventConfig['eventName'], ALFlowlet>();
   const defaultTopFlowlet = new flowletManager.flowletCtor("/");
 
   newEventsToPublish.forEach((eventConfig => {
@@ -162,6 +162,7 @@ export function publish(options: InitOptions): void {
         }
         flowlet = flowlet.fork(`ts${captureTimestamp}`);
         flowlet = flowletManager.push(flowlet);
+        flowletMap.set(eventName, flowlet);
       }
       let reactComponentData: ReactComponentData | null = null;
       if (element && cacheElementReactInfo) {
@@ -232,8 +233,9 @@ export function publish(options: InitOptions): void {
             }
           }
         }
-        if (event.isTrusted) {
-          flowletManager.pop(flowlet);
+        if (event.isTrusted && flowletMap.has(eventName)) {
+          flowletManager.pop(flowletMap.get(eventName));
+          flowletMap.delete(eventName);
         }
       },
       false, // useCapture
@@ -241,7 +243,7 @@ export function publish(options: InitOptions): void {
   }));
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
-    const { autoLoggingID, event, captureTimestamp, element, elementName, isTrusted, reactComponentName, reactComponentStack, surface } = eventData;
+    const { autoLoggingID, event, flowlet, captureTimestamp, element, elementName, isTrusted, reactComponentName, reactComponentStack, surface } = eventData;
 
     if (lastUIEvent != null) {
       const { timedEmitter } = lastUIEvent;
