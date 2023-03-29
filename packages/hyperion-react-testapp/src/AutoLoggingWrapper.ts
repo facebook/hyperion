@@ -46,19 +46,19 @@ export function init() {
         {
           eventName: 'click',
           cacheElementReactInfo: true,
-          eventFilter: (domEvent: MouseEvent) => domEvent.isTrusted
+          eventFilter: (domEvent) => domEvent.isTrusted
         },
         {
           eventName: 'keydown',
           cacheElementReactInfo: true,
           interactableElementsOnly: true,
-          eventFilter: (domEvent: KeyboardEvent) => domEvent?.code === 'Enter',
+          eventFilter: (domEvent) => domEvent.code === 'Enter',
         },
         {
           eventName: 'keyup',
           cacheElementReactInfo: true,
           interactableElementsOnly: true,
-          eventFilter: (domEvent: KeyboardEvent) => domEvent?.code === 'Enter',
+          eventFilter: (domEvent) => domEvent.code === 'Enter',
         },
       ]
     },

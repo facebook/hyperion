@@ -34,10 +34,10 @@ export type InitOptions = Types.Options<
   {
     componentNameValidator?: ComponentNameValidator;
     surface: PublicInitOptions<ALSurface.InitOptions>;
-    uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions>;
-    heartbeat?: ALHeartbeat.InitOptions;
-    surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions>;
-    network?: PublicInitOptions<ALNetworkPublisher.InitOptions>;
+    uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions> | null;
+    heartbeat?: ALHeartbeat.InitOptions | null;
+    surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions> | null;
+    network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
   }
 >;
 

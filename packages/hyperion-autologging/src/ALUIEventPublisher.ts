@@ -15,12 +15,21 @@ import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 
-export type ALUIEvent<T = EventHandlerMap> = {
+/**
+ * Generates a union type of all handler event and domEvent permutations.
+ * e.g. {domEvent: KeyboardEvent, event: 'keydown', ...}
+ */
+type ALUIEvent<T = EventHandlerMap> = {
   [K in keyof T]: Readonly<{
+    // The typed domEvent associated with the event we are capturing
     domEvent:T[K],
+    // Event we are capturing
     event: K,
-    element: Element | null,
+    // Element target associated with the domEvent
+    element: HTMLElement | null,
+    // Element text extracted from element
     elementName?: string | null,
+    // Whether the event is generated from a user action or dispatched via script
     isTrusted: boolean,
   }>
 }[keyof T];
@@ -83,7 +92,7 @@ type UIEventConfig<T = EventHandlerMap> = {
     eventName: K,
     // A callable filter for this event, returning true if the event should be emitted, or false if it should be discarded up front
     eventFilter?: (domEvent: T[K]) => boolean;
-    // Whether to limit to elements that are "interactable", e.g. have event handlers registered to the element.  Defaults to true.
+    // Whether to limit to elements that are "interactable", i.e. those that have event handlers registered to the element.  Defaults to true.
     interactableElementsOnly?: boolean;
     // Whether to cache element's react information on capture, defaults to false.
     cacheElementReactInfo?: boolean;
