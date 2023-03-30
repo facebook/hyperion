@@ -22,7 +22,7 @@ import { ALFlowletEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent 
 type ALUIEvent<T = EventHandlerMap> = {
   [K in keyof T]: Readonly<{
     // The typed domEvent associated with the event we are capturing
-    domEvent:T[K],
+    domEvent: T[K],
     // Event we are capturing
     event: K,
     // Element target associated with the domEvent
@@ -38,7 +38,6 @@ export type ALUIEventCaptureData = Readonly<
   ALUIEvent &
   ALFlowletEvent &
   ALReactElementEvent &
-  ALFlowletEvent &
   {
     captureTimestamp: number,
     surface: string | null,
@@ -107,6 +106,21 @@ export type InitOptions = Types.Options<
   }
 >;
 
+/**
+ *
+ * @param event - the event to check whether it's valid and we want to push/pop it on the flowlet stack
+ * @returns boolean indicating if flowlet should be added/removed from stack
+ * Whether to push/pop this event's flowlet via FlowletManager
+ */
+const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
+
+/**
+ *
+ * @param options - Configuration for determining which events to capture and emit events via provided channel.
+ * This function adds listeners for events via {@link window.document.addEventListener} (both capture and bubble phases),  and enriches these
+ * events with multiple attributes, including react information.  Capturing of information
+ * and filtering of events is configured via {@link UIEventConfig}.
+ */
 export function publish(options: InitOptions): void {
   const { uiEvents, flowletManager, channel, domSurfaceAttributeName } = options;
 
@@ -152,7 +166,7 @@ export function publish(options: InitOptions): void {
        * we need yet another distinguishing fact, for which we use timestamp
        */
       let flowlet = flowletManager.top() ?? defaultTopFlowlet; // We want to ensure flowlet is always assigned
-      if (event.isTrusted && event.bubbles) {
+      if (shouldPushPopFlowlet(event)) {
         if (surface) {
           flowlet = flowlet.fork(surface);
         }
@@ -211,29 +225,28 @@ export function publish(options: InitOptions): void {
           element = event.target instanceof HTMLElement ? event.target : null;
         }
 
-        if (element != null) {
-          channel.emit('al_ui_event_bubble', {
-            domEvent: event,
-            event: (eventName as any),
-            element,
-            bubbleTimestamp,
-            isTrusted: event.isTrusted,
-            autoLoggingID,
-          });
+        channel.emit('al_ui_event_bubble', {
+          domEvent: event,
+          event: (eventName as any),
+          element,
+          bubbleTimestamp,
+          isTrusted: event.isTrusted,
+          autoLoggingID,
+        });
 
-          /**
-           * We want the actual event fire after all bubble listeners are done
-           * Therefore, we fire the second one here, instead of registering a
-           * listener for the bubble events.
-           */
-          if (lastUIEvent != null) {
-            const { data, timedEmitter } = lastUIEvent;
-            if (data.event === eventName && data.element === element) {
-              timedEmitter.run();
-            }
+        /**
+         * We want the actual event fire after all bubble listeners are done
+         * Therefore, we fire the second one here, instead of registering a
+         * listener for the bubble events.
+         */
+        if (lastUIEvent != null) {
+          const { data, timedEmitter } = lastUIEvent;
+          if (data.event === eventName && data.domEvent.target === event.target) {
+            timedEmitter.run();
           }
         }
-        if (event.isTrusted && flowletMap.has(eventName)) {
+
+        if (shouldPushPopFlowlet(event) && flowletMap.has(eventName)) {
           flowletManager.pop(flowletMap.get(eventName));
           flowletMap.delete(eventName);
         }

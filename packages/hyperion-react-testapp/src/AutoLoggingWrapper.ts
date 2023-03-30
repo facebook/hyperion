@@ -51,13 +51,13 @@ export function init() {
         {
           eventName: 'keydown',
           cacheElementReactInfo: true,
-          interactableElementsOnly: true,
+          interactableElementsOnly: false,
           eventFilter: (domEvent) => domEvent.code === 'Enter',
         },
         {
           eventName: 'keyup',
           cacheElementReactInfo: true,
-          interactableElementsOnly: true,
+          interactableElementsOnly: false,
           eventFilter: (domEvent) => domEvent.code === 'Enter',
         },
       ]
@@ -86,6 +86,8 @@ export function init() {
     'al_surface_mount',
     'al_surface_unmount',
     'al_heartbeat_event',
+    'al_ui_event_capture',
+    'al_ui_event_bubble',
   ] as const).forEach(eventName => {
     channel.on(eventName).add(ev => {
       console.log(eventName, ev, performance.now());
