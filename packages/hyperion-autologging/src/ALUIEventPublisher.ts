@@ -246,8 +246,9 @@ export function publish(options: InitOptions): void {
           }
         }
 
-        if (shouldPushPopFlowlet(event) && flowletMap.has(eventName)) {
-          flowletManager.pop(flowletMap.get(eventName));
+        let flowlet: ALFlowlet | undefined;
+        if (shouldPushPopFlowlet(event) && (flowlet = flowletMap.get(eventName)) != null) {
+          flowletManager.pop(flowlet);
           flowletMap.delete(eventName);
         }
       },
