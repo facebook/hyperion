@@ -8,6 +8,10 @@ export default defineConfig({
     // file: './dist/hyperion.js',
     dir: './dist',
     manualChunks: {
+      "hyperionHook": [
+        "@hyperion/hook/src/Hook",
+        "@hyperion/hook/src/Channel",
+      ],
       "hyperionCore": [
         "@hyperion/hyperion-core/src/FunctionInterceptor",
         "@hyperion/hyperion-core/src/ConstructorInterceptor",
@@ -39,7 +43,6 @@ export default defineConfig({
         "@hyperion/hyperion-react/src/IReactComponent",
       ],
       "hyperionAutoLogging": [
-        "@hyperion/hook/src/Channel",
         "@hyperion/hyperion-autologging/src/ALFlowletManager",
         "@hyperion/hyperion-autologging/src/ALSurface",
         "@hyperion/hyperion-autologging/src/ALSurfaceContext",
