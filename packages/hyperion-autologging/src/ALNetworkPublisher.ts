@@ -33,7 +33,7 @@ export type ALNetworkRequestEvent = ALNetworkEvent & Readonly<RequestInfo>;
 
 export type ALNetworkResponseEvent = ALNetworkEvent & Readonly<
   {
-    requestEvent: ALNetworkRequestEvent | undefined | null;
+    requestEvent: ALNetworkRequestEvent;
   }
   &
   (
@@ -63,12 +63,12 @@ export type InitOptions = Types.Options<
     channel: ALChannel;
     /**
      * if provided, only requests that pass the filter function
-     * will generate request/response events. 
+     * will generate request/response events.
      */
     requestFilter?: (request: RequestInfo) => boolean;
 
     /**
-     * If passed, it will enable the app to mark any desired request with 
+     * If passed, it will enable the app to mark any desired request with
      * extra information (e.g. flowlet)
      */
     requestUrlMarker?: (request: RequestInfo, params: URLSearchParams) => void;
@@ -128,7 +128,7 @@ function captureFetch(options: InitOptions): void {
     });
   }
 
-  let ephemeralRequestEvent: ALNetworkResponseEvent['requestEvent'];
+  let ephemeralRequestEvent: ALNetworkResponseEvent['requestEvent'] | null;
   IWindow.fetch.onArgsObserverAdd((input, init) => {
     let request: RequestInfo;
     if (typeof input === "string") {
@@ -167,7 +167,7 @@ function captureFetch(options: InitOptions): void {
   IWindow.fetch.onValueObserverAdd(value => {
     /**
      * There might be many parallel fetch requests happening together.
-     * The argsObserver and valueObserver happen immediately before/after 
+     * The argsObserver and valueObserver happen immediately before/after
      * the same fetch call. So, we make a copy of requestEvent into the
      * Promise value itself to ensure each call gets its own instance.
      */
