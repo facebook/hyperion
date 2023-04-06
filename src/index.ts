@@ -2,6 +2,9 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
+// hyperionHook
+export * as Hook from "@hyperion/hook/src/Hook";
+export * as Channel from "@hyperion/hook/src/Channel";
 
 // hyperionCore
 export { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
@@ -30,7 +33,6 @@ export * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 export * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent"
 
 // hyperionAutoLogging
-export { Channel } from "@hyperion/hook/src/Channel";
 export { ALFlowlet, ALFlowletManager } from "@hyperion/hyperion-autologging/src/ALFlowletManager";
 export { useALSurfaceContext } from "@hyperion/hyperion-autologging/src/ALSurfaceContext";
 export * as ALEventIndex from "@hyperion/hyperion-autologging/src/ALEventIndex";
