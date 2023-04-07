@@ -26,7 +26,7 @@ type ALNetworkEvent = ALTimedEvent & Readonly<{
  */
 type RequestInfo = {
   method: string;
-  url: string | URL; // TODO: should we always send on of the types?
+  url: string;
   body?: RequestInit['body'],
 }
 export type ALNetworkRequestEvent = ALNetworkEvent & Readonly<RequestInfo>;
@@ -147,7 +147,7 @@ function captureFetch(options: InitOptions): void {
     } else {
       request = {
         method: "GET",
-        url: input,
+        url: input.href,
       };
     }
 
@@ -207,7 +207,7 @@ function captureXHR(options: InitOptions): void {
         requestUrlMarker({ method, url }, urlParams);
         args[1] = urlAppendParam(url, urlParams);
       } else if (url instanceof URL) {
-        requestUrlMarker({ method, url }, url.searchParams);
+        requestUrlMarker({ method, url: url.href }, url.searchParams);
       }
 
       return args;
@@ -215,7 +215,10 @@ function captureXHR(options: InitOptions): void {
   }
 
   IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
-    intercept.setVirtualPropertyValue<RequestInfo>(this, REQUEST_INFO_PROP_NAME, { method, url });
+    intercept.setVirtualPropertyValue<RequestInfo>(
+      this,
+      REQUEST_INFO_PROP_NAME,
+      { method, url: typeof url === 'string' ? url : url.href });
   });
 
   IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
@@ -227,7 +230,7 @@ function captureXHR(options: InitOptions): void {
     };
 
 
-    const flowlet = flowletManager.top(); // Befor calling requestFilter and losing current top flowlet
+    const flowlet = flowletManager.top(); // Before calling requestFilter and losing current top flowlet
     if (!options.requestFilter || options.requestFilter(request)) {
       let requestEvent: ALNetworkResponseEvent['requestEvent'];
 
