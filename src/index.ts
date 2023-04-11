@@ -3,8 +3,8 @@
  */
 
 // hyperionHook
-export * as Hook from "@hyperion/hook/src/Hook";
-export * as Channel from "@hyperion/hook/src/Channel";
+export { Hook } from "@hyperion/hook/src/Hook";
+export { PipeableEmitter, Channel } from "@hyperion/hook/src/Channel";
 
 // hyperionCore
 export { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
