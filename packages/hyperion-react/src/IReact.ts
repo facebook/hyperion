@@ -5,6 +5,7 @@
 import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys, validateModuleInterceptor } from '@hyperion/hyperion-core/src/IRequire';
 
 import type React from "react";
+
 import { Class } from './FlowToTsTypes';
 
 export type ReactComponentObjectProps = {

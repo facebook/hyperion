@@ -4,17 +4,16 @@
 
 'use strict';
 
+import type * as Types from "@hyperion/hyperion-util/src/Types";
+import type React from "react";
 import type {
   ReactComponentObjectProps, ReactElementComponentType, ReactForwardRefType,
   ReactMemoType, ReactNode, ReactSpecialComponent,
   ReactSpecialComponentTypes
 } from './IReact';
 
-import * as IReactConsts from './IReactConsts';
-
-import type * as Types from "@hyperion/hyperion-util/src/Types";
-import type React from "react";
 import { $Values, mixed } from './FlowToTsTypes';
+import * as IReactConsts from './IReactConsts';
 
 function warn(msg: string): void {
   if (__DEV__) {

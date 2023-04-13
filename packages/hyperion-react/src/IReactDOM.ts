@@ -2,10 +2,9 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys } from '@hyperion/hyperion-core/src/IRequire';
-
 import type ReactDOM from "react-dom";
 
+import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys } from '@hyperion/hyperion-core/src/IRequire';
 
 export type ReactDOMModuleExports = {
   createPortal: typeof ReactDOM.createPortal;
