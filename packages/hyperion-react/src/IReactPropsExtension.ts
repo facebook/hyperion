@@ -3,8 +3,9 @@
  */
 
 import type * as Types from "@hyperion/hyperion-util/src/Types";
+
+import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 import * as IReactComponent from "./IReactComponent";
-import TestAndSet from "./TestAndSet";
 
 export interface ExtendedProps<T> extends React.PropsWithChildren {
   __ext?: T;

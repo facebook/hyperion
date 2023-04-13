@@ -4,24 +4,24 @@
 
 'use strict';
 
-import { FunctionInterceptor, interceptFunction } from '@hyperion/hyperion-core/src/FunctionInterceptor';
-import { interceptMethod } from '@hyperion/hyperion-core/src/MethodInterceptor';
-import { ShadowPrototype } from '@hyperion/hyperion-core/src/ShadowPrototype';
+
+import type * as Types from "@hyperion/hyperion-util/src/Types";
+import type * as React from 'react';
 import type {
   ReactComponentObjectProps,
   ReactComponentType,
   ReactSpecialComponentTypes
 } from './IReact';
 
+import { assert } from '@hyperion/global';
 import { Hook } from '@hyperion/hook/src/Hook';
+import { FunctionInterceptor, interceptFunction } from '@hyperion/hyperion-core/src/FunctionInterceptor';
+import { interceptMethod } from '@hyperion/hyperion-core/src/MethodInterceptor';
+import { ShadowPrototype } from '@hyperion/hyperion-core/src/ShadowPrototype';
+import TestAndSet from '@hyperion/hyperion-util/src/TestAndSet';
+import { Class, mixed } from './FlowToTsTypes';
 import * as IReact from './IReact';
 import * as IReactElementVisitor from './IReactElementVisitor';
-
-import { assert } from '@hyperion/global';
-import type * as Types from "@hyperion/hyperion-util/src/Types";
-import type * as React from 'react';
-import { Class, mixed } from './FlowToTsTypes';
-import TestAndSet from './TestAndSet';
 
 // $FlowIgnore[unclear-type]
 type IAny = any;

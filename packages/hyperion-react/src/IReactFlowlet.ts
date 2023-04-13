@@ -2,15 +2,15 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import TestAndSet from "./TestAndSet";
+import type * as Types from "@hyperion/hyperion-util/src/Types";
 
+import { assert } from "@hyperion/global";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
+import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
+import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 import * as IReact from "./IReact";
 import * as IReactPropsExtension from "./IReactPropsExtension";
-import { assert } from "@hyperion/global";
-import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import type * as Types from "@hyperion/hyperion-util/src/Types";
 
 export interface FlowletDataType {
   // Technically anyone else can extend this interface for their expected data
