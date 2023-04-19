@@ -83,6 +83,18 @@ type JsxRuntimeModuleExports = {
 
 type ReactModuleExports = {
   createElement: typeof React.createElement;
+
+  useCallback: typeof React.useCallback;
+
+  useEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useEffect>) => ReturnType<typeof React.useEffect>;
+
+  useLayoutEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useEffect>) => ReturnType<typeof React.useEffect>;
+
+  useMemo: typeof React.useMemo;
+
+  useReducer: typeof React.useReducer;
+
+  forwardRef: typeof React.forwardRef;
 }
 
 export type IJsxRuntimeModuleExports = InterceptedModuleExports<JsxRuntimeModuleExports>;
@@ -120,7 +132,20 @@ export function interceptRuntime(moduleId: string, moduleExports: JsxRuntimeModu
 
 export function intercept(moduleId: string, moduleExports: ReactModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactModuleExports>): IReactModuleExports {
   if (!IReactModule) {
-    IReactModule = interceptModuleExports(moduleId, moduleExports, ['createElement'], failedExportsKeys);
+    IReactModule = interceptModuleExports(
+      moduleId,
+      moduleExports,
+      [
+        'createElement',
+        'useCallback',
+        'useEffect',
+        'useLayoutEffect',
+        'useMemo',
+        'useReducer',
+        'forwardRef',
+      ],
+      failedExportsKeys
+    );
   }
   return IReactModule;
 }
