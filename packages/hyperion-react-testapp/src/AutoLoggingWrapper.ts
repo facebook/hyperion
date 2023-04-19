@@ -4,12 +4,14 @@
 
 import { Channel } from "@hyperion/hook/src/Channel";
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
+import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 import React from 'react';
 import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import { FlowletManager } from "./FlowletManager";
+
 export let interceptionStatus = "disabled";
 
 export function init() {
@@ -26,6 +28,8 @@ export function init() {
   channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
 
   });
+
+  initFlowletTrackers(FlowletManager);
 
   const testCompValidator = (name: string) => !name.match(/(^Surface(Proxy)?)/);
 

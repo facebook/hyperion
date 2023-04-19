@@ -11,6 +11,7 @@ import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElementVisitor';
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
+import * as ALIReactFlowlet from "./ALIReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
@@ -58,7 +59,8 @@ export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<Surfac
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
-  IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
+  // IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
+  ALIReactFlowlet.InitOptions &
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
   {
@@ -176,7 +178,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
 export function init(options: InitOptions): ALSurfaceHOC {
   const { ReactModule, flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
 
-  IReactFlowlet.init<DataType, FlowletType, FlowletManagerType>(options); // extensionCtor
+  ALIReactFlowlet.init(options);
 
   setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
