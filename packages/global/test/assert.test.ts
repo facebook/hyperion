@@ -3,7 +3,7 @@
  */
 
 import "jest";
-import { assert } from "../src/assert";
+import { setAssertLoggerOptions, assert } from "../src/assert";
 
 describe("test assert", () => {
   test("test assert message", () => {
@@ -12,4 +12,13 @@ describe("test assert", () => {
     expect(_message).toBe("test message");
   });
 
+  test("change default assert logger", () => {
+    const fn = jest.fn();
+    setAssertLoggerOptions({
+      logger: { error: fn }
+    });
+    assert(false, "test message");
+    expect(fn).toBeCalledTimes(1);
+    expect(fn.mock.calls[0][0]).toBe("test message");
+  })
 })
