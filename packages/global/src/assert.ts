@@ -16,6 +16,11 @@ const devOptions: Required<Options> = {
   logger: console,
 }
 
+export function setAssertLoggerOptions(options: Options): void {
+  devOptions.getCallStack = options.getCallStack ?? devOptions.getCallStack;
+  devOptions.logger = options.logger;
+}
+
 export function assert(condition: boolean | undefined, message: string, options?: Options): asserts condition {
   if (!condition) {
     const callStackGetter = options?.getCallStack ?? devOptions.getCallStack;

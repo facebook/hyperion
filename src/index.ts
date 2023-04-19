@@ -7,6 +7,7 @@ export { Hook } from "@hyperion/hook/src/Hook";
 export { PipeableEmitter, Channel } from "@hyperion/hook/src/Channel";
 
 // hyperionCore
+export { setAssertLoggerOptions } from "@hyperion/global/src/assert";
 export { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
 export { interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 export { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";

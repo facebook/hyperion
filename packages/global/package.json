@@ -10,7 +10,7 @@
     "build": "tsc",
     "watch": "npm run build -- --watch",
     "start": "npm run watch",
-    "test": "jest"
+    "test": "npm run build & jest"
   },
   "workspaces": [
     "../devtools"
