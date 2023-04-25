@@ -9,6 +9,7 @@ import { ALFlowlet, ALFlowletManager } from './ALFlowletManager';
 
 export type ALFlowletEvent = Readonly<{
   flowlet: ALFlowlet;
+  alFlowlet?: ALFlowlet;
 }>;
 
 export type ALTimedEvent = Readonly<{

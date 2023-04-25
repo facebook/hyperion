@@ -9,7 +9,7 @@ import { FlowletManager } from "../src/FlowletManager";
 
 describe("test FlowletManager", () => {
   test("test FlowletManager methods and events", () => {
-    const manager = new FlowletManager();
+    const manager = new FlowletManager(Flowlet);
 
     const pushes: Flowlet[] = [];
     manager.onPush.add(flowlet => pushes.push(flowlet));
@@ -32,7 +32,7 @@ describe("test FlowletManager", () => {
   });
 
   test("test FlowletManager methods and events for async code", async () => {
-    const manager = new FlowletManager();
+    const manager = new FlowletManager(Flowlet);
 
     const pushes: Flowlet[] = [];
     manager.onPush.add(flowlet => pushes.push(flowlet));
@@ -61,7 +61,7 @@ describe("test FlowletManager", () => {
   });
 
   test("wrap/unwrap methods", () => {
-    const manager = new FlowletManager();
+    const manager = new FlowletManager(Flowlet);
 
     type Callback = () => void;
     const batchRunner = new class {
@@ -78,12 +78,12 @@ describe("test FlowletManager", () => {
 
     const f1 = manager.push(new Flowlet("f1"));
     batchRunner.schedule(() => {
-      expect(manager.top()).toStrictEqual(f1);
+      expect(manager.top()?.parent).toStrictEqual(f1);
     });
 
     const f2 = manager.push(f1.fork("f2"));
     batchRunner.schedule(() => {
-      expect(manager.top()).toStrictEqual(f2);
+      expect(manager.top()?.parent).toStrictEqual(f2);
     });
 
     manager.pop(f2);
@@ -94,7 +94,7 @@ describe("test FlowletManager", () => {
   });
 
   test("wrap callback with exception", () => {
-    const manager = new FlowletManager();
+    const manager = new FlowletManager(Flowlet);
 
     type Callback = () => void;
     const batchRunner = new class {
@@ -112,7 +112,7 @@ describe("test FlowletManager", () => {
     const f1 = manager.push(new Flowlet("f1"));
     const ExceptionText = "Test Exception";
     const func = () => {
-      expect(manager.top()).toStrictEqual(f1);
+      expect(manager.top() === f1 || manager.top()?.parent === f1).toBe(true);
       throw ExceptionText;
     }
     const wrapped = manager.wrap(func, 'test error');
@@ -132,7 +132,7 @@ describe("test FlowletManager", () => {
     expect(manager.top()).toStrictEqual(f1);
     const f2 = new Flowlet("f2");
     const f2_child = manager.push(f2, "reason1");
-    expect(f2_child.parent === f2).toBe(true);
+    expect(f2_child.parent).toStrictEqual(f2);
   });
 
 
@@ -144,13 +144,13 @@ describe("test FlowletManager", () => {
     const manager = new TestFlowletManager(TestFlowlet);
 
     const f1 = new TestFlowlet("f1");
-    expect(f1 instanceof TestFlowlet).toBe(true);
+    expect(f1).toBeInstanceOf(TestFlowlet);
 
     const f2 = manager.flowletCtor ? new manager.flowletCtor("f2") : null;
-    expect(f2 instanceof TestFlowlet).toBe(true);
+    expect(f2).toBeInstanceOf(TestFlowlet);
 
     const f3 = manager.push(f1, "reason1");
-    expect(f3 instanceof TestFlowlet).toBe(true);
+    expect(f3).toBeInstanceOf(TestFlowlet);
   });
 
 

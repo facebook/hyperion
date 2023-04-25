@@ -12,7 +12,7 @@ import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsol
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import { ALFlowletEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 
-type ALNetworkEvent = ALTimedEvent & Readonly<{
+type ALNetworkEvent = ALTimedEvent & Omit<ALFlowletEvent, "flowlet"> & Readonly<{
   event: "network";
   initiatorType: "fetch" | "xmlhttprequest"; // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/initiatorType
   flowlet: ALFlowletEvent['flowlet'] | null;
@@ -152,11 +152,13 @@ function captureFetch(options: InitOptions): void {
     }
 
     if (!options.requestFilter || options.requestFilter(request)) {
+      const flowlet = flowletManager.top();
       channel.emit("al_network_request", ephemeralRequestEvent = {
         initiatorType: "fetch",
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
-        flowlet: flowletManager.top(),
+        flowlet,
+        alFlowlet: flowlet?.data.alFlowlet,
         ...request,
       });
     } else {
@@ -177,11 +179,13 @@ function captureFetch(options: InitOptions): void {
       value.then(response => {
         const requestEvent = intercept.getVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME);
         assert(requestEvent != null, `Unexpected situation! Request info missing from fetch promise object`);
+        const flowlet = requestEvent?.flowlet; // Reuse the same flowlet as request, since by now things have changed.
         channel.emit('al_network_response', {
           initiatorType: "fetch",
           event: "network",
           eventTimestamp: performanceAbsoluteNow(),
-          flowlet: requestEvent?.flowlet, // Reuse the same flowlet as request, since by now things have changed.
+          flowlet,
+          alflowlet: flowlet?.data.alFlowlet,
           requestEvent,
           response,
         });
@@ -231,6 +235,7 @@ function captureXHR(options: InitOptions): void {
 
 
     const flowlet = flowletManager.top(); // Before calling requestFilter and losing current top flowlet
+    const alFlowlet = flowlet?.data.alFlowlet;
     if (!options.requestFilter || options.requestFilter(request)) {
       let requestEvent: ALNetworkResponseEvent['requestEvent'];
 
@@ -239,6 +244,7 @@ function captureXHR(options: InitOptions): void {
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
         flowlet,
+        alFlowlet,
         ...request // assert already ensures request is not undefined
       });
 
@@ -252,6 +258,7 @@ function captureXHR(options: InitOptions): void {
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
             flowlet, // should carry request flowlet forward
+            alFlowlet,
             requestEvent,
             response: this,
           })

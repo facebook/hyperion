@@ -76,6 +76,8 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       return listener;
     }
 
+    const flowlet = new this.flowletCtor(apiName, currentFLowlet);
+
     const funcInterceptor = interceptEventListener(listener);
     if (funcInterceptor && !funcInterceptor.getData(IS_FLOWLET_SETUP_PROP_NAME)) {
       funcInterceptor.setData(IS_FLOWLET_SETUP_PROP_NAME, true);
@@ -88,13 +90,16 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       const flowletManager = this;
       funcInterceptor.setCustom(<any>function (this: any) {
         const handler: Function = funcInterceptor.getOriginal();
-        if (flowletManager.top() === currentFLowlet) {
+        if (flowletManager.top() === flowlet) {
+          /**
+           * We would mostly expect the currentFLowlet to be on the top most of the time
+           * but we do this check here just in case we can save extra push/pop
+           */
           return handler.apply(this, <any>arguments);
         }
         let res;
-        let flowlet; // using this extra variable to enable .push to change the value if needed
         try {
-          flowlet = flowletManager.push(currentFLowlet, apiName);
+          flowletManager.push(flowlet); // let's not pass apiName to avoid creating a new flowlet each time. 
           res = handler.apply(this, <any>arguments);
         } finally {
           flowletManager.pop(flowlet, apiName);

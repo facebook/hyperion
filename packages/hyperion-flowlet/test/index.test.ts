@@ -18,9 +18,12 @@ describe("test flow of flowlets", () => {
     }
   });
 
+  function expectTopToForkFrom(manager: FlowletManager, flowlet: Flowlet) {
+    expect(manager.top() === flowlet || manager.top()?.parent === flowlet).toBe(true);
+  }
 
   test("test FlowletManager methods and events", async () => {
-    const manager = new FlowletManager();
+    const manager = new FlowletManager(Flowlet);
     const main = manager.push(new Flowlet("main"));
     const counter = new AsyncCounter(0);
 
@@ -31,7 +34,7 @@ describe("test flow of flowlets", () => {
         if (counter.getCount() > 3) {
           return; // enough flow creation!
         }
-        expect(manager.top()).toStrictEqual(main);
+        expectTopToForkFrom(manager, main);
         const currFlow = manager.push(main.fork("flow_" + counter.countUp().getCount())); // start a new flow
         {
           const div = window.document.createElement("div");
@@ -40,11 +43,11 @@ describe("test flow of flowlets", () => {
 
           function createFlow(flowName: string) {
             return (ev: MouseEvent) => {
-              expect(manager.top()).toStrictEqual(currFlow);
+              expectTopToForkFrom(manager, currFlow);
               const clickFlow = manager.push(currFlow.fork(flowName));
               {
                 Promise.resolve().then(() => { //async step 2
-                  expect(manager.top()).toStrictEqual(clickFlow);
+                  expectTopToForkFrom(manager, clickFlow);
                   counter.countDown();
                 });
               }
@@ -76,7 +79,7 @@ describe("test flow of flowlets", () => {
   });
 
   test("add/remove listeners", async () => {
-    const manager = new FlowletManager();
+    const manager = new FlowletManager(Flowlet);
     const main = manager.push(new Flowlet("main"));
     initFlowletTrackers(manager);
 
