@@ -2,22 +2,27 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Props, Surface } from "./Surface";
 
-export default function (/* props: Props */) {
-
+function ResultViewer(props: { text: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  function loadText(text: string) {
+  useEffect(() => {
     if (ref.current) {
-      ref.current.innerHTML += text
+      ref.current.innerHTML += props.text;
     }
-  }
+  });
+
+  return Surface({ surface: 'result' })(
+    <div ref={ref} style={{ width: "100px" }}></div>
+  );
+}
+
+export default function (/* props: Props */) {
+  const [text, setText] = useState<string>();
 
   const clear = useCallback(() => {
-    if (ref.current) {
-      ref.current.innerHTML = "Click on load button"
-    };
+    setText(void 0)
   }, []);
 
   const links = [
@@ -28,19 +33,19 @@ export default function (/* props: Props */) {
   ];
 
   const onCallbackFetch = useCallback(() => {
-    loadText("Loading via fetch ...");
+    setText("Loading via fetch ...");
     for (const link of links) {
-      fetch(link).then(response => response.text()).then(loadText);
+      fetch(link).then(response => response.text()).then(setText);
     }
   }, []);
 
   const onCallbackXHR = useCallback(() => {
-    loadText("Loading via xhr ...");
+    setText("Loading via xhr ...");
     for (const link of links) {
       const xhr = new XMLHttpRequest();
       xhr.open("GET", link);
       xhr.addEventListener("loadend", ev => {
-        loadText(xhr.responseText);
+        setText(xhr.responseText);
       });
       xhr.send();
     }
@@ -55,9 +60,7 @@ export default function (/* props: Props */) {
             <button onClick={onCallbackFetch}>Load image (fetch)</button><br />
             <button onClick={onCallbackXHR}>Load image (xhr)</button>
           </td>
-          <td>
-            <div ref={ref} style={{ width: "100px" }} ></div>
-          </td>
+          <td>{text ? <ResultViewer text={text}></ResultViewer> : " Click on the load button"}</td>
         </tr>
       </tbody>
     </table>

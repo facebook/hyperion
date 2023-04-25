@@ -8,7 +8,7 @@ import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsol
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import ALElementInfo from './ALElementInfo';
-import { ALFlowlet } from "./ALFlowletManager";
+import { ALFlowlet, ALFlowletManagerInstance } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
@@ -177,6 +177,7 @@ export function publish(options: InitOptions): void {
         flowlet = flowlet.fork(`ts${captureTimestamp}`);
         flowlet = flowletManager.push(flowlet);
         flowletMap.set(eventName, flowlet);
+        ALFlowletManagerInstance.push(flowlet);
       }
       let reactComponentData: ReactComponentData | null = null;
       if (element && cacheElementReactInfo) {
@@ -189,6 +190,7 @@ export function publish(options: InitOptions): void {
         element,
         captureTimestamp,
         flowlet,
+        alFlowlet: flowlet.data.alFlowlet,
         isTrusted: event.isTrusted,
         surface,
         elementName: element ? getElementName(element) : null,
@@ -250,6 +252,7 @@ export function publish(options: InitOptions): void {
         if (shouldPushPopFlowlet(event) && (flowlet = flowletMap.get(eventName)) != null) {
           flowletManager.pop(flowlet);
           flowletMap.delete(eventName);
+          ALFlowletManagerInstance.pop(flowlet);
         }
       },
       false, // useCapture
@@ -273,6 +276,7 @@ export function publish(options: InitOptions): void {
       eventTimestamp: captureTimestamp,
       autoLoggingID,
       flowlet,
+      alFlowlet: flowlet.data.alFlowlet,
       isTrusted,
       reactComponentName,
       reactComponentStack,
@@ -289,4 +293,20 @@ export function publish(options: InitOptions): void {
   }
 
   newEventsToPublish.forEach(event => PUBLISHED_EVENTS.add(event.eventName));
+
+  /**
+   * We know the the flowlet.data is going to carry the async flow data based
+   * on where each function was created.
+   * We want to make sure that flow knows what is the actual corresponding
+   * alflowlet which corresponds to execution code at runtime.
+   * Since as of now we only start a new flowlet when there is a UI event, we
+   * add the following code to say whenever a new flowlet is pushed (a.k.a a new async 
+   * context is started), we ensure that knows which alflowlet is responsible for it. 
+   */
+  flowletManager.onPush.add((flowlet, _reason) => {
+    const alFlowlet = ALFlowletManagerInstance.top();
+    if (alFlowlet && flowlet.data.alFlowlet !== alFlowlet) {
+      flowlet.data.alFlowlet = alFlowlet;
+    }
+  })
 }
