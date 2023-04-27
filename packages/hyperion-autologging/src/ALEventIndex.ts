@@ -4,8 +4,14 @@
 
 'use strict';
 
-// event index
-let _eventIndex = -1;
+import { SessionPersistentData } from "@hyperion/hyperion-util/src/SessionPersistentData";
+
+const _eventIndex = new SessionPersistentData<number>(
+  "alcei",
+  () => -1,
+  v => '' + v,
+  v => parseInt(v) || -1
+);
 
 /**
  * getEventIndex:
@@ -16,8 +22,7 @@ let _eventIndex = -1;
  * it must be consumed
  */
 export function getNextEventIndex(): number {
-  _eventIndex++;
-  return _eventIndex;
+  return _eventIndex.setValue(_eventIndex.getValue() + 1);
 }
 
 /**
@@ -25,5 +30,5 @@ export function getNextEventIndex(): number {
  * Returns the event index without incrementing, this is useful for linking to AutoLogging events externally
  */
 export function getLastUsedEventIndex(): number {
-  return _eventIndex;
+  return _eventIndex.getValue();
 }
