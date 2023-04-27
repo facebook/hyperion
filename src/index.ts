@@ -21,6 +21,11 @@ export { trackElementsWithAttributes } from "@hyperion/hyperion-util/src/trackEl
 // hyperionSyncMutationObserver
 export * as SyncMutationObserver from "@hyperion/hyperion-util/src/SyncMutationObserver";
 
+// hyperionUtil
+export { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
+export { SessionPersistentData } from "@hyperion/hyperion-util/src/SessionPersistentData";
+export { ClientSessionID } from "@hyperion/hyperion-util/src/ClientSessionID";
+
 // hyperionFlowletCore
 export { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 export { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";

@@ -11,6 +11,7 @@ import React from 'react';
 import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import { FlowletManager } from "./FlowletManager";
+import { ClientSessionID } from "@hyperion/hyperion-util/src/ClientSessionID";
 
 export let interceptionStatus = "disabled";
 
@@ -32,6 +33,8 @@ export function init() {
   initFlowletTrackers(FlowletManager);
 
   const testCompValidator = (name: string) => !name.match(/(^Surface(Proxy)?)/);
+
+  console.log('csid:', ClientSessionID);
 
   AutoLogging.init({
     flowletManager: FlowletManager,

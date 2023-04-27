@@ -30,6 +30,9 @@ export default defineConfig({
       "hyperionSyncMutationObserver": [
         "@hyperion/hyperion-util/src/SyncMutationObserver",
       ],
+      "hyperionUtil": [
+        "@hyperion/hyperion-util/src/ClientSessionID",
+      ],
       "hyperionFlowletCore": [
         "@hyperion/hyperion-flowlet/src/Flowlet",
         "@hyperion/hyperion-flowlet/src/FlowletManager",
