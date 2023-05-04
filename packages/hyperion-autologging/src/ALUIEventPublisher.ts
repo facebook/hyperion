@@ -302,11 +302,31 @@ export function publish(options: InitOptions): void {
    * Since as of now we only start a new flowlet when there is a UI event, we
    * add the following code to say whenever a new flowlet is pushed (a.k.a a new async 
    * context is started), we ensure that knows which alflowlet is responsible for it. 
+   * 
+   * To ensure this info carries forward, we first try the ALFlowletManagerInstance stack
+   * and if we could not any active UI flowlet, we then try to copy from the top of the current
+   * stack.
+   * This mechanism works because of how various 'creation time flowlets' are pushed/popped on
+   * the stack.
    */
   flowletManager.onPush.add((flowlet, _reason) => {
-    const alFlowlet = ALFlowletManagerInstance.top();
+    const alFlowlet = ALFlowletManagerInstance.top() ?? flowletManager.top()?.data?.alFlowlet;
     if (alFlowlet && flowlet.data.alFlowlet !== alFlowlet) {
       flowlet.data.alFlowlet = alFlowlet;
+      if (flowlet.name === "useState" && flowlet.parent) {
+        /**
+         * We know that useState will trigger an update on the corresponding component
+         * The parent of the useState's flowlet is 'usually' a surface flowlet.
+         * That because useState is called within a render function, and render function's
+         * flowlet will be picked up from the surface context.
+         * If we update the surface's flowlet, then anything that mount/unmount under that
+         * surface will pickup the correct flowlet.
+         * Another alternative is to mark the surface's flowlet explicitily and here
+         * look for that marking and updat the flowlet.
+         * 
+         */
+        flowlet.parent.data.alFlowlet = alFlowlet;
+      }
     }
   })
 }

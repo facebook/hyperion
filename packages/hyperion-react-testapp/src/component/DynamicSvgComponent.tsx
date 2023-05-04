@@ -33,14 +33,14 @@ export default function (/* props: Props */) {
   ];
 
   const onCallbackFetch = useCallback(() => {
-    setText("Loading via fetch ...");
+    // setText("Loading via fetch ..."); // Note if call these now, the corresponding component will be mounted. We want to mount alap to test the alflowlet flow
     for (const link of links) {
       fetch(link).then(response => response.text()).then(setText);
     }
   }, []);
 
   const onCallbackXHR = useCallback(() => {
-    setText("Loading via xhr ...");
+    // setText("Loading via xhr ..."); // Note if call these now, the corresponding component will be mounted. We want to mount alap to test the alflowlet flow
     for (const link of links) {
       const xhr = new XMLHttpRequest();
       xhr.open("GET", link);

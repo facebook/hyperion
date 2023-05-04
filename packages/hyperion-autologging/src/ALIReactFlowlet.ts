@@ -41,7 +41,11 @@ export function init(options: InitOptions) {
       args[0] = flowletManager.wrap(args[0], fi.name);
       return args;
     });
-  })
+  });
+  IReactModule.useState.onValueMapperAdd(value => {
+    value[1] = flowletManager.wrap(value[1], IReactModule.useState.name);
+    return value;
+  });
 
   /**
  * The following interceptor methods (onArgsObserver/onValueObserver) run immediately 

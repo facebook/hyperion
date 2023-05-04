@@ -10,12 +10,11 @@ import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import { ALFlowletEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
+import { ALOptionalFlowletEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 
-type ALNetworkEvent = ALTimedEvent & Omit<ALFlowletEvent, "flowlet"> & Readonly<{
+type ALNetworkEvent = ALTimedEvent & ALOptionalFlowletEvent & Readonly<{
   event: "network";
   initiatorType: "fetch" | "xmlhttprequest"; // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/initiatorType
-  flowlet: ALFlowletEvent['flowlet'] | null;
 }>;
 
 
