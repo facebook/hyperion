@@ -84,6 +84,8 @@ type JsxRuntimeModuleExports = {
 type ReactModuleExports = {
   createElement: typeof React.createElement;
 
+  forwardRef: typeof React.forwardRef;
+
   useCallback: typeof React.useCallback;
 
   useEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useEffect>) => ReturnType<typeof React.useEffect>;
@@ -94,7 +96,7 @@ type ReactModuleExports = {
 
   useReducer: typeof React.useReducer;
 
-  forwardRef: typeof React.forwardRef;
+  useState: typeof React.useState;
 }
 
 export type IJsxRuntimeModuleExports = InterceptedModuleExports<JsxRuntimeModuleExports>;
@@ -137,12 +139,13 @@ export function intercept(moduleId: string, moduleExports: ReactModuleExports, f
       moduleExports,
       [
         'createElement',
+        'forwardRef',
         'useCallback',
         'useEffect',
         'useLayoutEffect',
         'useMemo',
         'useReducer',
-        'forwardRef',
+        'useState'
       ],
       failedExportsKeys
     );

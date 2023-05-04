@@ -12,6 +12,10 @@ export type ALFlowletEvent = Readonly<{
   alFlowlet?: ALFlowlet;
 }>;
 
+export type ALOptionalFlowletEvent = Omit<ALFlowletEvent, 'flowlet'> & Readonly<{
+  flowlet: ALFlowlet | null;
+}>;
+
 export type ALTimedEvent = Readonly<{
   eventTimestamp: number,
 }>;
