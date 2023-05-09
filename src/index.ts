@@ -13,6 +13,7 @@ export { interceptFunction } from "@hyperion/hyperion-core/src/FunctionIntercept
 export { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 export { interceptConstructor, interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
 export * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
+export * as ICSSStyleDeclaration from "@hyperion/hyperion-dom/src/ICSSStyleDeclaration";
 export * as IRequire from "@hyperion/hyperion-core/src/IRequire";
 
 // hyperionTrackElementsWithAttributes
