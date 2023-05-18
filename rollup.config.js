@@ -18,13 +18,18 @@ export default defineConfig({
         "@hyperion/hyperion-core/src/AttributeInterceptor",
         "@hyperion/hyperion-core/src/intercept",
         "@hyperion/hyperion-core/src/IRequire",
+      ],
+      "hyperionDOM": [
+        "@hyperion/hyperion-dom/src/IEventTarget",
         "@hyperion/hyperion-dom/src/INode",
         "@hyperion/hyperion-dom/src/IElement_",
+        "@hyperion/hyperion-dom/src/IElement",
+        "@hyperion/hyperion-dom/src/IHTMLElement",
         "@hyperion/hyperion-dom/src/IWindow",
         "@hyperion/hyperion-dom/src/IXMLHttpRequest",
+        "@hyperion/hyperion-dom/src/ICSSStyleDeclaration",
       ],
       "hyperionTrackElementsWithAttributes": [
-        "@hyperion/hyperion-dom/src/IElement",
         "@hyperion/hyperion-util/src/trackElementsWithAttributes",
       ],
       "hyperionSyncMutationObserver": [
