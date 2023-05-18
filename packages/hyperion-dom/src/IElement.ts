@@ -47,4 +47,3 @@ export const toggleAttribute = interceptMethod('toggleAttribute', IElementtProto
 
 export const id = interceptElementAttribute("id", IElementtPrototype);
 export const innerHTML = interceptAttribute("innerHTML", IElementtPrototype);
-export const style = interceptAttribute("style", IElementtPrototype);
