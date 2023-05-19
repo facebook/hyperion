@@ -185,13 +185,18 @@ export function init(options: InitOptions): void {
       /**
        * This is a react component, and can be a class component constructor
        * or functional component.
-       * In this case, we add the flowlet to the props and then
-       * when various lifecycle functions are called we can read the flowlet.
        *
        * Note that react itself has no types, and flow compiler has some built-in
        * hard coded types just to be able to handle react types.
        * (see all the React$* types in react.js)
        * So, sadly the code bellow effectively cannot rely on types much.
+       * 
+       * We need to check for two conditions:
+       * 1- the component is a class constructor and it inherits from ReactModule.Component
+       *    or something that has a .render() function. 
+       * 2- the component is a normal function, i.e. the .prototype is a plain object with just one .constructor in it.
+         *  That means the __proto__ of this object is an empty object (i.e. the __proto__ of that object is null)
+         *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/prototype#:~:text=prototype%20property%2C%20by%20default
        */
 
       // $FlowIgnore[prop-missing]
@@ -199,7 +204,8 @@ export function init(options: InitOptions): void {
 
       if (
         classComponentParentClass instanceof ReactModule.Component ||
-        typeof classComponentParentClass?.render === 'function' // possibly created via React.createClass
+        typeof classComponentParentClass?.render === 'function' || // possibly created via React.createClass
+        Object.getPrototypeOf(Object.getPrototypeOf(classComponentParentClass)) // not a plane function, may be with some other lifecycle methods. 
       ) {
         // $FlowIgnore[incompatible-exact]
         // $FlowIgnore[incompatible-type]
