@@ -184,7 +184,7 @@ function captureFetch(options: InitOptions): void {
           event: "network",
           eventTimestamp: performanceAbsoluteNow(),
           flowlet,
-          alflowlet: flowlet?.data.alFlowlet,
+          alFlowlet: flowlet?.data.alFlowlet,
           requestEvent,
           response,
         });

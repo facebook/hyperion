@@ -9,11 +9,11 @@ import { ALFlowlet, ALFlowletManager } from './ALFlowletManager';
 
 export type ALFlowletEvent = Readonly<{
   flowlet: ALFlowlet;
-  alFlowlet?: ALFlowlet;
+  alFlowlet: ALFlowlet | null | undefined; // we want to ensure the value is always passed, even with a null value
 }>;
 
 export type ALOptionalFlowletEvent = Omit<ALFlowletEvent, 'flowlet'> & Readonly<{
-  flowlet: ALFlowlet | null;
+  flowlet: ALFlowletEvent['flowlet'] | null;
 }>;
 
 export type ALTimedEvent = Readonly<{
