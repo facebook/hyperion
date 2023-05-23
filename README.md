@@ -1,7 +1,7 @@
 # hyperion
 
 The goal of this project to automatically add more observability and control to the behavior of JavaScript objects and classes.
-This will in effect virualize the WebApplication.
+This will in effect virtualize the WebApplication.
 The main focus is to virtualize and intercept all browser API.
 
 
