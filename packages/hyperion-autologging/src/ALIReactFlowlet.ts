@@ -4,17 +4,21 @@
 
 import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 
+import type * as React from 'react';
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 
 import { assert } from "@hyperion/global";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
-import { ALSurfaceContext, useALSurfaceContext } from "./ALSurfaceContext";
+import { ALSurfaceContext } from "./ALSurfaceContext";
 
 export type InitOptions<> = Types.Options<
   IReactComponent.InitOptions &
   {
+    ReactModule: {
+      useRef: <T>(initialValue: T) => React.MutableRefObject<T>;
+    }
     IReactModule: IReact.IReactModuleExports;
     flowletManager: ALFlowletManager;
     disableReactFlowlet?: boolean;
@@ -29,7 +33,7 @@ export function init(options: InitOptions) {
 
   IReactComponent.init(options);
 
-  const { flowletManager, IReactModule } = options;
+  const { flowletManager, IReactModule, ReactModule } = options;
 
   [
     IReactModule.useCallback,
@@ -57,9 +61,44 @@ export function init(options: InitOptions) {
 
   const IS_FLOWLET_SETUP_PROP = 'isFlowletSetup';
 
-  type ComponentWithFlowlet = React.Component<any> & {
+  type FlowletRef = {
     _flowlet?: ALFlowlet | null | undefined
   };
+  type ComponentWithFlowlet = React.Component<any> & FlowletRef;
+
+  function assertFlowlet(activeFlowlet: ALFlowlet) {
+    const ctx = (ALSurfaceContext as any)._currentValue; // Unofficial internal value
+    assert(activeFlowlet.name === ctx?.flowlet?.name, "Unexpected change in flowlet");
+  }
+  function updateFlowletRef(ref: FlowletRef) {
+    if (__DEV__) {
+      assert(ref != null, "Expected a reference to add the flowlet to");
+    }
+    /**
+      * We cannot call hooks inside of the class components.
+      * Also, a class component can only have a single context assigned to it.
+      * So, we use this internal api/hack to get the value.
+      * This is ok, because this is a best effort and anyways most people are
+      * migrating away from class components.
+      * 
+      * In react 18, for functional components, calling useContext can sometimes
+      * go into infinite loop. So, we use internal call instead.
+      */
+    let activeFlowlet = ref._flowlet;
+    if (!activeFlowlet) {
+      // const ctx = useALSurfaceContext();
+      const ctx = (ALSurfaceContext as any)._currentValue; // Unofficial internal value
+      ref._flowlet = activeFlowlet = ctx?.flowlet;
+    } else {
+      if (__DEV__) {
+        assertFlowlet(activeFlowlet);
+      }
+    }
+    if (activeFlowlet) {
+      flowletManager.push(activeFlowlet);
+    }
+    return activeFlowlet;
+  }
 
   IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
     const methods = [
@@ -83,19 +122,7 @@ export function init(options: InitOptions) {
 
       if (method === shadowComponent.render) {
         method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
-          /**
-              * We cannot call hooks inside of the class components.
-              * Also, a class component can only have a single context assigned to it.
-              * So, we use this internal api/hack to get the value.
-              * This is ok, because this is a best effort and anyways most people are
-              * migrating away from class components.
-              */
-          const ctx = (ALSurfaceContext as any)._currentValue; // Unofficial internal value
-          const activeFlowlet = ctx?.flowlet;
-          if (activeFlowlet) {
-            flowletManager.push(activeFlowlet);
-            this._flowlet = activeFlowlet;
-          }
+          updateFlowletRef(this);
         });
       } else {
         method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
@@ -122,19 +149,16 @@ export function init(options: InitOptions) {
 
         let activeFlowlet: ALFlowlet | undefined | null;
         fi.onArgsObserverAdd(_props => {
-          const ctx = useALSurfaceContext();
-          activeFlowlet = ctx.flowlet;
-          if (activeFlowlet) {
-            flowletManager.push(activeFlowlet)
+          const ref = ReactModule.useRef<FlowletRef | null>(null);
+          if (!ref.current) {
+            ref.current = {};
           }
+          activeFlowlet = updateFlowletRef(ref.current);
         });
         fi.onValueObserverAdd(() => {
           if (activeFlowlet) {
             if (__DEV__) {
-              assert(
-                activeFlowlet === useALSurfaceContext().flowlet,
-                "Invalid situation! The active flowlet changed!"
-              );
+              assertFlowlet(activeFlowlet);
             }
             flowletManager.pop(activeFlowlet);
           }
