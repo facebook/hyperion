@@ -237,7 +237,7 @@ export function publish(options: InitOptions): void {
      * If any of the actual event handlers call stopPropagation, we know that
      * our bubble handler will not be called, so we trigger it rightaway
      */
-    IEvent.stopPropagation.onArgsObserverAdd(function (this) {
+    IEvent.stopPropagation.onBeforeCallArgsObserverAdd(function (this) {
       if (lastUIEvent != null && lastUIEvent.data.domEvent === this) {
         lastUIEvent.data.metadata.propagation_was_stopped = "true";
         lastUIEvent.timedEmitter.run();

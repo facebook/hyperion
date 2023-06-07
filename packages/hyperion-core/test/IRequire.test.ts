@@ -13,7 +13,7 @@ import * as TestModuleDefaultExports from "./IRequireTestModuleDefault";
 describe("Test interception of module exports", () => {
   test('Intercept normal module', () => {
     const IModule = IRequire.interceptModuleExports("IRequireTestModule", TestModule, ["foo"], []);
-    const handler = IModule.foo.onArgsObserverAdd(jest.fn(i => console.log(i)));
+    const handler = IModule.foo.onBeforeCallArgsObserverAdd(jest.fn(i => console.log(i)));
     TestModule.foo(10);
     expect(handler).toBeCalledTimes(1);
     expect(handler).toBeCalledWith(10);
@@ -22,7 +22,7 @@ describe("Test interception of module exports", () => {
   test('Intercept module with defaults', () => {
     const IModule = IRequire.interceptModuleExports("IRequireTestModuleDefaultExports", TestModuleDefaultExports, ["default"], []);
 
-    const handler = IModule.default.onArgsObserverAdd(jest.fn(i => console.log(i)));
+    const handler = IModule.default.onBeforeCallArgsObserverAdd(jest.fn(i => console.log(i)));
 
     TestModuleDefaultExports.default(20);
     expect(handler).toBeCalledTimes(1);

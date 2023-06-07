@@ -14,17 +14,17 @@ describe('test Node interception', () => {
       result = [this, value];
     });
 
-    INode.insertBefore.onArgsObserverAdd(observer);
-    INode.removeChild.onArgsObserverAdd(observer);
-    INode.replaceChild.onArgsObserverAdd(observer);
+    INode.insertBefore.onBeforeCallArgsObserverAdd(observer);
+    INode.removeChild.onBeforeCallArgsObserverAdd(observer);
+    INode.replaceChild.onBeforeCallArgsObserverAdd(observer);
 
     const elem = window.document.createElement("p");
     const child1 = window.document.createElement("a");
     const child2 = window.document.createElement("b");
     let testCount = 0;
 
-    INode.appendChild.onArgsObserverRemove(
-      INode.appendChild.onArgsObserverAdd(function (this, node) {
+    INode.appendChild.onBeforeCallArgsObserverRemove(
+      INode.appendChild.onBeforeCallArgsObserverAdd(function (this, node) {
         expect([this, node]).toStrictEqual([elem, child1]);
         testCount++;
       })
@@ -32,20 +32,20 @@ describe('test Node interception', () => {
     elem.appendChild(child1);
     elem.appendChild(child2);
 
-    INode.removeChild.onArgsObserverAdd(function (this, node) {
+    INode.removeChild.onBeforeCallArgsObserverAdd(function (this, node) {
       expect([this, node]).toStrictEqual([elem, child2]);
       testCount++;
     });
     elem.removeChild(child2);
 
-    INode.insertBefore.onArgsObserverAdd(function (this, newNode, referenceNode) {
+    INode.insertBefore.onBeforeCallArgsObserverAdd(function (this, newNode, referenceNode) {
       expect([this, newNode, referenceNode]).toStrictEqual([elem, child2, child1]);
       testCount++;
     });
     elem.insertBefore(child2, child1);
     elem.removeChild(child2);
 
-    INode.replaceChild.onArgsObserverAdd(function (this, newChild, oldChild) {
+    INode.replaceChild.onBeforeCallArgsObserverAdd(function (this, newChild, oldChild) {
       expect([this, newChild, oldChild]).toStrictEqual([elem, child2, child1]);
       testCount++;
     });

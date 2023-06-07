@@ -151,18 +151,18 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     IXMLHttpRequest.readystatechange,
     IXMLHttpRequest.ontimeout,
   ]) {
-    eventHandler.setter.onArgsMapperAdd(function (this, args: [any]) {
+    eventHandler.setter.onBeforeCallArgsMapperAdd(function (this, args: [any]) {
       const func = args[0];
       args[0] = flowletManager.wrap(func, eventHandler.name, void 0, getTriggerFlowletFromEvent);
       return args;
     });
   }
 
-  IEventTarget.addEventListener.onArgsMapperAdd(args => {
+  IEventTarget.addEventListener.onBeforeCallArgsMapperAdd(args => {
     args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}(${args[0]})`, void 0, getTriggerFlowletFromEvent);
     return args;
   });
-  IEventTarget.removeEventListener.onArgsMapperAdd(args => {
+  IEventTarget.removeEventListener.onBeforeCallArgsMapperAdd(args => {
     args[1] = flowletManager.getWrappedOrOriginal(args[1]);
     return args;
   });
@@ -171,7 +171,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     IGlobalThis.setTimeout,
     IGlobalThis.setInterval
   ]) {
-    fi.onArgsMapperAdd(args => {
+    fi.onBeforeCallArgsMapperAdd(args => {
       let handler = args[0];
       if (typeof handler === "string") {
         handler = new Function(handler);
@@ -186,7 +186,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     IPromise.resolve,
     IPromise.reject
   ]) {
-    fi.onValueObserverAdd(value => {
+    fi.onAfterReturnValueObserverAdd(value => {
       if (!getTriggerFlowlet(value)) {
         const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
         if (triggerFlowlet) {
@@ -202,7 +202,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     IPromise.any,
     IPromise.race
   ]) {
-    fi.onArgsAndValueMapperAdd(args => {
+    fi.onBeforeCallArgsAndAfterReturnValueMapperAdd(args => {
       const iterable = args[0];
       return value => {
         const topTriggerFlowlet = getTriggerFlowlet(value) ?? flowletManager.top()?.data.triggerFlowlet;
@@ -232,7 +232,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
   }
 
 
-  IPromise.then.onArgsAndValueMapperAdd(function (this, args) {
+  IPromise.then.onBeforeCallArgsAndAfterReturnValueMapperAdd(function (this, args) {
     const triggerFlowlet = getTriggerFlowlet(this);
     args[0] = flowletManager.wrap(args[0], IPromise.then.name, void 0, () => triggerFlowlet);
     args[1] = flowletManager.wrap(args[1], IPromise.then.name, void 0, () => triggerFlowlet);
@@ -247,7 +247,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     };
   });
 
-  IPromise.Catch.onArgsAndValueMapperAdd(function (this, args) {
+  IPromise.Catch.onBeforeCallArgsAndAfterReturnValueMapperAdd(function (this, args) {
     const triggerFlowlet = getTriggerFlowlet(this);
     args[0] = flowletManager.wrap(args[0], IPromise.then.name, void 0, () => triggerFlowlet);
     return value => {
@@ -260,5 +260,4 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
       return value;
     };
   });
-
 }

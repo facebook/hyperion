@@ -85,7 +85,7 @@ function ignoreInteractiveElement(node: HTMLElement) {
 const TrackedEvents = new Set<string>();
 
 let installHandlers = () => {
-  IEventTarget.addEventListener.onArgsObserverAdd(function (
+  IEventTarget.addEventListener.onBeforeCallArgsObserverAdd(function (
     this: EventTarget,
     event,
     _listener,
@@ -98,7 +98,7 @@ let installHandlers = () => {
     }
   });
 
-  IEventTarget.removeEventListener.onArgsObserverAdd(function (
+  IEventTarget.removeEventListener.onBeforeCallArgsObserverAdd(function (
     this: EventTarget,
     event,
     _listener,

@@ -12,7 +12,7 @@ function wrapHandler(handler: Function | string, observer: jest.Mock<any, any>) 
     handler = new Function(handler);
   };
   const fi = interceptFunction(handler);
-  fi.onArgsObserverAdd(observer);
+  fi.onBeforeCallArgsObserverAdd(observer);
   return fi.interceptor;
 }
 
@@ -20,7 +20,7 @@ describe('test Global Scope interception', () => {
 
   test('test setTImeout', async () => {
     const observer = jest.fn();
-    IGlobalThis.setTimeout.onArgsMapperAdd(args => {
+    IGlobalThis.setTimeout.onBeforeCallArgsMapperAdd(args => {
       args[0] = wrapHandler(args[0], observer);
       return args;
     });
@@ -40,7 +40,7 @@ describe('test Global Scope interception', () => {
 
   test('test setInterval', async () => {
     const observer = jest.fn();
-    IGlobalThis.setInterval.onArgsMapperAdd(args => {
+    IGlobalThis.setInterval.onBeforeCallArgsMapperAdd(args => {
       args[0] = wrapHandler(args[0], observer);
       return args;
     });

@@ -19,9 +19,9 @@ describe('test element style interception', () => {
       console.log('getterValue called', arguments);
     });
 
-    ICSSStyleDeclaration.setProperty.onArgsObserverAdd(setterArgs);
-    ICSSStyleDeclaration.getPropertyValue.onArgsObserverAdd(getterArgs);
-    ICSSStyleDeclaration.getPropertyValue.onValueObserverAdd(getterValue);
+    ICSSStyleDeclaration.setProperty.onBeforeCallArgsObserverAdd(setterArgs);
+    ICSSStyleDeclaration.getPropertyValue.onBeforeCallArgsObserverAdd(getterArgs);
+    ICSSStyleDeclaration.getPropertyValue.onAfterReturnValueObserverAdd(getterValue);
 
     let elem: HTMLElement;
     elem = window.document.createElement("P");
@@ -43,7 +43,7 @@ describe('test element style interception', () => {
   });
 
   test('test block setting block value', () => {
-    ICSSStyleDeclaration.setProperty.onArgsObserverAdd((property, value) => {
+    ICSSStyleDeclaration.setProperty.onBeforeCallArgsObserverAdd((property, value) => {
       const blocked = (property === "display" && value === "block");
       if (blocked) {
         console.log("Will block:", property, value);
