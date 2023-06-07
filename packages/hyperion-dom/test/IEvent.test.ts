@@ -11,7 +11,7 @@ import * as intercept from "@hyperion/hyperion-core/src/intercept";
 describe('test Event interception', () => {
   test('test base Event', () => {
     const stopPropagation = jest.fn();
-    IEvent.stopPropagation.onArgsObserverAdd(stopPropagation);
+    IEvent.stopPropagation.onBeforeCallArgsObserverAdd(stopPropagation);
 
     const eventIntercepted = jest.fn();
     IEvent.IEventPrototype.onBeforInterceptObj.add(eventIntercepted);

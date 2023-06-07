@@ -87,11 +87,11 @@ describe('test XHR interception', () => {
     //   result = [this, value];
     // });
     // IWindow.XMLHttpRequest.onArgsObserverAdd(function (this, value) {
-    IXMLHttpRequest.constructor.onValueObserverAdd(function (this, value) {
+    IXMLHttpRequest.constructor.onAfterReturnValueObserverAdd(function (this, value) {
       expect(value).toBeInstanceOf(XMLHttpRequest);
     });
 
-    IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
+    IXMLHttpRequest.open.onBeforeCallArgsObserverAdd(function (this, method, url) {
       result = [this, method, url];
     });
 

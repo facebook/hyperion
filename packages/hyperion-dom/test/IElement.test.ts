@@ -11,7 +11,7 @@ import { VirtualAttribute } from "../src/VirtualAttribute";
 describe('test Element', () => {
   test('test getAttribute', () => {
     let result: any[] = [];
-    const observer = IElement.getAttribute.onArgsObserverAdd(function (this, value) {
+    const observer = IElement.getAttribute.onBeforeCallArgsObserverAdd(function (this, value) {
       result.push(this);
       result.push(value);
     });
@@ -21,7 +21,7 @@ describe('test Element', () => {
     elem.getAttribute("test");
     expect(result).toStrictEqual([elem, "test"]);
 
-    IElement.getAttribute.onArgsObserverRemove(observer);
+    IElement.getAttribute.onBeforeCallArgsObserverRemove(observer);
   });
 
   test('test innerHTML', () => {
@@ -30,11 +30,11 @@ describe('test Element', () => {
     let addedNodes: Node[] = [];
     let removedNodes: Node[] = [];
 
-    IElement.innerHTML.setter.onArgsObserverAdd(function (this, value) {
+    IElement.innerHTML.setter.onBeforeCallArgsObserverAdd(function (this, value) {
       target = this;
       removedNodes = [...target.childNodes]; // child nodes is a live list, should make a copy
     });
-    IElement.innerHTML.setter.onValueObserverAdd(function (this) {
+    IElement.innerHTML.setter.onAfterReturnValueObserverAdd(function (this) {
       // Now it is done, we can read the results
       expect(this).toBe(target);
       addedNodes = [...target.childNodes];
@@ -60,10 +60,10 @@ describe('test Element', () => {
 
 
     const vId = IElement.IElementtPrototype.getVirtualProperty<VirtualAttribute>("id");
-    vId.rawValue.getter.onValueObserverAdd(observer);
-    vId.rawValue.setter.onArgsObserverAdd(observer);
-    vId.processedValue.getter.onValueObserverAdd(observer);
-    vId.processedValue.setter.onArgsObserverAdd(observer);
+    vId.rawValue.getter.onAfterReturnValueObserverAdd(observer);
+    vId.rawValue.setter.onBeforeCallArgsObserverAdd(observer);
+    vId.processedValue.getter.onAfterReturnValueObserverAdd(observer);
+    vId.processedValue.setter.onBeforeCallArgsObserverAdd(observer);
 
     const elem = window.document.createElement("div");
     [

@@ -124,7 +124,7 @@ function captureFetch(options: InitOptions): void {
      * Note that args mapper runs before args observer, so the following
      * changes will be picked up by the next observers, which is what we want
      */
-    IWindow.fetch.onArgsMapperAdd(args => {
+    IWindow.fetch.onBeforeCallArgsMapperAdd(args => {
       const urlParams = new URLSearchParams();
 
       let input = args[0];
@@ -161,7 +161,7 @@ function captureFetch(options: InitOptions): void {
     });
   }
 
-  IWindow.fetch.onArgsAndValueMapperAdd(([input, init]) => {
+  IWindow.fetch.onBeforeCallArgsAndAfterReturnValueMapperAdd(([input, init]) => {
     let ephemeralRequestEvent: ALNetworkResponseEvent['requestEvent'] | null;
     let request: RequestInfo = getFetchRequestInfo(input, init);
 
@@ -231,7 +231,7 @@ function captureXHR(options: InitOptions): void {
      * Note that args mapper runs before args observer, so the following
      * changes will be picked up by the next observers, which is what we want
      */
-    IXMLHttpRequest.open.onArgsMapperAdd(args => {
+    IXMLHttpRequest.open.onBeforeCallArgsMapperAdd(args => {
       const urlParams = new URLSearchParams();
 
       const [method, url] = args;
@@ -247,7 +247,7 @@ function captureXHR(options: InitOptions): void {
     });
   }
 
-  IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
+  IXMLHttpRequest.open.onBeforeCallArgsObserverAdd(function (this, method, url) {
     const request: RequestInfo = typeof url === 'string'
       ? {
         method,
@@ -288,7 +288,7 @@ function captureXHR(options: InitOptions): void {
     // });
    */
   if (__DEV__) {
-    IXMLHttpRequest.constructor.onValueObserverAdd(xhr => {
+    IXMLHttpRequest.constructor.onAfterReturnValueObserverAdd(xhr => {
       [
         "abort",
         "error",
@@ -314,7 +314,7 @@ function captureXHR(options: InitOptions): void {
     });
   }
 
-  IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
+  IXMLHttpRequest.send.onBeforeCallArgsObserverAdd(function (this, body) {
     const requestRaw = intercept.getVirtualPropertyValue<RequestInfo>(this, REQUEST_INFO_PROP_NAME);
     assert(requestRaw != null, `Unexpected situation! Request info is missing from xhr object`);
     const request = body instanceof Document ? requestRaw : {

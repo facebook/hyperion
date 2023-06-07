@@ -59,20 +59,20 @@ describe("test Attribute Interceptor", () => {
       observer.mockClear();
     }
 
-    IA.a.getter.onValueObserverAdd(observer);
-    IA.a.setter.onArgsObserverAdd(observer);
+    IA.a.getter.onAfterReturnValueObserverAdd(observer);
+    IA.a.setter.onBeforeCallArgsObserverAdd(observer);
 
-    IA.foo.getter.onValueObserverAdd(observer);
-    IA.foo.setter.onArgsObserverAdd(observer);
+    IA.foo.getter.onAfterReturnValueObserverAdd(observer);
+    IA.foo.setter.onBeforeCallArgsObserverAdd(observer);
 
-    IA.bar.getter.onValueObserverAdd(observer);
-    IA.bar.setter.onArgsObserverAdd(observer);
+    IA.bar.getter.onAfterReturnValueObserverAdd(observer);
+    IA.bar.setter.onBeforeCallArgsObserverAdd(observer);
 
-    IA.baz.getter.onValueObserverAdd(observer);
-    IA.baz.setter.onArgsObserverAdd(observer);
+    IA.baz.getter.onAfterReturnValueObserverAdd(observer);
+    IA.baz.setter.onBeforeCallArgsObserverAdd(observer);
 
-    IB.b.getter.onValueObserverAdd(observer);
-    IB.b.setter.onArgsObserverAdd(observer);
+    IB.b.getter.onAfterReturnValueObserverAdd(observer);
+    IB.b.setter.onBeforeCallArgsObserverAdd(observer);
 
     // a sequence of read/writes
     o.a = o.a + 20;
@@ -127,16 +127,16 @@ describe("test Attribute Interceptor", () => {
     const b = new B();
 
     const A_a_getter_observer = jest.fn();
-    IA.a.getter.onValueObserverAdd(A_a_getter_observer);
+    IA.a.getter.onAfterReturnValueObserverAdd(A_a_getter_observer);
 
     const A_a_setter_observer = jest.fn();
-    IA.a.setter.onArgsObserverAdd(A_a_setter_observer);
+    IA.a.setter.onBeforeCallArgsObserverAdd(A_a_setter_observer);
 
     const B_a_getter_observer = jest.fn();
-    IB.a.getter.onValueObserverAdd(B_a_getter_observer);
+    IB.a.getter.onAfterReturnValueObserverAdd(B_a_getter_observer);
 
     const B_a_setter_observer = jest.fn();
-    IB.a.setter.onArgsObserverAdd(B_a_setter_observer);
+    IB.a.setter.onBeforeCallArgsObserverAdd(B_a_setter_observer);
 
     a.a = 1;
     expect(A_a_setter_observer.mock.calls.length).toBe(1);

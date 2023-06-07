@@ -186,7 +186,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
    * sure that is not added to the DOM tree.
    * The following code blocks the effect of `setAttribute` by returning true
    */
-  IElement.setAttribute.onArgsObserverAdd(function (
+  IElement.setAttribute.onBeforeCallArgsObserverAdd(function (
     this: Element,
     attrName,
     attrValue: any,
