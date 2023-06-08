@@ -114,6 +114,8 @@ export type InitOptions = Types.Options<
  */
 const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
 
+const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], ALFlowlet>();
+
 /**
  *
  * @param options - Configuration for determining which events to capture and emit events via provided channel.
@@ -132,7 +134,6 @@ export function publish(options: InitOptions): void {
   trackInteractable(newEventsToPublish.map(ev => ev.eventName));
 
   let lastUIEvent: CurrentUIEvent | null;
-  let flowletMap = new Map<UIEventConfig['eventName'], ALFlowlet>();
   const defaultTopFlowlet = new flowletManager.flowletCtor("/");
 
   newEventsToPublish.forEach((eventConfig => {
@@ -176,7 +177,7 @@ export function publish(options: InitOptions): void {
         }
         flowlet = flowlet.fork(`ts${captureTimestamp}`);
         flowlet = flowletManager.push(flowlet);
-        flowletMap.set(eventName, flowlet);
+        activeUIEventFlowlets.set(eventName, flowlet);
         ALFlowletManagerInstance.push(flowlet);
       }
       let reactComponentData: ReactComponentData | null = null;
@@ -249,9 +250,9 @@ export function publish(options: InitOptions): void {
         }
 
         let flowlet: ALFlowlet | undefined;
-        if (shouldPushPopFlowlet(event) && (flowlet = flowletMap.get(eventName)) != null) {
+        if (shouldPushPopFlowlet(event) && (flowlet = activeUIEventFlowlets.get(eventName)) != null) {
           flowletManager.pop(flowlet);
-          flowletMap.delete(eventName);
+          activeUIEventFlowlets.delete(eventName);
           ALFlowletManagerInstance.pop(flowlet);
         }
       },
@@ -300,9 +301,9 @@ export function publish(options: InitOptions): void {
    * We want to make sure that flow knows what is the actual corresponding
    * alflowlet which corresponds to execution code at runtime.
    * Since as of now we only start a new flowlet when there is a UI event, we
-   * add the following code to say whenever a new flowlet is pushed (a.k.a a new async 
-   * context is started), we ensure that knows which alflowlet is responsible for it. 
-   * 
+   * add the following code to say whenever a new flowlet is pushed (a.k.a a new async
+   * context is started), we ensure that knows which alflowlet is responsible for it.
+   *
    * To ensure this info carries forward, we first try the ALFlowletManagerInstance stack
    * and if we could not any active UI flowlet, we then try to copy from the top of the current
    * stack.
@@ -323,7 +324,7 @@ export function publish(options: InitOptions): void {
          * surface will pickup the correct flowlet.
          * Another alternative is to mark the surface's flowlet explicitily and here
          * look for that marking and updat the flowlet.
-         * 
+         *
          */
         flowlet.parent.data.alFlowlet = alFlowlet;
       }
