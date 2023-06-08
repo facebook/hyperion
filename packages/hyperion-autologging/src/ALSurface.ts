@@ -264,7 +264,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     children: React.ReactNode,
     deep: boolean,
   ): boolean | undefined | null {
-    if (!ext || !(ext instanceof IReactFlowlet.PropsExtension<DataType, FlowletType>)) {
+    if (!ext || !(ext instanceof IReactFlowlet.PropsExtension/* <DataType, FlowletType> */)) {
       return;
     }
 

@@ -61,11 +61,11 @@
   "dependencies": {
     "@hyperion/global": "*",
     "@hyperion/hook": "*",
+    "@hyperion/hyperion-autologging": "*",
     "@hyperion/hyperion-core": "*",
     "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-flowlet": "*",
     "@hyperion/hyperion-react": "*",
-    "@hyperion/hyperion-autologging": "*",
     "@hyperion/hyperion-util": "*"
   },
   "devDependencies": {
@@ -83,6 +83,6 @@
     "rollup": "^3.7.4",
     "rollup-plugin-node-resolve": "^5.2.0",
     "tslib": "^2.4.0",
-    "typescript": "^5.0.3"
+    "typescript": "^5.1.3"
   }
 }
