@@ -16,15 +16,28 @@ import { ALFlowlet } from "./ALFlowletManager";
 import * as ALID from './ALID';
 import { getElementName } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
+import { assert } from "@hyperion/global/src/assert";
 
-type ALMutationEvent = ALReactElementEvent & ALOptionalFlowletEvent & Readonly<{
-  event: 'mount_component' | 'unmount_component';
-  surface: string;
-  element: HTMLElement;
-  elementName: string | null;
-  mountedDuration?: number;
-  autoLoggingID: ALID.ALID;
-}>;
+type ALMutationEvent = ALReactElementEvent & ALOptionalFlowletEvent & Readonly<
+  {
+    surface: string;
+    element: HTMLElement;
+    elementName: string | null;
+    autoLoggingID: ALID.ALID;
+  }
+  &
+  (
+    {
+      event: 'mount_component';
+    }
+    |
+    {
+      event: 'unmount_component';
+      mountedDuration: number;
+      mountEvent: ALSurfaceMutationEventData;
+    }
+  )
+>;
 
 export type ALSurfaceMutationEventData = Readonly<
   ALLoggableEvent &
@@ -46,6 +59,7 @@ type SurfaceInfo = ALReactElementEvent & {
   addFlowlet: ALFlowlet | null,
   removeFlowlet: ALFlowlet | null,
   elementName: string | null,
+  mountEvent: ALSurfaceMutationEventData | null,
 };
 
 const activeSurfaces = new Map<string, SurfaceInfo>();
@@ -91,6 +105,7 @@ export function publish(options: InitOptions): void {
             reactComponentStack: reactComponentData?.stack,
             elementName,
             removeFlowlet: null,
+            mountEvent: null,
           };
           activeSurfaces.set(surface, info);
           emitMutationEvent(action, info);
@@ -140,11 +155,11 @@ export function publish(options: InitOptions): void {
     action: 'added' | 'removed',
     surfaceInfo: SurfaceInfo
   ): void {
-    const { surface, removeTime, element, elementName } = surfaceInfo;
+    const { surface, removeTime, element, elementName, mountEvent } = surfaceInfo;
     switch (action) {
       case 'added': {
         const flowlet = surfaceInfo.addFlowlet;
-        channel.emit('al_surface_mutation_event', {
+        channel.emit('al_surface_mutation_event', surfaceInfo.mountEvent = {
           event: 'mount_component',
           eventTimestamp: surfaceInfo.addTime,
           eventIndex: ALEventIndex.getNextEventIndex(),
@@ -160,10 +175,7 @@ export function publish(options: InitOptions): void {
         break;
       }
       case 'removed': {
-        if (removeTime == null) {
-          // Not expected to happen,  but to assert
-          break;
-        }
+        assert(mountEvent != null && removeTime != null, "Missing mutaion info for unmounting");
         const flowlet = surfaceInfo.removeFlowlet;
         channel.emit('al_surface_mutation_event', {
           event: 'unmount_component',
@@ -178,6 +190,7 @@ export function publish(options: InitOptions): void {
           surface,
           reactComponentName: surfaceInfo.reactComponentName,
           reactComponentStack: surfaceInfo.reactComponentStack,
+          mountEvent,
         });
         break;
       }

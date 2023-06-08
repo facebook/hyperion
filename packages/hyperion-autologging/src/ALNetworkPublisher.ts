@@ -4,15 +4,16 @@
 
 import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
-import * as intercept from "@hyperion/hyperion-core/src/intercept";
 import "@hyperion/hyperion-core/src/IPromise";
+import * as intercept from "@hyperion/hyperion-core/src/intercept";
 import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import { ALOptionalFlowletEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
+import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import * as ALEventIndex from "./ALEventIndex";
+import { ALLoggableEvent, ALOptionalFlowletEvent, ALSharedInitOptions } from "./ALType";
 
-type ALNetworkEvent = ALTimedEvent & ALOptionalFlowletEvent & Readonly<{
+type ALNetworkEvent = ALLoggableEvent & ALOptionalFlowletEvent & Readonly<{
   event: "network";
   initiatorType: "fetch" | "xmlhttprequest"; // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/initiatorType
 }>;
@@ -156,6 +157,7 @@ function captureFetch(options: InitOptions): void {
         initiatorType: "fetch",
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
+        eventIndex: ALEventIndex.getNextEventIndex(),
         flowlet,
         alFlowlet: flowlet?.data.alFlowlet,
         ...request,
@@ -183,6 +185,7 @@ function captureFetch(options: InitOptions): void {
           initiatorType: "fetch",
           event: "network",
           eventTimestamp: performanceAbsoluteNow(),
+          eventIndex: ALEventIndex.getNextEventIndex(),
           flowlet,
           alFlowlet: flowlet?.data.alFlowlet,
           requestEvent,
@@ -242,6 +245,7 @@ function captureXHR(options: InitOptions): void {
         initiatorType: "xmlhttprequest",
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
+        eventIndex: ALEventIndex.getNextEventIndex(),
         flowlet,
         alFlowlet,
         ...request // assert already ensures request is not undefined
@@ -256,6 +260,7 @@ function captureXHR(options: InitOptions): void {
             initiatorType: "xmlhttprequest",
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
+            eventIndex: ALEventIndex.getNextEventIndex(),
             flowlet, // should carry request flowlet forward
             alFlowlet,
             requestEvent,
