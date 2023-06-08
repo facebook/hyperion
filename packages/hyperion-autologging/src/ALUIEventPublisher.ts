@@ -304,14 +304,12 @@ export function publish(options: InitOptions): void {
    * add the following code to say whenever a new flowlet is pushed (a.k.a a new async
    * context is started), we ensure that knows which alflowlet is responsible for it.
    *
-   * To ensure this info carries forward, we first try the ALFlowletManagerInstance stack
-   * and if we could not any active UI flowlet, we then try to copy from the top of the current
-   * stack.
+   * To ensure this info carries forward, we look at the ALFlowletManagerInstance stack.
    * This mechanism works because of how various 'creation time flowlets' are pushed/popped on
    * the stack.
    */
   flowletManager.onPush.add((flowlet, _reason) => {
-    const alFlowlet = ALFlowletManagerInstance.top() ?? flowletManager.top()?.data?.alFlowlet;
+    const alFlowlet = ALFlowletManagerInstance.top();
     if (alFlowlet && flowlet.data.alFlowlet !== alFlowlet) {
       flowlet.data.alFlowlet = alFlowlet;
       if (flowlet.name === "useState" && flowlet.parent) {
