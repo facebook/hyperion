@@ -166,19 +166,21 @@ export function publish(options: InitOptions): void {
        * Since it is possible to interact with the same exact element multiple times,
        * we need yet another distinguishing fact, for which we use timestamp
        */
-      let flowlet = flowletManager.top() ?? defaultTopFlowlet; // We want to ensure flowlet is always assigned
+      const topFlowlet = flowletManager.top();
+      let flowlet = topFlowlet ?? defaultTopFlowlet; // We want to ensure flowlet is always assigned
       if (shouldPushPopFlowlet(event)) {
-        if (surface) {
-          flowlet = flowlet.fork(surface);
-        }
-        flowlet = flowlet.fork(eventName);
+        let flowletName = eventName + `(ts:${captureTimestamp}`;
         if (autoLoggingID) {
-          flowlet = flowlet.fork(autoLoggingID)
+          flowletName += `,element:${autoLoggingID}`;
         }
-        flowlet = flowlet.fork(`ts${captureTimestamp}`);
+        if (surface) {
+          flowletName += `,surface:${surface}`;
+        }
+        flowletName += ')';
+        flowlet = new flowletManager.flowletCtor(flowletName);
+        ALFlowletManagerInstance.push(flowlet);
         flowlet = flowletManager.push(flowlet);
         activeUIEventFlowlets.set(eventName, flowlet);
-        ALFlowletManagerInstance.push(flowlet);
       }
       let reactComponentData: ReactComponentData | null = null;
       if (element && cacheElementReactInfo) {
