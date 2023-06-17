@@ -66,18 +66,12 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   readonly onPop = new Hook<(flowlet: T | null, reason?: string) => void>();
 
 
-  wrap<T extends CallbackType | undefined | null>(listener: T, apiName: string): T {
+  wrap<C extends CallbackType | undefined | null>(listener: C, apiName: string, customFlowlet?: T): C {
     if (!listener) {
       return listener;
     }
 
-    const currentFLowlet = this.top();
-    if (!currentFLowlet) {
-      return listener;
-    }
-
-    const flowlet = new this.flowletCtor(apiName, currentFLowlet);
-
+    const flowlet = customFlowlet ?? new this.flowletCtor(apiName, this.top());
     const funcInterceptor = interceptEventListener(listener);
     if (funcInterceptor && !funcInterceptor.getData(IS_FLOWLET_SETUP_PROP_NAME)) {
       funcInterceptor.setData(IS_FLOWLET_SETUP_PROP_NAME, true);
@@ -99,7 +93,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
         }
         let res;
         try {
-          flowletManager.push(flowlet); // let's not pass apiName to avoid creating a new flowlet each time. 
+          flowletManager.push(flowlet); // let's not pass apiName to avoid creating a new flowlet each time.
           res = handler.apply(this, <any>arguments);
         } finally {
           flowletManager.pop(flowlet, apiName);
@@ -107,7 +101,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
         return res;
       });
     }
-    return isEventListenerObject(listener) || !funcInterceptor ? listener : <T>funcInterceptor.interceptor;
+    return isEventListenerObject(listener) || !funcInterceptor ? listener : <C>funcInterceptor.interceptor;
   }
 
   getWrappedOrOriginal<T extends CallbackType | undefined | null>(listener: T): T {
