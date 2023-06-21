@@ -205,7 +205,8 @@ export function init(options: InitOptions): void {
       if (
         classComponentParentClass instanceof ReactModule.Component ||
         typeof classComponentParentClass?.render === 'function' || // possibly created via React.createClass
-        Object.getPrototypeOf(Object.getPrototypeOf(classComponentParentClass)) // not a plane function, may be with some other lifecycle methods. 
+        Object.getPrototypeOf(Object.getPrototypeOf(classComponentParentClass)) || // not a plain function, may be with some other lifecycle methods. 
+        classComponentParentClass === ReactModule.Component.prototype // in case buggy code didn't properly inherit from ReactModule.Component
       ) {
         // $FlowIgnore[incompatible-exact]
         // $FlowIgnore[incompatible-type]
