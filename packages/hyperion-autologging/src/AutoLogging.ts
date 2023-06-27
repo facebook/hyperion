@@ -6,6 +6,7 @@
 
 import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
+import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import * as ALHeartbeat from "./ALHeartbeat";
 import * as ALNetworkPublisher from "./ALNetworkPublisher";
@@ -60,6 +61,8 @@ export function init(options: InitOptions): boolean {
   if (options.componentNameValidator) {
     setComponentNameValidator(options.componentNameValidator);
   }
+
+  initFlowletTrackers(options.flowletManager);
 
   const sharedOptions: ALSharedInitOptions = {
     flowletManager: options.flowletManager,

@@ -4,7 +4,6 @@
 
 import { Channel } from "@hyperion/hook/src/Channel";
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
-import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
 import React from 'react';
@@ -30,11 +29,35 @@ export function init() {
 
   });
 
-  initFlowletTrackers(FlowletManager);
-
   const testCompValidator = (name: string) => !name.match(/(^Surface(Proxy)?)/);
 
   console.log('csid:', ClientSessionID);
+
+  // Better to first setup listeners before initializing AutoLogging so we don't miss any events (e.g. Heartbeat(START))
+  ([
+    'al_surface_mount',
+    'al_surface_unmount',
+    'al_heartbeat_event',
+    'al_ui_event_capture',
+    'al_ui_event_bubble',
+  ] as const).forEach(eventName => {
+    channel.on(eventName).add(ev => {
+      console.log(eventName, ev, performance.now());
+    });
+
+  });
+
+  ([
+    'al_ui_event',
+    'al_surface_mutation_event',
+    'al_network_request',
+    'al_network_response',
+    'al_network_response',
+  ] as const).forEach(eventName => {
+    channel.on(eventName).add(ev => {
+      console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
+    });
+  });
 
   AutoLogging.init({
     flowletManager: FlowletManager,
@@ -89,28 +112,4 @@ export function init() {
     }
   });
 
-  ([
-    'al_surface_mount',
-    'al_surface_unmount',
-    'al_heartbeat_event',
-    'al_ui_event_capture',
-    'al_ui_event_bubble',
-  ] as const).forEach(eventName => {
-    channel.on(eventName).add(ev => {
-      console.log(eventName, ev, performance.now());
-    });
-
-  });
-
-  ([
-    'al_ui_event',
-    'al_surface_mutation_event',
-    'al_network_request',
-    'al_network_response',
-    'al_network_response',
-  ] as const).forEach(eventName => {
-    channel.on(eventName).add(ev => {
-      console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
-    });
-  });
 }
