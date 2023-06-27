@@ -4,7 +4,7 @@
 
 import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
-import "@hyperion/hyperion-core/src/IPromise";
+import * as IPromise from "@hyperion/hyperion-core/src/IPromise";
 import * as intercept from "@hyperion/hyperion-core/src/intercept";
 import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
@@ -176,6 +176,7 @@ function captureFetch(options: InitOptions): void {
      */
 
     if (ephemeralRequestEvent) {
+      intercept.intercept(value, IPromise.IPromisePrototype); // Ensure we can setVirtualPropertyValue, and ensures Promise is intercepted.
       intercept.setVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME, ephemeralRequestEvent);
       value.then(response => {
         const requestEvent = intercept.getVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME);

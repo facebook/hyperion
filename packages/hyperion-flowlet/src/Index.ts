@@ -9,9 +9,16 @@ import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 // import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 // import * as IWorker from "@hyperion/hyperion-dom/src/IWorker";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
+import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 import { FlowletManager } from "./FlowletManager";
 
+const initialized = new TestAndSet();
+
 export function initFlowletTrackers(flowletManager: FlowletManager) {
+  if (initialized.testAndSet()) {
+    return;
+  }
+
   for (const eventHandler of [
     // IWindow.ondevicemotion,
     // IWindow.ondeviceorientation,

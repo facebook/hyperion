@@ -13,6 +13,8 @@ export { interceptFunction } from "@hyperion/hyperion-core/src/FunctionIntercept
 export { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 export { interceptConstructor, interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
 export * as IRequire from "@hyperion/hyperion-core/src/IRequire";
+export * as IPromise from "@hyperion/hyperion-core/src/IPromise";
+export * as IGlobalThis from "@hyperion/hyperion-core/src/IGlobalThis";
 
 // hyperionDOM
 export * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";

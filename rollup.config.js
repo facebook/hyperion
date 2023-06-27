@@ -18,6 +18,8 @@ export default defineConfig({
         "@hyperion/hyperion-core/src/AttributeInterceptor",
         "@hyperion/hyperion-core/src/intercept",
         "@hyperion/hyperion-core/src/IRequire",
+        "@hyperion/hyperion-core/src/IPromise",
+        "@hyperion/hyperion-core/src/IGlobalThis",
       ],
       "hyperionDOM": [
         "@hyperion/hyperion-dom/src/IEventTarget",
