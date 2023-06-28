@@ -39,6 +39,9 @@ export default defineConfig({
       ],
       "hyperionUtil": [
         "@hyperion/hyperion-util/src/ClientSessionID",
+        "@hyperion/hyperion-util/src/SessionPersistentData",
+        "@hyperion/hyperion-util/src/TestAndSet",
+        "@hyperion/hyperion-util/src/TimedTrigger",
       ],
       "hyperionFlowletCore": [
         "@hyperion/hyperion-flowlet/src/Flowlet",
