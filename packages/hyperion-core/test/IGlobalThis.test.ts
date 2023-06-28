@@ -59,4 +59,4 @@ describe('test Global Scope interception', () => {
 
     expect(observer).toBeCalledTimes(finalCount);
   });
-})
+});

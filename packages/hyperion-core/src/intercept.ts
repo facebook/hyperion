@@ -23,8 +23,9 @@ const ExtensionPropName = "__ext";
 const ShadowPrototypePropName = "__sproto";
 let extensionId = 0;
 
+type ExtensiblePrototypeObject = Object & Partial<Record<typeof ShadowPrototypePropName, ShadowPrototype>>;
 
-type ShadowPrototypeGetter = (protoObj: Object & Partial<Record<typeof ShadowPrototypePropName, ShadowPrototype>>) => ShadowPrototype | null | undefined
+type ShadowPrototypeGetter = (protoObj: ExtensiblePrototypeObject) => ShadowPrototype | null | undefined
 const shadowPrototypeGetters: ShadowPrototypeGetter[] = [];
 /**
  * @param getter function to map a given object to a shadow prototype
@@ -40,13 +41,18 @@ export function registerShadowPrototypeGetter(getter: ShadowPrototypeGetter): ()
   });
 }
 
+export function getOwnShadowPrototypeOf<T extends ShadowPrototype>(protoObj: ExtensiblePrototypeObject): T | null | undefined {
+  const shadowProto = Object.getOwnPropertyDescriptor(protoObj, ShadowPrototypePropName);
+  return shadowProto?.value;
+}
+
 /**
  * intercept function can look up the prototype chain to find a proper ShadowPrototype for intercepting
  * a given object.
  * You should be careful to call this function on non-leaf nodes of the prototype chain.
  * This will be the last priority after the shadowPrototypeGetters is tried
  */
-export function registerShadowPrototype(protoObj: Object & Partial<Record<typeof ShadowPrototypePropName, ShadowPrototype>>, shadowPrototype: ShadowPrototype): void {
+export function registerShadowPrototype<T extends ShadowPrototype>(protoObj: ExtensiblePrototypeObject, shadowPrototype: T): T {
   __DEV__ && assert(
     !protoObj[ShadowPrototypePropName],
     `hiding existing ShadowPrototype in the chain of prototype ${protoObj}.`,
@@ -56,6 +62,7 @@ export function registerShadowPrototype(protoObj: Object & Partial<Record<typeof
     value: shadowPrototype,
     // configurable: true,
   });
+  return shadowPrototype;
 }
 
 let cachedPropertyDescriptor: PropertyDescriptor = {

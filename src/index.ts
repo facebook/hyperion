@@ -32,9 +32,10 @@ export { trackElementsWithAttributes } from "@hyperion/hyperion-util/src/trackEl
 export * as SyncMutationObserver from "@hyperion/hyperion-util/src/SyncMutationObserver";
 
 // hyperionUtil
-export { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
-export { SessionPersistentData } from "@hyperion/hyperion-util/src/SessionPersistentData";
 export { ClientSessionID } from "@hyperion/hyperion-util/src/ClientSessionID";
+export { SessionPersistentData } from "@hyperion/hyperion-util/src/SessionPersistentData";
+export { default as TestAndSet } from "@hyperion/hyperion-util/src/TestAndSet";
+export { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 
 // hyperionFlowletCore
 export { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
