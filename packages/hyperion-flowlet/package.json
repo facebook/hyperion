@@ -17,12 +17,12 @@
     "../hyperion-dom"
   ],
   "dependencies": {
-    "@hyperion/global": "*",
-    "@hyperion/hook": "*",
-    "@hyperion/hyperion-dom": "*"
+    "@hyperion/global": "^0.1.0",
+    "@hyperion/hook": "^0.1.0",
+    "@hyperion/hyperion-dom": "^0.1.0"
   },
   "devDependencies": {
-    "@hyperion/devtools": "*",
-    "@types/jest": "^27.4.1"
+    "@hyperion/devtools": "^0.1.0",
+    "@types/jest": "^29.5.3"
   }
 }
