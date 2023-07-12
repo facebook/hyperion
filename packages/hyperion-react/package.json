@@ -17,16 +17,16 @@
     "../hyperion-dom"
   ],
   "dependencies": {
-    "@hyperion/global": "*",
-    "@hyperion/hook": "*",
-    "@hyperion/hyperion-dom": "*",
-    "@types/react": "^18.0.26",
-    "@types/react-dom": "^18.0.9",
-    "@types/react-is": "^17.0.3",
+    "@hyperion/global": "^0.1.0",
+    "@hyperion/hook": "^0.1.0",
+    "@hyperion/hyperion-dom": "^0.1.0",
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.7",
+    "@types/react-is": "^17.0.4",
     "react-is": "^18.2.0"
   },
   "devDependencies": {
-    "@hyperion/devtools": "*",
-    "@types/jest": "^29.2.4"
+    "@hyperion/devtools": "^0.1.0",
+    "@types/jest": "^29.5.3"
   }
 }
