@@ -38,7 +38,7 @@ export { default as TestAndSet } from "@hyperion/hyperion-util/src/TestAndSet";
 export { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 
 // hyperionFlowletCore
-export { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
+export { Flowlet, onFlowletInit } from "@hyperion/hyperion-flowlet/src/Flowlet";
 export { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 
 // hyperionFlowlet
