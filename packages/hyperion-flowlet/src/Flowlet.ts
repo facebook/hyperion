@@ -4,13 +4,13 @@
 
 import { Hook } from "@hyperion/hook";
 
-export const onFlowletInit = new Hook<(flowlet: Flowlet) => void>();
+export const onFlowletInit = new Hook<<T extends {} = {}>(flowlet: Flowlet<T>) => void>();
 
 let flowletID: number = 0;
 
 export class Flowlet<T extends {} = {}> {
   readonly data: T;
-  private _id: number = flowletID++;
+  readonly id: number = flowletID++;
   private _fullName: string | null = null;
 
   constructor(
@@ -18,7 +18,7 @@ export class Flowlet<T extends {} = {}> {
     public readonly parent?: Flowlet<T> | null
   ) {
     this.data = Object.create(parent?.data ?? null);
-    onFlowletInit.call(this);
+    onFlowletInit.call<T>(this);
   }
 
   getFullName(): string {
@@ -26,10 +26,6 @@ export class Flowlet<T extends {} = {}> {
       this._fullName = `${this.parent?.getFullName() ?? ""}/${this.name}`;
     }
     return this._fullName;
-  }
-
-  getID(): number {
-    return this._id;
   }
 
   fork(name: string): Flowlet<T> {
