@@ -17,12 +17,10 @@ export interface FlowletDataType {
 };
 
 
-let _globalExtId = 0;
 export class PropsExtension<
   DataType extends FlowletDataType,
   FlowletType extends Flowlet<DataType>
 > {
-  readonly id: number = _globalExtId++; // Useful for debugging
   flowlet: FlowletType;
 
   constructor(flowlet: FlowletType) {
