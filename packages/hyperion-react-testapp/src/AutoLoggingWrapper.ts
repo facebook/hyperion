@@ -53,6 +53,7 @@ export function init() {
     'al_network_request',
     'al_network_response',
     'al_network_response',
+    'al_flowlet_event',
   ] as const).forEach(eventName => {
     channel.on(eventName).add(ev => {
       console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
@@ -63,6 +64,9 @@ export function init() {
     flowletManager: FlowletManager,
     domSurfaceAttributeName: 'data-surfaceid',
     componentNameValidator: testCompValidator,
+    flowletPublisher: {
+      channel
+    },
     surface: {
       ReactModule: React as any,
       IReactDOMModule,
