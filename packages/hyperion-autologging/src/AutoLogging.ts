@@ -38,8 +38,8 @@ export type InitOptions = Types.Options<
   {
     componentNameValidator?: ComponentNameValidator;
     flowletPublisher?: PublicInitOptions<ALFlowletPublisher.InitOptions> | null;
-    surface: PublicInitOptions<ALSurface.InitOptions>;
     elementText?: ALInteractableDOMElement.ALElementTextOptions | null;
+    surface: Omit<PublicInitOptions<ALSurface.InitOptions>, "channel">;
     uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions> | null;
     heartbeat?: ALHeartbeat.InitOptions | null;
     surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions> | null;
@@ -110,7 +110,8 @@ export function init(options: InitOptions): boolean {
   cachedResults = {
     surfaceRenderer: ALSurface.init({
       ...sharedOptions,
-      ...options.surface
+      ...options.surface,
+      channel: options.surfaceMutationPublisher?.channel,
     }),
   };
 
