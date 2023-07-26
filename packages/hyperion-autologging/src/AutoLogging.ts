@@ -8,6 +8,7 @@ import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
 import * as Types from "@hyperion/hyperion-util/src/Types";
+import * as ALFlowletPublisher from "./ALFlowletPublisher";
 import * as ALHeartbeat from "./ALHeartbeat";
 import * as ALNetworkPublisher from "./ALNetworkPublisher";
 import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
@@ -21,6 +22,7 @@ import * as ALUIEventPublisher from "./ALUIEventPublisher";
  * don't have to import these types one by one.
  */
 export type ALChannelEvent = (
+  ALFlowletPublisher.InitOptions['channel'] &
   ALSurface.InitOptions['channel'] &
   ALUIEventPublisher.InitOptions['channel'] &
   ALHeartbeat.InitOptions['channel'] &
@@ -34,6 +36,7 @@ export type InitOptions = Types.Options<
   ALSharedInitOptions &
   {
     componentNameValidator?: ComponentNameValidator;
+    flowletPublisher?: PublicInitOptions<ALFlowletPublisher.InitOptions> | null;
     surface: PublicInitOptions<ALSurface.InitOptions>;
     uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions> | null;
     heartbeat?: ALHeartbeat.InitOptions | null;
@@ -67,6 +70,10 @@ export function init(options: InitOptions): boolean {
   const sharedOptions: ALSharedInitOptions = {
     flowletManager: options.flowletManager,
     domSurfaceAttributeName: options.domSurfaceAttributeName,
+  }
+
+  if (options.flowletPublisher) {
+    ALFlowletPublisher.publish(options.flowletPublisher);
   }
 
   if (options.uiEventPublisher) {
