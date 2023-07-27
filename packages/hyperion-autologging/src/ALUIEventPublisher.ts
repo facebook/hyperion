@@ -196,7 +196,7 @@ export function publish(options: InitOptions): void {
         alFlowlet: flowlet.data.alFlowlet,
         isTrusted: event.isTrusted,
         surface,
-        elementName: element ? getElementName(element) : null,
+        elementName: element ? getElementName(element)?.text : null,
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
         autoLoggingID

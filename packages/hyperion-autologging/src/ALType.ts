@@ -24,7 +24,7 @@ export type ALTimedEvent = Readonly<{
  * Generally we will have publishers that generate various events.
  * In some cases, the event is final and we want that to be logged eventually.
  * In such cases, we need to add an eventIndex to keep track events.
- * 
+ *
  * In some cases, publisher may generate an event but there is an expectation
  * that applications may fileter some of them out (e.g. network, mousemove, ...)
  * In such cases, the publishers should use the ALEvent base type instead
@@ -43,4 +43,9 @@ export type ALReactElementEvent = Readonly<{
 export type ALSharedInitOptions = Types.Options<{
   flowletManager: ALFlowletManager;
   domSurfaceAttributeName: string;
+}>;
+
+export type ALElementNameResult = Readonly<{
+  text: string,
+  source: 'innerText' | 'aria-label' | 'aria-labelledby';
 }>;
