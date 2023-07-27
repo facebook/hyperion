@@ -5,6 +5,7 @@
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
 import { onReactDOMElement } from "@hyperion/hyperion-react/src/IReactComponent";
+import { ALElementNameResult } from "./ALType";
 
 'use strict';
 
@@ -185,17 +186,29 @@ const extractInnerText = (element: HTMLElement | null): string | null => {
 export function getElementName(
   element: HTMLElement,
   // Whether to try to resolve if element name is a result of Fbt translation
-): string | null {
+): ALElementNameResult | null {
   let nextElement: HTMLElement | null = element;
   while (nextElement && nextElement.nodeType === Node.ELEMENT_NODE) {
-    const name = extractInnerText(nextElement);
-    if (name != null) {
-      return name;
-    }
     const label = nextElement.getAttribute('aria-label');
     if (label != null) {
-        return label;
+
+        return {text: label, source: 'aria-label'};
     }
+    const labelledBy = nextElement.getAttribute('aria-labelledby');
+    if(labelledBy != null) {
+        const element = document.getElementById(labelledBy);
+        if(element!= null) {
+          const text = extractInnerText(element);
+          if(text!= null) {
+            return {text, source: 'aria-labelledby'};
+          }
+        }
+    }
+    const name = extractInnerText(nextElement);
+    if (name != null) {
+      return {text: name, source: 'innerText'};
+    }
+
     nextElement = nextElement.parentElement;
   }
   return null;

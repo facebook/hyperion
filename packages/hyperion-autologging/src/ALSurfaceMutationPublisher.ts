@@ -94,7 +94,10 @@ export function publish(options: InitOptions): void {
           if (cacheElementReactInfo) {
             const elementInfo = ALElementInfo.getOrCreate(node);
             reactComponentData = elementInfo.getReactComponentData();
-            elementName = getElementName(node);
+            const elementNameResult = getElementName(node);
+            if(elementNameResult) {
+              elementName = elementNameResult.text;
+            }
           }
           info = {
             surface,
