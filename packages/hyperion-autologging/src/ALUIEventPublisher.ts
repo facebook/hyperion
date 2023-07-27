@@ -29,6 +29,8 @@ type ALUIEvent<T = EventHandlerMap> = {
     element: HTMLElement | null,
     // Element text extracted from element
     elementName?: string | null,
+    // The source attribute where we got the elementName from
+    elementNameSource?: string | null,
     // Whether the event is generated from a user action or dispatched via script
     isTrusted: boolean,
   }>
@@ -187,6 +189,7 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(element);
         reactComponentData = elementInfo.getReactComponentData();
       }
+      const elementNameWithSource = element ? getElementName(element) : null;
       const eventData: ALUIEventCaptureData = {
         domEvent: event,
         event: (eventName as any),
@@ -196,7 +199,8 @@ export function publish(options: InitOptions): void {
         alFlowlet: flowlet.data.alFlowlet,
         isTrusted: event.isTrusted,
         surface,
-        elementName: element ? getElementName(element)?.text : null,
+        elementName: elementNameWithSource ? elementNameWithSource.text : null,
+        elementNameSource: elementNameWithSource ? elementNameWithSource.source : null,
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
         autoLoggingID
@@ -263,7 +267,7 @@ export function publish(options: InitOptions): void {
   }));
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
-    const { autoLoggingID, event, flowlet, captureTimestamp, element, elementName, isTrusted, reactComponentName, reactComponentStack, surface } = eventData;
+    const { autoLoggingID, event, flowlet, captureTimestamp, element, elementName, elementNameSource, isTrusted, reactComponentName, reactComponentStack, surface } = eventData;
 
     if (lastUIEvent != null) {
       const { timedEmitter } = lastUIEvent;
@@ -276,6 +280,7 @@ export function publish(options: InitOptions): void {
       event: (event as any),
       element,
       elementName,
+      elementNameSource,
       eventTimestamp: captureTimestamp,
       autoLoggingID,
       flowlet,

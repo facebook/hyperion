@@ -190,7 +190,7 @@ export function getElementName(
   let nextElement: HTMLElement | null = element;
   while (nextElement && nextElement.nodeType === Node.ELEMENT_NODE) {
     const label = nextElement.getAttribute('aria-label');
-    if (label != null) {
+    if (label != null && label !== '') {
 
         return {text: label, source: 'aria-label'};
     }
@@ -199,13 +199,13 @@ export function getElementName(
         const element = document.getElementById(labelledBy);
         if(element!= null) {
           const text = extractInnerText(element);
-          if(text!= null) {
+          if(text!= null && text !== '') {
             return {text, source: 'aria-labelledby'};
           }
         }
     }
     const name = extractInnerText(nextElement);
-    if (name != null) {
+    if (name != null && name !== '') {
       return {text: name, source: 'innerText'};
     }
 
