@@ -192,6 +192,10 @@ export function getElementName(
     if (name != null) {
       return name;
     }
+    const label = nextElement.getAttribute('aria-label');
+    if (label != null) {
+        return label;
+    }
     nextElement = nextElement.parentElement;
   }
   return null;
