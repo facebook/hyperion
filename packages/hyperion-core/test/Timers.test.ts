@@ -5,9 +5,13 @@
 import "jest";
 
 
-describe('test timers', () => {
+describe('Test interception via test. ', () => {
 
-  test('Check the rendered components', async () => {
+  test('Check global this interception during test', async () => {
+    /**
+     * We use timers because we know they will internally use setTimeout
+     * and other timer related api that we have intercepted.
+     */
     jest.useFakeTimers();
 
     console.log('BEFORE FIRST');
@@ -17,7 +21,7 @@ describe('test timers', () => {
     /**
      * We load the following here to test what happens if jest starts first
      * and then we install the interceptors.
-     * Goal is to see everyting continue function correctly.
+     * Goal is to see everyting continue to function correctly.
      */
     const x = require("../src/IGlobalThis");
     x.setTimeout.onArgsObserverAdd(() => {
