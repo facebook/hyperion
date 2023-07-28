@@ -14,7 +14,7 @@ import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from './ALEventIndex';
 import { ALFlowlet } from "./ALFlowletManager";
 import * as ALID from './ALID';
-import { getElementName } from './ALInteractableDOMElement';
+import { ALElementNameResult, getElementName } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
 import { assert } from "@hyperion/global/src/assert";
 
@@ -23,6 +23,7 @@ type ALMutationEvent = ALReactElementEvent & ALOptionalFlowletEvent & Readonly<
     surface: string;
     element: HTMLElement;
     elementName: string | null;
+    elementNameSource: ALElementNameResult['source'] | null;
     autoLoggingID: ALID.ALID;
   }
   &
@@ -59,6 +60,7 @@ type SurfaceInfo = ALReactElementEvent & {
   addFlowlet: ALFlowlet | null,
   removeFlowlet: ALFlowlet | null,
   elementName: string | null,
+  elementNameSource: ALElementNameResult['source'] | null,
   mountEvent: ALSurfaceMutationEventData | null,
 };
 
@@ -91,12 +93,14 @@ export function publish(options: InitOptions): void {
         if (!info) {
           let reactComponentData: ReactComponentData | null = null;
           let elementName: string | null = null;
+          let elementNameSource: ALElementNameResult['source'] | null = null;
           if (cacheElementReactInfo) {
             const elementInfo = ALElementInfo.getOrCreate(node);
             reactComponentData = elementInfo.getReactComponentData();
             const elementNameResult = getElementName(node);
             if(elementNameResult) {
               elementName = elementNameResult.text;
+              elementNameSource = elementNameResult.source;
             }
           }
           info = {
@@ -107,6 +111,7 @@ export function publish(options: InitOptions): void {
             reactComponentName: reactComponentData?.name,
             reactComponentStack: reactComponentData?.stack,
             elementName,
+            elementNameSource,
             removeFlowlet: null,
             mountEvent: null,
           };
@@ -158,7 +163,7 @@ export function publish(options: InitOptions): void {
     action: 'added' | 'removed',
     surfaceInfo: SurfaceInfo
   ): void {
-    const { surface, removeTime, element, elementName, mountEvent } = surfaceInfo;
+    const { surface, removeTime, element, elementName, elementNameSource, mountEvent } = surfaceInfo;
     switch (action) {
       case 'added': {
         const flowlet = surfaceInfo.addFlowlet;
@@ -168,6 +173,7 @@ export function publish(options: InitOptions): void {
           eventIndex: ALEventIndex.getNextEventIndex(),
           element,
           elementName,
+          elementNameSource,
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
           flowlet,
           alFlowlet: flowlet?.data.alFlowlet,
@@ -186,6 +192,7 @@ export function publish(options: InitOptions): void {
           eventIndex: ALEventIndex.getNextEventIndex(),
           element,
           elementName,
+          elementNameSource,
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
           mountedDuration: (removeTime - surfaceInfo.addTime) / 1000,
           flowlet,
