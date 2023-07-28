@@ -44,8 +44,3 @@ export type ALSharedInitOptions = Types.Options<{
   flowletManager: ALFlowletManager;
   domSurfaceAttributeName: string;
 }>;
-
-export type ALElementNameResult = Readonly<{
-  text: string,
-  source: 'innerText' | 'aria-label' | 'aria-labelledby';
-}>;

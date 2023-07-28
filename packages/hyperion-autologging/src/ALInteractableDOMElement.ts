@@ -5,7 +5,6 @@
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
 import { onReactDOMElement } from "@hyperion/hyperion-react/src/IReactComponent";
-import { ALElementNameResult } from "./ALType";
 
 'use strict';
 
@@ -183,27 +182,78 @@ const extractInnerText = (element: HTMLElement | null): string | null => {
   return null;
 };
 
+export type ALElementNameResult = Readonly<{
+  text: string,
+  source: 'innerText' | 'aria-label' | 'aria-labelledby'| 'aria-description' | 'aria-describedby';
+}>;
+
 export function getElementName(
   element: HTMLElement,
   // Whether to try to resolve if element name is a result of Fbt translation
 ): ALElementNameResult | null {
   let nextElement: HTMLElement | null = element;
   while (nextElement && nextElement.nodeType === Node.ELEMENT_NODE) {
-    const label = nextElement.getAttribute('aria-label');
-    if (label != null && label !== '') {
 
-        return {text: label, source: 'aria-label'};
-    }
     const labelledBy = nextElement.getAttribute('aria-labelledby');
-    if(labelledBy != null) {
-        const element = document.getElementById(labelledBy);
-        if(element!= null) {
-          const text = extractInnerText(element);
-          if(text!= null && text !== '') {
-            return {text, source: 'aria-labelledby'};
+    if (labelledBy != null) {
+      const fullLabel = labelledBy.split(' ').map(labelledBy => {
+        const labelElement = document.getElementById(labelledBy);
+        if (labelElement != null) {
+          const labelText = extractInnerText(labelElement);
+          if (labelText != null) {
+            return {
+              text: labelText,
+            };
           }
         }
+        return null;
+      });
+      const fullLabelText = fullLabel.map(label => label?.text).join(' ');
+      if (fullLabelText != null && fullLabelText !== '') {
+        return {
+          text: fullLabelText,
+          source: 'aria-labelledby',
+        };
+      }
     }
+
+    const label = nextElement.getAttribute('aria-label');
+    if (label != null && label !== '') {
+        return {text: label, source: 'aria-label'};
+    }
+
+    const description = nextElement.getAttribute('aria-description');
+    if (description != null && description !== '') {
+      return {
+        text: description,
+        source: 'aria-description',
+      };
+    }
+
+    const describedBy = nextElement.getAttribute('aria-describedby');
+    if (describedBy != null) {
+      const fullDesc = describedBy.split(' ').map(describedBy => {
+        const descElement = document.getElementById(describedBy);
+        if (descElement != null) {
+          const descText = extractInnerText(descElement);
+          if (descText != null) {
+            return {
+              text: descText,
+            };
+          }
+        }
+        return null;
+      });
+      const fullDescText = fullDesc.map(desc => desc?.text).join(' ');
+
+      if (fullDescText != null && fullDescText !== '') {
+        return {
+          text: fullDescText,
+          source: 'aria-describedby',
+        };
+      }
+    }
+
     const name = extractInnerText(nextElement);
     if (name != null && name !== '') {
       return {text: name, source: 'innerText'};
