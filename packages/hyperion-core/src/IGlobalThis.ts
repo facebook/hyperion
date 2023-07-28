@@ -5,7 +5,7 @@
 import globalScope from "@hyperion/global/src/global";
 import { interceptMethod } from "./MethodInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
-import { getOwnShadowPrototypeOf, registerShadowPrototype } from "./intercept";
+import { getOwnShadowPrototypeOf } from "./intercept";
 
 interface GlobalScope extends Pick<Window, "setTimeout" | "setInterval"> {
   Promise: typeof Promise;
@@ -16,8 +16,16 @@ interface GlobalScope extends Pick<Window, "setTimeout" | "setInterval"> {
  * But since it updates the global primodials, we should be careful to not redo
  * all the interception again. Specially since interceptMethod will pickup the
  * right (original) set of interceptors, we don't want to have a different ShadowPrototype
+ * 
+ * Also, in hyperion-dom, we do have interception of Window which is the globalThis of the browsers
+ * That module will need to set the parent of the shadow prototype and register a few more information
+ * To ensure that no one is really using the internal hooks of the ShadowPrototype for tracking object interception
+ * the following IGlobalThisPrototype is kept local to this module and not exported. As of now all usecases of the
+ * hyperion is in browser, if/when we support nodejs, there should be a similar mechanism for handling that environments
+ * globalThis.
+ * For this particular case, we are ok if the ShadowPrototype is not used. 
  */
-export const IGlobalThisPrototype = getOwnShadowPrototypeOf<ShadowPrototype<GlobalScope>>(globalScope) ?? registerShadowPrototype(globalScope, new ShadowPrototype<GlobalScope>(<GlobalScope>globalScope, null));
+const IGlobalThisPrototype = getOwnShadowPrototypeOf<ShadowPrototype<GlobalScope>>(globalScope) ?? new ShadowPrototype<GlobalScope>(<GlobalScope>globalScope, null);
 
 export const setInterval = interceptMethod("setInterval", IGlobalThisPrototype);
 export const setTimeout = interceptMethod("setTimeout", IGlobalThisPrototype);
