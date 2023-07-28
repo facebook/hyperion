@@ -187,6 +187,24 @@ export type ALElementNameResult = Readonly<{
   source: 'innerText' | 'aria-label' | 'aria-labelledby'| 'aria-description' | 'aria-describedby';
 }>;
 
+// Takes a space-delimited list of DOM element IDs and returns the inner text of those elements joined by spaces
+function getTextFromElementsByIds(ids: string): string | null {
+  const fullText = ids.split(' ').map(id => {
+    const element = document.getElementById(id);
+    if (element != null) {
+      const text = extractInnerText(element);
+      if (text != null) {
+          return text;
+      }
+    }
+    return null;
+  }).join(' ');
+  if (fullText != null && fullText !== '') {
+    return fullText;
+  }
+  return null;
+}
+
 export function getElementName(
   element: HTMLElement,
   // Whether to try to resolve if element name is a result of Fbt translation
@@ -196,25 +214,30 @@ export function getElementName(
 
     const labelledBy = nextElement.getAttribute('aria-labelledby');
     if (labelledBy != null) {
-      const fullLabel = labelledBy.split(' ').map(labelledBy => {
-        const labelElement = document.getElementById(labelledBy);
-        if (labelElement != null) {
-          const labelText = extractInnerText(labelElement);
-          if (labelText != null) {
-            return {
-              text: labelText,
-            };
-          }
-        }
-        return null;
-      });
-      const fullLabelText = fullLabel.map(label => label?.text).join(' ');
-      if (fullLabelText != null && fullLabelText !== '') {
+      const labelText = getTextFromElementsByIds(labelledBy);
+      if(labelText != null && labelText !== '') {
         return {
-          text: fullLabelText,
-          source: 'aria-labelledby',
+          text: labelText,
+          source: 'aria-labelledby'
         };
       }
+      // const fullLabel = labelledBy.split(' ').map(labelledBy => {
+      //   const labelElement = document.getElementById(labelledBy);
+      //   if (labelElement != null) {
+      //     const labelText = extractInnerText(labelElement);
+      //     if (labelText != null) {
+      //         return labelText
+      //     }
+      //   }
+      //   return null;
+      // });
+      // const fullLabelText = fullLabel.join(' ');
+      // if (fullLabelText != null && fullLabelText !== '') {
+      //   return {
+      //     text: fullLabelText,
+      //     source: 'aria-labelledby',
+      //   };
+      // }
     }
 
     const label = nextElement.getAttribute('aria-label');
@@ -232,26 +255,32 @@ export function getElementName(
 
     const describedBy = nextElement.getAttribute('aria-describedby');
     if (describedBy != null) {
-      const fullDesc = describedBy.split(' ').map(describedBy => {
-        const descElement = document.getElementById(describedBy);
-        if (descElement != null) {
-          const descText = extractInnerText(descElement);
-          if (descText != null) {
-            return {
-              text: descText,
-            };
-          }
-        }
-        return null;
-      });
-      const fullDescText = fullDesc.map(desc => desc?.text).join(' ');
-
-      if (fullDescText != null && fullDescText !== '') {
+      const descText = getTextFromElementsByIds(describedBy);
+      if(descText!= null && descText!== '') {
         return {
-          text: fullDescText,
+          text: descText,
           source: 'aria-describedby',
-        };
+        }
       }
+      // const fullDesc = describedBy.split(' ').map(describedBy => {
+      //   const descElement = document.getElementById(describedBy);
+      //   if (descElement != null) {
+      //     const descText = extractInnerText(descElement);
+      //     if (descText != null) {
+      //       return descText;
+
+      //     }
+      //   }
+      //   return null;
+      // });
+      // const fullDescText = fullDesc.join(' ');
+
+      // if (fullDescText != null && fullDescText !== '') {
+      //   return {
+      //     text: fullDescText,
+      //     source: 'aria-describedby',
+      //   };
+      // }
     }
 
     const name = extractInnerText(nextElement);
