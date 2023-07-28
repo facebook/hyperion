@@ -10,7 +10,7 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import ALElementInfo from './ALElementInfo';
 import { ALFlowlet, ALFlowletManagerInstance } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
-import { getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
+import { ALElementNameResult, getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
@@ -30,7 +30,7 @@ type ALUIEvent<T = EventHandlerMap> = {
     // Element text extracted from element
     elementName?: string | null,
     // The source attribute where we got the elementName from
-    elementNameSource?: string | null,
+    elementNameSource?: ALElementNameResult['source'] | null,
     // Whether the event is generated from a user action or dispatched via script
     isTrusted: boolean,
   }>
@@ -151,7 +151,7 @@ export function publish(options: InitOptions): void {
       let element: HTMLElement | null = null;
       let autoLoggingID: ALID | null = null;
       if (interactableElementsOnly) {
-        element = getInteractable(event.target, eventName);
+        element = getInteractable(event.target, eventName, true);
         if (element == null) {
           return;
         }
