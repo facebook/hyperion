@@ -182,10 +182,20 @@ const extractInnerText = (element: HTMLElement | null): string | null => {
   return null;
 };
 
-export type ALElementNameResult = Readonly<{
+export type ALElementText = Readonly<{
+  /// Element text extracted from element
   text: string,
-  source: 'innerText' | 'aria-label' | 'aria-labelledby'| 'aria-description' | 'aria-describedby';
+
+  /// The source attribute where we got the elementName from
+  source: 'innerText' | 'aria-label' | 'aria-labelledby' | 'aria-description' | 'aria-describedby';
 }>;
+
+export type ALElementTextEvent = Readonly<{
+  // Element text extracted from element
+  elementName: string | null,
+  elementText: ALElementText | null;
+}>
+
 
 // Takes a space-delimited list of DOM element IDs and returns the inner text of those elements joined by spaces
 function getTextFromElementsByIds(ids: string): string | null {
@@ -194,7 +204,7 @@ function getTextFromElementsByIds(ids: string): string | null {
     if (element != null) {
       const text = extractInnerText(element);
       if (text != null) {
-          return text;
+        return text;
       }
     }
     return null;
@@ -208,14 +218,14 @@ function getTextFromElementsByIds(ids: string): string | null {
 export function getElementName(
   element: HTMLElement,
   // Whether to try to resolve if element name is a result of Fbt translation
-): ALElementNameResult | null {
+): ALElementText | null {
   let nextElement: HTMLElement | null = element;
   while (nextElement && nextElement.nodeType === Node.ELEMENT_NODE) {
 
     const labelledBy = nextElement.getAttribute('aria-labelledby');
     if (labelledBy != null) {
       const labelText = getTextFromElementsByIds(labelledBy);
-      if(labelText != null && labelText !== '') {
+      if (labelText != null && labelText !== '') {
         return {
           text: labelText,
           source: 'aria-labelledby'
@@ -242,7 +252,7 @@ export function getElementName(
 
     const label = nextElement.getAttribute('aria-label');
     if (label != null && label !== '') {
-        return {text: label, source: 'aria-label'};
+      return { text: label, source: 'aria-label' };
     }
 
     const description = nextElement.getAttribute('aria-description');
@@ -256,7 +266,7 @@ export function getElementName(
     const describedBy = nextElement.getAttribute('aria-describedby');
     if (describedBy != null) {
       const descText = getTextFromElementsByIds(describedBy);
-      if(descText!= null && descText!== '') {
+      if (descText != null && descText !== '') {
         return {
           text: descText,
           source: 'aria-describedby',
@@ -285,10 +295,24 @@ export function getElementName(
 
     const name = extractInnerText(nextElement);
     if (name != null && name !== '') {
-      return {text: name, source: 'innerText'};
+      return { text: name, source: 'innerText' };
     }
 
     nextElement = nextElement.parentElement;
   }
   return null;
+}
+
+export function getElementTextEvent(element: HTMLElement | null): ALElementTextEvent {
+  if (!element) {
+    return {
+      elementName: null,
+      elementText: null,
+    }
+  }
+  const elementText = getElementName(element);
+  return {
+    elementName: elementText?.text ?? null,
+    elementText,
+  };
 }
