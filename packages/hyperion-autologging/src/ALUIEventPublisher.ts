@@ -4,13 +4,13 @@
 
 'use strict';
 import { Channel } from "@hyperion/hook/src/Channel";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
+import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
 import { ALFlowlet, ALFlowletManagerInstance } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
-import { ALElementNameResult, getElementName, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
+import { ALElementTextEvent, getElementTextEvent, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
@@ -27,10 +27,7 @@ type ALUIEvent<T = EventHandlerMap> = {
     event: K,
     // Element target associated with the domEvent
     element: HTMLElement | null,
-    // Element text extracted from element
-    elementName?: string | null,
-    // The source attribute where we got the elementName from
-    elementNameSource?: ALElementNameResult['source'] | null,
+
     // Whether the event is generated from a user action or dispatched via script
     isTrusted: boolean,
   }>
@@ -40,6 +37,7 @@ export type ALUIEventCaptureData = Readonly<
   ALUIEvent &
   ALFlowletEvent &
   ALReactElementEvent &
+  ALElementTextEvent &
   {
     captureTimestamp: number,
     surface: string | null,
@@ -56,14 +54,8 @@ export type ALUIEventBubbleData = Readonly<
 >;
 
 export type ALLoggableUIEvent = Readonly<
-  ALTimedEvent &
-  ALUIEvent &
-  ALFlowletEvent &
-  ALReactElementEvent &
-  {
-    autoLoggingID: ALID | null,
-    surface?: string | null,
-  }
+  Omit<ALUIEventCaptureData, 'captureTimestamp'> &
+  ALTimedEvent
 >;
 
 export type ALUIEventData = Readonly<
@@ -189,7 +181,7 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(element);
         reactComponentData = elementInfo.getReactComponentData();
       }
-      const elementNameWithSource = element ? getElementName(element) : null;
+      const elementText = getElementTextEvent(element);
       const eventData: ALUIEventCaptureData = {
         domEvent: event,
         event: (eventName as any),
@@ -199,8 +191,7 @@ export function publish(options: InitOptions): void {
         alFlowlet: flowlet.data.alFlowlet,
         isTrusted: event.isTrusted,
         surface,
-        elementName: elementNameWithSource ? elementNameWithSource.text : null,
-        elementNameSource: elementNameWithSource ? elementNameWithSource.source : null,
+        ...elementText,
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
         autoLoggingID
@@ -267,7 +258,7 @@ export function publish(options: InitOptions): void {
   }));
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
-    const { autoLoggingID, event, flowlet, captureTimestamp, element, elementName, elementNameSource, isTrusted, reactComponentName, reactComponentStack, surface } = eventData;
+    const { captureTimestamp } = eventData;
 
     if (lastUIEvent != null) {
       const { timedEmitter } = lastUIEvent;
@@ -275,20 +266,8 @@ export function publish(options: InitOptions): void {
     }
 
     const data: ALUIEventData = {
-      // Capture event, should we include bubble as well?
-      domEvent: eventData.domEvent,
-      event: (event as any),
-      element,
-      elementName,
-      elementNameSource,
+      ...eventData,
       eventTimestamp: captureTimestamp,
-      autoLoggingID,
-      flowlet,
-      alFlowlet: flowlet.data.alFlowlet,
-      isTrusted,
-      reactComponentName,
-      reactComponentStack,
-      surface,
     };
 
     lastUIEvent = {
