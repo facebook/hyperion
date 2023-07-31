@@ -10,6 +10,7 @@ import Counter from "./component/Counter";
 import NestedComponent from './component/NestedComponent';
 import { PortalBodyContainerComponent } from './component/PortalComponent';
 import DynamicSvgComponent from './component/DynamicSvgComponent';
+import ElementNameComponent from './component/ElementNameComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -45,8 +46,9 @@ function App() {
       <div>
         <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
       </div>
-
-
+      <div>
+        <ElementNameComponent />
+      </div>
       <DynamicSvgComponent></DynamicSvgComponent>
     </div>
   );
