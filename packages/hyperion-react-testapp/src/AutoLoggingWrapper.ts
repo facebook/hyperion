@@ -11,6 +11,7 @@ import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import { FlowletManager } from "./FlowletManager";
 import { ClientSessionID } from "@hyperion/hyperion-util/src/ClientSessionID";
+import { ALElementText } from "@hyperion/hyperion-autologging/src/ALInteractableDOMElement";
 
 export let interceptionStatus = "disabled";
 
@@ -60,6 +61,10 @@ export function init() {
     });
   });
 
+  interface ExtendedElementText extends ALElementText {
+    isExtended?: boolean;
+  }
+
   AutoLogging.init({
     flowletManager: FlowletManager,
     domSurfaceAttributeName: 'data-surfaceid',
@@ -73,6 +78,12 @@ export function init() {
       IReactModule,
       IJsxRuntimeModule,
       channel,
+    },
+    elementText: {
+      updateText(elementText: ExtendedElementText, domSource) {
+        elementText.isExtended = true;
+        console.log("Element Text ", elementText, domSource);
+      },
     },
     uiEventPublisher: {
       channel,
