@@ -92,9 +92,9 @@ export function publish(options: InitOptions): void {
           if (cacheElementReactInfo) {
             const elementInfo = ALElementInfo.getOrCreate(node);
             reactComponentData = elementInfo.getReactComponentData();
-            elementText = getElementTextEvent(node);
+            elementText = getElementTextEvent(node, surface);
           } else {
-            elementText = getElementTextEvent(null);
+            elementText = getElementTextEvent(null, surface);
           }
           info = {
             surface,

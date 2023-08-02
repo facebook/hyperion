@@ -27,9 +27,10 @@ type ALUIEvent<T = EventHandlerMap> = {
     event: K,
     // Element target associated with the domEvent
     element: HTMLElement | null,
-
     // Whether the event is generated from a user action or dispatched via script
     isTrusted: boolean,
+
+    autoLoggingID: ALID | null,
   }>
 }[keyof T];
 
@@ -41,7 +42,6 @@ export type ALUIEventCaptureData = Readonly<
   {
     captureTimestamp: number,
     surface: string | null,
-    autoLoggingID: ALID | null,
   }
 >;
 
@@ -49,7 +49,6 @@ export type ALUIEventBubbleData = Readonly<
   ALUIEvent &
   {
     bubbleTimestamp: number,
-    autoLoggingID: ALID | null,
   }
 >;
 
@@ -181,7 +180,7 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(element);
         reactComponentData = elementInfo.getReactComponentData();
       }
-      const elementText = getElementTextEvent(element);
+      const elementText = getElementTextEvent(element, surface);
       const eventData: ALUIEventCaptureData = {
         domEvent: event,
         event: (eventName as any),

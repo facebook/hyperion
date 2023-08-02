@@ -158,22 +158,14 @@ export function trackInteractable(events: Array<string>): void {
   events.forEach(event => TrackedEvents.add(event));
 }
 
-function isTruthy(value: any): boolean {
-  return (
-    /* Although Boolean(value) also captures null/undefined we need to add this
-      check so that Flow refines value as non-nullable */
-    value != null && Boolean(value)
-  );
-}
-
 const extractInnerText = (element: HTMLElement | null): string | null => {
   const innerText = element?.innerText?.replace(
     // Remove zero-width invisible Unicode characters (https://stackoverflow.com/a/11305926)
     /[\u200B-\u200D\uFEFF]/g,
     '',
   );
-  if (isTruthy(innerText)) {
-    const innerTextArray = innerText?.split(/\r\n|\r|\n/);
+  if (innerText) {
+    const innerTextArray = innerText.split(/\r\n|\r|\n/);
     const name = (innerTextArray && innerTextArray.length > 0) ? innerTextArray[0] : null;
     if (name != null) {
       return name;
@@ -182,135 +174,125 @@ const extractInnerText = (element: HTMLElement | null): string | null => {
   return null;
 };
 
-export type ALElementText = Readonly<{
+export type ALElementText = {
   /// Element text extracted from element
   text: string,
 
   /// The source attribute where we got the elementName from
-  source: 'innerText' | 'aria-label' | 'aria-labelledby' | 'aria-description' | 'aria-describedby';
-}>;
+  readonly source: 'innerText' | 'aria-label' | 'aria-labelledby' | 'aria-description' | 'aria-describedby';
+};
 
 export type ALElementTextEvent = Readonly<{
   // Element text extracted from element
   elementName: string | null,
   elementText: ALElementText | null;
-}>
+}>;
 
+export type ALDOMTextSource = {
+  surface: string | null;
+  directSource: HTMLElement;
+  indirectSources?: HTMLElement[] | null;
+}
+
+export type ALElementTextOptions = Readonly<{
+  updateText: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
+}>;
+
+let _options: ALElementTextOptions | null = null;
+export function init(options: ALElementTextOptions) {
+  _options = options;
+}
+
+function callExternalTextProcessor(
+  elementText: ALElementText,
+  domSource: ALDOMTextSource,
+): ALElementText {
+  _options?.updateText(elementText, domSource);
+  return elementText;
+}
 
 // Takes a space-delimited list of DOM element IDs and returns the inner text of those elements joined by spaces
-function getTextFromElementsByIds(ids: string): string | null {
-  const fullText = ids.split(' ').map(id => {
-    const element = document.getElementById(id);
-    if (element != null) {
-      const text = extractInnerText(element);
-      if (text != null) {
-        return text;
-      }
-    }
-    return null;
-  }).join(' ');
+function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementText['source']): ALElementText | null {
+  const indirectSources = domSource.directSource
+    .getAttribute(source)
+    ?.split(' ')
+    .map(id => document.getElementById(id))
+    .filter(function (element): element is HTMLElement { return element instanceof HTMLElement });
+  const fullText = indirectSources?.map(extractInnerText).filter(text => text != null).join(' ');
   if (fullText != null && fullText !== '') {
-    return fullText;
+    domSource.indirectSources = indirectSources
+    return callExternalTextProcessor(
+      {
+        text: fullText,
+        source,
+      },
+      domSource
+    );
   }
   return null;
 }
 
-export function getElementName(
-  element: HTMLElement,
-  // Whether to try to resolve if element name is a result of Fbt translation
-): ALElementText | null {
-  let nextElement: HTMLElement | null = element;
-  while (nextElement && nextElement.nodeType === Node.ELEMENT_NODE) {
-
-    const labelledBy = nextElement.getAttribute('aria-labelledby');
-    if (labelledBy != null) {
-      const labelText = getTextFromElementsByIds(labelledBy);
-      if (labelText != null && labelText !== '') {
-        return {
-          text: labelText,
-          source: 'aria-labelledby'
-        };
-      }
-      // const fullLabel = labelledBy.split(' ').map(labelledBy => {
-      //   const labelElement = document.getElementById(labelledBy);
-      //   if (labelElement != null) {
-      //     const labelText = extractInnerText(labelElement);
-      //     if (labelText != null) {
-      //         return labelText
-      //     }
-      //   }
-      //   return null;
-      // });
-      // const fullLabelText = fullLabel.join(' ');
-      // if (fullLabelText != null && fullLabelText !== '') {
-      //   return {
-      //     text: fullLabelText,
-      //     source: 'aria-labelledby',
-      //   };
-      // }
-    }
-
-    const label = nextElement.getAttribute('aria-label');
-    if (label != null && label !== '') {
-      return { text: label, source: 'aria-label' };
-    }
-
-    const description = nextElement.getAttribute('aria-description');
-    if (description != null && description !== '') {
-      return {
-        text: description,
-        source: 'aria-description',
-      };
-    }
-
-    const describedBy = nextElement.getAttribute('aria-describedby');
-    if (describedBy != null) {
-      const descText = getTextFromElementsByIds(describedBy);
-      if (descText != null && descText !== '') {
-        return {
-          text: descText,
-          source: 'aria-describedby',
-        }
-      }
-      // const fullDesc = describedBy.split(' ').map(describedBy => {
-      //   const descElement = document.getElementById(describedBy);
-      //   if (descElement != null) {
-      //     const descText = extractInnerText(descElement);
-      //     if (descText != null) {
-      //       return descText;
-
-      //     }
-      //   }
-      //   return null;
-      // });
-      // const fullDescText = fullDesc.join(' ');
-
-      // if (fullDescText != null && fullDescText !== '') {
-      //   return {
-      //     text: fullDescText,
-      //     source: 'aria-describedby',
-      //   };
-      // }
-    }
-
-    const name = extractInnerText(nextElement);
-    if (name != null && name !== '') {
-      return { text: name, source: 'innerText' };
-    }
-
-    nextElement = nextElement.parentElement;
+function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALElementText['source']): ALElementText | null {
+  const label = domSource.directSource.getAttribute(source);
+  if (label != null && label !== '') {
+    return callExternalTextProcessor(
+      {
+        text: label,
+        source
+      },
+      domSource
+    );
   }
   return null;
 }
 
-export function getElementTextEvent(element: HTMLElement | null): ALElementTextEvent {
+function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText['source']): ALElementText | null {
+  const text = extractInnerText(domSource.directSource);
+  if (text != null && text !== '') {
+    return callExternalTextProcessor(
+      {
+        text,
+        source
+      },
+      domSource
+    );
+  }
+  return null;
+}
+
+export function getElementName(element: HTMLElement, surface: string | null): ALElementText | null {
+  const domSource: ALDOMTextSource = {
+    directSource: element,
+    surface
+  };
+  for (
+    let nextElement: HTMLElement | null = element;
+    nextElement && nextElement.nodeType === Node.ELEMENT_NODE;
+    nextElement = nextElement.parentElement
+  ) {
+
+    const text = getTextFromElementsByIds(domSource, 'aria-labelledby')
+      ?? getTextFromElementAttribute(domSource, 'aria-label')
+      ?? getTextFromElementAttribute(domSource, 'aria-description')
+      ?? getTextFromElementsByIds(domSource, 'aria-describedby')
+      ?? getTextFromInnerText(domSource, 'innerText')
+      // ?? TODO: add support for <label for=''> later
+      ;
+    if (text) {
+      return text;
+    }
+  }
+  return null;
+}
+
+export function getElementTextEvent(element: HTMLElement | null, surface: string | null): ALElementTextEvent {
   if (!element) {
     return {
       elementName: null,
       elementText: null,
     }
   }
-  const elementText = getElementName(element);
+  const elementText = getElementName(element, surface);
   return {
     elementName: elementText?.text ?? null,
     elementText,

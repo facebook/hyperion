@@ -10,6 +10,7 @@ import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import * as ALFlowletPublisher from "./ALFlowletPublisher";
 import * as ALHeartbeat from "./ALHeartbeat";
+import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
 import * as ALNetworkPublisher from "./ALNetworkPublisher";
 import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
 import * as ALSurface from "./ALSurface";
@@ -38,6 +39,7 @@ export type InitOptions = Types.Options<
     componentNameValidator?: ComponentNameValidator;
     flowletPublisher?: PublicInitOptions<ALFlowletPublisher.InitOptions> | null;
     surface: PublicInitOptions<ALSurface.InitOptions>;
+    elementText?: ALInteractableDOMElement.ALElementTextOptions | null;
     uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions> | null;
     heartbeat?: ALHeartbeat.InitOptions | null;
     surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions> | null;
@@ -70,6 +72,10 @@ export function init(options: InitOptions): boolean {
   const sharedOptions: ALSharedInitOptions = {
     flowletManager: options.flowletManager,
     domSurfaceAttributeName: options.domSurfaceAttributeName,
+  }
+
+  if (options.elementText) {
+    ALInteractableDOMElement.init(options.elementText);
   }
 
   if (options.flowletPublisher) {
