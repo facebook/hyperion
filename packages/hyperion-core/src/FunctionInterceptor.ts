@@ -427,6 +427,13 @@ export class FunctionInterceptor<
     }
     this.data[dataPropName] = value;
   }
+  public testAndSet(dataPropName: string): boolean {
+    const currValue = this.getData<boolean>(dataPropName) || false;
+    if (!currValue) {
+      this.setData<boolean>(dataPropName, true);
+    }
+    return currValue;
+  }
 }
 
 type ExtendedFuncType<FuncType extends InterceptableFunction> =
