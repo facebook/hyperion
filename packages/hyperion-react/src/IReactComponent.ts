@@ -156,15 +156,12 @@ export function init(options: InitOptions): void {
      * So, we don't need to use the interceptionInfo map here.
      */
 
-    const fi = __DEV__
-      ? interceptFunction<TReactFunctionComponent>(
-        functionComponent,
-        false,
-        null,
-        (functionComponent.displayName ?? functionComponent.name) || void 0, // void 0 will force default for empty string
-      )
-      : interceptFunction<TReactFunctionComponent>(functionComponent);
-
+    const fi = interceptFunction<TReactFunctionComponent>(
+      functionComponent,
+      false,
+      null,
+      (functionComponent.displayName ?? functionComponent.name) || void 0, // void 0 will force default for empty string
+    );
     onReactFunctionComponentIntercept.call(fi);
 
     return fi.interceptor;

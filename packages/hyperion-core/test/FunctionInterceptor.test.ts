@@ -82,6 +82,11 @@ describe("test modern classes", () => {
     const testPropName = 'randomProp';
     fi.setData(testPropName, true);
     expect(fi.getData(testPropName)).toBe(true);
+
+    fi.setData(testPropName, false);
+    expect(fi.getData(testPropName)).toBe(false);
+    expect(fi.testAndSet(testPropName)).toBe(false);
+    expect(fi.getData(testPropName)).toBe(true);
   });
 
   test("Ensure props are carried over", () => {
