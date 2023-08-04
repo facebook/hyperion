@@ -153,9 +153,11 @@ let installHandlers = () => {
   installHandlers = () => { }; // Done doing stuff!
 }
 
-export function trackInteractable(events: Array<string>): void {
+export function trackInteractable(eventName: string): boolean {
   installHandlers();
-  events.forEach(event => TrackedEvents.add(event));
+  const alreadyTracked = TrackedEvents.has(eventName);
+  TrackedEvents.add(eventName);
+  return alreadyTracked;
 }
 
 const extractInnerText = (element: HTMLElement | null): string | null => {
@@ -270,6 +272,7 @@ export function getElementName(element: HTMLElement, surface: string | null): AL
     nextElement && nextElement.nodeType === Node.ELEMENT_NODE;
     nextElement = nextElement.parentElement
   ) {
+    domSource.directSource = nextElement;
 
     const text = getTextFromElementsByIds(domSource, 'aria-labelledby')
       ?? getTextFromElementAttribute(domSource, 'aria-label')
