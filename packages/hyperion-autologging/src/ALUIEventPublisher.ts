@@ -19,7 +19,7 @@ import { ALFlowletEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent 
  * Generates a union type of all handler event and domEvent permutations.
  * e.g. {domEvent: KeyboardEvent, event: 'keydown', ...}
  */
-type ALUIEvent<T = EventHandlerMap> = {
+type ALUIEvent<T = EventHandlerMap> = ALTimedEvent & {
   [K in keyof T]: Readonly<{
     // The typed domEvent associated with the event we are capturing
     domEvent: T[K],
@@ -40,21 +40,16 @@ export type ALUIEventCaptureData = Readonly<
   ALReactElementEvent &
   ALElementTextEvent &
   {
-    captureTimestamp: number,
     surface: string | null,
   }
 >;
 
 export type ALUIEventBubbleData = Readonly<
-  ALUIEvent &
-  {
-    bubbleTimestamp: number,
-  }
+  ALUIEvent
 >;
 
 export type ALLoggableUIEvent = Readonly<
-  Omit<ALUIEventCaptureData, 'captureTimestamp'> &
-  ALTimedEvent
+  ALUIEventCaptureData
 >;
 
 export type ALUIEventData = Readonly<
@@ -74,7 +69,6 @@ type CurrentUIEvent = {
   timedEmitter: TimedTrigger,
 };
 
-const PUBLISHED_EVENTS = new Set<string>();
 type ALChannel = Channel<ALChannelUIEvent>;
 
 type EventHandlerMap = DocumentEventMap;
@@ -109,6 +103,38 @@ const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
 
 const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], ALFlowlet>();
 
+function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig<DocumentEventMap>, eventName: T, event: DocumentEventMap[T]): (ALUIEvent & ALTimedEvent) | null {
+  const eventTimestamp = performanceAbsoluteNow();
+
+  const { eventFilter, interactableElementsOnly = true } = eventConfig;
+
+  if (eventFilter && !eventFilter(event as any)) {
+    return null;
+  }
+
+  let element: HTMLElement | null = null;
+  let autoLoggingID: ALID | null = null;
+  if (interactableElementsOnly) {
+    element = getInteractable(event.target, eventName, false);
+    if (element == null) {
+      return null;
+    }
+    autoLoggingID = getOrSetAutoLoggingID(element);
+  }
+  else {
+    element = event.target instanceof HTMLElement ? event.target : null;
+  }
+
+  return {
+    domEvent: event,
+    event: (eventName as any),
+    element,
+    eventTimestamp,
+    isTrusted: event.isTrusted,
+    autoLoggingID,
+  };
+}
+
 /**
  *
  * @param options - Configuration for determining which events to capture and emit events via provided channel.
@@ -119,38 +145,25 @@ const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], ALFlowlet>();
 export function publish(options: InitOptions): void {
   const { uiEvents, flowletManager, channel, domSurfaceAttributeName } = options;
 
-
-  const newEventsToPublish = uiEvents.filter(
-    event => !PUBLISHED_EVENTS.has(event.eventName),
-  );
-
-  trackInteractable(newEventsToPublish.map(ev => ev.eventName));
-
   let lastUIEvent: CurrentUIEvent | null;
   const defaultTopFlowlet = new flowletManager.flowletCtor("/");
 
-  newEventsToPublish.forEach((eventConfig => {
-    const { eventName, eventFilter, cacheElementReactInfo = false, interactableElementsOnly = true } = eventConfig;
+  uiEvents.forEach((eventConfig => {
+    const { eventName, cacheElementReactInfo = false } = eventConfig;
+
+    // the following will ensure that repeated items in the list won't have double handlers
+    if (trackInteractable(eventName)) {
+      // Already handled
+      return;
+    }
+
     // Track event in the capturing phase
     window.document.addEventListener(eventName, (event) => {
-      const captureTimestamp = performanceAbsoluteNow();
-
-      if (eventFilter && !eventFilter(event as any)) {
+      const uiEventData = getCommonEventData(eventConfig, eventName, event);
+      if (!uiEventData) {
         return;
       }
-
-      let element: HTMLElement | null = null;
-      let autoLoggingID: ALID | null = null;
-      if (interactableElementsOnly) {
-        element = getInteractable(event.target, eventName, true);
-        if (element == null) {
-          return;
-        }
-        autoLoggingID = getOrSetAutoLoggingID(element);
-      }
-      else {
-        element = event.target instanceof HTMLElement ? event.target : null;
-      }
+      const { element, autoLoggingID, eventTimestamp } = uiEventData;
 
       const surface = getSurfacePath(element, domSurfaceAttributeName);
       /**
@@ -162,7 +175,7 @@ export function publish(options: InitOptions): void {
       const topFlowlet = flowletManager.top();
       let flowlet = topFlowlet ?? defaultTopFlowlet; // We want to ensure flowlet is always assigned
       if (shouldPushPopFlowlet(event)) {
-        let flowletName = eventName + `(ts:${captureTimestamp}`;
+        let flowletName = eventName + `(ts:${eventTimestamp}`;
         if (autoLoggingID) {
           flowletName += `,element:${autoLoggingID}`;
         }
@@ -182,18 +195,13 @@ export function publish(options: InitOptions): void {
       }
       const elementText = getElementTextEvent(element, surface);
       const eventData: ALUIEventCaptureData = {
-        domEvent: event,
-        event: (eventName as any),
-        element,
-        captureTimestamp,
+        ...uiEventData,
         flowlet,
         alFlowlet: flowlet.data.alFlowlet,
-        isTrusted: event.isTrusted,
         surface,
         ...elementText,
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
-        autoLoggingID
       };
       channel.emit('al_ui_event_capture', eventData);
       updateLastUIEvent(eventData);
@@ -205,33 +213,12 @@ export function publish(options: InitOptions): void {
     window.document.addEventListener(
       eventName,
       (event) => {
-        const bubbleTimestamp = performanceAbsoluteNow();
-
-        if (eventFilter && !eventFilter(event as any)) {
+        const uiEventData = getCommonEventData(eventConfig, eventName, event);
+        if (!uiEventData) {
           return;
         }
 
-        let element: HTMLElement | null = null;
-        let autoLoggingID: ALID | null = null;
-        if (interactableElementsOnly) {
-          element = getInteractable(event.target, eventName);
-          if (element == null) {
-            return;
-          }
-          autoLoggingID = getOrSetAutoLoggingID(element);
-        }
-        else {
-          element = event.target instanceof HTMLElement ? event.target : null;
-        }
-
-        channel.emit('al_ui_event_bubble', {
-          domEvent: event,
-          event: (eventName as any),
-          element,
-          bubbleTimestamp,
-          isTrusted: event.isTrusted,
-          autoLoggingID,
-        });
+        channel.emit('al_ui_event_bubble', uiEventData);
 
         /**
          * We want the actual event fire after all bubble listeners are done
@@ -257,17 +244,12 @@ export function publish(options: InitOptions): void {
   }));
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
-    const { captureTimestamp } = eventData;
-
     if (lastUIEvent != null) {
       const { timedEmitter } = lastUIEvent;
       timedEmitter.run();
     }
 
-    const data: ALUIEventData = {
-      ...eventData,
-      eventTimestamp: captureTimestamp,
-    };
+    const data: ALUIEventData = eventData;
 
     lastUIEvent = {
       data,
@@ -277,8 +259,6 @@ export function publish(options: InitOptions): void {
       }, MAX_CAPTURE_TO_BUBBLE_DELAY_MS),
     };
   }
-
-  newEventsToPublish.forEach(event => PUBLISHED_EVENTS.add(event.eventName));
 
   /**
    * We know the the flowlet.data is going to carry the async flow data based
