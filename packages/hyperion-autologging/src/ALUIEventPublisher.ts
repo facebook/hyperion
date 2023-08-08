@@ -115,7 +115,16 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
   let element: HTMLElement | null = null;
   let autoLoggingID: ALID | null = null;
   if (interactableElementsOnly) {
-    element = getInteractable(event.target, eventName, false);
+    /**
+     * Because of how UI events work in browser, one could for example click anywhere
+     * on a sub-tree an element and the event handler of that element will handle the event
+     * once the event "bublles" to it.
+     * For interactable elements, first we walk as high up the DOM tree as we can
+     * to find the actuall element on which the original event handler was added. 
+     * We use that as the base of event to ensure the text, surface, ... for events
+     * remain consistent no matter where the user actually clicked, hovered, ...
+     */
+    element = getInteractable(event.target, eventName, true);
     if (element == null) {
       return null;
     }

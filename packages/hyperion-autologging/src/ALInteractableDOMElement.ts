@@ -160,20 +160,20 @@ export function trackInteractable(eventName: string): boolean {
   return alreadyTracked;
 }
 
-const extractInnerText = (element: HTMLElement | null): string | null => {
-  const innerText = element?.innerText?.replace(
+function extractCleanText(text: string): string {
+  const cleanText = text.replace(
     // Remove zero-width invisible Unicode characters (https://stackoverflow.com/a/11305926)
     /[\u200B-\u200D\uFEFF]/g,
     '',
   );
-  if (innerText) {
-    const innerTextArray = innerText.split(/\r\n|\r|\n/);
-    const name = (innerTextArray && innerTextArray.length > 0) ? innerTextArray[0] : null;
+  if (cleanText) {
+    const lines = cleanText.split(/\r\n|\r|\n/);
+    const name = (lines && lines.length > 0) ? lines[0] : null;
     if (name != null) {
       return name;
     }
   }
-  return null;
+  return "";
 };
 
 export type ALElementText = {
@@ -192,100 +192,130 @@ export type ALElementTextEvent = Readonly<{
 
 export type ALDOMTextSource = {
   surface: string | null;
-  directSource: HTMLElement;
-  indirectSources?: HTMLElement[] | null;
+  element: HTMLElement;
 }
 
 export type ALElementTextOptions = Readonly<{
-  updateText: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
+  maxDepth?: number;
+  updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
+  reduceText?: <T extends ALElementText>(prevElementText: T, currTextElementText: T, nextElementText: T) => void;
 }>;
 
 let _options: ALElementTextOptions | null = null;
+let MaxDepth = 20;
 export function init(options: ALElementTextOptions) {
   _options = options;
+  MaxDepth = _options.maxDepth ?? MaxDepth;
 }
 
 function callExternalTextProcessor(
   elementText: ALElementText,
   domSource: ALDOMTextSource,
-): ALElementText {
-  _options?.updateText(elementText, domSource);
-  return elementText;
+  results: ALElementText[]
+): ALElementText[] {
+  _options?.updateText?.(elementText, domSource);
+  results.push(elementText);
+  return results;
 }
 
-// Takes a space-delimited list of DOM element IDs and returns the inner text of those elements joined by spaces
-function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementText['source']): ALElementText | null {
-  const indirectSources = domSource.directSource
-    .getAttribute(source)
-    ?.split(' ')
-    .map(id => document.getElementById(id))
-    .filter(function (element): element is HTMLElement { return element instanceof HTMLElement });
-  const fullText = indirectSources?.map(extractInnerText).filter(text => text != null).join(' ');
-  if (fullText != null && fullText !== '') {
-    domSource.indirectSources = indirectSources
+function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, results: ALElementText[]): ALElementText[] | null {
+  const text = textNode.nodeValue;
+  if (text != null && text !== '') {
     return callExternalTextProcessor(
       {
-        text: fullText,
-        source,
+        text,
+        source: 'innerText'
       },
-      domSource
+      domSource,
+      results
     );
+
   }
   return null;
 }
 
-function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALElementText['source']): ALElementText | null {
-  const label = domSource.directSource.getAttribute(source);
+
+// Takes a space-delimited list of DOM element IDs and returns the inner text of those elements joined by spaces
+function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
+  const indirectSources = domSource.element
+    .getAttribute(source)
+    ?.split(' ')
+    .map(id => document.getElementById(id))
+    .filter(function (element): element is HTMLElement { return element instanceof HTMLElement });
+  if (!indirectSources?.length) {
+    return null;
+  }
+
+  for (let i = 0; i < indirectSources.length; i++) {
+    domSource.element = indirectSources[i];
+    getTextFromInnerText(domSource, source, results);
+  }
+
+  return results;
+}
+
+function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
+  const label = domSource.element.getAttribute(source);
   if (label != null && label !== '') {
     return callExternalTextProcessor(
       {
         text: label,
         source
       },
-      domSource
+      domSource,
+      results
     );
   }
   return null;
 }
 
-function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText['source']): ALElementText | null {
-  const text = extractInnerText(domSource.directSource);
+function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
+  const text = domSource.element.textContent; // Jest does not support innerText, https://github.com/jsdom/jsdom/issues/1245
   if (text != null && text !== '') {
     return callExternalTextProcessor(
       {
         text,
         source
       },
-      domSource
+      domSource,
+      results
     );
   }
   return null;
 }
 
-export function getElementName(element: HTMLElement, surface: string | null): ALElementText | null {
+function getElementName(element: HTMLElement, surface: string | null, results: ALElementText[], depth = 0): void {
+  if (depth > MaxDepth) {
+    return;
+  }
+
   const domSource: ALDOMTextSource = {
-    directSource: element,
+    element: element,
     surface
   };
-  for (
-    let nextElement: HTMLElement | null = element;
-    nextElement && nextElement.nodeType === Node.ELEMENT_NODE;
-    nextElement = nextElement.parentElement
-  ) {
-    domSource.directSource = nextElement;
 
-    const text = getTextFromElementsByIds(domSource, 'aria-labelledby')
-      ?? getTextFromElementAttribute(domSource, 'aria-label')
-      ?? getTextFromElementAttribute(domSource, 'aria-description')
-      ?? getTextFromElementsByIds(domSource, 'aria-describedby')
-      ?? getTextFromInnerText(domSource, 'innerText')
-      // ?? TODO: add support for <label for=''> later
-      ;
-    if (text) {
-      return text;
+  /**
+   * First we check if the element itself has some definitive text we can use
+   */
+  const selfText = getTextFromElementsByIds(domSource, 'aria-labelledby', results)
+    ?? getTextFromElementAttribute(domSource, 'aria-label', results)
+    ?? getTextFromElementAttribute(domSource, 'aria-description', results)
+    ?? getTextFromElementsByIds(domSource, 'aria-describedby', results)
+    ;
+
+  if (!selfText) {
+    /**
+     * Now we recurse into the children to find other text candidates.
+     */
+    for (
+      let child = element.firstChild; child; child = child.nextSibling) {
+      if (child instanceof HTMLElement && child.nodeType === Node.ELEMENT_NODE) {
+        getElementName(child, surface, results, depth + 1);
+      } else if (child instanceof Text && child.nodeType === Node.TEXT_NODE) {
+        getTextFromTextNode({ element: element, surface }, child, results);
+      }
     }
   }
-  return null;
 }
 
 export function getElementTextEvent(element: HTMLElement | null, surface: string | null): ALElementTextEvent {
@@ -295,7 +325,30 @@ export function getElementTextEvent(element: HTMLElement | null, surface: string
       elementText: null,
     }
   }
-  const elementText = getElementName(element, surface);
+  const results: ALElementText[] = [];
+  getElementName(element, surface, results);
+  const elementText = results.reduce(
+    (prev, current) => {
+      /**
+       * We want to ensure that if _options.updateText has changed individual objects
+       * we can still maintain that structure and pass it back to _options.reduceText
+       * Therefore, we spread both prev and current bellow
+       */
+      const cleanText = extractCleanText(current.text);
+      const next: ALElementText = {
+        ...prev,
+        ...current,
+        text: prev.text + cleanText,
+      };
+
+      _options?.reduceText?.(prev, current, next);
+      return next;
+    },
+    {
+      text: "",
+      source: 'innerText'
+    }
+  );
   return {
     elementName: elementText?.text ?? null,
     elementText,
