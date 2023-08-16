@@ -69,8 +69,19 @@ describe("Text various element text options", () => {
         }
         elementText.text = elementText.text.replace(/\r\n|\r|\n/, '');
       },
-      reduceText: (prev: ExtendedElementText, current: ExtendedElementText, next: ExtendedElementText) => {
-        next.modifiedText = (prev.modifiedText ?? "") + (current.modifiedText ?? "");
+      getText: (elementTexts: Readonly<ExtendedElementText[]>): ExtendedElementText => {
+        return elementTexts.reduce((prev, current) => {
+          return {
+            ...prev,
+            ...current,
+            text: prev.text + ALInteractableDOMElement.extractCleanText(current.text),
+            modifiedText: (prev.modifiedText ?? "") + (current.modifiedText ?? ""),
+          }
+        }, {
+          text: "",
+          source: 'innerText',
+          modifiedText: ""
+        });
       }
     });
     const text = ALInteractableDOMElement.getElementTextEvent(dom, null);
