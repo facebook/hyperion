@@ -60,7 +60,8 @@ export function getInteractable(
   eventName: string,
   returnInteractableNode: boolean = false,
 ): HTMLElement | null {
-  const selectorString = `[data-${eventName}able="1"],input`;
+  // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
+  const selectorString = `[data-${eventName}able="1"],input,button,select,option,details,dialog,summary`;
   if (node instanceof HTMLElement) {
     const closestSelectorElement = node.closest(selectorString);
     if (
@@ -160,7 +161,7 @@ export function trackInteractable(eventName: string): boolean {
   return alreadyTracked;
 }
 
-function extractCleanText(text: string): string {
+export function extractCleanText(text: string): string {
   const cleanText = text.replace(
     // Remove zero-width invisible Unicode characters (https://stackoverflow.com/a/11305926)
     /[\u200B-\u200D\uFEFF]/g,
@@ -198,7 +199,7 @@ export type ALDOMTextSource = {
 export type ALElementTextOptions = Readonly<{
   maxDepth?: number;
   updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
-  reduceText?: <T extends ALElementText>(prevElementText: T, currTextElementText: T, nextElementText: T) => void;
+  getText?: <T extends ALElementText>(elementTexts: T[]) => ALElementText;
 }>;
 
 let _options: ALElementTextOptions | null = null;
@@ -327,7 +328,7 @@ export function getElementTextEvent(element: HTMLElement | null, surface: string
   }
   const results: ALElementText[] = [];
   getElementName(element, surface, results);
-  const elementText = results.reduce(
+  const elementText = _options?.getText?.(results) ?? results.reduce(
     (prev, current) => {
       /**
        * We want to ensure that if _options.updateText has changed individual objects
@@ -340,8 +341,6 @@ export function getElementTextEvent(element: HTMLElement | null, surface: string
         ...current,
         text: prev.text + cleanText,
       };
-
-      _options?.reduceText?.(prev, current, next);
       return next;
     },
     {
