@@ -8,7 +8,7 @@ import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
-import { ALFlowlet, ALFlowletManagerInstance } from "./ALFlowletManager";
+import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, getElementTextEvent, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
@@ -108,6 +108,8 @@ const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
 
 const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], ALFlowlet>();
 
+const uiEventFlowletManager = new ALFlowletManager();
+
 function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig<DocumentEventMap>, eventName: T, event: DocumentEventMap[T]): CommonEventData | null {
   const eventTimestamp = performanceAbsoluteNow();
 
@@ -200,7 +202,7 @@ export function publish(options: InitOptions): void {
         }
         flowletName += ')';
         flowlet = new flowletManager.flowletCtor(flowletName);
-        ALFlowletManagerInstance.push(flowlet);
+        uiEventFlowletManager.push(flowlet);
         flowlet = flowletManager.push(flowlet);
         activeUIEventFlowlets.set(eventName, flowlet);
       }
@@ -213,7 +215,6 @@ export function publish(options: InitOptions): void {
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
         flowlet,
-        alFlowlet: flowlet.data.alFlowlet,
         surface,
         ...elementText,
         reactComponentName: reactComponentData?.name,
@@ -247,7 +248,7 @@ export function publish(options: InitOptions): void {
             /**
              * In case during al_ui_event_bubble subscribers have updated the
              * metadata of the event, we combine them into the metadata of the
-             * al_ui_event_capture event. 
+             * al_ui_event_capture event.
              */
             Object.assign(data.metadata, uiEventData.metadata);
             timedEmitter.run();
@@ -258,7 +259,7 @@ export function publish(options: InitOptions): void {
         if (shouldPushPopFlowlet(event) && (flowlet = activeUIEventFlowlets.get(eventName)) != null) {
           flowletManager.pop(flowlet);
           activeUIEventFlowlets.delete(eventName);
-          ALFlowletManagerInstance.pop(flowlet);
+          uiEventFlowletManager.pop(flowlet);
         }
       },
       false, // useCapture
@@ -291,14 +292,14 @@ export function publish(options: InitOptions): void {
    * add the following code to say whenever a new flowlet is pushed (a.k.a a new async
    * context is started), we ensure that knows which alflowlet is responsible for it.
    *
-   * To ensure this info carries forward, we look at the ALFlowletManagerInstance stack.
+   * To ensure this info carries forward, we look at the uiEventFlowletManager stack.
    * This mechanism works because of how various 'creation time flowlets' are pushed/popped on
    * the stack.
    */
   flowletManager.onPush.add((flowlet, _reason) => {
-    const alFlowlet = ALFlowletManagerInstance.top();
-    if (alFlowlet && flowlet.data.alFlowlet !== alFlowlet) {
-      flowlet.data.alFlowlet = alFlowlet;
+    const uiEventFlowlet = uiEventFlowletManager.top();
+    if (uiEventFlowlet && flowlet.data.uiEventFlowlet !== uiEventFlowlet) {
+      flowlet.data.uiEventFlowlet = uiEventFlowlet;
       if (flowlet.name === "useState" && flowlet.parent) {
         /**
          * We know that useState will trigger an update on the corresponding component
@@ -311,7 +312,7 @@ export function publish(options: InitOptions): void {
          * look for that marking and updat the flowlet.
          *
          */
-        flowlet.parent.data.alFlowlet = alFlowlet;
+        flowlet.parent.data.uiEventFlowlet = uiEventFlowlet;
       }
     }
   })

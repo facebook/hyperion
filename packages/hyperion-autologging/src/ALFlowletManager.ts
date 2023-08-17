@@ -14,7 +14,7 @@ import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
  */
 export interface ALFlowletDataType {
   surface?: string;
-  alFlowlet?: ALFlowlet;
+  uiEventFlowlet?: ALFlowlet;
 };
 
 export class ALFlowlet<DataType extends ALFlowletDataType = ALFlowletDataType>
@@ -27,5 +27,3 @@ export class ALFlowletManager<DataType extends ALFlowletDataType = ALFlowletData
     super(ALFlowlet);
   }
 }
-
-export const ALFlowletManagerInstance = new ALFlowletManager();
