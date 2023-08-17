@@ -159,7 +159,6 @@ function captureFetch(options: InitOptions): void {
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
         flowlet,
-        alFlowlet: flowlet?.data.alFlowlet,
         ...request,
         metadata: {},
       });
@@ -189,7 +188,6 @@ function captureFetch(options: InitOptions): void {
           eventTimestamp: performanceAbsoluteNow(),
           eventIndex: ALEventIndex.getNextEventIndex(),
           flowlet,
-          alFlowlet: flowlet?.data.alFlowlet,
           requestEvent,
           response,
           metadata: {},
@@ -240,7 +238,6 @@ function captureXHR(options: InitOptions): void {
 
 
     const flowlet = flowletManager.top(); // Before calling requestFilter and losing current top flowlet
-    const alFlowlet = flowlet?.data.alFlowlet;
     if (!options.requestFilter || options.requestFilter(request)) {
       let requestEvent: ALNetworkResponseEvent['requestEvent'];
 
@@ -250,7 +247,6 @@ function captureXHR(options: InitOptions): void {
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
         flowlet,
-        alFlowlet,
         ...request, // assert already ensures request is not undefined
         metadata: {},
       });
@@ -266,7 +262,6 @@ function captureXHR(options: InitOptions): void {
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
             flowlet, // should carry request flowlet forward
-            alFlowlet,
             requestEvent,
             response: this,
             metadata: {},
