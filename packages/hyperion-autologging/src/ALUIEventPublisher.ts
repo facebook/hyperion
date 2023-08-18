@@ -25,11 +25,11 @@ type ALUIEvent<T = EventHandlerMap> = ALTimedEvent & {
     domEvent: T[K],
     // Event we are capturing
     event: K,
-    // Element target associated with the domEvent
+    // Element target associated with the domEvent; With interactableElementsOnly, will be the interactable element target.
     element: HTMLElement | null,
     // Whether the event is generated from a user action or dispatched via script
     isTrusted: boolean,
-
+    // The underlying identifier assigned to this element
     autoLoggingID: ALID | null,
   }>
 }[keyof T];
@@ -93,6 +93,11 @@ export type InitOptions = Types.Options<
   }
 >;
 
+type CommonEventData = (ALUIEvent & ALTimedEvent) & {
+  // The event.target element,  as opposed to element which represents the interactableElement
+  targetElement: HTMLElement | null,
+};
+
 /**
  *
  * @param event - the event to check whether it's valid and we want to push/pop it on the flowlet stack
@@ -103,7 +108,7 @@ const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
 
 const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], ALFlowlet>();
 
-function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig<DocumentEventMap>, eventName: T, event: DocumentEventMap[T]): (ALUIEvent & ALTimedEvent) | null {
+function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig<DocumentEventMap>, eventName: T, event: DocumentEventMap[T]): CommonEventData | null {
   const eventTimestamp = performanceAbsoluteNow();
 
   const { eventFilter, interactableElementsOnly = true } = eventConfig;
@@ -120,7 +125,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
      * on a sub-tree an element and the event handler of that element will handle the event
      * once the event "bublles" to it.
      * For interactable elements, first we walk as high up the DOM tree as we can
-     * to find the actuall element on which the original event handler was added. 
+     * to find the actuall element on which the original event handler was added.
      * We use that as the base of event to ensure the text, surface, ... for events
      * remain consistent no matter where the user actually clicked, hovered, ...
      */
@@ -138,6 +143,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     domEvent: event,
     event: (eventName as any),
     element,
+    targetElement: event.target instanceof HTMLElement ? event.target : null,
     eventTimestamp,
     isTrusted: event.isTrusted,
     autoLoggingID,
@@ -172,9 +178,9 @@ export function publish(options: InitOptions): void {
       if (!uiEventData) {
         return;
       }
-      const { element, autoLoggingID, eventTimestamp } = uiEventData;
+      const { element, targetElement, autoLoggingID, eventTimestamp } = uiEventData;
 
-      const surface = getSurfacePath(element, domSurfaceAttributeName);
+      const surface = getSurfacePath(targetElement, domSurfaceAttributeName);
       /**
        * Regardless of element, we want to set the flowlet on this event.
        * If we do have an element, we include its id in the flowlet.
@@ -198,8 +204,8 @@ export function publish(options: InitOptions): void {
         activeUIEventFlowlets.set(eventName, flowlet);
       }
       let reactComponentData: ReactComponentData | null = null;
-      if (element && cacheElementReactInfo) {
-        const elementInfo = ALElementInfo.getOrCreate(element);
+      if (targetElement && cacheElementReactInfo) {
+        const elementInfo = ALElementInfo.getOrCreate(targetElement);
         reactComponentData = elementInfo.getReactComponentData();
       }
       const elementText = getElementTextEvent(element, surface);
