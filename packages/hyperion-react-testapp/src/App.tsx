@@ -11,6 +11,7 @@ import NestedComponent from './component/NestedComponent';
 import { PortalBodyContainerComponent } from './component/PortalComponent';
 import DynamicSvgComponent from './component/DynamicSvgComponent';
 import ElementNameComponent from './component/ElementNameComponent';
+import TextComponent from './component/TextComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -50,6 +51,7 @@ function App() {
         <ElementNameComponent />
       </div>
       <DynamicSvgComponent></DynamicSvgComponent>
+      <TextComponent />
     </div>
   );
 }
