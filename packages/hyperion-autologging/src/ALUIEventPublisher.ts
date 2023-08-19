@@ -13,13 +13,13 @@ import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, getElementTextEvent, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
-import { ALFlowletEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
+import { ALFlowletEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 
 /**
  * Generates a union type of all handler event and domEvent permutations.
  * e.g. {domEvent: KeyboardEvent, event: 'keydown', ...}
  */
-type ALUIEvent<T = EventHandlerMap> = ALTimedEvent & {
+type ALUIEvent<T = EventHandlerMap> = ALTimedEvent & ALMetadataEvent & {
   [K in keyof T]: Readonly<{
     // The typed domEvent associated with the event we are capturing
     domEvent: T[K],
@@ -147,6 +147,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     eventTimestamp,
     isTrusted: event.isTrusted,
     autoLoggingID,
+    metadata: {},
   };
 }
 
@@ -243,6 +244,12 @@ export function publish(options: InitOptions): void {
         if (lastUIEvent != null) {
           const { data, timedEmitter } = lastUIEvent;
           if (data.event === eventName && data.domEvent.target === event.target) {
+            /**
+             * In case during al_ui_event_bubble subscribers have updated the
+             * metadata of the event, we combine them into the metadata of the
+             * al_ui_event_capture event. 
+             */
+            Object.assign(data.metadata, uiEventData.metadata);
             timedEmitter.run();
           }
         }

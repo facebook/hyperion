@@ -126,6 +126,7 @@ function _logHeartbeat(heartbeatType: ALHeartbeatType): void {
       eventTimestamp: timestamp,
       // flowlet: AdsALFlowletManager.top(),
       heartbeatType,
+      metadata: {},
     });
     _lastHeartbeatTime = timestamp;
   }

@@ -6,7 +6,8 @@
 
 import { getReactComponentData_THIS_CAN_BREAK } from './ALReactUtils';
 import type { ReactComponentData } from './ALReactUtils';
-import { getVirtualPropertyValue, setVirtualPropertyValue } from '@hyperion/hyperion-core/src/intercept';
+import { getVirtualPropertyValue, intercept, setVirtualPropertyValue } from '@hyperion/hyperion-core/src/intercept';
+import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 
 const AL_ELEMENT_INFO_PROPNAME = '__alInfo';
 const AUTO_LOGGING_COMPONENT_TYPE = 'data-auto-logging-component-type';
@@ -20,6 +21,7 @@ export default class ALElementInfo {
     element: Element
   ) {
     this.element = element;
+    intercept(element, IElement.IElementtPrototype); // This also ensures that proper interception is setup. 
     setVirtualPropertyValue(
       element,
       AL_ELEMENT_INFO_PROPNAME,

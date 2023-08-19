@@ -9,30 +9,27 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 
 import * as Flowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { ALFlowlet } from "./ALFlowletManager";
+import { ALMetadataEvent } from "./ALType";
 
-export type ALFlowletEventData = Readonly<
-  {
-    flowlet: ALFlowlet;
-  }
->;
+export type ALFlowletEventData = ALMetadataEvent & Readonly<{
+  flowlet: ALFlowlet;
+}>;
 
 export type ALChannelFlowletEvent = Readonly<{
   al_flowlet_event: [ALFlowletEventData],
-}
->;
+}>;
 
 export type ALFlowletChannel = Channel<ALChannelFlowletEvent>;
 
-export type InitOptions = Types.Options<
-  {
-    channel: ALFlowletChannel;
-  }
->;
+export type InitOptions = Types.Options<{
+  channel: ALFlowletChannel;
+}>;
 
 export function publish(options: InitOptions): void {
   Flowlet.onFlowletInit.add(flowlet => {
     options.channel.emit('al_flowlet_event', {
       flowlet,
+      metadata: {},
     });
   });
 }

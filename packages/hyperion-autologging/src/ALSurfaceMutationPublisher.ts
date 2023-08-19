@@ -167,6 +167,7 @@ export function publish(options: InitOptions): void {
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
           flowlet,
           alFlowlet: flowlet?.data.alFlowlet,
+          metadata: {},
         });
         break;
       }
@@ -183,6 +184,7 @@ export function publish(options: InitOptions): void {
           flowlet,
           alFlowlet: flowlet?.data.alFlowlet,
           mountEvent,
+          metadata: {},
         });
         break;
       }
