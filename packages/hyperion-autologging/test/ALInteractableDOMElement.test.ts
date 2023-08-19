@@ -83,6 +83,28 @@ describe("Text various element text options", () => {
     const text = ALInteractableDOMElement.getElementTextEvent(dom.root, null);
     expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3test*  test7  test*  test*  test10  ");
     console.log(text);
+    dom.cleanup();
+  });
+
+  test("Detect interactable", () => {
+    const dom = DomFragment.html(`
+      <div id='1' onclick="return 1;"></div>
+      <div id="2" data-clickable="1">
+        <span id="3">Test</span>
+      </div>
+    `);
+
+    function interactable(node: HTMLElement | null, eventName: string): HTMLElement | null {
+      return ALInteractableDOMElement.getInteractable(node, "click", true);
+    }
+
+    let node = document.getElementById("1");
+    expect(interactable(node, "click")).toStrictEqual(node);
+
+    node = document.getElementById("2");
+    expect(interactable(node, "click")).toStrictEqual(node);
+
+    expect(interactable(document.getElementById("3"), "click")).toStrictEqual(node);
 
     dom.cleanup();
   });
