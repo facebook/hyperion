@@ -17,7 +17,15 @@ export type ALOptionalFlowletEvent = Omit<ALFlowletEvent, 'flowlet'> & Readonly<
 }>;
 
 export type ALTimedEvent = Readonly<{
-  eventTimestamp: number,
+  eventTimestamp: number;
+}>;
+
+export type Metadata = {
+  [Key: string]: string;
+};
+
+export type ALMetadataEvent = Readonly<{
+  metadata: Metadata;
 }>;
 
 /**
@@ -31,13 +39,13 @@ export type ALTimedEvent = Readonly<{
  * for their events to signal to the subscribers that they need to add extra
  * information as needed.
  */
-export type ALLoggableEvent = ALTimedEvent & Readonly<{
-  eventIndex: number,
+export type ALLoggableEvent = ALTimedEvent & ALMetadataEvent & Readonly<{
+  eventIndex: number;
 }>;
 
 export type ALReactElementEvent = Readonly<{
-  reactComponentName?: string | null,
-  reactComponentStack?: string[] | null,
+  reactComponentName?: string | null;
+  reactComponentStack?: string[] | null;
 }>;
 
 export type ALSharedInitOptions = Types.Options<{

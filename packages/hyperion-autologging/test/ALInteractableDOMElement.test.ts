@@ -7,16 +7,10 @@
 import "jest";
 
 import * as ALInteractableDOMElement from "../src/ALInteractableDOMElement";
+import * as DomFragment from "./DomFragment";
 
-function html(text: string): HTMLElement {
-  const element = document.createElement("div");
-  element.innerHTML = text;
-  document.body.appendChild(element); // To ensure query functions of document works
-  return element;
-}
-
-function createTestDom(): HTMLElement {
-  return html(`
+function createTestDom(): DomFragment.DomFragment {
+  return DomFragment.html(`
   <span id='1' aria-label="test1"></span>
   <span id='2' aria-description="test2"></span>
   <span id='3'>test3</span>
@@ -37,7 +31,7 @@ function getText(id: string): string | null {
 
 describe("Text various element text options", () => {
   test("element with simple text", () => {
-    createTestDom();
+    const dom = createTestDom();
 
     expect(getText(`1`)).toBe("test1");
     expect(getText(`2`)).toBe("test2");
@@ -49,6 +43,8 @@ describe("Text various element text options", () => {
     expect(getText(`8`)).toBe("test8");
     expect(getText(`9`)).toBe("test9");
     expect(getText(`10`)).toBe("test10");
+
+    dom.cleanup();
   });
 
   test("element text callbacks", () => {
@@ -84,9 +80,10 @@ describe("Text various element text options", () => {
         });
       }
     });
-    const text = ALInteractableDOMElement.getElementTextEvent(dom, null);
+    const text = ALInteractableDOMElement.getElementTextEvent(dom.root, null);
     expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3test*  test7  test*  test*  test10  ");
     console.log(text);
 
+    dom.cleanup();
   });
 });

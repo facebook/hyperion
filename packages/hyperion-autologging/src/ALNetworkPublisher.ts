@@ -161,6 +161,7 @@ function captureFetch(options: InitOptions): void {
         flowlet,
         alFlowlet: flowlet?.data.alFlowlet,
         ...request,
+        metadata: {},
       });
     } else {
       ephemeralRequestEvent = null;
@@ -191,6 +192,7 @@ function captureFetch(options: InitOptions): void {
           alFlowlet: flowlet?.data.alFlowlet,
           requestEvent,
           response,
+          metadata: {},
         });
       });
     }
@@ -249,7 +251,8 @@ function captureXHR(options: InitOptions): void {
         eventIndex: ALEventIndex.getNextEventIndex(),
         flowlet,
         alFlowlet,
-        ...request // assert already ensures request is not undefined
+        ...request, // assert already ensures request is not undefined
+        metadata: {},
       });
 
       this.addEventListener(
@@ -266,7 +269,8 @@ function captureXHR(options: InitOptions): void {
             alFlowlet,
             requestEvent,
             response: this,
-          })
+            metadata: {},
+          });
         },
         { once: true }
       );
