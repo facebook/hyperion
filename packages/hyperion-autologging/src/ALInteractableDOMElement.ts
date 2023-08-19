@@ -8,26 +8,6 @@ import { onReactDOMElement } from "@hyperion/hyperion-react/src/IReactComponent"
 
 'use strict';
 
-const eventNamesMap: {
-  [key: string]: (arg0: HTMLElement) => ((this: GlobalEventHandlers, ev: MouseEvent) => any) | null;
-} = {
-  click: (node: HTMLElement) => {
-    return node.onclick;
-  },
-  mouseover: (node: HTMLElement) => {
-    return node.onmouseover;
-  },
-  mouseenter: (node: HTMLElement) => {
-    return node.onmouseenter;
-  },
-  mouseout: (node: HTMLElement) => {
-    return node.onmouseout;
-  },
-  mouseleave: (node: HTMLElement) => {
-    return node.onmouseleave;
-  },
-};
-
 const SYNTHETIC_EVENT_HANDLER_MAP: {
   [key: string]: string;
 } = {
@@ -55,13 +35,23 @@ const SYNTHETIC_EVENT_HANDLER_MAP: {
   submit: 'onSubmit',
 };
 
+type HTMLElementEventNames = keyof HTMLElementEventMap
+type AttributeEventHandlerName = `on${HTMLElementEventNames}`;
+type HTMLElementWithHandlers = HTMLElement & {
+  [K in AttributeEventHandlerName]?: any;//  ((this: GlobalEventHandlers, ev: MouseEvent) => any) | null;
+}
+
+function eventHandlerTrackerAttribute(eventName: string): string {
+  return `data-${eventName}able`;
+}
+
 export function getInteractable(
   node: EventTarget | null,
   eventName: string,
   returnInteractableNode: boolean = false,
 ): HTMLElement | null {
   // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
-  const selectorString = `[data-${eventName}able="1"],input,button,select,option,details,dialog,summary`;
+  const selectorString = `[${eventHandlerTrackerAttribute(eventName)}="1"],input,button,select,option,details,dialog,summary`;
   if (node instanceof HTMLElement) {
     const closestSelectorElement = node.closest(selectorString);
     if (
@@ -69,7 +59,7 @@ export function getInteractable(
       (closestSelectorElement instanceof HTMLElement &&
         ignoreInteractiveElement(closestSelectorElement))
     ) {
-      const closestHandler = getClosestHandler(node, eventName);
+      const closestHandler = getClosestElementWithHandler(node, eventName as HTMLElementEventNames); // we already know node is HTMLElement
       return closestHandler != null
         ? returnInteractableNode
           ? closestHandler
@@ -84,21 +74,14 @@ export function getInteractable(
   return null;
 }
 
-function getClosestHandler(node: EventTarget, eventName: string): HTMLElement | null {
-  if (node instanceof HTMLElement) {
-    let handler;
-    if (eventNamesMap[eventName] != null) {
-      handler = eventNamesMap[eventName](node);
-    }
-    if (handler != null) {
-      return ignoreInteractiveElement(node) ? null : node;
-    } else {
-      return node.parentElement != null
-        ? getClosestHandler(node.parentElement, eventName)
-        : null;
-    }
+function getClosestElementWithHandler(node: HTMLElementWithHandlers, eventName: HTMLElementEventNames): HTMLElement | null {
+  const handler = node[`on${eventName}`];
+  if (handler != null) {
+    return ignoreInteractiveElement(node) ? null : node;
   } else {
-    return null;
+    return node.parentElement != null
+      ? getClosestElementWithHandler(node.parentElement, eventName)
+      : null;
   }
 }
 
@@ -122,8 +105,7 @@ let installHandlers = () => {
   ) {
     if (TrackedEvents.has(event) && this instanceof HTMLElement) {
       if (!ignoreInteractiveElement(this)) {
-        const attribute = `data-${event}able`;
-
+        const attribute = eventHandlerTrackerAttribute(event);
         this.setAttribute(attribute, '1');
       }
     }
@@ -135,8 +117,7 @@ let installHandlers = () => {
     _listener,
   ) {
     if (this instanceof HTMLElement) {
-      const attribute = `data-${event}able`;
-
+      const attribute = eventHandlerTrackerAttribute(event);
       this.removeAttribute(attribute);
     }
   });
@@ -145,7 +126,7 @@ let installHandlers = () => {
     if (props != null) {
       TrackedEvents.forEach(event => {
         if (props[SYNTHETIC_EVENT_HANDLER_MAP[event]] != null) {
-          props[`data-${event}able`] = '1';
+          props[eventHandlerTrackerAttribute(event)] = '1';
         }
       });
     }
