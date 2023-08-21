@@ -8,7 +8,7 @@ import { Props, Surface } from "./Surface";
 
 export default class ClassComponent extends React.Component<Props> {
   render() {
-    return Surface({ surface: `ClassComp: ${this.props.message}` })(
+    return Surface({ surface: `ClassComp: ${this.props.message}`, metadata: { type: 'class component' } })(
       <ul data-comptype="class">
         <li>The class component</li>
         <li>{this.props.message}</li>
