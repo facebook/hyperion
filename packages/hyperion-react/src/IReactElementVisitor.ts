@@ -177,6 +177,7 @@ function optimizeVisitors<
     [IReactConsts.REACT_CONTEXT_TYPE]: ctor('context'),
     [IReactConsts.REACT_FRAGMENT_TYPE]: ctor('fragment'),
     [IReactConsts.REACT_SUSPENSE_TYPE]: ctor(),
+    [IReactConsts.REACT_SUSPENSE_LIST_TYPE]: ctor(),
     [IReactConsts.REACT_PROFILER_TYPE]: ctor(),
     [IReactConsts.REACT_LEGACY_HIDDEN_TYPE]: ctor(),
     [IReactConsts.REACT_SCOPE_TYPE]: ctor(),

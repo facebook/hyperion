@@ -5,6 +5,7 @@
 'use strict';
 
 import { assert } from "@hyperion/global";
+import global from "@hyperion/global/src/global";
 import { Channel } from "@hyperion/hook/src/Channel";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
@@ -70,7 +71,9 @@ export function init(options: InitOptions): boolean {
     setComponentNameValidator(options.componentNameValidator);
   }
 
-  initFlowletTrackers(options.flowletManager);
+  if (global instanceof Window && global?.document.createElement != null) {
+    initFlowletTrackers(options.flowletManager);
+  }
 
   const sharedOptions: ALSharedInitOptions = {
     flowletManager: options.flowletManager,
