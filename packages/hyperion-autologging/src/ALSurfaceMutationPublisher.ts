@@ -7,7 +7,7 @@
 import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type { ALChannelSurfaceEvent } from './ALSurface';
-import { ALLoggableEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
+import { ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 import { assert } from "@hyperion/global/src/assert";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
@@ -50,7 +50,7 @@ export type ALChannelSurfaceMutationEvent = Readonly<{
 
 export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>;
 
-type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & {
+type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & {
   surface: string,
   element: HTMLElement,
   addTime: number,
@@ -72,7 +72,7 @@ export type InitOptions = Types.Options<
 export function publish(options: InitOptions): void {
   const { domSurfaceAttributeName, channel, flowletManager, cacheElementReactInfo } = options;
 
-  function processNode(node: Node, action: 'added' | 'removed') {
+  function processNode(node: Node, action: 'added' | 'removed', metadata: ALMetadataEvent['metadata']) {
     const timestamp = performanceAbsoluteNow();
 
     const flowlet = flowletManager.top();
@@ -106,6 +106,7 @@ export function publish(options: InitOptions): void {
             ...elementText,
             removeFlowlet: null,
             mountEvent: null,
+            metadata,
           };
           activeSurfaces.set(surface, info);
           emitMutationEvent(action, info);
@@ -127,6 +128,14 @@ export function publish(options: InitOptions): void {
           info.removeFlowlet = flowlet;
           info.removeTime = timestamp;
           activeSurfaces.delete(surface);
+          /**
+           * We share the same object between the mount and unmount events
+           * therefore, any change by the subscribers of these events will
+           * be seen on the object itself.
+           * If we really wanted to be sure we can run the following code
+           * but the perf overhead would be un-necessary.
+           * // Object.assign(info.metadata, metadata); 
+           */
           emitMutationEvent(action, info);
         }
         break;
@@ -139,14 +148,14 @@ export function publish(options: InitOptions): void {
       `[${domSurfaceAttributeName}='${event.surface}']`,
     );
     if (element != null) {
-      processNode(element, 'added');
+      processNode(element, 'added', event.metadata);
     }
   });
 
   channel.addListener('al_surface_unmount', event => {
     const removeSurfaceNode = activeSurfaces.get(event.surface);
     if (removeSurfaceNode) {
-      processNode(removeSurfaceNode.element, 'removed');
+      processNode(removeSurfaceNode.element, 'removed', event.metadata);
     }
   });
 
@@ -167,7 +176,6 @@ export function publish(options: InitOptions): void {
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
           flowlet,
           alFlowlet: flowlet?.data.alFlowlet,
-          metadata: {},
         });
         break;
       }
@@ -184,7 +192,6 @@ export function publish(options: InitOptions): void {
           flowlet,
           alFlowlet: flowlet?.data.alFlowlet,
           mountEvent,
-          metadata: {},
         });
         break;
       }

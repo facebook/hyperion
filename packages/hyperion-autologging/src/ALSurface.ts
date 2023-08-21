@@ -20,23 +20,24 @@ import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import { ALSharedInitOptions } from "./ALType";
+import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
 
-type ALChannelSurfaceData = Readonly<{
-  surface: string,
+type ALChannelSurfaceData = ALMetadataEvent & Readonly<{
+  surface: string;
 }>;
 
 export type ALSurfaceProps = Readonly<{
-  surface: string,
+  surface: string;
+  metadata?: ALMetadataEvent['metadata'];
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
 export type ALSurfaceHOC = (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
 
 export type ALChannelSurfaceEvent = Readonly<{
-  al_surface_mount: [ALChannelSurfaceData],
-  al_surface_unmount: [ALChannelSurfaceData],
+  al_surface_mount: [ALChannelSurfaceData];
+  al_surface_unmount: [ALChannelSurfaceData];
 }>;
 
 type DataType = ALFlowletDataType;
@@ -47,13 +48,14 @@ type ALChannel = Channel<ALChannelEventType>;
 
 
 export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
-  flowlet: FlowletType,
-  flowletManager: FlowletManagerType,
+  flowlet: FlowletType;
+  flowletManager: FlowletManagerType;
   /** The optional incoming surface that we are re-wrapping via a proxy.
    * If this is provided,  then we won't emit mutations for this surface as we are
    * doubly wrapping that surface, for surface attribution purposes.
    */
-  fullSurfaceString?: string
+  fullSurfaceString?: string;
+  metadata?: ALSurfaceProps['metadata'];
 }
 ) => React.ReactElement;
 
@@ -71,8 +73,8 @@ export type InitOptions = Types.Options<
     IReactModule: IReact.IReactModuleExports;
     IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     domFlowletAttributeName?: string;
-    channel: ALChannel,
-    disableReactDomPropsExtension?: boolean
+    channel: ALChannel;
+    disableReactDomPropsExtension?: boolean;
   }
 >;
 
@@ -202,9 +204,10 @@ export function init(options: InitOptions): ALSurfaceHOC {
       const { channel } = options;
       // Emit surface mutation events on mount/unmount
       ReactModule.useLayoutEffect(() => {
-        channel.emit('al_surface_mount', { surface: fullSurfaceString });
+        const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes. 
+        channel.emit('al_surface_mount', { surface: fullSurfaceString, metadata });
         return () => {
-          channel.emit('al_surface_unmount', { surface: fullSurfaceString });
+          channel.emit('al_surface_unmount', { surface: fullSurfaceString, metadata });
         }
       }, [fullSurfaceString]);
     }
@@ -336,7 +339,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     },
   });
 
-  return ({ surface }, renderer) => {
+  return ({ surface, metadata }, renderer) => {
     const topFlowlet = flowletManager.top();
 
     let flowlet: FlowletType;
@@ -354,6 +357,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         {
           flowlet,
           flowletManager,
+          metadata,
         },
         renderer ? renderer(children) : children
       );
