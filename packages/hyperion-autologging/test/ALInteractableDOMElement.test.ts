@@ -23,11 +23,154 @@ function createTestDom(): DomFragment.DomFragment {
   <span id='10'><span aria-label="te"></span>s<span>t10</span></span>
   `);
 }
+function createInteractableTestDom(): DomFragment.DomFragment {
+  return DomFragment.html(`
+    <div id='no-interactable'>No Interactable</div>
+    <div>
+      <div id='atag-parent-clickable' data-clickable="1">
+        <a id='atag' href="#">Create metric</a>
+        <a id='atag-nohref'>Create metric</a>
+      </div>
+      <button id='button'>button</button>
+      <input id='input'>input</input>
+      <select id='select'>select</select>
+      <option id='option'>option</option>
+      <details id='details'>details</details>
+      <dialog id='dialog'>dialog</dialog>
+      <dialog id='summary'>summary</summary>
+      <div id="outer-clickable" aria-busy="false" class="test" role="button" tabindex="0" data-clickable="1" data-keydownable="1">
+        <span class="1">
+          <div class="2">
+            <div id="inner-clickable-assign-handler" class="3">
+              <div id="inner-keydownable-assign-handler" class="4">
+                <em id="clicked-text" class="test">Cancel</em>
+              </div>
+            </div>
+          </div>
+        </span>
+      </div>
+      <button id='button-with-nested'>
+        <div>
+          <em id="button-click-text">Continue</em>
+        </div>
+      </button>
+    </div>
+  `);
+}
 
 function getText(id: string): string | null {
   const element = document.getElementById(id);
   return ALInteractableDOMElement.getElementTextEvent(element, null).elementName;
 }
+
+describe("Test interactable detection algorithm", () => {
+  function interactable(node: HTMLElement | null, eventName: string, interactableOnly: boolean = true): HTMLElement | null {
+    return ALInteractableDOMElement.getInteractable(node, eventName, interactableOnly);
+  }
+
+  test("Detect interactable", () => {
+    const dom = DomFragment.html(`
+      <div id='1' onclick="return 1;"></div>
+      <div id="2" data-clickable="1">
+        <span id="3">Test</span>
+      </div>
+    `);
+
+    let node = document.getElementById("1");
+    expect(interactable(node, "click")).toStrictEqual(node);
+
+    node = document.getElementById("2");
+    expect(interactable(node, "click")).toStrictEqual(node);
+
+    expect(interactable(document.getElementById("3"), "click")).toStrictEqual(node);
+
+    dom.cleanup();
+  });
+
+  test('No interactable found returns null', () => {
+    const dom = createInteractableTestDom();
+
+    const ni = document.getElementById("no-interactable");
+    expect(interactable(ni, "click", true)).toBeNull();
+    expect(interactable(ni, "click", false)).toBeNull();
+
+    dom.cleanup();
+  })
+
+  test('Button with clicked nested text', () => {
+    const dom = createInteractableTestDom();
+
+    const button = document.getElementById("button-with-nested");
+    const clickedText = document.getElementById("button-click-text");
+    expect(interactable(clickedText, "click")).toStrictEqual(button);
+
+    dom.cleanup();
+  });
+
+  test('Deeply nested click on text, finds interactable up dom.', () => {
+    const dom = createInteractableTestDom();
+
+    const outerClickable = document.getElementById("outer-clickable");
+    const clickedText = document.getElementById("clicked-text");
+    expect(interactable(clickedText, "click")).toStrictEqual(outerClickable);
+
+    expect(interactable(clickedText, "keydown")).toStrictEqual(outerClickable);
+
+    dom.cleanup();
+  });
+
+  test('Deeply nested click on text stops parent walking when reaching assigned handler', () => {
+    const dom = createInteractableTestDom();
+    const outerClickable = document.getElementById("outer-clickable");
+    const clickedText = document.getElementById("clicked-text");
+    // Assert base case is still valid
+    expect(interactable(clickedText, "click")).toStrictEqual(outerClickable);
+    expect(interactable(clickedText, "keydown")).toStrictEqual(outerClickable);
+    // Assign an onclick to an inner element, and assert we stop searching up the DOM when reaching this element
+    const innerClickable = document.getElementById("inner-clickable-assign-handler");
+    if (innerClickable != null) {
+      innerClickable.onclick = () => { console.log("inner clickable"); };
+    }
+    expect(interactable(clickedText, "click")).toStrictEqual(innerClickable);
+    // Assign an onkeydown to an inner element, and assert we stop searching up the DOM when reaching this element
+    const innerKeydownable = document.getElementById("inner-keydownable-assign-handler");
+    if (innerKeydownable != null) {
+      innerKeydownable.onkeydown = () => { console.log("inner keydownable"); };
+    }
+    expect(interactable(clickedText, "keydown")).toStrictEqual(innerKeydownable);
+
+    dom.cleanup();
+  });
+
+  test("atag with parent clickable, with/without href, and with/without installed onclick handler", () => {
+    const dom = createInteractableTestDom();
+    // atag with href, and parent data-clickable
+    const atag = document.getElementById("atag");
+    const atagNoHref = document.getElementById("atag-nohref");
+    const atagParent = document.getElementById("atag-parent-clickable");
+    // Should still return a tag element, since href is present
+    expect(interactable(atag, "click")).toEqual(atag);
+    // Should return parent clickable, since there's no installed handler on the element and no href
+    expect(interactable(atagNoHref, "click")).toEqual(atagParent);
+    if (atagNoHref != null) {
+      // Assign an onclick that should get detected in our interactable algorithm now, even
+      // though it's an a tag, and has no href
+      atagNoHref.onclick = () => { console.log("click atag"); };
+    }
+    expect(interactable(atagNoHref, "click")).toEqual(atagNoHref);
+
+    dom.cleanup();
+  });
+
+  test("Specific element tags in selector are found as interactable", () => {
+    const dom = createInteractableTestDom();
+    ['input', 'button', 'select', 'option', 'details', 'dialog', 'summary'].forEach((elementType) => {
+      const el = document.getElementById(elementType);
+      expect(interactable(el, "click")).toEqual(el);
+    });
+    dom.cleanup();
+  });
+});
 
 describe("Text various element text options", () => {
   test("element with simple text", () => {
@@ -83,29 +226,6 @@ describe("Text various element text options", () => {
     const text = ALInteractableDOMElement.getElementTextEvent(dom.root, null);
     expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3test*  test7  test*  test*  test10  ");
     console.log(text);
-    dom.cleanup();
-  });
-
-  test("Detect interactable", () => {
-    const dom = DomFragment.html(`
-      <div id='1' onclick="return 1;"></div>
-      <div id="2" data-clickable="1">
-        <span id="3">Test</span>
-      </div>
-    `);
-
-    function interactable(node: HTMLElement | null, eventName: string): HTMLElement | null {
-      return ALInteractableDOMElement.getInteractable(node, "click", true);
-    }
-
-    let node = document.getElementById("1");
-    expect(interactable(node, "click")).toStrictEqual(node);
-
-    node = document.getElementById("2");
-    expect(interactable(node, "click")).toStrictEqual(node);
-
-    expect(interactable(document.getElementById("3"), "click")).toStrictEqual(node);
-
     dom.cleanup();
   });
 });
