@@ -51,38 +51,23 @@ export function getInteractable(
   returnInteractableNode: boolean = false,
 ): HTMLElement | null {
   // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
-  const selectorString = `[${eventHandlerTrackerAttribute(eventName)}="1"],input,button,select,option,details,dialog,summary`;
+  const selectorString = `[${eventHandlerTrackerAttribute(eventName)}="1"],input,button,select,option,details,dialog,summary,a[href]`;
   if (node instanceof HTMLElement) {
-    const closestSelectorElement = node.closest(selectorString);
-    if (
-      closestSelectorElement == null ||
-      (closestSelectorElement instanceof HTMLElement &&
-        ignoreInteractiveElement(closestSelectorElement))
-    ) {
-      const closestHandler = getClosestElementWithHandler(node, eventName as HTMLElementEventNames); // we already know node is HTMLElement
-      return closestHandler != null
-        ? returnInteractableNode
-          ? closestHandler
-          : node
-        : null;
-    } else {
-      if (closestSelectorElement instanceof HTMLElement) {
-        return returnInteractableNode ? closestSelectorElement : node;
+    for (let element: HTMLElement | null = node; element != null; element = element.parentElement) {
+      if (element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames)) {
+        if (ignoreInteractiveElement(element)) {
+          continue;
+        }
+        return returnInteractableNode ? element : node;
       }
     }
   }
   return null;
 }
 
-function getClosestElementWithHandler(node: HTMLElementWithHandlers, eventName: HTMLElementEventNames): HTMLElement | null {
+function elementHasEventHandler(node: HTMLElementWithHandlers, eventName: HTMLElementEventNames): boolean {
   const handler = node[`on${eventName}`];
-  if (handler != null) {
-    return ignoreInteractiveElement(node) ? null : node;
-  } else {
-    return node.parentElement != null
-      ? getClosestElementWithHandler(node.parentElement, eventName)
-      : null;
-  }
+  return handler != null;
 }
 
 function ignoreInteractiveElement(node: HTMLElement) {
