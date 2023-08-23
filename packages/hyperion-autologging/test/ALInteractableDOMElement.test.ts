@@ -228,4 +228,55 @@ describe("Text various element text options", () => {
     console.log(text);
     dom.cleanup();
   });
+
+  test("Detect interactable", () => {
+    const dom = DomFragment.html(`
+      <div id='1' onclick="return 1;"></div>
+      <div id="2" data-clickable="1">
+        <span id="3">Test</span>
+      </div>
+    `);
+
+    function interactable(node: HTMLElement | null, eventName: string): HTMLElement | null {
+      return ALInteractableDOMElement.getInteractable(node, "click", true);
+    }
+
+    let node = document.getElementById("1");
+    expect(interactable(node, "click")).toStrictEqual(node);
+
+    node = document.getElementById("2");
+    expect(interactable(node, "click")).toStrictEqual(node);
+
+    expect(interactable(document.getElementById("3"), "click")).toStrictEqual(node);
+
+    dom.cleanup();
+  });
+
+  test("Detect data-*able is set correctly", () => {
+    const dom = DomFragment.html(`
+      <div id="attribute"></div>
+      <div id="addEventListener"></div>
+    `);
+
+    ALInteractableDOMElement.trackInteractable("click");
+
+    let node = document.getElementById("attribute");
+    expect(node).not.toBeNull();
+    if (node) {
+      node.onclick = () => { };
+      expect(node.getAttribute("data-clickable")).toBe("1");
+      node.onclick = null;
+      expect(node.getAttribute("data-clickable")).toBe(null);
+
+    }
+
+    node = document.getElementById("addEventListener");
+    expect(node).not.toBeNull();
+    if (node) {
+      node.addEventListener("click", () => { });
+      expect(node.getAttribute("data-clickable")).toBe("1");
+    }
+
+
+  });
 });

@@ -30,6 +30,7 @@ export default defineConfig({
         "@hyperion/hyperion-dom/src/IWindow",
         "@hyperion/hyperion-dom/src/IXMLHttpRequest",
         "@hyperion/hyperion-dom/src/ICSSStyleDeclaration",
+        "@hyperion/hyperion-dom/src/IGlobalEventHandlers",
       ],
       "hyperionTrackElementsWithAttributes": [
         "@hyperion/hyperion-util/src/trackElementsWithAttributes",

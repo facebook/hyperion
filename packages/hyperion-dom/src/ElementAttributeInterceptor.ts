@@ -2,13 +2,13 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { AttributeInterceptor, AttributeInterceptorBase, getAttributeInterceptor } from "@hyperion/hyperion-core/src/AttributeInterceptor";
+import { AttributeInterceptor, AttributeInterceptorBase, interceptAttributeBase } from "@hyperion/hyperion-core/src/AttributeInterceptor";
+import { ExtendedPropertyDescriptor } from "@hyperion/hyperion-core/src/PropertyInterceptor";
 import { ShadowPrototype } from "@hyperion/hyperion-core/src/ShadowPrototype";
-import * as IElement from "./IElement_";
 import * as IAttrCustom from "./IAttrCustom";
 import * as IElementCustom from "./IElementCustom";
+import * as IElement from "./IElement_";
 import { VirtualAttribute } from "./VirtualAttribute";
-import { ExtendedPropertyDescriptor } from "@hyperion/hyperion-core/src/PropertyInterceptor";
 
 
 let lazyInit = () => {
@@ -17,10 +17,12 @@ let lazyInit = () => {
   lazyInit = () => { };
 }
 
-class ElementAttributeInterceptor<
+export class ElementAttributeInterceptor<
   BaseType extends Element & { [key: string]: any },
   Name extends string,
-  > extends AttributeInterceptor<BaseType, Name, string, string> {
+  GetAttrType = BaseType[Name] | string | null,
+  SetAttrType = GetAttrType | string,
+> extends AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType> {
 
   public readonly raw: AttributeInterceptorBase<
     BaseType,
@@ -42,7 +44,7 @@ class ElementAttributeInterceptor<
 
     IElement.IElementtPrototype.setVirtualProperty(
       name,
-      new VirtualAttribute<BaseType, Name, string | null, string>(this.raw, this)
+      new VirtualAttribute<BaseType, Name, string | null, string, GetAttrType, SetAttrType>(this.raw, this)
     );
 
     lazyInit();
@@ -52,10 +54,11 @@ class ElementAttributeInterceptor<
 export function interceptElementAttribute<
   BaseType extends Element & { [key: string]: any },
   Name extends string,
-  >(
-    name: Name,
-    shadowPrototype: ShadowPrototype<BaseType>
-  ): ElementAttributeInterceptor<BaseType, Name> {
-  const desc = getAttributeInterceptor<BaseType, Name, string, string, ElementAttributeInterceptor<BaseType, Name>>(name, shadowPrototype);
-  return desc?.interceptor ?? new ElementAttributeInterceptor(name, shadowPrototype, desc);
+  GetAttrType = BaseType[Name],
+  SetAttrType = GetAttrType,
+>(
+  name: Name,
+  shadowPrototype: ShadowPrototype<BaseType>
+): ElementAttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType> {
+  return interceptAttributeBase<BaseType, Name, GetAttrType, SetAttrType, ElementAttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType>>(name, shadowPrototype, ElementAttributeInterceptor);
 }

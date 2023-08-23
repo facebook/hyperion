@@ -14,7 +14,7 @@ export class AttributeInterceptorBase<
   Name extends string,
   GetterType extends InterceptableFunction = (this: BaseType) => BaseType[Name],
   SetterType extends InterceptableFunction = (this: BaseType, value: BaseType[Name]) => void
-  > extends PropertyInterceptor {
+> extends PropertyInterceptor {
   public readonly getter: FunctionInterceptor<BaseType, Name, GetterType>;
   public readonly setter: FunctionInterceptor<BaseType, Name, SetterType>;
 
@@ -34,12 +34,12 @@ export class AttributeInterceptor<
   Name extends string,
   GetAttrType = BaseType[Name],
   SetAttrType = GetAttrType
-  > extends AttributeInterceptorBase<
+> extends AttributeInterceptorBase<
   BaseType,
   Name,
   (this: BaseType) => GetAttrType,
   (this: BaseType, value: SetAttrType) => void
-  > {
+> {
   constructor(name: Name, shadowPrototype: ShadowPrototype<BaseType>, desc?: ExtendedPropertyDescriptor) {
     super(name);
 
@@ -122,15 +122,15 @@ export class AttributeInterceptor<
 
 }
 
-export function getAttributeInterceptor<
+function getAttributeInterceptor<
   BaseType extends { [key: string]: any },
   Name extends string,
   GetAttrType = BaseType[Name],
   SetAttrType = GetAttrType,
-  AttrInterceptorType = AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType>,
-  >(
-    name: Name,
-    shadowPrototype: ShadowPrototype<BaseType>,
+  AttrInterceptorType extends AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType> = AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType>,
+>(
+  name: Name,
+  shadowPrototype: ShadowPrototype<BaseType>,
 ): ExtendedPropertyDescriptor<AttrInterceptorType> | undefined {
   const desc = getExtendedPropertyDescriptor<AttrInterceptorType>(shadowPrototype.targetPrototype, name);
   if (desc) {
@@ -150,15 +150,29 @@ export function getAttributeInterceptor<
   return desc;
 }
 
+export function interceptAttributeBase<
+  BaseType extends { [key: string]: any },
+  Name extends string,
+  GetAttrType = BaseType[Name],
+  SetAttrType = GetAttrType,
+  AttrInterceptor extends AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType> = AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType>,
+>(
+  name: Name,
+  shadowPrototype: ShadowPrototype<BaseType>,
+  attributeInterceptorCtor: new (name: Name, shadowPrototype: ShadowPrototype<BaseType>, desc?: ExtendedPropertyDescriptor) => AttrInterceptor
+): AttrInterceptor {
+  const desc = getAttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType, AttrInterceptor>(name, shadowPrototype);
+  return desc?.interceptor ?? new attributeInterceptorCtor(name, shadowPrototype, desc);
+}
+
 export function interceptAttribute<
   BaseType extends { [key: string]: any },
   Name extends string,
   GetAttrType = BaseType[Name],
   SetAttrType = GetAttrType,
-  >(
-    name: Name,
-    shadowPrototype: ShadowPrototype<BaseType>
-  ): AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType> {
-  const desc = getAttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType>(name, shadowPrototype);
-  return desc?.interceptor ?? new AttributeInterceptor(name, shadowPrototype, desc);
+>(
+  name: Name,
+  shadowPrototype: ShadowPrototype<BaseType>
+): AttributeInterceptor<BaseType, Name, GetAttrType, SetAttrType> {
+  return interceptAttributeBase<BaseType, Name, GetAttrType, SetAttrType>(name, shadowPrototype, AttributeInterceptor);
 }
