@@ -63,7 +63,8 @@ type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & 
 const activeSurfaces = new Map<string, SurfaceInfo>();
 
 export type InitOptions = Types.Options<
-  ALSharedInitOptions & {
+  ALSharedInitOptions &
+  {
     channel: ALSurfaceMutationChannel;
     cacheElementReactInfo: boolean;
   }

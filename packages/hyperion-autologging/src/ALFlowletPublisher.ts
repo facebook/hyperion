@@ -21,9 +21,11 @@ export type ALChannelFlowletEvent = Readonly<{
 
 export type ALFlowletChannel = Channel<ALChannelFlowletEvent>;
 
-export type InitOptions = Types.Options<{
-  channel: ALFlowletChannel;
-}>;
+export type InitOptions = Types.Options<
+  {
+    channel: ALFlowletChannel;
+  }
+>;
 
 export function publish(options: InitOptions): void {
   Flowlet.onFlowletInit.add(flowlet => {

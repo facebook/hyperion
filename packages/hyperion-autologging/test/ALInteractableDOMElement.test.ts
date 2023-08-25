@@ -276,7 +276,5 @@ describe("Text various element text options", () => {
       node.addEventListener("click", () => { });
       expect(node.getAttribute("data-clickable")).toBe("1");
     }
-
-
   });
 });
