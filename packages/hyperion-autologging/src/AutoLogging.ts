@@ -7,6 +7,7 @@
 import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
+import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import * as ALFlowletPublisher from "./ALFlowletPublisher";
 import * as ALHeartbeat from "./ALHeartbeat";
@@ -31,11 +32,13 @@ export type ALChannelEvent = (
   ALNetworkPublisher.InitOptions['channel']
 ) extends Channel<infer EventType> ? EventType : never;
 
-type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions>;
+type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions | 'react'>;
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
   {
+    react: (ALSurface.InitOptions)['react'];
+    enableReactComponentVisitors?: boolean;
     componentNameValidator?: ComponentNameValidator;
     flowletPublisher?: PublicInitOptions<ALFlowletPublisher.InitOptions> | null;
     surface: PublicInitOptions<ALSurface.InitOptions>;
@@ -74,6 +77,15 @@ export function init(options: InitOptions): boolean {
     domSurfaceAttributeName: options.domSurfaceAttributeName,
   }
 
+  // Enumerating the cases where we need react interception and visitors
+  if (
+    options.enableReactComponentVisitors ||
+    !options.surface.disableReactDomPropsExtension ||
+    !options.surface.disableReactFlowlet
+  ) {
+    IReactComponent.init(options.react);
+  }
+
   if (options.elementText) {
     ALInteractableDOMElement.init(options.elementText);
   }
@@ -109,6 +121,7 @@ export function init(options: InitOptions): boolean {
 
   cachedResults = {
     surfaceRenderer: ALSurface.init({
+      react: options.react,
       ...sharedOptions,
       ...options.surface
     }),
