@@ -31,11 +31,13 @@ export type ALChannelHeartbeatEvent = Readonly<{
 
 export type ALHeartbeatChannel = Channel<ALChannelHeartbeatEvent & ALChannelUIEvent>;
 
-export type InitOptions = Types.Options<{
-  channel: ALHeartbeatChannel;
-  heartbeatInterval?: number;
-  maxUserInactivityDuration?: number;
-}>;
+export type InitOptions = Types.Options<
+  {
+    channel: ALHeartbeatChannel;
+    heartbeatInterval?: number;
+    maxUserInactivityDuration?: number;
+  }
+>;
 
 const HEARTBEAT_INTERVAL = 30 * 1000 /* DateConsts.MS_PER_SEC */;
 const MAX_USER_INACTIVITY_DURATION = 4 * HEARTBEAT_INTERVAL;

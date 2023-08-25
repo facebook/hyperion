@@ -3,9 +3,10 @@
  */
 
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
-import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
-import { onReactDOMElement } from "@hyperion/hyperion-react/src/IReactComponent";
 // import * as IGlobalEventHandlers from "@hyperion/hyperion-dom/src/IGlobalEventHandlers";
+import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
+import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
+import type * as Types from "@hyperion/hyperion-util/src/Types";
 
 'use strict';
 
@@ -108,7 +109,7 @@ let installHandlers = () => {
     }
   });
 
-  onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
+  IReactComponent.onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
     if (props != null) {
       TrackedEvents.forEach(event => {
         if (props[SYNTHETIC_EVENT_HANDLER_MAP[event]] != null) {
@@ -290,17 +291,23 @@ export type ALDOMTextSource = {
   element: HTMLElement;
 }
 
-export type ALElementTextOptions = Readonly<{
-  maxDepth?: number;
-  updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
-  getText?: <T extends ALElementText>(elementTexts: T[]) => ALElementText;
-}>;
+export type ALElementTextOptions = Types.Options<
+  IReactComponent.InitOptions &
+  {
+    maxDepth?: number;
+    updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
+    getText?: <T extends ALElementText>(elementTexts: T[]) => ALElementText;
+  }
+>;
 
 let _options: ALElementTextOptions | null = null;
 let MaxDepth = 20;
 export function init(options: ALElementTextOptions) {
   _options = options;
   MaxDepth = _options.maxDepth ?? MaxDepth;
+
+  // We need this to ensure interactivity tracking works well.
+  IReactComponent.init(options);
 }
 
 function callExternalTextProcessor(
