@@ -11,9 +11,11 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 
 
 export type InitOptions = Types.Options<{
-  ReactModule: {
-    createContext: typeof React.createContext;
-    useContext: typeof React.useContext;
+  react: {
+    ReactModule: {
+      createContext: typeof React.createContext;
+      useContext: typeof React.useContext;
+    }
   }
 }>;
 
@@ -33,12 +35,12 @@ const DefaultSurfaceContext: ALSurfaceContextValue = {
 export let ALSurfaceContext: React.Context<ALSurfaceContextValue> | null = null;
 
 
-let ReactModule: InitOptions['ReactModule'] | null = null;
+let ReactModule: InitOptions['react']['ReactModule'] | null = null;
 
 export function init(options: InitOptions): React.Context<ALSurfaceContextValue> {
   assert(!ReactModule && !ALSurfaceContext, "Already initilized");
 
-  ReactModule = options.ReactModule;
+  ReactModule = options.react.ReactModule;
   ALSurfaceContext = ReactModule.createContext(
     DefaultSurfaceContext,
   );

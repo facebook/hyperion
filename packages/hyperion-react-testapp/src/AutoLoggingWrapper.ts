@@ -72,12 +72,14 @@ export function init() {
     flowletPublisher: {
       channel
     },
-    surface: {
+    react: {
       ReactModule: React as any,
       IReactDOMModule,
       IReactModule,
       IJsxRuntimeModule,
-      channel,
+    },
+    surface: {
+      channel
     },
     elementText: {
       updateText(elementText: ExtendedElementText, domSource) {

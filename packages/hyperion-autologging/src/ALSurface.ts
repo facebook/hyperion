@@ -66,12 +66,14 @@ export type InitOptions = Types.Options<
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
   {
-    ReactModule: {
-      createElement: typeof React.createElement;
-      useLayoutEffect: typeof React.useLayoutEffect;
+    react: {
+      ReactModule: {
+        createElement: typeof React.createElement;
+        useLayoutEffect: typeof React.useLayoutEffect;
+      };
+      IReactModule: IReact.IReactModuleExports;
+      IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     };
-    IReactModule: IReact.IReactModuleExports;
-    IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     domFlowletAttributeName?: string;
     channel: ALChannel;
     disableReactDomPropsExtension?: boolean;
@@ -100,7 +102,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   }
 
   // We should make sure the following enabled for our particular usage in this function.
-  IReactComponent.init(options);
+  IReactComponent.init(options.react);
 
   const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName } = options;
   /**
@@ -178,7 +180,8 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
 
 
 export function init(options: InitOptions): ALSurfaceHOC {
-  const { ReactModule, flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
+  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
+  const { ReactModule } = options.react;
 
   ALIReactFlowlet.init(options);
 

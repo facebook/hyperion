@@ -292,7 +292,6 @@ export type ALDOMTextSource = {
 }
 
 export type ALElementTextOptions = Types.Options<
-  IReactComponent.InitOptions &
   {
     maxDepth?: number;
     updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
@@ -305,9 +304,6 @@ let MaxDepth = 20;
 export function init(options: ALElementTextOptions) {
   _options = options;
   MaxDepth = _options.maxDepth ?? MaxDepth;
-
-  // We need this to ensure interactivity tracking works well.
-  IReactComponent.init(options);
 }
 
 function callExternalTextProcessor(

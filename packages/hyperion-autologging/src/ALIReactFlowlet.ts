@@ -14,12 +14,13 @@ import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import { ALSurfaceContext } from "./ALSurfaceContext";
 
 export type InitOptions<> = Types.Options<
-  IReactComponent.InitOptions &
   {
-    ReactModule: {
-      useRef: <T>(initialValue: T) => React.MutableRefObject<T>;
-    }
-    IReactModule: IReact.IReactModuleExports;
+    react: IReactComponent.InitOptions & {
+      ReactModule: {
+        useRef: <T>(initialValue: T) => React.MutableRefObject<T>;
+      }
+      IReactModule: IReact.IReactModuleExports;
+    };
     flowletManager: ALFlowletManager;
     disableReactFlowlet?: boolean;
   }
@@ -31,9 +32,10 @@ export function init(options: InitOptions) {
     return;
   }
 
-  IReactComponent.init(options);
+  IReactComponent.init(options.react);
 
-  const { flowletManager, IReactModule, ReactModule } = options;
+  const { flowletManager } = options;
+  const { IReactModule, ReactModule } = options.react;
 
   [
     IReactModule.useCallback,

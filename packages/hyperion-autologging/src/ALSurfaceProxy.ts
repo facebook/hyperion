@@ -15,8 +15,10 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 
 
 export type InitOptions = Types.Options<{
-  ReactModule: { createElement: typeof React.createElement, Fragment: typeof React.Fragment };
-  IReactDOMModule: IReactDOM.IReactDOMModuleExports;
+  react: {
+    ReactModule: { createElement: typeof React.createElement, Fragment: typeof React.Fragment };
+    IReactDOMModule: IReactDOM.IReactDOMModuleExports;
+  };
   flowletManager: ALFlowletManager;
 }>;
 
@@ -36,7 +38,8 @@ type ProxyInitOptions =
  * like the following:
  */
 function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions>): React.ReactElement {
-  const { ReactModule, surfaceComponent, flowletManager, children } = props;
+  const { surfaceComponent, flowletManager, children } = props;
+  const { ReactModule, } = props.react;
   const { surface, flowlet } = useALSurfaceContext();
   if (surface != null && flowlet != null) {
     return ReactModule.createElement(
@@ -55,7 +58,7 @@ function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions>): React.R
 }
 
 export function init(options: ProxyInitOptions): void {
-  const { IReactDOMModule, ReactModule } = options;
+  const { IReactDOMModule, ReactModule } = options.react;
   /**
    * When createPortal is called, the react components will be added to a
    * separate container DOM node and shown in place later.
