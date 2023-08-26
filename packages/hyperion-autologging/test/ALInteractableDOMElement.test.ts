@@ -262,13 +262,13 @@ describe("Text various element text options", () => {
 
     let node = document.getElementById("attribute");
     expect(node).not.toBeNull();
-    if (node) {
-      node.onclick = () => { };
-      expect(node.getAttribute("data-clickable")).toBe("1");
-      node.onclick = null;
-      expect(node.getAttribute("data-clickable")).toBe(null);
-
-    }
+    // Enable when feature is enabled again
+    // if (node) {
+    //   node.onclick = () => { };
+    //   expect(node.getAttribute("data-clickable")).toBe("1");
+    //   node.onclick = null;
+    //   expect(node.getAttribute("data-clickable")).toBe(null);
+    // }
 
     node = document.getElementById("addEventListener");
     expect(node).not.toBeNull();
