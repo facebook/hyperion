@@ -5,7 +5,7 @@
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
 import { onReactDOMElement } from "@hyperion/hyperion-react/src/IReactComponent";
-import * as IGlobalEventHandlers from "@hyperion/hyperion-dom/src/IGlobalEventHandlers";
+// import * as IGlobalEventHandlers from "@hyperion/hyperion-dom/src/IGlobalEventHandlers";
 
 'use strict';
 
@@ -118,132 +118,132 @@ let installHandlers = () => {
     }
   });
 
-  for (const eventHandler of [
-    IGlobalEventHandlers.onabort,
-    IGlobalEventHandlers.onanimationcancel,
-    IGlobalEventHandlers.onanimationend,
-    IGlobalEventHandlers.onanimationiteration,
-    IGlobalEventHandlers.onanimationstart,
-    IGlobalEventHandlers.onauxclick,
-    IGlobalEventHandlers.onblur,
-    IGlobalEventHandlers.oncanplay,
-    IGlobalEventHandlers.oncanplaythrough,
-    IGlobalEventHandlers.onchange,
-    IGlobalEventHandlers.onclick,
-    IGlobalEventHandlers.onclose,
-    IGlobalEventHandlers.oncontextmenu,
-    IGlobalEventHandlers.oncuechange,
-    IGlobalEventHandlers.ondblclick,
-    IGlobalEventHandlers.ondrag,
-    IGlobalEventHandlers.ondragend,
-    IGlobalEventHandlers.ondragenter,
-    IGlobalEventHandlers.ondragleave,
-    IGlobalEventHandlers.ondragover,
-    IGlobalEventHandlers.ondragstart,
-    IGlobalEventHandlers.ondrop,
-    IGlobalEventHandlers.ondurationchange,
-    IGlobalEventHandlers.onemptied,
-    IGlobalEventHandlers.onended,
-    IGlobalEventHandlers.onfocus,
-    IGlobalEventHandlers.onformdata,
-    IGlobalEventHandlers.ongotpointercapture,
-    IGlobalEventHandlers.oninput,
-    IGlobalEventHandlers.oninvalid,
-    IGlobalEventHandlers.onkeydown,
-    IGlobalEventHandlers.onkeypress,
-    IGlobalEventHandlers.onkeyup,
-    IGlobalEventHandlers.onload,
-    IGlobalEventHandlers.onloadeddata,
-    IGlobalEventHandlers.onloadedmetadata,
-    IGlobalEventHandlers.onloadstart,
-    IGlobalEventHandlers.onlostpointercapture,
-    IGlobalEventHandlers.onmousedown,
-    IGlobalEventHandlers.onmouseenter,
-    IGlobalEventHandlers.onmouseleave,
-    IGlobalEventHandlers.onmousemove,
-    IGlobalEventHandlers.onmouseout,
-    IGlobalEventHandlers.onmouseover,
-    IGlobalEventHandlers.onmouseup,
-    IGlobalEventHandlers.onpause,
-    IGlobalEventHandlers.onplay,
-    IGlobalEventHandlers.onplaying,
-    IGlobalEventHandlers.onpointercancel,
-    IGlobalEventHandlers.onpointerdown,
-    IGlobalEventHandlers.onpointerenter,
-    IGlobalEventHandlers.onpointerleave,
-    IGlobalEventHandlers.onpointermove,
-    IGlobalEventHandlers.onpointerout,
-    IGlobalEventHandlers.onpointerover,
-    IGlobalEventHandlers.onpointerup,
-    IGlobalEventHandlers.onprogress,
-    IGlobalEventHandlers.onratechange,
-    IGlobalEventHandlers.onreset,
-    IGlobalEventHandlers.onresize,
-    IGlobalEventHandlers.onscroll,
-    IGlobalEventHandlers.onsecuritypolicyviolation,
-    IGlobalEventHandlers.onseeked,
-    IGlobalEventHandlers.onseeking,
-    IGlobalEventHandlers.onselect,
-    IGlobalEventHandlers.onselectionchange,
-    IGlobalEventHandlers.onselectstart,
-    IGlobalEventHandlers.onslotchange,
-    IGlobalEventHandlers.onstalled,
-    IGlobalEventHandlers.onsubmit,
-    IGlobalEventHandlers.onsuspend,
-    IGlobalEventHandlers.ontimeupdate,
-    IGlobalEventHandlers.ontoggle,
-    IGlobalEventHandlers.ontouchcancel,
-    IGlobalEventHandlers.ontouchend,
-    IGlobalEventHandlers.ontouchmove,
-    IGlobalEventHandlers.ontouchstart,
-    IGlobalEventHandlers.ontransitioncancel,
-    IGlobalEventHandlers.ontransitionend,
-    IGlobalEventHandlers.ontransitionrun,
-    IGlobalEventHandlers.ontransitionstart,
-    IGlobalEventHandlers.onvolumechange,
-    IGlobalEventHandlers.onwaiting,
-    IGlobalEventHandlers.onwebkitanimationend,
-    IGlobalEventHandlers.onwebkitanimationiteration,
-    IGlobalEventHandlers.onwebkitanimationstart,
-    IGlobalEventHandlers.onwebkittransitionend,
-    IGlobalEventHandlers.onwheel,
-    IGlobalEventHandlers.onafterprint,
-    IGlobalEventHandlers.onbeforeprint,
-    IGlobalEventHandlers.onbeforeunload,
-    IGlobalEventHandlers.ongamepadconnected,
-    IGlobalEventHandlers.ongamepaddisconnected,
-    IGlobalEventHandlers.onhashchange,
-    IGlobalEventHandlers.onlanguagechange,
-    IGlobalEventHandlers.onmessage,
-    IGlobalEventHandlers.onmessageerror,
-    IGlobalEventHandlers.onoffline,
-    IGlobalEventHandlers.ononline,
-    IGlobalEventHandlers.onpagehide,
-    IGlobalEventHandlers.onpageshow,
-    IGlobalEventHandlers.onpopstate,
-    IGlobalEventHandlers.onrejectionhandled,
-    IGlobalEventHandlers.onstorage,
-    IGlobalEventHandlers.onunhandledrejection,
-    IGlobalEventHandlers.onunload,
-  ]) {
-    const eventName = /on(.*)/.exec(eventHandler.name)?.[1];
-    if (eventName != null) {
-      eventHandler.setter.onArgsObserverAdd(function (this, handler) {
-        if (this instanceof HTMLElement) {
-          const attribute = eventHandlerTrackerAttribute(eventName);
-          if (!!handler) {
-            if (TrackedEvents.has(eventName)) {
-              if (!ignoreInteractiveElement(this)) {
-                this.setAttribute(attribute, '1');
-              }
-            }
-          } else {
-            this.removeAttribute(attribute);
-          }
-        }
-      });
-    }
-  }
+  // for (const eventHandler of [
+  //   IGlobalEventHandlers.onabort,
+  //   IGlobalEventHandlers.onanimationcancel,
+  //   IGlobalEventHandlers.onanimationend,
+  //   IGlobalEventHandlers.onanimationiteration,
+  //   IGlobalEventHandlers.onanimationstart,
+  //   IGlobalEventHandlers.onauxclick,
+  //   IGlobalEventHandlers.onblur,
+  //   IGlobalEventHandlers.oncanplay,
+  //   IGlobalEventHandlers.oncanplaythrough,
+  //   IGlobalEventHandlers.onchange,
+  //   IGlobalEventHandlers.onclick,
+  //   IGlobalEventHandlers.onclose,
+  //   IGlobalEventHandlers.oncontextmenu,
+  //   IGlobalEventHandlers.oncuechange,
+  //   IGlobalEventHandlers.ondblclick,
+  //   IGlobalEventHandlers.ondrag,
+  //   IGlobalEventHandlers.ondragend,
+  //   IGlobalEventHandlers.ondragenter,
+  //   IGlobalEventHandlers.ondragleave,
+  //   IGlobalEventHandlers.ondragover,
+  //   IGlobalEventHandlers.ondragstart,
+  //   IGlobalEventHandlers.ondrop,
+  //   IGlobalEventHandlers.ondurationchange,
+  //   IGlobalEventHandlers.onemptied,
+  //   IGlobalEventHandlers.onended,
+  //   IGlobalEventHandlers.onfocus,
+  //   IGlobalEventHandlers.onformdata,
+  //   IGlobalEventHandlers.ongotpointercapture,
+  //   IGlobalEventHandlers.oninput,
+  //   IGlobalEventHandlers.oninvalid,
+  //   IGlobalEventHandlers.onkeydown,
+  //   IGlobalEventHandlers.onkeypress,
+  //   IGlobalEventHandlers.onkeyup,
+  //   IGlobalEventHandlers.onload,
+  //   IGlobalEventHandlers.onloadeddata,
+  //   IGlobalEventHandlers.onloadedmetadata,
+  //   IGlobalEventHandlers.onloadstart,
+  //   IGlobalEventHandlers.onlostpointercapture,
+  //   IGlobalEventHandlers.onmousedown,
+  //   IGlobalEventHandlers.onmouseenter,
+  //   IGlobalEventHandlers.onmouseleave,
+  //   IGlobalEventHandlers.onmousemove,
+  //   IGlobalEventHandlers.onmouseout,
+  //   IGlobalEventHandlers.onmouseover,
+  //   IGlobalEventHandlers.onmouseup,
+  //   IGlobalEventHandlers.onpause,
+  //   IGlobalEventHandlers.onplay,
+  //   IGlobalEventHandlers.onplaying,
+  //   IGlobalEventHandlers.onpointercancel,
+  //   IGlobalEventHandlers.onpointerdown,
+  //   IGlobalEventHandlers.onpointerenter,
+  //   IGlobalEventHandlers.onpointerleave,
+  //   IGlobalEventHandlers.onpointermove,
+  //   IGlobalEventHandlers.onpointerout,
+  //   IGlobalEventHandlers.onpointerover,
+  //   IGlobalEventHandlers.onpointerup,
+  //   IGlobalEventHandlers.onprogress,
+  //   IGlobalEventHandlers.onratechange,
+  //   IGlobalEventHandlers.onreset,
+  //   IGlobalEventHandlers.onresize,
+  //   IGlobalEventHandlers.onscroll,
+  //   IGlobalEventHandlers.onsecuritypolicyviolation,
+  //   IGlobalEventHandlers.onseeked,
+  //   IGlobalEventHandlers.onseeking,
+  //   IGlobalEventHandlers.onselect,
+  //   IGlobalEventHandlers.onselectionchange,
+  //   IGlobalEventHandlers.onselectstart,
+  //   IGlobalEventHandlers.onslotchange,
+  //   IGlobalEventHandlers.onstalled,
+  //   IGlobalEventHandlers.onsubmit,
+  //   IGlobalEventHandlers.onsuspend,
+  //   IGlobalEventHandlers.ontimeupdate,
+  //   IGlobalEventHandlers.ontoggle,
+  //   IGlobalEventHandlers.ontouchcancel,
+  //   IGlobalEventHandlers.ontouchend,
+  //   IGlobalEventHandlers.ontouchmove,
+  //   IGlobalEventHandlers.ontouchstart,
+  //   IGlobalEventHandlers.ontransitioncancel,
+  //   IGlobalEventHandlers.ontransitionend,
+  //   IGlobalEventHandlers.ontransitionrun,
+  //   IGlobalEventHandlers.ontransitionstart,
+  //   IGlobalEventHandlers.onvolumechange,
+  //   IGlobalEventHandlers.onwaiting,
+  //   IGlobalEventHandlers.onwebkitanimationend,
+  //   IGlobalEventHandlers.onwebkitanimationiteration,
+  //   IGlobalEventHandlers.onwebkitanimationstart,
+  //   IGlobalEventHandlers.onwebkittransitionend,
+  //   IGlobalEventHandlers.onwheel,
+  //   IGlobalEventHandlers.onafterprint,
+  //   IGlobalEventHandlers.onbeforeprint,
+  //   IGlobalEventHandlers.onbeforeunload,
+  //   IGlobalEventHandlers.ongamepadconnected,
+  //   IGlobalEventHandlers.ongamepaddisconnected,
+  //   IGlobalEventHandlers.onhashchange,
+  //   IGlobalEventHandlers.onlanguagechange,
+  //   IGlobalEventHandlers.onmessage,
+  //   IGlobalEventHandlers.onmessageerror,
+  //   IGlobalEventHandlers.onoffline,
+  //   IGlobalEventHandlers.ononline,
+  //   IGlobalEventHandlers.onpagehide,
+  //   IGlobalEventHandlers.onpageshow,
+  //   IGlobalEventHandlers.onpopstate,
+  //   IGlobalEventHandlers.onrejectionhandled,
+  //   IGlobalEventHandlers.onstorage,
+  //   IGlobalEventHandlers.onunhandledrejection,
+  //   IGlobalEventHandlers.onunload,
+  // ]) {
+  //   const eventName = /on(.*)/.exec(eventHandler.name)?.[1];
+  //   if (eventName != null) {
+  //     eventHandler.setter.onArgsObserverAdd(function (this, handler) {
+  //       if (this instanceof HTMLElement) {
+  //         const attribute = eventHandlerTrackerAttribute(eventName);
+  //         if (!!handler) {
+  //           if (TrackedEvents.has(eventName)) {
+  //             if (!ignoreInteractiveElement(this)) {
+  //               this.setAttribute(attribute, '1');
+  //             }
+  //           }
+  //         } else {
+  //           this.removeAttribute(attribute);
+  //         }
+  //       }
+  //     });
+  //   }
+  // }
 
   installHandlers = () => { }; // Done doing stuff!
 }
