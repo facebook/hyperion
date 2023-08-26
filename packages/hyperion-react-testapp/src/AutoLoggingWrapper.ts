@@ -77,7 +77,6 @@ export function init() {
       IReactDOMModule,
       IReactModule,
       IJsxRuntimeModule,
-      channel,
     },
     elementText: {
       updateText(elementText: ExtendedElementText, domSource) {
