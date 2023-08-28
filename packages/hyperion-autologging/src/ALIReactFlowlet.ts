@@ -117,10 +117,9 @@ export function init(options: InitOptions) {
 
 
     methods.forEach(method => {
-      if (method.getData<boolean>(IS_FLOWLET_SETUP_PROP)) {
+      if (method.testAndSet(IS_FLOWLET_SETUP_PROP)) {
         return;
       }
-      method.setData(IS_FLOWLET_SETUP_PROP, true);
 
       if (method === shadowComponent.render) {
         method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
@@ -146,8 +145,7 @@ export function init(options: InitOptions) {
 
   IReactComponent.onReactFunctionComponentIntercept.add(
     fi => {
-      if (!fi.getData<boolean>(IS_FLOWLET_SETUP_PROP)) {
-        fi.setData(IS_FLOWLET_SETUP_PROP, true);
+      if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
 
         let activeFlowlet: ALFlowlet | undefined | null;
         fi.onArgsObserverAdd(_props => {

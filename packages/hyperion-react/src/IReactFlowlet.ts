@@ -101,10 +101,9 @@ export function init<
     ];
 
     methods.forEach(method => {
-      if (method.getData<boolean>(IS_FLOWLET_SETUP_PROP)) {
+      if (method.testAndSet(IS_FLOWLET_SETUP_PROP)) {
         return;
       }
-      method.setData(IS_FLOWLET_SETUP_PROP, true);
 
       /**
        * The following interceptor methods run immediately before & after
@@ -126,8 +125,7 @@ export function init<
 
   IReactComponent.onReactFunctionComponentIntercept.add(
     fi => {
-      if (!fi.getData<boolean>(IS_FLOWLET_SETUP_PROP)) {
-        fi.setData(IS_FLOWLET_SETUP_PROP, true);
+      if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
 
         let activeFlowlet: FlowletType | undefined | null;
         fi.onArgsObserverAdd(props => {
