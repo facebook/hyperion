@@ -73,8 +73,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
 
     const flowlet = customFlowlet ?? new this.flowletCtor(apiName, this.top());
     const funcInterceptor = interceptEventListener(listener);
-    if (funcInterceptor && !funcInterceptor.getData(IS_FLOWLET_SETUP_PROP_NAME)) {
-      funcInterceptor.setData(IS_FLOWLET_SETUP_PROP_NAME, true);
+    if (funcInterceptor && !funcInterceptor.testAndSet(IS_FLOWLET_SETUP_PROP_NAME)) {
       // funcInterceptor.onArgsObserverAdd(() => {
       //   this.push(currentFLowlet);
       // });
