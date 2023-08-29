@@ -433,4 +433,37 @@ describe("test modern classes", () => {
     fi.interceptor(1); // should be blocked
     expect(fn).toBeCalledTimes(0);
   });
+
+  test("intercept recursive function with args and value observers", () => {
+    // Test when original function is replaced with its intercepted version
+    let func = function (i: number): number[] {
+      if (i > 0) {
+        return func(i - 1).concat([i]);
+      } else {
+        return [];
+      }
+    };
+
+    const fi = interceptFunction(func);
+    func = fi.interceptor;
+
+    let ephemeralValue: number = 0;
+    fi.onArgsObserverAdd(i => {
+      ephemeralValue = i;
+    });
+    fi.onValueObserverAdd(value => {
+      expect(ephemeralValue).toBe(0);
+    });
+
+    let callCount = 0;
+    fi.onArgsAndValueObserverAdd(i => {
+      callCount++;
+      return value => {
+        expect(value.length).toBe(i);
+      };
+    });
+
+    func(2);
+    expect(callCount).toBe(3);
+  });
 });
