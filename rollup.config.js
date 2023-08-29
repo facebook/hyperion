@@ -60,6 +60,7 @@ export default defineConfig({
         "@hyperion/hyperion-autologging/src/ALFlowletManager",
         "@hyperion/hyperion-autologging/src/ALSurface",
         "@hyperion/hyperion-autologging/src/ALSurfaceContext",
+        "@hyperion/hyperion-autologging/src/ALSurfaceUtils",
         "@hyperion/hyperion-autologging/src/ALEventIndex",
         "@hyperion/hyperion-autologging/src/ALElementInfo",
         "@hyperion/hyperion-autologging/src/ALInteractableDOMElement",
