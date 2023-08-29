@@ -128,8 +128,8 @@ function captureFetch(options: InitOptions): void {
     });
   }
 
-  let ephemeralRequestEvent: ALNetworkResponseEvent['requestEvent'] | null;
-  IWindow.fetch.onArgsObserverAdd((input, init) => {
+  IWindow.fetch.onArgsAndValueObserverAdd((input, init) => {
+    let ephemeralRequestEvent: ALNetworkResponseEvent['requestEvent'] | null;
     let request: RequestInfo;
     if (typeof input === "string") {
       request = {
@@ -165,34 +165,34 @@ function captureFetch(options: InitOptions): void {
     } else {
       ephemeralRequestEvent = null;
     }
-  });
 
-  IWindow.fetch.onValueObserverAdd(value => {
-    /**
-     * There might be many parallel fetch requests happening together.
-     * The argsObserver and valueObserver happen immediately before/after
-     * the same fetch call. So, we make a copy of requestEvent into the
-     * Promise value itself to ensure each call gets its own instance.
-     */
+    return value => {
+      /**
+       * There might be many parallel fetch requests happening together.
+       * The argsObserver and valueObserver happen immediately before/after
+       * the same fetch call. So, we make a copy of requestEvent into the
+       * Promise value itself to ensure each call gets its own instance.
+       */
 
-    if (ephemeralRequestEvent) {
-      intercept.intercept(value, IPromise.IPromisePrototype); // Ensure we can setVirtualPropertyValue, and ensures Promise is intercepted.
-      intercept.setVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME, ephemeralRequestEvent);
-      value.then(response => {
-        const requestEvent = intercept.getVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME);
-        assert(requestEvent != null, `Unexpected situation! Request info missing from fetch promise object`);
-        const flowlet = requestEvent?.flowlet; // Reuse the same flowlet as request, since by now things have changed.
-        channel.emit('al_network_response', {
-          initiatorType: "fetch",
-          event: "network",
-          eventTimestamp: performanceAbsoluteNow(),
-          eventIndex: ALEventIndex.getNextEventIndex(),
-          flowlet,
-          requestEvent,
-          response,
-          metadata: {},
+      if (ephemeralRequestEvent) {
+        intercept.intercept(value, IPromise.IPromisePrototype); // Ensure we can setVirtualPropertyValue, and ensures Promise is intercepted.
+        intercept.setVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME, ephemeralRequestEvent);
+        value.then(response => {
+          const requestEvent = intercept.getVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME);
+          assert(requestEvent != null, `Unexpected situation! Request info missing from fetch promise object`);
+          const flowlet = requestEvent?.flowlet; // Reuse the same flowlet as request, since by now things have changed.
+          channel.emit('al_network_response', {
+            initiatorType: "fetch",
+            event: "network",
+            eventTimestamp: performanceAbsoluteNow(),
+            eventIndex: ALEventIndex.getNextEventIndex(),
+            flowlet,
+            requestEvent,
+            response,
+            metadata: {},
+          });
         });
-      });
+      }
     }
   });
 }

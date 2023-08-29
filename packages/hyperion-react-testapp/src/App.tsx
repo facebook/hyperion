@@ -12,6 +12,7 @@ import { PortalBodyContainerComponent } from './component/PortalComponent';
 import DynamicSvgComponent from './component/DynamicSvgComponent';
 import ElementNameComponent from './component/ElementNameComponent';
 import TextComponent from './component/TextComponent';
+import RecursiveRuncComponent from "./component/RecursiveFuncComponent";
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -52,6 +53,7 @@ function App() {
       </div>
       <DynamicSvgComponent></DynamicSvgComponent>
       <TextComponent />
+      <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
     </div>
   );
 }

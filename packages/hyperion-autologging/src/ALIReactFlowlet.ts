@@ -147,20 +147,20 @@ export function init(options: InitOptions) {
     fi => {
       if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
 
-        let activeFlowlet: ALFlowlet | undefined | null;
-        fi.onArgsObserverAdd(_props => {
+        fi.onArgsAndValueObserverAdd(_props => {
           const ref = ReactModule.useRef<FlowletRef | null>(null);
           if (!ref.current) {
             ref.current = {};
           }
-          activeFlowlet = updateFlowletRef(ref.current);
-        });
-        fi.onValueObserverAdd(() => {
-          if (activeFlowlet) {
-            if (__DEV__) {
-              assertFlowlet(activeFlowlet);
+          let activeFlowlet = updateFlowletRef(ref.current);
+
+          return () => {
+            if (activeFlowlet) {
+              if (__DEV__) {
+                assertFlowlet(activeFlowlet);
+              }
+              flowletManager.pop(activeFlowlet);
             }
-            flowletManager.pop(activeFlowlet);
           }
         });
       }
