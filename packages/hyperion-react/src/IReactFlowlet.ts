@@ -111,29 +111,27 @@ export function init<
        * the body of the method has access to flowlet.
        * We will expand these methods to other lifecycle methods later.
        */
-      let activeFlowlet: FlowletType | undefined | null;
-      method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
-        activeFlowlet = flowletPusher(this.props);
-      });
-      method.onValueObserverAdd(function (this: ComponentWithFlowlet) {
-        if (activeFlowlet) {
-          flowletManager.pop(activeFlowlet);
+      method.onArgsAndValueObserverAdd(function (this: ComponentWithFlowlet) {
+        const activeFlowlet = flowletPusher(this.props);
+        return () => {
+          if (activeFlowlet) {
+            flowletManager.pop(activeFlowlet);
+          }
         }
       });
+
     });
   });
 
   IReactComponent.onReactFunctionComponentIntercept.add(
     fi => {
       if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
-
-        let activeFlowlet: FlowletType | undefined | null;
-        fi.onArgsObserverAdd(props => {
-          activeFlowlet = flowletPusher(props);
-        });
-        fi.onValueObserverAdd(() => {
-          if (activeFlowlet) {
-            flowletManager.pop(activeFlowlet);
+        fi.onArgsAndValueObserverAdd(props => {
+          const activeFlowlet = flowletPusher(props);
+          return () => {
+            if (activeFlowlet) {
+              flowletManager.pop(activeFlowlet);
+            }
           }
         });
       }
