@@ -19,6 +19,7 @@ import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
+import * as ALCustomEvent from "./ALCustomEvent";
 
 /**
  * This type extracts the union of all events types so that external modules
@@ -30,7 +31,8 @@ export type ALChannelEvent = (
   ALUIEventPublisher.InitOptions['channel'] &
   ALHeartbeat.InitOptions['channel'] &
   ALSurfaceMutationPublisher.InitOptions['channel'] &
-  ALNetworkPublisher.InitOptions['channel']
+  ALNetworkPublisher.InitOptions['channel'] &
+  ALCustomEvent.ALCustomEventChannel
 ) extends Channel<infer EventType> ? EventType : never;
 
 type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions | 'react'>;
