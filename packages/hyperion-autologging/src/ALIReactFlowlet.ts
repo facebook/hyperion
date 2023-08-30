@@ -147,20 +147,21 @@ export function init(options: InitOptions) {
     fi => {
       if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
 
-        fi.onArgsAndValueObserverAdd(_props => {
+        fi.onArgsAndValueMapperAdd(([_props]) => {
           const ref = ReactModule.useRef<FlowletRef | null>(null);
           if (!ref.current) {
             ref.current = {};
           }
           let activeFlowlet = updateFlowletRef(ref.current);
 
-          return () => {
+          return (value) => {
             if (activeFlowlet) {
               if (__DEV__) {
                 assertFlowlet(activeFlowlet);
               }
               flowletManager.pop(activeFlowlet);
             }
+            return value;
           }
         });
       }
