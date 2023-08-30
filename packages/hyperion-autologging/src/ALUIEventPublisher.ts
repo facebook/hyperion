@@ -276,7 +276,8 @@ export function publish(options: InitOptions): void {
 
     lastUIEvent = {
       data,
-      timedEmitter: new TimedTrigger(_ => {
+      timedEmitter: new TimedTrigger(timerFired => {
+        data.metadata.has_timed_out_before_bubble = '' + timerFired;
         channel.emit('al_ui_event', data);
         lastUIEvent = null;
       }, MAX_CAPTURE_TO_BUBBLE_DELAY_MS),
