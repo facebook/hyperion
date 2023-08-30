@@ -128,7 +128,7 @@ function captureFetch(options: InitOptions): void {
     });
   }
 
-  IWindow.fetch.onArgsAndValueObserverAdd((input, init) => {
+  IWindow.fetch.onArgsAndValueMapperAdd(([input, init]) => {
     let ephemeralRequestEvent: ALNetworkResponseEvent['requestEvent'] | null;
     let request: RequestInfo;
     if (typeof input === "string") {
@@ -193,6 +193,7 @@ function captureFetch(options: InitOptions): void {
           });
         });
       }
+      return value;
     }
   });
 }

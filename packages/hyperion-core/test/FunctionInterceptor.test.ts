@@ -434,6 +434,38 @@ describe("test modern classes", () => {
     expect(fn).toBeCalledTimes(0);
   });
 
+  test("onArgsAndValueMapper feature", () => {
+    const fn = jest.fn<number, [number]>(i => i);
+    const fi = interceptFunction(fn);
+
+    fi.onArgsAndValueMapperAdd(args => {
+      args[0] *= 3;
+      return value => {
+        return value * 5;
+      };
+    });
+
+    let result = fi.interceptor(2);
+    expect(fn).toBeCalledTimes(1);
+    expect(fn.mock.calls[0][0]).toBe((2) * 3);
+    expect(fn.mock.results[0].value).toBe((2 * 3));
+    expect(result).toBe((2 * 3) * 5);
+
+    fi.onArgsAndValueMapperAdd(args => {
+      args[0] *= 7;
+      return value => {
+        return value * 11;
+      };
+    });
+
+    result = fi.interceptor(2);
+    expect(fn).toBeCalledTimes(2);
+    expect(fn.mock.calls[1][0]).toBe((2 * 3) * 7);
+    expect(fn.mock.results[1].value).toBe(((2 * 3) * 7));
+    expect(result).toBe((((2 * 3) * 7) * 5) * 11);
+  });
+
+
   test("intercept recursive function with args and value observers", () => {
     // Test when original function is replaced with its intercepted version
     let func = function (i: number): number[] {
@@ -456,10 +488,11 @@ describe("test modern classes", () => {
     });
 
     let callCount = 0;
-    fi.onArgsAndValueObserverAdd(i => {
+    fi.onArgsAndValueMapperAdd(args => {
       callCount++;
       return value => {
-        expect(value.length).toBe(i);
+        expect(value.length).toBe(args[0]);
+        return value;
       };
     });
 
