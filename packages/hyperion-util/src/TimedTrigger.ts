@@ -7,7 +7,7 @@
 type TimeoutID = number | any /* React expects Timeout?! */;
 
 
-const SUPPOORTS_IDLE_CALLBACK = typeof requestIdleCallback === 'function' && typeof cancelIdleCallback === "function";
+const SUPPORTS_IDLE_CALLBACK = typeof requestIdleCallback === 'function' && typeof cancelIdleCallback === "function";
 
 /**
  * This class can be used when we want to run a function once either by calling
@@ -33,7 +33,7 @@ export class TimedTrigger {
   constructor(action: (timerFired: boolean) => void, delay: number, useIdleCallback: boolean = false) {
     this._action = action;
     this._delay = delay;
-    this._useIdleCallback = useIdleCallback && SUPPOORTS_IDLE_CALLBACK;
+    this._useIdleCallback = useIdleCallback && SUPPORTS_IDLE_CALLBACK;
     this._setTimer();
   }
 

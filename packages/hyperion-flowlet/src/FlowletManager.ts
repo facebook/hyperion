@@ -6,15 +6,61 @@ import { Hook } from "@hyperion/hook";
 import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { CallbackType, interceptEventListener, isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
 import { Flowlet } from "./Flowlet";
-
+import { assert, getLogger } from "@hyperion/global";
+import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 
 const IS_FLOWLET_SETUP_PROP_NAME = `__isFlowletSetup`;
+
+const CLEANUP_PERIOD = 3000; // ms call cleanup at most every 3 seconds
+const MIN_STACK_SIZE_FOR_QUICK_CLEANUP = 10; // clean up pending tasks if system was not idle and stack size is greater than this value
+
 
 export class FlowletManager<T extends Flowlet = Flowlet> {
   private _flowletStack: T[] = [];
   private _top: T | null = null; // To optimize for faster reading of top;
 
-  constructor(public flowletCtor: new (flowletName: string, parent?: T | null) => T) { }
+  /**
+   * If we don't succeed at poping the top of stack, we keep a list of those
+   * iterms and periodically remove them to ensure the size of the stack does
+   * not keep growing.
+   */
+  private _pendingPops = new Set<T>();
+
+  constructor(public flowletCtor: new (flowletName: string, parent?: T | null) => T) {
+    if (__DEV__) {
+      this.onPush.add(flowlet => {
+        assert(flowlet != null, `Unexpected NULL flowlet value pushed to stack!`);
+      });
+    }
+    this.scheduleCleanup();
+  }
+
+  private scheduleCleanup() {
+    new TimedTrigger(
+      (timerFired) => {
+        const fullCleanup = !timerFired;  // We are in the idle period and should have nothing on the stack
+        this.cleanup(fullCleanup);
+        this.scheduleCleanup();
+      },
+      CLEANUP_PERIOD,
+      true // use idle callback when possible. 
+    );
+  }
+
+  public cleanup(fullCleanup: boolean) {
+    if (fullCleanup) {
+      // We are in the idle period and should have nothing on the stack
+      if (this.stackSize() > 0) {
+        this._flowletStack = [];
+        getLogger().warn?.(`Flushed all pending flowlets from stack!`);
+      }
+    } else {
+      if (this.stackSize() > MIN_STACK_SIZE_FOR_QUICK_CLEANUP && this._pendingPops.size > 0) {
+        this.popIf(flowlet => this._pendingPops.has(flowlet));
+        this._pendingPops.clear();
+      }
+    }
+  }
 
   top(): T | null {
     return this._top;
@@ -28,14 +74,15 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   stackSize(): number {
     return this._flowletStack.length;
   }
+
   push(flowlet: T, forkReason?: string): T {
     const newFlowlet = forkReason && this.flowletCtor ? new this.flowletCtor(forkReason, flowlet) : flowlet;
-    this.onPush.call(flowlet, forkReason);
+    this.onPush.call(flowlet, forkReason, newFlowlet);
     this._flowletStack.push(newFlowlet);
     this.updateTop();
     return newFlowlet;
   }
-  readonly onPush = new Hook<(flowlet: T, reason?: string) => void>();
+  readonly onPush = new Hook<(flowlet: T, reason?: string, replacementFlowlet?: T) => void>();
 
   /**
   * Pops all the flowlets that match a certain filter condition
@@ -57,17 +104,19 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       return currTop;
     }
     // __DEV__ && assert(!!flowlet, `Cannot pop undefined flowlet from top of the stack: ${currTop?.fullName()}`);
+    let succeeded: boolean;
     if (currTop === flowlet) {
       this._flowletStack.pop();
       this.updateTop();
+      succeeded = true;
     } else {
-      this.popIf(f => f !== flowlet);
+      succeeded = false;
+      this._pendingPops.add(flowlet);
     }
-    this.onPop.call(flowlet, reason);
+    this.onPop.call(flowlet, succeeded, reason);
     return currTop;
   }
-  readonly onPop = new Hook<(flowlet: T | null, reason?: string) => void>();
-
+  readonly onPop = new Hook<(flowlet: T | null, popSucceeded: boolean, reason: string | undefined) => void>();
 
   wrap<C extends CallbackType | undefined | null>(listener: C, apiName: string, customFlowlet?: T): C {
     if (!listener) {

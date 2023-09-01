@@ -7,6 +7,7 @@ import "./global";
 interface Options {
   getCallStack?: (skipFrameCount: number, exception?: any) => string[];
   logger: {
+    warn?: (message?: any, ...optionalParams: any[]) => void;
     error(message?: any, ...optionalParams: any[]): void;
   };
 }
@@ -19,6 +20,10 @@ const devOptions: Required<Options> = {
 export function setAssertLoggerOptions(options: Options): void {
   devOptions.getCallStack = options.getCallStack ?? devOptions.getCallStack;
   devOptions.logger = options.logger;
+}
+
+export function getLogger(): Options['logger'] {
+  return devOptions.logger
 }
 
 export function assert(condition: boolean | undefined, message: string, options?: Options): asserts condition {

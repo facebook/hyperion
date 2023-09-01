@@ -21,7 +21,7 @@ export default class ALElementInfo {
     element: Element
   ) {
     this.element = element;
-    intercept(element, IElement.IElementtPrototype); // This also ensures that proper interception is setup. 
+    intercept(element, IElement.IElementtPrototype); // This also ensures that proper interception is setup.
     setVirtualPropertyValue(
       element,
       AL_ELEMENT_INFO_PROPNAME,

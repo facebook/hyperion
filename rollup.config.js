@@ -13,6 +13,7 @@ export default defineConfig({
         "@hyperion/hook/src/Channel",
       ],
       "hyperionCore": [
+        "@hyperion/global/src/assert",
         "@hyperion/hyperion-core/src/FunctionInterceptor",
         "@hyperion/hyperion-core/src/ConstructorInterceptor",
         "@hyperion/hyperion-core/src/AttributeInterceptor",
