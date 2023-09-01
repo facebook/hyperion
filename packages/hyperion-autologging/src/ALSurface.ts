@@ -207,7 +207,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       const { channel } = options;
       // Emit surface mutation events on mount/unmount
       ReactModule.useLayoutEffect(() => {
-        const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes. 
+        const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
         channel.emit('al_surface_mount', { surface: fullSurfaceString, metadata });
         return () => {
           channel.emit('al_surface_unmount', { surface: fullSurfaceString, metadata });

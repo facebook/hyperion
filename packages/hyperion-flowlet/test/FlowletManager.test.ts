@@ -8,6 +8,8 @@ import { Flowlet } from "../src/Flowlet";
 import { FlowletManager } from "../src/FlowletManager";
 
 describe("test FlowletManager", () => {
+  jest.useFakeTimers();
+
   test("test FlowletManager methods and events", () => {
     const manager = new FlowletManager(Flowlet);
 
@@ -51,13 +53,22 @@ describe("test FlowletManager", () => {
     expect(manager.top()).toStrictEqual(f2);
 
     // We pop f1, but top is f2
-    expect(manager.pop(f1)).toStrictEqual(f2);
+    manager.onPop.add(
+      (flowlet, succeeded) => {
+        expect(flowlet).toStrictEqual(f1);
+        expect(succeeded).toBe(false);
+      },
+      true
+    );
+    expect(manager.pop(f1)).toStrictEqual(f2); // don't expect anything to be popped.
     expect(pops).toStrictEqual([f1]);
     expect(manager.top()).toStrictEqual(f2);
 
+    expect(manager.stackSize()).toBe(3);
     expect(await p1).toStrictEqual(f2);
     expect(pops).toStrictEqual([f1, f2]);
-    expect(manager.top()).toStrictEqual(main);
+    expect(manager.stackSize()).toBe(2);
+    // expect(manager.top()).toStrictEqual(main); // Since out of order pop no longer works, we don't expect this.
   });
 
   test("wrap/unwrap methods", () => {
@@ -153,5 +164,30 @@ describe("test FlowletManager", () => {
     expect(f3).toBeInstanceOf(TestFlowlet);
   });
 
+  test("cleanup logic", () => {
+    const manager = new FlowletManager(Flowlet);
+
+    const main = manager.push(new Flowlet("main"));
+
+    manager.onPush.add((flowlet, reason, replacement) => {
+      expect(flowlet.name).toBe("f1");
+      expect(replacement?.parent).toStrictEqual(flowlet);
+    }, true);
+    const f1 = manager.push(main.fork("f1"), 'test');
+
+    const f2 = manager.push(main.fork("f2"));
+
+    manager.onPop.add((flowlet, succeed) => {
+      expect(flowlet).toStrictEqual(f1);
+      expect(succeed).toStrictEqual(false);
+    }, true);
+    const p1 = manager.pop(f1);
+    expect(p1).toStrictEqual(f2);
+
+    expect(manager.stackSize()).not.toBe(0);
+    manager.cleanup(true);
+    // jest.runAllTimers();
+    expect(manager.stackSize()).toBe(0);
+  });
 
 });
