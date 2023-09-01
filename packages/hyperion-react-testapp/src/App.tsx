@@ -13,6 +13,8 @@ import DynamicSvgComponent from './component/DynamicSvgComponent';
 import ElementNameComponent from './component/ElementNameComponent';
 import TextComponent from './component/TextComponent';
 import RecursiveRuncComponent from "./component/RecursiveFuncComponent";
+import { ElementTextTooltip } from "@hyperion/hyperion-autologging-visualizer/src/component/ElementTextTooltip.react";
+import { SyncChannel } from './Channel';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -37,24 +39,26 @@ function App() {
   const maxDepth = 1000;
 
   return (
-    <div className="App">
-      <div>
-        {/* <Counter></Counter> */}
+    <ElementTextTooltip channel={SyncChannel}>
+      <div className="App">
+        <div>
+          {/* <Counter></Counter> */}
+        </div>
+        <div>
+          <NestedComponent></NestedComponent>
+          <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
+        </div>
+        <div>
+          <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
+        </div>
+        <div>
+          <ElementNameComponent />
+        </div>
+        <DynamicSvgComponent></DynamicSvgComponent>
+        <TextComponent />
+        <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
       </div>
-      <div>
-        <NestedComponent></NestedComponent>
-        <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
-      </div>
-      <div>
-        <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
-      </div>
-      <div>
-        <ElementNameComponent />
-      </div>
-      <DynamicSvgComponent></DynamicSvgComponent>
-      <TextComponent />
-      <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
-    </div>
+    </ElementTextTooltip>
   );
 }
 
