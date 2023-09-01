@@ -71,7 +71,7 @@ export function init(options: InitOptions): boolean {
     setComponentNameValidator(options.componentNameValidator);
   }
 
-  if (global instanceof Window && global?.document.createElement != null) {
+  if (typeof global !== 'undefined' && (global as Window)?.document?.createElement != null) {
     initFlowletTrackers(options.flowletManager);
   }
 
