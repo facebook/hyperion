@@ -7,6 +7,9 @@
 import type { Channel } from "@hyperion/hook/src/Channel";
 
 import { ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALTimedEvent } from "./ALType";
+import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import * as ALEventIndex from "./ALEventIndex";
+import { ALFlowletDataType, ALFlowletManager } from "./ALFlowletManager";
 
 export type ALCustomEventData =
   ALMetadataEvent &
@@ -21,3 +24,15 @@ export type ALChannelCustomEvent = Readonly<{
 }>;
 
 export type ALCustomEventChannel = Channel<ALChannelCustomEvent>;
+
+export function emitALCustomEvent<T extends ALFlowletDataType>(channel: ALCustomEventChannel, flowletManager: ALFlowletManager<T>, metadata: ALMetadataEvent['metadata'], nonLoggable?: boolean): ALCustomEventData {
+  const event: ALCustomEventData = {
+    event: 'custom',
+    eventTimestamp: performanceAbsoluteNow(),
+    eventIndex: nonLoggable ? void 0 : ALEventIndex.getNextEventIndex(),
+    flowlet: flowletManager.top(),
+    metadata
+  }
+  channel.emit('al_custom_event', event);
+  return event;
+}
