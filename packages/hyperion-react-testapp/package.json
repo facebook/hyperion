@@ -6,12 +6,16 @@
     "../devtools",
     "../global",
     "../hook",
-    "../hyperion-react"
+    "../hyperion-react",
+    "../hyperion-autologging",
+    "../hyperion-autologging-visualizer"
   ],
   "dependencies": {
     "@hyperion/global": "*",
     "@hyperion/hook": "*",
     "@hyperion/hyperion-react": "*",
+    "@hyperion/hyperion-autologging": "*",
+    "@hyperion/hyperion-autologging-visualizer": "*",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
@@ -22,7 +26,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "typescript": "^5.1.6",
+    "typescript": "^5.2.2",
     "web-vitals": "^3.4.0"
   },
   "scripts": {

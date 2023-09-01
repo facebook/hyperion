@@ -3,3 +3,18 @@
  */
 
 'use strict';
+import * as Types from "@hyperion/hyperion-util/src/Types";
+import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
+import { Channel } from "@hyperion/hook/src/Channel";
+import * as ElementTextTooltip from "./component/ElementTextTooltip.react";
+
+export type InitOptions = Types.Options<
+  Pick<AutoLogging.InitOptions, 'flowletManager' | 'domSurfaceAttributeName'> &
+  {
+    channel: Channel<AutoLogging.ALChannelEvent>
+  }
+>;
+
+export function init(options: InitOptions) {
+  ElementTextTooltip.init(options);
+}

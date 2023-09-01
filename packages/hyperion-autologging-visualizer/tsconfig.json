@@ -3,7 +3,8 @@
   "extends": "@hyperion/devtools",
   "compilerOptions": {
     // "jsx": "react-jsx",
-    "jsx": "preserve",
+    // "jsx": "preserve",
+    "jsx": "react",
   },
   "include": [
     "src",
