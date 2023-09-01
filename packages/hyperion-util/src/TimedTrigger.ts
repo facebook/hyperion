@@ -6,6 +6,9 @@
 
 type TimeoutID = number | any /* React expects Timeout?! */;
 
+
+const SUPPOORTS_IDLE_CALLBACK = typeof requestIdleCallback === 'function' && typeof cancelIdleCallback === "function";
+
 /**
  * This class can be used when we want to run a function once either by calling
  * it explicitly, or have it run after a certain time automatically.
@@ -20,20 +23,27 @@ type TimeoutID = number | any /* React expects Timeout?! */;
  * timer.
  */
 export class TimedTrigger {
-  _timeoutID: TimeoutID | null = null;
-  _timerFired: boolean = false;
-  _delay: number;
-  _action: null | ((timerFired: boolean) => void);
+  private _timeoutID: TimeoutID | null = null;
+  private _timerFired: boolean = false;
+  private _delay: number;
+  private _action: null | ((timerFired: boolean) => void);
+  private _useIdleCallback: boolean;
 
-  constructor(action: (timerFired: boolean) => void, delay: number) {
+
+  constructor(action: (timerFired: boolean) => void, delay: number, useIdleCallback: boolean = false) {
     this._action = action;
     this._delay = delay;
+    this._useIdleCallback = useIdleCallback && SUPPOORTS_IDLE_CALLBACK;
     this._setTimer();
   }
 
   _clearTimer() {
     if (this._timeoutID != null) {
-      clearTimeout(this._timeoutID);
+      if (this._useIdleCallback) {
+        cancelIdleCallback(this._timeoutID);
+      } else {
+        clearTimeout(this._timeoutID);
+      }
     }
     this._timeoutID = null;
   }
@@ -41,10 +51,17 @@ export class TimedTrigger {
   _setTimer() {
     if (!this.isDone()) {
       this._clearTimer();
-      this._timeoutID = setTimeout(() => {
-        this._timerFired = true;
-        this.run();
-      }, this._delay);
+      if (this._useIdleCallback) {
+        this._timeoutID = requestIdleCallback((deadline) => {
+          this._timerFired = deadline.didTimeout;
+          this.run();
+        }, { timeout: this._delay });
+      } else {
+        this._timeoutID = setTimeout(() => {
+          this._timerFired = true;
+          this.run();
+        }, this._delay);
+      }
     }
   }
 
