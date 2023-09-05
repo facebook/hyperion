@@ -27,7 +27,7 @@ function createCtorInterceptor<
       default: throw "Unsupported case!";
     }
     return result;
-  }
+  };
   copyOwnProperties(ctorFunc, ctorInterceptor, true);
   return ctorInterceptor;
 }
@@ -36,7 +36,7 @@ class ConstructorInterceptor<
   BaseType extends InterceptableObjectType,
   Name extends string,
   FuncType extends { new(...args: any): BaseType; } = { new(...args: ConstructorParameters<BaseType[Name]>): BaseType; }
-  > extends FunctionInterceptor<BaseType, Name, FuncType> {
+> extends FunctionInterceptor<BaseType, Name, FuncType> {
   private ctorInterceptor: FuncType | null = null;
   constructor(name: Name, originalCtor: FuncType) {
     super(name, originalCtor, true); //If we intercept constructor, that means we want the output to be intercepted
@@ -62,7 +62,7 @@ class ConstructorMethodInterceptor<
   Name extends string,
   T extends InterceptableObjectType,
   FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<T[Name]>): T; }
-  > extends MethodInterceptor<Name, T, FuncType> {
+> extends MethodInterceptor<Name, T, FuncType> {
   private ctorInterceptor: FuncType | null = null;
   constructor(name: Name, shadowPrototype: ShadowPrototype<T>, desc?: ExtendedPropertyDescriptor) {
     super(name, shadowPrototype, true, desc); //If we intercept constructor, that means we want the output to be intercepted
@@ -75,16 +75,6 @@ class ConstructorMethodInterceptor<
 }
 
 export function interceptConstructorMethod<
-  Name extends string,
-  BaseType extends InterceptableObjectType,
-  FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<BaseType[Name]>): BaseType; }
->(name: Name,
-  shadowPrototype: ShadowPrototype<BaseType>,
-): FunctionInterceptor<BaseType, Name, FuncType> {
-
-  return new ConstructorMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype);
-}
-export function interceptConstrucorMethod<
   Name extends string,
   BaseType extends InterceptableObjectType,
   FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<BaseType[Name]>): BaseType; }

@@ -22,6 +22,7 @@ import TestAndSet from '@hyperion/hyperion-util/src/TestAndSet';
 import { Class, mixed } from './FlowToTsTypes';
 import * as IReact from './IReact';
 import * as IReactElementVisitor from './IReactElementVisitor';
+import { interceptConstructor } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
 
 // $FlowIgnore[unclear-type]
 type IAny = any;
@@ -37,6 +38,8 @@ export type GenericReactComponent = ReactComponentType<IAny>;
 
 class ReactClassComponentShadowPrototype<PropsType> extends ShadowPrototype<ReactClassComponent<PropsType>> {
   name: string;
+
+  ctor: FunctionInterceptor<ReactClassComponent<PropsType>, string, new (props: PropsType, context?: unknown) => ReactClassComponent<PropsType>>;
 
   render = interceptMethod('render', this);
 
@@ -71,6 +74,7 @@ class ReactClassComponentShadowPrototype<PropsType> extends ShadowPrototype<Reac
     super(classComponentParentClass, null);
 
     this.name = component.displayName ?? component.name;
+    this.ctor = interceptConstructor(component)
   }
 }
 
@@ -131,20 +135,23 @@ export function init(options: InitOptions): void {
     classComponentParentClass: TReactClassComponent,
   ): Class<TReactClassComponent> {
     // For class components, we just need to intercept them once
-    if (interceptionInfo.has(component)) {
-      return component;
-    }
-    interceptionInfo.set(component, null);
+    // if (interceptionInfo.has(component)) {
+    //   return component;
+    // }
+    // interceptionInfo.set(component, null);
 
-    if (!interceptionInfo.has(classComponentParentClass)) {
-      const info = new ReactClassComponentShadowPrototype(
+    let info = interceptionInfo.get(classComponentParentClass);
+    if (!info) {
+      info = new ReactClassComponentShadowPrototype(
         component,
         classComponentParentClass,
       );
       interceptionInfo.set(classComponentParentClass, info);
       onReactClassComponentIntercept.call(info);
     }
-    return component;
+    return info.ctor.interceptor;
+
+    // return component;
   }
 
   function processReactFunctionComponent(functionComponent: TReactFunctionComponent): TReactFunctionComponent {
