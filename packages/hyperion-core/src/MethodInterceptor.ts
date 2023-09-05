@@ -11,7 +11,7 @@ export class MethodInterceptor<
   Name extends string,
   T extends InterceptableObjectType,
   FuncType extends InterceptableFunction = (this: T, ...args: Parameters<T[Name]>) => ReturnType<T[Name]>
-  >
+>
   extends FunctionInterceptor<T, Name, FuncType>  {
 
   constructor(name: Name, shadowPrototype: ShadowPrototype<T>, interceptOutput: boolean = false, desc?: ExtendedPropertyDescriptor) {
@@ -112,9 +112,9 @@ export function getMethodInterceptor<
   Name extends string,
   BaseType extends InterceptableObjectType,
   FuncType extends InterceptableFunction = (this: BaseType, ...args: Parameters<BaseType[Name]>) => ReturnType<BaseType[Name]>,
-  >(
-    name: Name,
-    shadowPrototype: ShadowPrototype<BaseType>,
+>(
+  name: Name,
+  shadowPrototype: ShadowPrototype<BaseType>,
 ): ExtendedPropertyDescriptor<FunctionInterceptor<BaseType, Name, FuncType>> | undefined {
   type FuncInterceptorType = FunctionInterceptor<BaseType, Name, FuncType>;
 
@@ -145,8 +145,9 @@ export function interceptMethod<
 >(
   name: Name,
   shadowPrototype: ShadowPrototype<BaseType>,
-  interceptOutput: boolean = false
+  interceptOutput: boolean = false,
+  miCtor?: null | (new (name: string, shadowPrototype: ShadowPrototype<BaseType>, interceptOutput?: boolean, desc?: ExtendedPropertyDescriptor) => MethodInterceptor<Name, BaseType, FuncType>),
 ): FunctionInterceptor<BaseType, Name, FuncType> {
   const desc = getMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype);
-  return desc?.interceptor ?? new MethodInterceptor(name, shadowPrototype, interceptOutput, desc);
+  return desc?.interceptor ?? new (miCtor ?? MethodInterceptor)(name, shadowPrototype, interceptOutput, desc);
 }
