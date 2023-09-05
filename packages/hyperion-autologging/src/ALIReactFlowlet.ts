@@ -4,14 +4,15 @@
 
 import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 
-import type * as React from 'react';
 import type * as Types from "@hyperion/hyperion-util/src/Types";
+import type * as React from 'react';
 
 import { assert } from "@hyperion/global";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
-import { ALSurfaceContext } from "./ALSurfaceContext";
+import { ALSurfaceContext, useALSurfaceContext } from "./ALSurfaceContext";
+
 
 export type InitOptions<> = Types.Options<
   {
@@ -35,7 +36,7 @@ export function init(options: InitOptions) {
   IReactComponent.init(options.react);
 
   const { flowletManager } = options;
-  const { IReactModule, ReactModule } = options.react;
+  const { IReactModule } = options.react;
 
   [
     IReactModule.useCallback,
@@ -102,7 +103,8 @@ export function init(options: InitOptions) {
     return activeFlowlet;
   }
 
-  IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
+  // TODO: temporarily disable code only for class components, that way we at least get some coverage. 
+  false && IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
     const methods = [
       shadowComponent.render,
       shadowComponent.componentWillMount,
@@ -148,20 +150,16 @@ export function init(options: InitOptions) {
       if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
 
         fi.onArgsAndValueMapperAdd(([_props]) => {
-          const ref = ReactModule.useRef<FlowletRef | null>(null);
-          if (!ref.current) {
-            ref.current = {};
-          }
-          let activeFlowlet = updateFlowletRef(ref.current);
-
-          return (value) => {
-            if (activeFlowlet) {
-              if (__DEV__) {
-                assertFlowlet(activeFlowlet);
-              }
+          const ctx = useALSurfaceContext();
+          const activeFlowlet = ctx?.flowlet;
+          if (activeFlowlet) {
+            flowletManager.push(activeFlowlet);
+            return (value) => {
               flowletManager.pop(activeFlowlet);
-            }
-            return value;
+              return value;
+            };
+          } else {
+            return value => value; // Nothing to do here
           }
         });
       }
@@ -169,3 +167,5 @@ export function init(options: InitOptions) {
   );
 
 }
+
+
