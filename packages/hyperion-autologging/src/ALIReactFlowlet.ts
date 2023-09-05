@@ -7,18 +7,18 @@ import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 
-import { assert } from "@hyperion/global";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import { ALSurfaceContext, useALSurfaceContext } from "./ALSurfaceContext";
-
 
 export type InitOptions<> = Types.Options<
   {
     react: IReactComponent.InitOptions & {
       ReactModule: {
         useRef: <T>(initialValue: T) => React.MutableRefObject<T>;
+        createElement: typeof React.createElement;
+        Fragment: typeof React.Fragment;
       }
       IReactModule: IReact.IReactModuleExports;
     };
@@ -69,42 +69,24 @@ export function init(options: InitOptions) {
   };
   type ComponentWithFlowlet = React.Component<any> & FlowletRef;
 
-  function assertFlowlet(activeFlowlet: ALFlowlet) {
-    const ctx = (ALSurfaceContext as any)._currentValue; // Unofficial internal value
-    assert(activeFlowlet.name === ctx?.flowlet?.name, "Unexpected change in flowlet");
-  }
-  function updateFlowletRef(ref: FlowletRef) {
-    if (__DEV__) {
-      assert(ref != null, "Expected a reference to add the flowlet to");
-    }
-    /**
-      * We cannot call hooks inside of the class components.
-      * Also, a class component can only have a single context assigned to it.
-      * So, we use this internal api/hack to get the value.
-      * This is ok, because this is a best effort and anyways most people are
-      * migrating away from class components.
-      * 
-      * In react 18, for functional components, calling useContext can sometimes
-      * go into infinite loop. So, we use internal call instead.
-      */
-    let activeFlowlet = ref._flowlet;
-    if (!activeFlowlet) {
-      // const ctx = useALSurfaceContext();
-      const ctx = (ALSurfaceContext as any)._currentValue; // Unofficial internal value
-      ref._flowlet = activeFlowlet = ctx?.flowlet;
-    } else {
-      if (__DEV__) {
-        assertFlowlet(activeFlowlet);
-      }
-    }
-    if (activeFlowlet) {
-      flowletManager.push(activeFlowlet);
-    }
-    return activeFlowlet;
-  }
+  IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
+    const ictor = shadowComponent.ctor;
+    const component: any = ictor.getOriginal();
 
-  // TODO: temporarily disable code only for class components, that way we at least get some coverage. 
-  false && IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
+    /**
+     * Just achieve more coverage, for legacy components, if there is not context defined
+     * we use the https://legacy.reactjs.org/docs/legacy-context.html model to get a context
+     * assigned to the component and then read the surface info from there
+     */
+    if (!component.contextType && !component.contextTypes) {
+      component.contextType = ALSurfaceContext; // Just to be consistent
+      (ictor.interceptor as any).contextType = ALSurfaceContext; // the real constructor used by the application
+
+      ictor.onValueObserverAdd((value: ComponentWithFlowlet & { context?: any }) => {
+        value._flowlet = value.context?.flowlet;
+      });
+    }
+
     const methods = [
       shadowComponent.render,
       shadowComponent.componentWillMount,
@@ -117,24 +99,17 @@ export function init(options: InitOptions) {
       shadowComponent.componentDidCatch,
     ];
 
-
     methods.forEach(method => {
       if (method.testAndSet(IS_FLOWLET_SETUP_PROP)) {
         return;
       }
 
-      if (method === shadowComponent.render) {
-        method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
-          updateFlowletRef(this);
-        });
-      } else {
-        method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
-          const activeFlowlet = this._flowlet;
-          if (activeFlowlet) {
-            flowletManager.push(activeFlowlet);
-          }
-        });
-      }
+      method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
+        const activeFlowlet = this._flowlet;
+        if (activeFlowlet) {
+          flowletManager.push(activeFlowlet);
+        }
+      });
 
       method.onValueObserverAdd(function (this: ComponentWithFlowlet) {
         const activeFlowlet = this._flowlet;
@@ -162,6 +137,7 @@ export function init(options: InitOptions) {
             return value => value; // Nothing to do here
           }
         });
+
       }
     },
   );
