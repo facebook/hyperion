@@ -5,6 +5,6 @@ coverage
 package-lock.json
 test/**/*.js
 dist/
-packages/*/src/*.js
-packages/*/src/*.jsx
-src/*.js
+src/**/*.js
+packages/**/src/*.js
+packages/**/src/*.jsx
