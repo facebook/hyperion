@@ -57,12 +57,14 @@
     "./packages/hyperion-react",
     "./packages/hyperion-autologging",
     "./packages/hyperion-autologging-visualizer",
-    "./packages/hyperion-util"
+    "./packages/hyperion-util",
+    "./packages/hyperion-react-testapp"
   ],
   "dependencies": {
     "@hyperion/global": "*",
     "@hyperion/hook": "*",
     "@hyperion/hyperion-autologging": "*",
+    "@hyperion/hyperion-autologging-visualizer": "*",
     "@hyperion/hyperion-core": "*",
     "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-flowlet": "*",
@@ -70,6 +72,7 @@
     "@hyperion/hyperion-util": "*"
   },
   "devDependencies": {
+    "@hyperion/hyperion-react-testapp": "*",
     "@babel/cli": "^7.22.9",
     "@babel/core": "^7.22.9",
     "@babel/plugin-proposal-class-properties": "^7.18.6",

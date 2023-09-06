@@ -5,7 +5,7 @@
 import { Channel } from "@hyperion/hook/src/Channel";
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import React from "react";
+import React, {useEffect, useState} from "react";
 
 export type InitOptions = Types.Options<
   {
@@ -22,11 +22,12 @@ type Props = React.PropsWithChildren<{
   channel: Channel<AutoLogging.ALChannelEvent>
 }>;
 
-export function ElementTextTooltip(props: Props): React.ReactNode {
+export function ElementTextTooltip(props: Props): React.JSX.Element {
   const channel = props.channel ?? _channell;
-  const [label, setLabel] = React.useState<string>('');
-  if (channel) {
-    React.useEffect(() => {
+  const [label, setLabel] = useState<string>('');
+
+  useEffect(() => {
+    if (channel) {
       const listener = channel.addListener('al_ui_event', event => {
         const { elementText } = event;
         if (elementText) {
@@ -36,8 +37,9 @@ export function ElementTextTooltip(props: Props): React.ReactNode {
       return () => {
         channel.removeListener('al_ui_event', listener);
       }
-    });
-  }
+    }
+    return;
+  });
   return (<>
     <div>
       <label>{label}</label>

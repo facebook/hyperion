@@ -23,7 +23,15 @@
     "@hyperion/global": "*",
     "@hyperion/hook": "*",
     "@hyperion/hyperion-dom": "*",
-    "@hyperion/hyperion-react": "*"
+    "@hyperion/hyperion-react": "*",
+    "@types/cytoscape": "^3.19.11",
+    "cytoscape": "^3.26.0",
+    "cytoscape-cola": "^2.5.1",
+    "cytoscape-dagre": "^2.5.0",
+    "cytoscape-elk": "^2.2.0",
+    "cytoscape-klay": "^3.1.4",
+    "react-cytoscapejs": "^2.0.0",
+    "web-worker": "^1.2.0"
   },
   "peerDependencies": {
     "@types/react": "^18.2.14",
@@ -31,7 +39,10 @@
   },
   "devDependencies": {
     "@hyperion/devtools": "*",
-    "@types/jest": "^29.5.4"
+    "@types/cytoscape-dagre": "^2.3.1",
+    "@types/cytoscape-klay": "^3.1.2",
+    "@types/jest": "^29.5.4",
+    "@types/react-cytoscapejs": "^1.2.2"
   },
   "eslintConfig": {
     "extends": [

@@ -54,6 +54,7 @@ export type InitOptions = Types.Options<
 >;
 
 export type InitResults = Readonly<{
+  initOptions: InitOptions;
   surfaceRenderer: ALSurface.ALSurfaceHOC;
 }>;
 
@@ -125,6 +126,7 @@ export function init(options: InitOptions): boolean {
   }
 
   cachedResults = {
+    initOptions: options,
     surfaceRenderer: ALSurface.init({
       react: options.react,
       ...sharedOptions,
@@ -150,4 +152,26 @@ export function getSurfaceRenderer(defaultALSurfaceHOC?: ALSurface.ALSurfaceHOC)
     }
   );
   return renderer;
+}
+
+
+/**
+ * Gets the init options passed when initializing AutoLogging.
+ * Can be useful to get configured channels, registered events, and other information after framework initialization.
+ */
+export function getInitOptions(): InitOptions {
+  const options = cachedResults?.initOptions;
+  assert(
+    options != null,
+    "AutoLogging must have been initilized first. Did you forget to call .init() functions?",
+    {
+      logger: {
+        error: msg => {
+          console.error(msg);
+          throw msg;
+        }
+      }
+    }
+  );
+  return options;
 }

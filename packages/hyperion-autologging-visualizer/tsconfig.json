@@ -4,9 +4,9 @@
   "compilerOptions": {
     // "jsx": "react-jsx",
     // "jsx": "preserve",
-    "jsx": "react",
+    "jsx": "react"
   },
   "include": [
-    "src",
-  ],
+    "src"
+  ]
 }

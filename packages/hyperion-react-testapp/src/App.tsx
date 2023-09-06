@@ -15,6 +15,7 @@ import TextComponent from './component/TextComponent';
 import RecursiveRuncComponent from "./component/RecursiveFuncComponent";
 import { ElementTextTooltip } from "@hyperion/hyperion-autologging-visualizer/src/component/ElementTextTooltip.react";
 import { SyncChannel } from './Channel';
+import { ALSessionGraph } from "@hyperion/hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -39,26 +40,23 @@ function App() {
   const maxDepth = 1000;
 
   return (
-    <ElementTextTooltip channel={SyncChannel}>
-      <div className="App">
-        <div>
-          {/* <Counter></Counter> */}
-        </div>
-        <div>
-          <NestedComponent></NestedComponent>
-          <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
-        </div>
-        <div>
-          <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
-        </div>
-        <div>
-          <ElementNameComponent />
-        </div>
-        <DynamicSvgComponent></DynamicSvgComponent>
-        <TextComponent />
-        <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
+    <div className="App">
+      <ALSessionGraph />
+      <ElementTextTooltip channel={SyncChannel} />
+      <div>
+        <NestedComponent></NestedComponent>
+        <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
       </div>
-    </ElementTextTooltip>
+      <div>
+        <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
+      </div>
+      <div>
+        <ElementNameComponent />
+      </div>
+      <DynamicSvgComponent></DynamicSvgComponent>
+      <TextComponent />
+      <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
+    </div>
   );
 }
 
