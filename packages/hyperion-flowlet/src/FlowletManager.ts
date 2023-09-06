@@ -12,6 +12,7 @@ import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 const IS_FLOWLET_SETUP_PROP_NAME = `__isFlowletSetup`;
 
 const CLEANUP_PERIOD = 3000; // ms call cleanup at most every 3 seconds
+const MIN_STACK_SIZE_TO_SCHEDULE_CLEANUP = 100; // only if stack size passes this number schedule a later cleanup
 const MIN_STACK_SIZE_FOR_QUICK_CLEANUP = 10; // clean up pending tasks if system was not idle and stack size is greater than this value
 
 
@@ -26,6 +27,8 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
    */
   private _pendingPops = new Set<T>();
 
+  private _scheduler: TimedTrigger | null = null;
+
   constructor(public flowletCtor: new (flowletName: string, parent?: T | null) => T) {
     if (__DEV__) {
       this.onPush.add(flowlet => {
@@ -36,23 +39,35 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   }
 
   private scheduleCleanup() {
-    new TimedTrigger(
-      (timerFired) => {
-        const fullCleanup = !timerFired;  // We are in the idle period and should have nothing on the stack
-        this.cleanup(fullCleanup);
-        this.scheduleCleanup();
-      },
-      CLEANUP_PERIOD,
-      true // use idle callback when possible. 
-    );
+    /**
+     * We schdule a listner to see when stack reaches the threshold size.
+     * Then we don't need to have this listener any more until cleanup is finished, at which
+     * point we can schedule the stack size monitoring again.
+     * This should save some cycles during busy times.
+     */
+    const handler = this.onPush.add(() => {
+      if (this.stackSize() > MIN_STACK_SIZE_TO_SCHEDULE_CLEANUP && !this._scheduler) {
+        this.onPush.remove(handler); // No longer need this code until cleanup finishes.
+        this._scheduler = new TimedTrigger(
+          (timerFired) => {
+            this._scheduler = null;
+            const fullCleanup = !timerFired; // We are in the idle period and should have nothing on the stack
+            this.cleanup(fullCleanup);
+            this.scheduleCleanup();
+          },
+          CLEANUP_PERIOD,
+          true // use idle callback when possible.
+        );
+      }
+    });
   }
 
   public cleanup(fullCleanup: boolean) {
     if (fullCleanup) {
       // We are in the idle period and should have nothing on the stack
       if (this.stackSize() > 0) {
+        getLogger().warn?.(`Flushed all pending flowlets from stack of size: `, this.stackSize());
         this._flowletStack = [];
-        getLogger().warn?.(`Flushed all pending flowlets from stack!`);
       }
     } else {
       if (this.stackSize() > MIN_STACK_SIZE_FOR_QUICK_CLEANUP && this._pendingPops.size > 0) {
