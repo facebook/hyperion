@@ -26,8 +26,8 @@ const globalScope =
           {};
 
 
-if (typeof __DEV__ !== "boolean") {
-  (globalThis as OurGlobal).__DEV__ = true;
+if (typeof __DEV__ === "undefined") {
+  (globalThis as OurGlobal).__DEV__ = false; // Ensure at least it is defined.
 
   if (
     typeof global === "object" && (
