@@ -27,6 +27,10 @@ export class SessionPersistentData<T> {
   private static runner: TimedTrigger | null = null;
   private static pending = new Set<SessionPersistentData<any>>();
   private schedule() {
+    if (!this.isPersisted()) {
+      return; // Not much to do!
+    }
+
     if (!SessionPersistentData.runner) {
       SessionPersistentData.runner = new TimedTrigger(
         () => {
