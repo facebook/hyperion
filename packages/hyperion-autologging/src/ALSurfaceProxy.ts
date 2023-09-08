@@ -38,17 +38,17 @@ type ProxyInitOptions =
  * like the following:
  */
 function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions>): React.ReactElement {
-  const { surfaceComponent, flowletManager, children } = props;
+  const { surfaceComponent, children } = props;
   const { ReactModule, } = props.react;
-  const { surface, flowlet } = useALSurfaceContext();
-  if (surface != null && flowlet != null) {
+  const surfaceContext = useALSurfaceContext();
+  const { flowlet } = surfaceContext;
+  if (surfaceContext.surface != null && flowlet != null) {
     return ReactModule.createElement(
       surfaceComponent,
       {
         __ext: new SurfacePropsExtension(flowlet),
-        flowlet: flowlet,
-        flowletManager: flowletManager,
-        fullSurfaceString: surface,
+        flowlet,
+        proxiedContext: surfaceContext,
       },
       children
     );

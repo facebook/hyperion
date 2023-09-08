@@ -6,7 +6,7 @@
 
 import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import type { ALChannelSurfaceEvent } from './ALSurface';
+import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData } from './ALSurface';
 import { ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 import { assert } from "@hyperion/global/src/assert";
@@ -55,6 +55,7 @@ type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & 
   element: HTMLElement,
   addTime: number,
   removeTime?: number,
+  flowlet: ALFlowlet,
   addFlowlet: ALFlowlet | null,
   removeFlowlet: ALFlowlet | null,
   mountEvent: ALSurfaceMutationEventData | null,
@@ -71,16 +72,16 @@ export type InitOptions = Types.Options<
 >;
 
 export function publish(options: InitOptions): void {
-  const { domSurfaceAttributeName, channel, flowletManager, cacheElementReactInfo } = options;
+  const { channel, flowletManager, cacheElementReactInfo } = options;
 
-  function processNode(node: Node, action: 'added' | 'removed', metadata: ALMetadataEvent['metadata']) {
+  function processNode(event: ALChannelSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
+    const { element, surface, flowlet, metadata } = event;
 
-    const flowlet = flowletManager.top();
-    if (!(node instanceof HTMLElement) || /LINK|SCRIPT/.test(node.nodeName)) {
+    const currFlowlet = flowletManager.top();
+    if (!(element instanceof HTMLElement) || /LINK|SCRIPT/.test(element.nodeName)) {
       return;
     }
-    const surface = node.getAttribute(domSurfaceAttributeName);
     if (surface == null) {
       return;
     }
@@ -91,17 +92,18 @@ export function publish(options: InitOptions): void {
           let reactComponentData: ReactComponentData | null = null;
           let elementText: ALElementTextEvent;
           if (cacheElementReactInfo) {
-            const elementInfo = ALElementInfo.getOrCreate(node);
+            const elementInfo = ALElementInfo.getOrCreate(element);
             reactComponentData = elementInfo.getReactComponentData();
-            elementText = getElementTextEvent(node, surface);
+            elementText = getElementTextEvent(element, surface);
           } else {
             elementText = getElementTextEvent(null, surface);
           }
           info = {
             surface,
-            element: node,
+            element: element,
             addTime: timestamp,
-            addFlowlet: flowlet,
+            flowlet,
+            addFlowlet: currFlowlet,
             reactComponentName: reactComponentData?.name,
             reactComponentStack: reactComponentData?.stack,
             ...elementText,
@@ -111,22 +113,22 @@ export function publish(options: InitOptions): void {
           };
           activeSurfaces.set(surface, info);
           emitMutationEvent(action, info);
-        } else if (node != info.element && node.contains(info.element)) {
+        } else if (element != info.element && element.contains(info.element)) {
           /**
-          * This means we are seeing a node that is higher in the DOM
+          * This means we are seeing a element that is higher in the DOM
           * and belongs to a surface that we have seen before.
-          * So, we can just update the surface=>node info.
+          * So, we can just update the surface=>element info.
           *  */
-          info.element = node;
-          info.addFlowlet = flowlet;
+          info.element = element;
+          info.addFlowlet = currFlowlet;
           info.addTime = timestamp;
         }
         break;
       }
       case 'removed': {
         const info = activeSurfaces.get(surface);
-        if (info && info.element === node) {
-          info.removeFlowlet = flowlet;
+        if (info && info.element === element) {
+          info.removeFlowlet = currFlowlet;
           info.removeTime = timestamp;
           activeSurfaces.delete(surface);
           /**
@@ -145,19 +147,11 @@ export function publish(options: InitOptions): void {
   }
 
   channel.addListener('al_surface_mount', event => {
-    const element = document.querySelector(
-      `[${domSurfaceAttributeName}='${event.surface}']`,
-    );
-    if (element != null) {
-      processNode(element, 'added', event.metadata);
-    }
+    processNode(event, 'added');
   });
 
   channel.addListener('al_surface_unmount', event => {
-    const removeSurfaceNode = activeSurfaces.get(event.surface);
-    if (removeSurfaceNode) {
-      processNode(removeSurfaceNode.element, 'removed', event.metadata);
-    }
+    processNode(event, 'removed');
   });
 
 
@@ -169,19 +163,25 @@ export function publish(options: InitOptions): void {
     switch (action) {
       case 'added': {
         const flowlet = surfaceInfo.addFlowlet;
+        if (flowlet) {
+          surfaceInfo.metadata.add_flowlet = flowlet.getFullName();
+        }
         channel.emit('al_surface_mutation_event', surfaceInfo.mountEvent = {
           ...surfaceInfo,
           event: 'mount_component',
           eventTimestamp: surfaceInfo.addTime,
           eventIndex: ALEventIndex.getNextEventIndex(),
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
-          flowlet,
+          // flowlet,
         });
         break;
       }
       case 'removed': {
         assert(mountEvent != null && removeTime != null, "Missing mutaion info for unmounting");
         const flowlet = surfaceInfo.removeFlowlet;
+        if (flowlet) {
+          surfaceInfo.metadata.remove_flowlet = flowlet.getFullName();
+        }
         channel.emit('al_surface_mutation_event', {
           ...surfaceInfo,
           event: 'unmount_component',
@@ -189,7 +189,7 @@ export function publish(options: InitOptions): void {
           eventIndex: ALEventIndex.getNextEventIndex(),
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
           mountedDuration: (removeTime - surfaceInfo.addTime) / 1000,
-          flowlet,
+          // flowlet,
           mountEvent,
         });
         break;
