@@ -5,3 +5,4 @@
 'use strict';
 
 export const AUTO_LOGGING_SURFACE = "data-surface";
+export const AUTO_LOGGING_REGION = "data-region";

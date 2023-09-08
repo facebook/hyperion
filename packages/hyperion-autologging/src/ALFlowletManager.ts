@@ -14,6 +14,7 @@ import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
  */
 export interface ALFlowletDataType {
   surface?: string;
+  region?: string;
   uiEventFlowlet?: ALFlowlet;
 };
 
