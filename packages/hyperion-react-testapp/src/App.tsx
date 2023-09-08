@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import React from 'react';
+import React, { ChangeEventHandler, useCallback, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import LargeComp from './component/LargeComponent';
@@ -16,6 +16,7 @@ import RecursiveRuncComponent from "./component/RecursiveFuncComponent";
 import { ElementTextTooltip } from "@hyperion/hyperion-autologging-visualizer/src/component/ElementTextTooltip.react";
 import { SyncChannel } from './Channel';
 import { ALSessionGraph } from "@hyperion/hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
+import RegionComponent from './component/RegionComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -36,13 +37,15 @@ function InitComp() {
 }
 
 function App() {
-
   const maxDepth = 1000;
 
-  return (
-    <div className="App">
-      <ALSessionGraph />
-      <ElementTextTooltip channel={SyncChannel} />
+  const Modes = {
+    'region': () => <RegionComponent></RegionComponent>,
+    'network': () => <DynamicSvgComponent></DynamicSvgComponent>,
+    'nested': () => <ElementTextTooltip channel={SyncChannel}>
+      <div>
+        {/* <Counter></Counter> */}
+      </div>
       <div>
         <NestedComponent></NestedComponent>
         <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
@@ -56,6 +59,26 @@ function App() {
       <DynamicSvgComponent></DynamicSvgComponent>
       <TextComponent />
       <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
+      <RegionComponent></RegionComponent>
+    </ElementTextTooltip>,
+  };
+  const [mode, setMode] = useState<keyof typeof Modes>('region');
+
+  const onChange = useCallback<ChangeEventHandler<HTMLSelectElement>>((event) => {
+    const value = event.target.value;
+    if (value === 'region' || value === 'network' || value === 'nested') {
+      setMode(value);
+    }
+  }, []);
+
+  return (
+    <div className="App">
+      <ALSessionGraph />
+      <label>Select a mode:</label>
+      <select onChange={onChange} value={mode}>
+        {Object.keys(Modes).map(key => <option value={key}>{key}</option>)}
+      </select>
+      {Modes[mode]()}
     </div>
   );
 }

@@ -16,7 +16,7 @@ import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsE
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType } from "./ALFlowletManager";
-import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
+import { AUTO_LOGGING_REGION, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
@@ -31,6 +31,7 @@ export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Reado
 export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
+  isHiddenRegion?: boolean;
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
@@ -55,6 +56,7 @@ export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<Surfac
    */
   proxiedContext?: ALSurfaceContext.ALSurfaceContextFilledValue
   metadata?: ALSurfaceProps['metadata'];
+  isHiddenRegion?: boolean;
 }
 ) => React.ReactElement;
 
@@ -74,6 +76,7 @@ export type InitOptions = Types.Options<
       IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     };
     domFlowletAttributeName?: string;
+    domRegionAttributeName?: string;
     channel: ALChannel;
     disableReactDomPropsExtension?: boolean;
   }
@@ -103,7 +106,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   // We should make sure the following enabled for our particular usage in this function.
   IReactComponent.init(options.react);
 
-  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName } = options;
+  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName, domRegionAttributeName = AUTO_LOGGING_REGION } = options;
   /**
   * if flowlets are disabled, but we still want to extend the props, we use
   * the following placeholder flowlet to let the rest of the logic work.
@@ -132,6 +135,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
      */
     if (allowedTags.has(component)) {
       props[domSurfaceAttributeName] = new SurfaceDOMString(flowlet);
+      props[domRegionAttributeName] = new SurfaceDOMString(flowlet);
 
       if (__DEV__) {
         if (domFlowletAttributeName) {
@@ -165,7 +169,8 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   ) {
     if (
       (
-        attrName === domSurfaceAttributeName
+        attrName === domSurfaceAttributeName ||
+        attrName === domRegionAttributeName
       ) && (
         attrValue === '' ||
         attrValue === 'null' ||
@@ -180,7 +185,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
 
 
 export function init(options: InitOptions): ALSurfaceHOC {
-  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE } = options;
+  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domRegionAttributeName = AUTO_LOGGING_REGION } = options;
   const { ReactModule } = options.react;
 
   ALIReactFlowlet.init(options);
@@ -200,25 +205,35 @@ export function init(options: InitOptions): ALSurfaceHOC {
     }
 
     let fullSurfaceString: string;
+    let fullRegionString: string;
     let domAttributeName: string;
     let domAttributeValue: string;
 
     const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
-    const { surface: parentSurface } = surfaceCtx;
+    const { surface: parentSurface, region: parentRegion } = surfaceCtx;
 
     if (!proxiedContext) {
       const surface = flowlet.name;
-      fullSurfaceString = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
-      domAttributeName = domSurfaceAttributeName;
-      domAttributeValue = fullSurfaceString;
+      fullRegionString = (parentRegion ?? '') + SURFACE_SEPARATOR + surface;
+      if (props.isHiddenRegion) {
+        fullSurfaceString = parentSurface ?? SURFACE_SEPARATOR;
+        domAttributeName = domRegionAttributeName;
+        domAttributeValue = fullRegionString;
+      } else {
+        fullSurfaceString = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
+        domAttributeName = domSurfaceAttributeName;
+        domAttributeValue = fullSurfaceString;
+      }
     } else {
       fullSurfaceString = proxiedContext.surface;
+      fullRegionString = proxiedContext.region;
       domAttributeName = domSurfaceAttributeName
       domAttributeValue = fullSurfaceString;
     }
 
     const surfaceData: SurfaceData = {
       surface: fullSurfaceString,
+      region: fullRegionString,
       flowlet,
       domAttributeName,
       domAttributeValue,
@@ -228,6 +243,9 @@ export function init(options: InitOptions): ALSurfaceHOC {
       const { channel } = options;
       // Emit surface mutation events on mount/unmount
       const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
+      if (props.isHiddenRegion) {
+        metadata.hidden_region = "true";
+      }
       ReactModule.useLayoutEffect(() => {
         const event: ALChannelSurfaceEventData = {
           flowlet,
@@ -375,7 +393,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     },
   });
 
-  return ({ surface, metadata }, renderer) => {
+  return ({ surface, metadata, isHiddenRegion }, renderer) => {
     const topFlowlet = flowletManager.top();
 
     let flowlet: FlowletType;
@@ -393,6 +411,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         {
           flowlet,
           metadata,
+          isHiddenRegion,
         },
         renderer ? renderer(children) : children
       );
