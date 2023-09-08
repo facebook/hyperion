@@ -15,16 +15,17 @@ import * as ALIReactFlowlet from "./ALIReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
-import { ALFlowletDataType, ALFlowletManager } from "./ALFlowletManager";
+import { ALFlowletDataType } from "./ALFlowletManager";
 import { AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
 
-type ALChannelSurfaceData = ALMetadataEvent & Readonly<{
+export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
   surface: string;
+  element?: Element | null;
 }>;
 
 export type ALSurfaceProps = Readonly<{
@@ -36,25 +37,23 @@ export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
 export type ALSurfaceHOC = (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
 
 export type ALChannelSurfaceEvent = Readonly<{
-  al_surface_mount: [ALChannelSurfaceData];
-  al_surface_unmount: [ALChannelSurfaceData];
+  al_surface_mount: [ALChannelSurfaceEventData];
+  al_surface_unmount: [ALChannelSurfaceEventData];
 }>;
 
 type DataType = ALFlowletDataType;
 type FlowletType = Flowlet<DataType>;
-type FlowletManagerType = ALFlowletManager<ALFlowletDataType>;
 type ALChannelEventType = ALChannelSurfaceEvent;
 type ALChannel = Channel<ALChannelEventType>;
 
 
 export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
   flowlet: FlowletType;
-  flowletManager: FlowletManagerType;
   /** The optional incoming surface that we are re-wrapping via a proxy.
    * If this is provided,  then we won't emit mutations for this surface as we are
    * doubly wrapping that surface, for surface attribution purposes.
    */
-  fullSurfaceString?: string;
+  proxiedContext?: ALSurfaceContext.ALSurfaceContextFilledValue
   metadata?: ALSurfaceProps['metadata'];
 }
 ) => React.ReactElement;
@@ -165,8 +164,9 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
     attrValue: any,
   ) {
     if (
-      attrName === domSurfaceAttributeName &&
       (
+        attrName === domSurfaceAttributeName
+      ) && (
         attrValue === '' ||
         attrValue === 'null' ||
         (attrValue instanceof SurfaceDOMString && attrValue.toString() === '')
@@ -188,29 +188,56 @@ export function init(options: InitOptions): ALSurfaceHOC {
   setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
 
+  type SurfaceData = ALSurfaceContext.ALSurfaceContextFilledValue & {
+    domAttributeName: string;
+    domAttributeValue: string;
+  }
+
   const Surface: SurfaceComponent = props => {
-    const { __ext, flowlet, flowletManager } = props;
+    const { __ext, flowlet, proxiedContext } = props;
     if (__ext && __ext.flowlet !== flowlet) {
       __ext.flowlet = flowlet;
     }
 
-    const incomingSurfaceString = props.fullSurfaceString ?? '';
-    const isPassedSurface = incomingSurfaceString !== '';
-    let fullSurfaceString = incomingSurfaceString;
-    const { surface: parentSurface } = ALSurfaceContext.useALSurfaceContext();
-    if (!isPassedSurface) {
+    let fullSurfaceString: string;
+    let domAttributeName: string;
+    let domAttributeValue: string;
+
+    const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
+    const { surface: parentSurface } = surfaceCtx;
+
+    if (!proxiedContext) {
       const surface = flowlet.name;
       fullSurfaceString = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
+      domAttributeName = domSurfaceAttributeName;
+      domAttributeValue = fullSurfaceString;
+    } else {
+      fullSurfaceString = proxiedContext.surface;
+      domAttributeName = domSurfaceAttributeName
+      domAttributeValue = fullSurfaceString;
     }
 
-    if (options.channel && !isPassedSurface) {
+    const surfaceData: SurfaceData = {
+      surface: fullSurfaceString,
+      flowlet,
+      domAttributeName,
+      domAttributeValue,
+    };
+
+    if (options.channel && !proxiedContext) {
       const { channel } = options;
       // Emit surface mutation events on mount/unmount
+      const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
       ReactModule.useLayoutEffect(() => {
-        const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
-        channel.emit('al_surface_mount', { surface: fullSurfaceString, metadata });
+        const event: ALChannelSurfaceEventData = {
+          flowlet,
+          surface: domAttributeValue,
+          metadata,
+          element: document.querySelector(`[${domAttributeName}='${domAttributeValue}']`)
+        };
+        channel.emit('al_surface_mount', event);
         return () => {
-          channel.emit('al_surface_unmount', { surface: fullSurfaceString, metadata });
+          channel.emit('al_surface_unmount', event);
         }
       }, [fullSurfaceString]);
     }
@@ -219,7 +246,8 @@ export function init(options: InitOptions): ALSurfaceHOC {
     let children = props.children;
 
     if (!options.disableReactDomPropsExtension) {
-      const foundDomElement = propagateFlowletDown(props.children, flowlet);
+      const foundDomElement = propagateFlowletDown(props.children, surfaceData);
+
       if (foundDomElement !== true) {
         /**
          * We could not find a dom node to safely add the attribute to it.
@@ -240,7 +268,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
           },
           props.children
         );
-        propagateFlowletDown(children, flowlet);
+        propagateFlowletDown(children, surfaceData);
       }
     } else {
       children = ReactModule.createElement(
@@ -248,7 +276,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         {
           "data-surface-wrapper": "1",
           style: { display: 'contents' },
-          [domSurfaceAttributeName]: fullSurfaceString,
+          [domAttributeName]: domAttributeValue,
         },
         props.children
       );
@@ -256,7 +284,13 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     // We want to override the intercepted values
     flowletManager.push(flowlet);
-    const result = ReactModule.createElement(SurfaceContext.Provider, { value: { surface: fullSurfaceString, flowlet: flowlet } }, children);
+    const result = ReactModule.createElement(
+      SurfaceContext.Provider,
+      {
+        value: surfaceData
+      },
+      children
+    );
     flowletManager.pop(flowlet);
     return result;
   }
@@ -265,7 +299,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
   function updateFlowlet(
     ext: IReactFlowlet.PropsExtension<DataType, FlowletType> | undefined,
-    flowlet: FlowletType,
+    params: SurfaceData,
     children: React.ReactNode,
     deep: boolean,
   ): boolean | undefined | null {
@@ -278,11 +312,11 @@ export function init(options: InitOptions): ALSurfaceHOC {
       return;
     }
 
-    if (extFlowlet.data.surface !== flowlet.data.surface) {
-      ext.flowlet = flowlet;
+    if (extFlowlet.data.surface !== params.flowlet.data.surface) {
+      ext.flowlet = params.flowlet;
     }
     if (deep) {
-      return propagateFlowletDown(children, flowlet);
+      return propagateFlowletDown(children, params);
     }
     return;
   }
@@ -295,24 +329,24 @@ export function init(options: InitOptions): ALSurfaceHOC {
   const propagateFlowletDown = IReactElementVisitor.createReactNodeVisitor<
     IDomElementExtendedProps,
     IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>>,
-    FlowletType,
+    SurfaceData,
     boolean | undefined
   >({
-    domElement: (_component, props, flowlet, _node) => {
-      const ext = props[domSurfaceAttributeName];
+    domElement: (_component, props, params, _node) => {
+      const ext = props[params.domAttributeName];
       if (ext instanceof SurfaceDOMString) {
-        ext.surface = flowlet.data.surface;
+        ext.surface = params.domAttributeValue;
       }
-      updateFlowlet(ext, flowlet, props.children, false);
+      updateFlowlet(ext, params, props.children, false);
       return true;
     },
-    component: (component, props, flowlet, _node) => {
+    component: (component, props, params, _node) => {
       if (component !== Surface) {
-        return updateFlowlet(props.__ext, flowlet, props.children, true);
+        return updateFlowlet(props.__ext, params, props.children, true);
       }
       return;
     },
-    memo: (_component, _props, flowlet, node) => {
+    memo: (_component, _props, params, node) => {
       let result: boolean | undefined;
       for (
         // @ts-ignore
@@ -324,20 +358,20 @@ export function init(options: InitOptions): ALSurfaceHOC {
         const pending = fiberNode.pendingProps;
         if (memoized) {
           result =
-            updateFlowlet(memoized.__ext, flowlet, memoized.children, true) ||
+            updateFlowlet(memoized.__ext, params, memoized.children, true) ||
             result;
         }
 
         if (memoized !== pending && pending) {
           result =
-            updateFlowlet(pending.__ext, flowlet, pending.children, true) ||
+            updateFlowlet(pending.__ext, params, pending.children, true) ||
             result;
         }
       }
       return result;
     },
-    __default: (_component, props, flowlet, _node) => {
-      return updateFlowlet(props.__ext, flowlet, props.children, true);
+    __default: (_component, props, params, _node) => {
+      return updateFlowlet(props.__ext, params, props.children, true);
     },
   });
 
@@ -358,7 +392,6 @@ export function init(options: InitOptions): ALSurfaceHOC {
         Surface,
         {
           flowlet,
-          flowletManager,
           metadata,
         },
         renderer ? renderer(children) : children

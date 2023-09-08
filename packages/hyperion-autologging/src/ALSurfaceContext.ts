@@ -19,13 +19,17 @@ export type InitOptions = Types.Options<{
   }
 }>;
 
-type ALSurfaceContextValue = {
+export type ALSurfaceContextFilledValue = {
   surface: string;
   flowlet: ALFlowlet;
-} | {
-  surface: null;
-  flowlet: null;
 };
+
+type ALSurfaceContextValue =
+  ALSurfaceContextFilledValue
+  | {
+    surface: null;
+    flowlet: null;
+  };
 
 const DefaultSurfaceContext: ALSurfaceContextValue = {
   surface: null,
