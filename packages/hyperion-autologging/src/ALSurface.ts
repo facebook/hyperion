@@ -220,7 +220,6 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     if (!options.disableReactDomPropsExtension) {
       const foundDomElement = propagateFlowletDown(props.children, flowlet);
-
       if (foundDomElement !== true) {
         /**
          * We could not find a dom node to safely add the attribute to it.

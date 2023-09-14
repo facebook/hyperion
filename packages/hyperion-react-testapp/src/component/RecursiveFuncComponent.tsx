@@ -3,6 +3,7 @@
  */
 
 import { Surface } from "./Surface";
+import React from "react";
 
 type Props = {
   i: number;

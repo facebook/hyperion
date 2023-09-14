@@ -3,6 +3,7 @@
  */
 
 import { Props } from "./Surface";
+import React from "react";
 
 export default function FuncComponent(props: Props) {
   return (

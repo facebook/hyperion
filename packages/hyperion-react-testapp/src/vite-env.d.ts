@@ -1,5 +1,4 @@
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
-
-/// <reference types="react-scripts" />
+/// <reference types="vite/client" />

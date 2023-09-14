@@ -4,6 +4,7 @@
 
 import * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
+import React from "react";
 
 export type Props = {
   message: string,

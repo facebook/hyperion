@@ -4,6 +4,7 @@
 
  import { useState } from "react";
  import { Surface } from "./Surface";
+ import React from "react";
 
  export function InputSurfaceComponent() {
   let [msg, setMsg] = useState("");
