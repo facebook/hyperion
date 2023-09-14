@@ -1,3 +1,5 @@
+import React from "react";
+
 export default function (/* props: Props */) {
   function setExpectedElementName(name: string): void {
     const element = document.getElementById('expectedElementName');

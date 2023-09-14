@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Surface } from "./Surface";
 
 // Toggles rendering a Surface component, useful for testing mount/unmount of Surface

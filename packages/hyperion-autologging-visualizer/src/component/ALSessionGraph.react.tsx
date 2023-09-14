@@ -246,7 +246,7 @@ type Node = {
     label: string;
     parent?: string;
     position?: {x: number, y: number};
-    color?: string;
+    color: string;
   }
 };
 
@@ -256,6 +256,7 @@ type Edge = {
     target: string;
     label: string;
     weight?: number;
+    color: string;
   }
 }
 
@@ -342,11 +343,16 @@ const NodeColorMap = new Map([
   ['flowlet-part', 'gray'],
 ]);
 
+const nodeColor = (name: string) => NodeColorMap.get(name) ?? 'gray';
+
 const EdgeColorMap = new Map([
   ['flowlet', 'red'],
   ['seq', 'black'],
   ['ce', 'blue']
 ]);
+
+const edgeColor = (name: string) => EdgeColorMap.get(name) ?? 'gray';
+
 
 function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
   const elements: GraphData = [];
@@ -360,7 +366,7 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
     const srcNode = {
       scratch: {_event: event},
       data: {
-        color: NodeColorMap.get(eventName),
+        color: nodeColor(eventName),
         id: String(nodeId++),
         label: eventName,
       }
@@ -379,7 +385,7 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
               data: {
                 source: String(matchFlowlet.flowletNodeId),
                 target: srcNode.data.id,
-                color: EdgeColorMap.get('flowlet'),
+                color: edgeColor('flowlet'),
                 label: matchFlowlet.flowletNodeId+'->'+srcNode.data.id,
               }
             }
@@ -393,7 +399,7 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
           const flowletParent = {
             scratch: {_event: event},
             data: {
-              color: NodeColorMap.get('parent'),
+              color: nodeColor('parent'),
               id: String(flowletParentId),
               label: flowletName,
             }
@@ -405,7 +411,7 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
               data: {
                 source: srcNode.data.id,
                 target: String(flowletParentId),
-                color: EdgeColorMap.get('flowlet'),
+                color: edgeColor('flowlet'),
                 label: srcNode.data.id+'->'+flowletParentId,
               }
             }
@@ -419,7 +425,7 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
                 scratch: {_event: flowlet},
                 data: {
                   parent: String(flowletParentId),
-                  color: NodeColorMap.get('flowlet-part'),
+                  color: nodeColor('flowlet-part'),
                   id: nodeId,
                   label: flowletParts[k],
                 }
@@ -433,7 +439,7 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
                   data: {
                     source: previousNodeId,
                     target: nodeId,
-                    color: EdgeColorMap.get('seq'),
+                    color: edgeColor('seq'),
                     label: previousNodeId+'->'+nodeId,
                   }
                 }
@@ -451,7 +457,7 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
             data: {
               source: node.data.id,
               target: srcNode.data.id,
-              color: EdgeColorMap.get('seq'),
+              color: edgeColor('seq'),
               label: node.data.id+'->'+srcNode.data.id,
             }
           }
@@ -493,7 +499,7 @@ function formatEventBuffer(events: Array<EventBody>): GraphData {
       {
         scratch: {_event: event},
         data: {
-          color: NodeColorMap.get(events[i].event),
+          color: nodeColor(events[i].event),
           id: id,
           label: events[i].event,
         }
@@ -506,7 +512,8 @@ function formatEventBuffer(events: Array<EventBody>): GraphData {
           data: {
             source: (i-1).toString(),
             target: i.toString(),
-            label: (i-1).toString()+'->'+i.toString()
+            label: (i-1).toString()+'->'+i.toString(),
+            color: edgeColor('seq'),
           }
         }
       );
@@ -532,7 +539,7 @@ function formatEventBuffer(events: Array<EventBody>): GraphData {
         data: {
           source: src,
           target: String(key),
-          color: EdgeColorMap.get('flowlet'),
+          color: edgeColor('flowlet'),
           label: src+'->'+key
         }
       },
@@ -544,7 +551,7 @@ function formatEventBuffer(events: Array<EventBody>): GraphData {
           data: {
             source: String(key),
             target: String(parseInt(src)+1),
-            color: EdgeColorMap.get('flowlet'),
+            color: edgeColor('flowlet'),
             label: key+'->'+String(parseInt(src)+1)
           }
         },
@@ -683,14 +690,14 @@ export function ALSessionGraph(): React.JSX.Element{
   }, [addEvent]);
 
   const testElements = [
-    { data: { id: 'one', label: 'Node 1' }, position: { x: 0, y: 0 } },
-    { data: { id: 'parent', label: 'Parent' }, position: { x: 0, y: 0 } },
+    { data: { id: 'one', label: 'Node 1', color: 'gray'}, position: { x: 0, y: 0 } },
+    { data: { id: 'parent', label: 'Parent', color: 'gray'}, position: { x: 0, y: 0 } },
     { data: { parent: 'parent', id: 'two', label: 'Node 2', color: 'blue'}, position: { x: 0, y: 0 } },
     { data: { parent: 'parent', id: 'three', label: 'Node 3', color: 'blue' }, position: { x: 0, y: 0 } },
-    { data: { id: 'four', label: 'Node 3' }, position: { x: 0, y: 0 } },
-    { data: { source: 'one', target: 'parent', label: 'Edge from Node1 to Parent' } },
+    { data: { id: 'four', label: 'Node 3', color: 'gray' }, position: { x: 0, y: 0 } },
+    { data: { source: 'one', target: 'parent', color: 'black', label: 'Edge from Node1 to Parent' } },
     { data: { source: 'two', target: 'three', color: 'red', label: 'Edge from Node3 to Node4' } },
-    { data: { source: 'parent', target: 'four', label: 'Edge from Parent to Node4' } }
+    { data: { source: 'parent', target: 'four', color: 'black', label: 'Edge from Parent to Node4' } }
   ];
 
   return (

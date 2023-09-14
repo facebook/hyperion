@@ -135,7 +135,7 @@ export function publish(options: InitOptions): void {
            * be seen on the object itself.
            * If we really wanted to be sure we can run the following code
            * but the perf overhead would be un-necessary.
-           * // Object.assign(info.metadata, metadata); 
+           * // Object.assign(info.metadata, metadata);
            */
           emitMutationEvent(action, info);
         }
