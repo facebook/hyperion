@@ -16,6 +16,8 @@
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    // Some third part packages we are importing don't have types defined
+    "noImplicitAny": false,
     // "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx"

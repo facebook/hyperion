@@ -4,7 +4,9 @@
   "compilerOptions": {
     // "jsx": "react-jsx",
     // "jsx": "preserve",
-    "jsx": "react"
+    "jsx": "react",
+    // Some third part packages we are importing don't have types defined
+    "noImplicitAny": false
   },
   "include": [
     "src"
