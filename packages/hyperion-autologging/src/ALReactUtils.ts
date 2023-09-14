@@ -44,7 +44,7 @@ type ReactInternalFiberType = Readonly<{
 
 const getReactInternalFiber = (element: Element): ReactInternalFiber | null => {
   const key = Object.keys(element).find(key => key.startsWith('__reactFiber$'));
-  const el = element as {[k: string]: any};
+  const el = element as { [k: string]: any };
   return key != null ? el[key] : null;
 };
 
@@ -70,7 +70,7 @@ export function getReactComponentData_THIS_CAN_BREAK(
   const element: Element = node;
   try {
     let name: string | null = null;
-    const stack = [];
+    const stack: Array<string> = [];
     let fiber = getReactInternalFiber(element);
     while (fiber) {
       const fiberType = fiber.type;

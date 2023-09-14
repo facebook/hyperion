@@ -20,7 +20,7 @@ import { ALFlowlet } from "@hyperion/hyperion-autologging/src/ALFlowletManager";
 
 
 // TODO: move this out into a config that can be passed to the graph component, which includes the config mapping
-const LAYOUT = {name: 'elk'}; // {name: 'elk | klay' | 'dagre' | 'cola'}
+const LAYOUT = {name: 'klay'}; // {name: 'elk | klay' | 'dagre' | 'cola'}
 
 const ELK_CONFIG = {
   randomize: false, // use random node positions at beginning of layout
@@ -56,8 +56,8 @@ const ELK_CONFIG = {
 
 const KLAY_CONFIG  = {
   randomize: false, // use random node positions at beginning of layout
-  nodeDimensionsIncludeLabels: false, // Boolean which changes whether label dimensions are included when calculating node dimensions
-  fit: false, // Whether to fit
+  nodeDimensionsIncludeLabels: true, // Boolean which changes whether label dimensions are included when calculating node dimensions
+  fit: true, // Whether to fit
   padding: 20, // Padding on fit
   animate: true, // Whether to transition the node positions
   animateFilter: function( _node: any, _i: any ){ return true; }, // Whether to animate specific nodes when animation is on; non-animated nodes immediately go to their final positions
@@ -199,8 +199,7 @@ if (LAYOUT.name === 'klay') {
   console.log('[PS] using dagre');
   Cytoscape.use(dagre);
   CONFIG = DAGRE_CONFIG;
-}
-else if(LAYOUT.name === 'cola') {
+} else if(LAYOUT.name === 'cola') {
   console.log('[PS] using cola');
   Cytoscape.use(cola);
   CONFIG = COLA_CONFIG;
@@ -350,7 +349,7 @@ const EdgeColorMap = new Map([
 ]);
 
 function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
-  const elements = [];
+  const elements: GraphData = [];
   const eventNodes: Array<Node> = [];
   let nodeId = 0;
   let flowletsSeen: Array<{flowlet: string, flowletNodeId: number}> = [];
@@ -469,7 +468,7 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
 function formatEventBuffer(events: Array<EventBody>): GraphData {
   // Look into compound nodes for grouping non-ui events in compound nodes
   // https://js.cytoscape.org/#notation/compound-nodes via `parent` field
-  const elements = [];
+  const elements: GraphData = [];
   // ui flowlet mapped to list of nodes matching,
   // generate a parent node from the key, and then children are within the parent
   const flowletMap = new Map<number, {flowlet: BaseFlowlet, source:string, links: Array<string>}>();
@@ -562,13 +561,16 @@ function ALSessionPetriReact(props: CyProps):  React.JSX.Element {
 
   const setCytoscape = React.useCallback(
     (ref: cytoscape.Core) => {
+      if (ref == null) {
+        return;
+      }
       cy.current = ref;
-      cy.current.layout({...LAYOUT, ...CONFIG}).run();
+      cy.current?.layout({...LAYOUT, ...CONFIG}).run();
       if (!listenerRegistered) {
-        cy.current.on('click mouseover', 'node', (event) => {
+        cy.current?.on('click mouseover', 'node', (event) => {
           console.log('[PS]', event.type, event.target.data(), event.target.scratch());
         });
-        cy.current.on('click', 'edge', (event) => {
+        cy.current?.on('click', 'edge', (event) => {
           console.log('[PS]', event.type, event.target.data(), event.target.scratch());
         });
 
@@ -581,10 +583,11 @@ function ALSessionPetriReact(props: CyProps):  React.JSX.Element {
   return <>
     {!hide && <CytoscapeComponent
       cy={setCytoscape}
+      headless={false}
       stylesheet={props.stylesheet ?? defaultStylesheet}
       elements={props.elements}
       style={{width: props.width, height: props.height}}
-      layout={LAYOUT}/>}
+      />}
     <button onClick={() => setHide(!hide)}>{hide ? 'Show Graph' :'Hide Graph'}</button>
     <button onClick={() => {const e = Math.random() * 100; cy.current?.add([{ data: { id: 'one' + String(e), label: 'Node ' + e }, position: { x: 0, y: 0 } }])}}>Add Dummy Node</button>
     </>;
