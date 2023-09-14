@@ -23,6 +23,7 @@ export default defineConfig({
         "@hyperion/hyperion-core/src/IGlobalThis",
       ],
       "hyperionDOM": [
+        "@hyperion/hyperion-dom/src/IEvent",
         "@hyperion/hyperion-dom/src/IEventTarget",
         "@hyperion/hyperion-dom/src/INode",
         "@hyperion/hyperion-dom/src/IElement_",

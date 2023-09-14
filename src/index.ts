@@ -17,6 +17,7 @@ export * as IPromise from "@hyperion/hyperion-core/src/IPromise";
 export * as IGlobalThis from "@hyperion/hyperion-core/src/IGlobalThis";
 
 // hyperionDOM
+export * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
 export * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 // export * as INode from "@hyperion/hyperion-dom/src/INode";
 export * as IElement from "@hyperion/hyperion-dom/src/IElement";
