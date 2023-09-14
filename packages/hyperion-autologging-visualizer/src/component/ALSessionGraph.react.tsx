@@ -268,6 +268,7 @@ type GraphStyle = Array<{
 }>;
 
 type CyProps = {
+  graphTitle: string;
   height: string;
   width: string;
   elements: GraphData;
@@ -354,7 +355,7 @@ const EdgeColorMap = new Map([
 const edgeColor = (name: string) => EdgeColorMap.get(name) ?? 'gray';
 
 
-function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
+function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
   const elements: GraphData = [];
   const eventNodes: Array<Node> = [];
   let nodeId = 0;
@@ -470,100 +471,9 @@ function formatEventBufferv2(events: Array<EventBody>, uiFlowlet: boolean = true
   return elements;
 }
 
-
-function formatEventBuffer(events: Array<EventBody>): GraphData {
-  // Look into compound nodes for grouping non-ui events in compound nodes
-  // https://js.cytoscape.org/#notation/compound-nodes via `parent` field
-  const elements: GraphData = [];
-  // ui flowlet mapped to list of nodes matching,
-  // generate a parent node from the key, and then children are within the parent
-  const flowletMap = new Map<number, {flowlet: BaseFlowlet, source:string, links: Array<string>}>();
-  // Iterate over all events, pushing events + edges
-  for (let i = 0; i < events.length; i++) {
-    const event = events[i];
-    const id = i.toString();
-    if (event.copiedFlowlet != null) {
-      const key = event.copiedFlowlet.data?.uiEventFlowlet?.id;
-      if (key != null && event.copiedFlowlet.data?.uiEventFlowlet != null) {
-        if (!flowletMap.has(key)) {
-            flowletMap.set(key, {
-              flowlet: event.copiedFlowlet.data?.uiEventFlowlet,
-              source: id,
-              links: []
-            });
-        }
-        flowletMap.get(key)?.links.push(id);
-      }
-    }
-    elements.push(
-      {
-        scratch: {_event: event},
-        data: {
-          color: nodeColor(events[i].event),
-          id: id,
-          label: events[i].event,
-        }
-      }
-    );
-    if (i > 0) {
-      // Sequential edge
-      elements.push(
-        {
-          data: {
-            source: (i-1).toString(),
-            target: i.toString(),
-            label: (i-1).toString()+'->'+i.toString(),
-            color: edgeColor('seq'),
-          }
-        }
-      );
-    }
-  }
-  // Handle flowlet links
-  for (const key of flowletMap.keys()) {
-    const src = flowletMap.get(key)?.source;
-    if (src == null) {
-      continue;
-    }
-    elements.push(
-      // Parent node
-      {
-        data: {
-          id: String(key),
-          label: String(flowletMap.get(key)?.flowlet?.name),
-          color: 'pink',
-        }
-      },
-      // Edge from source to parent
-      {
-        data: {
-          source: src,
-          target: String(key),
-          color: edgeColor('flowlet'),
-          label: src+'->'+key
-        }
-      },
-    );
-    if (src != null && parseInt(src)+1 < events.length) {
-      elements.push(
-        // NAIVE edge from parent to next index
-        {
-          data: {
-            source: String(key),
-            target: String(parseInt(src)+1),
-            color: edgeColor('flowlet'),
-            label: key+'->'+String(parseInt(src)+1)
-          }
-        },
-      )
-    }
-  }
-  return elements;
-}
-
 function ALSessionPetriReact(props: CyProps):  React.JSX.Element {
   const [listenerRegistered, setListenerRegistered] = React.useState(false);
-  const [hide, setHide] = React.useState(false);
+  const [hide, setHide] = React.useState(true);
   const cy = React.useRef<cytoscape.Core | null>(null);
 
   const setCytoscape = React.useCallback(
@@ -588,15 +498,18 @@ function ALSessionPetriReact(props: CyProps):  React.JSX.Element {
   );
 
   return <>
-    {!hide && <CytoscapeComponent
-      cy={setCytoscape}
-      headless={false}
-      stylesheet={props.stylesheet ?? defaultStylesheet}
-      elements={props.elements}
-      style={{width: props.width, height: props.height}}
-      />}
-    <button onClick={() => setHide(!hide)}>{hide ? 'Show Graph' :'Hide Graph'}</button>
-    <button onClick={() => {const e = Math.random() * 100; cy.current?.add([{ data: { id: 'one' + String(e), label: 'Node ' + e }, position: { x: 0, y: 0 } }])}}>Add Dummy Node</button>
+    <button onClick={() => setHide(!hide)}>{hide ? `Show ${props.graphTitle} Graph` :`Hide ${props.graphTitle} Graph`}</button>
+    {!hide && (
+    <>
+      <button onClick={() => {const e = Math.random() * 100; cy.current?.add([{ data: { id: 'one' + String(e), label: 'Node ' + e }, position: { x: 0, y: 0 } }])}}>Add Dummy Node</button>
+      <CytoscapeComponent
+        cy={setCytoscape}
+        headless={false}
+        stylesheet={props.stylesheet ?? defaultStylesheet}
+        elements={props.elements}
+        style={{width: props.width, height: props.height}}
+        />
+    </>)}
     </>;
 }
 
@@ -689,49 +602,23 @@ export function ALSessionGraph(): React.JSX.Element{
     return () => removeListeners.forEach(rm => rm());
   }, [addEvent]);
 
-  const testElements = [
-    { data: { id: 'one', label: 'Node 1', color: 'gray'}, position: { x: 0, y: 0 } },
-    { data: { id: 'parent', label: 'Parent', color: 'gray'}, position: { x: 0, y: 0 } },
-    { data: { parent: 'parent', id: 'two', label: 'Node 2', color: 'blue'}, position: { x: 0, y: 0 } },
-    { data: { parent: 'parent', id: 'three', label: 'Node 3', color: 'blue' }, position: { x: 0, y: 0 } },
-    { data: { id: 'four', label: 'Node 3', color: 'gray' }, position: { x: 0, y: 0 } },
-    { data: { source: 'one', target: 'parent', color: 'black', label: 'Edge from Node1 to Parent' } },
-    { data: { source: 'two', target: 'three', color: 'red', label: 'Edge from Node3 to Node4' } },
-    { data: { source: 'parent', target: 'four', color: 'black', label: 'Edge from Parent to Node4' } }
-  ];
-
   return (
     <div style={{width:"100%", display:"inline-block"}}>
       {/* <div style={{textAlign:"left", float:"left", width: "50px"}}>
         <pre>{JSON.stringify(eventBuffer.map((e, i) => {return {id: i, ev: e.event};}), undefined, 2)}</pre>
       </div> */}
       <div style={{textAlign:"left"}}>
-      <div>
-        <h2>Simple (UI Flowlet)</h2>
         <ALSessionPetriReact
-            height={'200px'}
-            width={'100%'}
-            elements={formatEventBuffer(eventBuffer)} />
-      </div>
-      <div>
-        <h2>Flowlet (Non UI)</h2>
-        <ALSessionPetriReact
+          graphTitle={'Flowlet (Non UI)'}
           height={'200px'}
           width={'100%'}
-          elements={formatEventBufferv2(eventBuffer, false, true)} />
-      </div>
-      <div>
-        <h2>UI Flowlet</h2>
+          elements={formatEventBuffer(eventBuffer, false, true)} />
+        <br/>
         <ALSessionPetriReact
+          graphTitle={'UI Flowlet'}
           height={'200px'}
           width={'100%'}
-          elements={formatEventBufferv2(eventBuffer, true, true)} />
-      </div>
-        <h2>Test</h2>
-        <ALSessionPetriReact
-          height={'200px'}
-          width={'100%'}
-          elements={testElements} />
+          elements={formatEventBuffer(eventBuffer, true, true)} />
         {/* <_ALSessionPetri
           height={'200px'}
           width={'100%'}
