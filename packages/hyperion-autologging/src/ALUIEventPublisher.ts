@@ -4,6 +4,8 @@
 
 'use strict';
 import { Channel } from "@hyperion/hook/src/Channel";
+import { intercept } from "@hyperion/hyperion-core/src/intercept";
+import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
@@ -222,9 +224,21 @@ export function publish(options: InitOptions): void {
       };
       channel.emit('al_ui_event_capture', eventData);
       updateLastUIEvent(eventData);
+      intercept(event);
     },
       true, // useCapture
     );
+
+    /**
+     * If any of the actual event handlers call stopPropagation, we know that
+     * our bubble handler will not be called, so we trigger it rightaway
+     */
+    IEvent.stopPropagation.onArgsObserverAdd(function (this) {
+      if (lastUIEvent != null && lastUIEvent.data.domEvent === this) {
+        lastUIEvent.data.metadata.propagation_was_stopped = "true";
+        lastUIEvent.timedEmitter.run();
+      }
+    });
 
     // Track event in the bubbling phase
     window.document.addEventListener(
