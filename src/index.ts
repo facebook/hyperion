@@ -58,4 +58,5 @@ export * as ALEventIndex from "@hyperion/hyperion-autologging/src/ALEventIndex";
 export { default as ALElementInfo } from "@hyperion/hyperion-autologging/src/ALElementInfo";
 export * as ALInteractableDOMElement from "@hyperion/hyperion-autologging/src/ALInteractableDOMElement";
 export * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
+export { ALSurfaceCapability } from "@hyperion/hyperion-autologging/src/ALSurface";
 export * as ALSurfaceUtils from "@hyperion/hyperion-autologging/src/ALSurfaceUtils";

@@ -5,6 +5,7 @@
 import * as ALSurface from "@hyperion/hyperion-autologging/src/ALSurface";
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 import * as React from "react";
+import { ALSurfaceCapability } from "@hyperion/hyperion-autologging/src/ALSurface";
 
 export type Props = {
   message: string,
@@ -18,7 +19,7 @@ let SurfaceRenderer: ALSurface.ALSurfaceHOC = (props, render) => {
 export const Surface = (props: ALSurface.ALSurfaceProps) =>
   AutoLogging.getSurfaceRenderer(SurfaceRenderer)(props, children => (
     <div style={{ border: '1px solid red', marginLeft: '5px' }}>
-      <div style={{ color: props.isHiddenRegion ? 'blue' : 'red' }}>{props.surface}</div>
+      <div style={{ color: props.capability && !(props.capability & ALSurfaceCapability.trackInteraction) ? 'blue' : 'red' }}>{props.surface}</div>
       {children}
     </div>
   ));
