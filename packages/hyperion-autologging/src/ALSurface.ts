@@ -11,27 +11,47 @@ import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElementVisitor';
 import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
-import * as ALIReactFlowlet from "./ALIReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType } from "./ALFlowletManager";
+import * as ALIReactFlowlet from "./ALIReactFlowlet";
 import { AUTO_LOGGING_REGION, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
 
-export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
+export type ALChannelSurfaceEventData = ALMetadataEvent & Readonly<{
   surface: string;
   element?: Element | null;
 }>;
 
+export enum ALSurfaceCapability {
+  TrackInteraction = 1 << 0, // Mark all interaction events with this surface
+  TrackMutation = 1 << 1, // report mount/unmount of this surface
+  // TrackVisibility = 1 << 2, // track when mounted surface's visibility changes
+  // TrackBoundingRect = 1 << 3, // Report the size of the bounding rect of the surface on the screen.  
+}
+
+const AllSurfaceCapabilityValues = [
+  ALSurfaceCapability.TrackInteraction,
+  ALSurfaceCapability.TrackMutation,
+];
+const AllSurfaceCapabilityValuesString = AllSurfaceCapabilityValues.map(c => ALSurfaceCapability[c]).join(',');
+function surfaceCapabilityToString(capability?: ALSurfaceCapability): string {
+  if (!capability) {
+    return AllSurfaceCapabilityValuesString;
+  }
+
+  return AllSurfaceCapabilityValues.filter(c => (capability & c) != 0).map(c => ALSurfaceCapability[c]).join(',');
+}
+
 export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
-  isHiddenRegion?: boolean;
+  capability?: ALSurfaceCapability, // a one-hot encoding what the surface can do. 
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
@@ -48,16 +68,17 @@ type ALChannelEventType = ALChannelSurfaceEvent;
 type ALChannel = Channel<ALChannelEventType>;
 
 
-export type SurfaceComponent = (props: IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
-  flowlet: FlowletType;
-  /** The optional incoming surface that we are re-wrapping via a proxy.
-   * If this is provided,  then we won't emit mutations for this surface as we are
-   * doubly wrapping that surface, for surface attribution purposes.
-   */
-  proxiedContext?: ALSurfaceContext.ALSurfaceContextFilledValue
-  metadata?: ALSurfaceProps['metadata'];
-  isHiddenRegion?: boolean;
-}
+export type SurfaceComponent = (props:
+  IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> &
+  Omit<ALSurfaceProps, 'surface'> &
+  {
+    flowlet: FlowletType;
+    /** The optional incoming surface that we are re-wrapping via a proxy.
+     * If this is provided,  then we won't emit mutations for this surface as we are
+     * doubly wrapping that surface, for surface attribution purposes.
+     */
+    proxiedContext?: ALSurfaceContext.ALSurfaceContextFilledValue
+  }
 ) => React.ReactElement;
 
 export type InitOptions = Types.Options<
@@ -215,7 +236,8 @@ export function init(options: InitOptions): ALSurfaceHOC {
     if (!proxiedContext) {
       const surface = flowlet.name;
       fullRegionString = (parentRegion ?? '') + SURFACE_SEPARATOR + surface;
-      if (props.isHiddenRegion) {
+      const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled! 
+      if (!trackInteraction) {
         fullSurfaceString = parentSurface ?? SURFACE_SEPARATOR;
         domAttributeName = domRegionAttributeName;
         domAttributeValue = fullRegionString;
@@ -243,12 +265,12 @@ export function init(options: InitOptions): ALSurfaceHOC {
       const { channel } = options;
       // Emit surface mutation events on mount/unmount
       const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
-      if (props.isHiddenRegion) {
-        metadata.hidden_region = "true";
-      }
+      metadata.original_flowlet = flowlet.getFullName();
+
+      metadata.surface_capability = surfaceCapabilityToString(props.capability);
+
       ReactModule.useLayoutEffect(() => {
         const event: ALChannelSurfaceEventData = {
-          flowlet,
           surface: domAttributeValue,
           metadata,
           element: document.querySelector(`[${domAttributeName}='${domAttributeValue}']`)
@@ -257,7 +279,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         return () => {
           channel.emit('al_surface_unmount', event);
         }
-      }, [fullSurfaceString]);
+      }, [domAttributeName, domAttributeValue]);
     }
 
     flowlet.data.surface = fullSurfaceString;
@@ -393,7 +415,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     },
   });
 
-  return ({ surface, metadata, isHiddenRegion }, renderer) => {
+  return ({ surface, ...rest }, renderer) => {
     const topFlowlet = flowletManager.top();
 
     let flowlet: FlowletType;
@@ -410,8 +432,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         Surface,
         {
           flowlet,
-          metadata,
-          isHiddenRegion,
+          ...rest
         },
         renderer ? renderer(children) : children
       );
