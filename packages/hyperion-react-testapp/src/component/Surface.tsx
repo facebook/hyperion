@@ -19,7 +19,7 @@ let SurfaceRenderer: ALSurface.ALSurfaceHOC = (props, render) => {
 export const Surface = (props: ALSurface.ALSurfaceProps) =>
   AutoLogging.getSurfaceRenderer(SurfaceRenderer)(props, children => (
     <div style={{ border: '1px solid red', marginLeft: '5px' }}>
-      <div style={{ color: props.capability && !(props.capability & ALSurfaceCapability.trackInteraction) ? 'blue' : 'red' }}>{props.surface}</div>
+      <div style={{ color: props.capability && !(props.capability & ALSurfaceCapability.TrackInteraction) ? 'blue' : 'red' }}>{props.surface}</div>
       {children}
     </div>
   ));
