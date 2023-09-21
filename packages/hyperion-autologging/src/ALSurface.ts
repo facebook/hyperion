@@ -16,7 +16,7 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType } from "./ALFlowletManager";
 import * as ALIReactFlowlet from "./ALIReactFlowlet";
-import { AUTO_LOGGING_REGION, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
+import { AUTO_LOGGING_NON_INTERACTIVE_SURFACe, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
@@ -45,7 +45,7 @@ function surfaceCapabilityToString(capability?: ALSurfaceCapability): string {
     return AllSurfaceCapabilityValuesString;
   }
 
-  return AllSurfaceCapabilityValues.filter(c => (capability & c) != 0).map(c => ALSurfaceCapability[c]).join(',');
+  return AllSurfaceCapabilityValues.filter(c => (capability & c) !== 0).map(c => ALSurfaceCapability[c]).join(',');
 }
 
 export type ALSurfaceProps = Readonly<{
@@ -97,7 +97,7 @@ export type InitOptions = Types.Options<
       IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     };
     domFlowletAttributeName?: string;
-    domRegionAttributeName?: string;
+    domNonInteractiveSurfaceAttributeName?: string;
     channel: ALChannel;
     disableReactDomPropsExtension?: boolean;
   }
@@ -127,7 +127,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   // We should make sure the following enabled for our particular usage in this function.
   IReactComponent.init(options.react);
 
-  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName, domRegionAttributeName = AUTO_LOGGING_REGION } = options;
+  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName, domNonInteractiveSurfaceAttributeName: domRegionAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACe } = options;
   /**
   * if flowlets are disabled, but we still want to extend the props, we use
   * the following placeholder flowlet to let the rest of the logic work.
@@ -206,7 +206,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
 
 
 export function init(options: InitOptions): ALSurfaceHOC {
-  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domRegionAttributeName = AUTO_LOGGING_REGION } = options;
+  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domNonInteractiveSurfaceAttributeName: domRegionAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACe } = options;
   const { ReactModule } = options.react;
 
   ALIReactFlowlet.init(options);
@@ -231,7 +231,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     let domAttributeValue: string;
 
     const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
-    const { surface: parentSurface, region: parentRegion } = surfaceCtx;
+    const { surface: parentSurface, nonInteractiveSurface: parentRegion } = surfaceCtx;
 
     if (!proxiedContext) {
       const surface = flowlet.name;
@@ -248,14 +248,14 @@ export function init(options: InitOptions): ALSurfaceHOC {
       }
     } else {
       fullSurfaceString = proxiedContext.surface;
-      fullRegionString = proxiedContext.region;
+      fullRegionString = proxiedContext.nonInteractiveSurface;
       domAttributeName = domSurfaceAttributeName
       domAttributeValue = fullSurfaceString;
     }
 
     const surfaceData: SurfaceData = {
       surface: fullSurfaceString,
-      region: fullRegionString,
+      nonInteractiveSurface: fullRegionString,
       flowlet,
       domAttributeName,
       domAttributeValue,
