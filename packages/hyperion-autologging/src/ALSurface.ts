@@ -231,7 +231,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     let domAttributeValue: string;
 
     const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
-    const { surface: parentSurface, nonInteractiveSurface: parentRegion } = surfaceCtx;
+    const { surface: parentSurface, nonInteractiveSurface: parentNonInteractiveSurface } = surfaceCtx;
 
     if (!proxiedContext) {
       const surface = flowlet.name;
