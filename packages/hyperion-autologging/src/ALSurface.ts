@@ -225,8 +225,8 @@ export function init(options: InitOptions): ALSurfaceHOC {
       __ext.flowlet = flowlet;
     }
 
-    let fullSurfaceString: string;
-    let fullRegionString: string;
+    let surfacePath: string;
+    let nonInteractiveSurfacePath: string;
     let domAttributeName: string;
     let domAttributeValue: string;
 
