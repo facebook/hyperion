@@ -206,7 +206,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
 
 
 export function init(options: InitOptions): ALSurfaceHOC {
-  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domNonInteractiveSurfaceAttributeName: domRegionAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACe } = options;
+  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domNonInteractiveSurfaceAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE } = options;
   const { ReactModule } = options.react;
 
   ALIReactFlowlet.init(options);
