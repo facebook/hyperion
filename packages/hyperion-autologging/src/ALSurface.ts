@@ -16,7 +16,7 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType } from "./ALFlowletManager";
 import * as ALIReactFlowlet from "./ALIReactFlowlet";
-import { AUTO_LOGGING_NON_INTERACTIVE_SURFACe, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
+import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
@@ -156,7 +156,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
      */
     if (allowedTags.has(component)) {
       props[domSurfaceAttributeName] = new SurfaceDOMString(flowlet);
-      props[domRegionAttributeName] = new SurfaceDOMString(flowlet);
+      props[domNonInteractiveSurfaceAttributeName] = new SurfaceDOMString(flowlet);
 
       if (__DEV__) {
         if (domFlowletAttributeName) {
@@ -191,7 +191,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
     if (
       (
         attrName === domSurfaceAttributeName ||
-        attrName === domRegionAttributeName
+        attrName === domNonInteractiveSurfaceAttributeName
       ) && (
         attrValue === '' ||
         attrValue === 'null' ||
@@ -235,27 +235,27 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     if (!proxiedContext) {
       const surface = flowlet.name;
-      fullRegionString = (parentRegion ?? '') + SURFACE_SEPARATOR + surface;
+      nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
       const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled! 
       if (!trackInteraction) {
-        fullSurfaceString = parentSurface ?? SURFACE_SEPARATOR;
-        domAttributeName = domRegionAttributeName;
-        domAttributeValue = fullRegionString;
+        surfacePath = parentSurface ?? SURFACE_SEPARATOR;
+        domAttributeName = domNonInteractiveSurfaceAttributeName;
+        domAttributeValue = nonInteractiveSurfacePath;
       } else {
-        fullSurfaceString = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
+        surfacePath = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
         domAttributeName = domSurfaceAttributeName;
-        domAttributeValue = fullSurfaceString;
+        domAttributeValue = surfacePath;
       }
     } else {
-      fullSurfaceString = proxiedContext.surface;
-      fullRegionString = proxiedContext.nonInteractiveSurface;
+      surfacePath = proxiedContext.surface;
+      nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;
       domAttributeName = domSurfaceAttributeName
-      domAttributeValue = fullSurfaceString;
+      domAttributeValue = surfacePath;
     }
 
     const surfaceData: SurfaceData = {
-      surface: fullSurfaceString,
-      nonInteractiveSurface: fullRegionString,
+      surface: surfacePath,
+      nonInteractiveSurface: nonInteractiveSurfacePath,
       flowlet,
       domAttributeName,
       domAttributeValue,
@@ -282,7 +282,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       }, [domAttributeName, domAttributeValue]);
     }
 
-    flowlet.data.surface = fullSurfaceString;
+    flowlet.data.surface = surfacePath;
     let children = props.children;
 
     if (!options.disableReactDomPropsExtension) {
