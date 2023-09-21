@@ -127,7 +127,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   // We should make sure the following enabled for our particular usage in this function.
   IReactComponent.init(options.react);
 
-  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName, domNonInteractiveSurfaceAttributeName: domRegionAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACe } = options;
+  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName, domNonInteractiveSurfaceAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE } = options;
   /**
   * if flowlets are disabled, but we still want to extend the props, we use
   * the following placeholder flowlet to let the rest of the logic work.
