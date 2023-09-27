@@ -7,7 +7,7 @@
 import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData } from './ALSurface';
-import { ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
+import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 import { assert } from "@hyperion/global/src/assert";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
@@ -75,7 +75,7 @@ export function publish(options: InitOptions): void {
 
   function processNode(event: ALChannelSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
-    const { element, surface, metadata } = event;
+    const { element, surface, metadata, flowlet, triggerFlowlet } = event;
 
     const currFlowlet = flowletManager.top();
     if (!(element instanceof HTMLElement) || /LINK|SCRIPT/.test(element.nodeName)) {

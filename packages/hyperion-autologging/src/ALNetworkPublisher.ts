@@ -12,6 +12,7 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import * as ALEventIndex from "./ALEventIndex";
 import { ALLoggableEvent, ALOptionalFlowletEvent, ALSharedInitOptions } from "./ALType";
+import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 
 type ALNetworkEvent = ALLoggableEvent & ALOptionalFlowletEvent & Readonly<{
   event: "network";
@@ -173,7 +174,12 @@ function captureFetch(options: InitOptions): void {
       ephemeralRequestEvent = null;
     }
 
+    const parentTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+    const triggerFlowlet = new TriggerFlowlet(`fetch(method:${request.method},url:${request.url})`, parentTriggerFlowlet);
+
     return value => {
+      setTriggerFlowlet(value, triggerFlowlet); // This will be picked by the wrappers of Promis.* callbacks.
+
       /**
        * There might be many parallel fetch requests happening together.
        * The argsObserver and valueObserver happen immediately before/after
@@ -188,7 +194,10 @@ function captureFetch(options: InitOptions): void {
           const requestEvent = intercept.getVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME);
           assert(requestEvent != null, `Unexpected situation! Request info missing from fetch promise object`);
           const flowlet = requestEvent?.flowlet; // Reuse the same flowlet as request, since by now things have changed.
-          const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+
+          // const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+          assert(triggerFlowlet === flowletManager.top()?.data.triggerFlowlet, `Broken trigger flowlet chain!`);
+
           channel.emit('al_network_response', {
             initiatorType: "fetch",
             event: "network",
@@ -235,7 +244,50 @@ function captureXHR(options: InitOptions): void {
     intercept.setVirtualPropertyValue<RequestInfo>(
       this,
       REQUEST_INFO_PROP_NAME,
-      { method, url: typeof url === 'string' ? url : url.href });
+      { method, url: typeof url === 'string' ? url : url.href }
+    );
+
+    const parentTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+    const triggerFlowlet = new TriggerFlowlet(`xhr(method:${method},url:${url})`, parentTriggerFlowlet);
+    setTriggerFlowlet(this, triggerFlowlet);
+  });
+
+  /**
+   * We could use something like the following to catch every event listener on the xhr
+   * however, this means we would slowdown every such call just to check if the `this`
+   * argument is an XHR.
+   * Instead, we just add the very first event handler ourselves to make sure the event
+   * would carry the right info.
+   * This approach is similar to how for UI events we rely on being the first event handler
+   * for them to update the Event object's triggerFlowlet.
+    // IEventTarget.addEventListener.onArgsObserverAdd(function (this, _event, callback) {
+    //   if (this instanceof XMLHttpRequest) {
+    //     const triggerFlowlet = getTriggerFlowlet(this);
+    //     if (triggerFlowlet) {
+    //       ...
+    //     }
+    //   }
+    // });
+   */
+  IXMLHttpRequest.constructor.onValueObserverAdd(xhr => {
+    [
+      "abort",
+      "error",
+      "load",
+      "loadend",
+      "loadstart",
+      "progress",
+      "readystatechange",
+      "timeout",
+    ].forEach(eventName => {
+      xhr.addEventListener(eventName, event => {
+        const triggerFlowlet = getTriggerFlowlet(xhr);
+        assert(triggerFlowlet != null, `Expected triggerFlowlet to be assigned to xhr`);
+        if (triggerFlowlet) {
+          setTriggerFlowlet(event, triggerFlowlet);
+        }
+      });
+    });
   });
 
   IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
@@ -266,7 +318,6 @@ function captureXHR(options: InitOptions): void {
         'loadend',
         event => {
           assert(event.target === this, "Invalid xhr target for loadend event");
-
           channel.emit('al_network_response', {
             initiatorType: "xmlhttprequest",
             event: "network",

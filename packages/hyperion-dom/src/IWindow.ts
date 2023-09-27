@@ -15,7 +15,7 @@ export const requestAnimationFrame = interceptMethod("requestAnimationFrame", IW
 export const requestIdleCallback = interceptMethod("requestIdleCallback", IWindowPrototype);
 export const IntersectionObserver = interceptConstructorMethod("IntersectionObserver", IWindowPrototype);
 export const MutationObserver = interceptConstructorMethod("MutationObserver", IWindowPrototype);
-export const XMLHttpRequest = interceptConstructorMethod("XMLHttpRequest", IWindowPrototype);
+// export const XMLHttpRequest = interceptConstructorMethod("XMLHttpRequest", IWindowPrototype);
 
 
 //#region Event Handlers https://developer.mozilla.org/en-US/docs/Web/API/Window#event_handlers

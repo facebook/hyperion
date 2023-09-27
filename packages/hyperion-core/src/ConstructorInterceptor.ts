@@ -77,8 +77,9 @@ class ConstructorMethodInterceptor<
 export function interceptConstructorMethod<
   Name extends string,
   BaseType extends InterceptableObjectType,
-  FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<BaseType[Name]>): BaseType; }
->(name: Name,
+  FuncType extends { new(...args: any): any; } = { new(...args: ConstructorParameters<BaseType[Name]>): BaseType[Name]; }
+>(
+  name: Name,
   shadowPrototype: ShadowPrototype<BaseType>,
 ): FunctionInterceptor<BaseType, Name, FuncType> {
   const desc = getMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype);

@@ -55,6 +55,10 @@ export function init() {
     flowletPublisher: {
       channel
     },
+    triggerFlowlet: {
+      disableReactFlowlet: true,
+      channel,
+    },
     react: {
       ReactModule: React as any,
       IReactDOMModule,
