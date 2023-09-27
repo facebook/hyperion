@@ -168,6 +168,7 @@ export function publish(options: InitOptions): void {
           eventIndex: ALEventIndex.getNextEventIndex(),
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
           flowlet,
+          triggerFlowlet: flowlet?.data.triggerFlowlet,
         });
         break;
       }
@@ -182,6 +183,7 @@ export function publish(options: InitOptions): void {
           autoLoggingID: ALID.getOrSetAutoLoggingID(element),
           mountedDuration: (removeTime - surfaceInfo.addTime) / 1000,
           flowlet,
+          triggerFlowlet: flowlet?.data.triggerFlowlet,
           mountEvent,
         });
         break;
