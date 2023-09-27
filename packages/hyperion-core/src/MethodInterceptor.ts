@@ -115,8 +115,8 @@ export function getMethodInterceptor<
 >(
   name: Name,
   shadowPrototype: ShadowPrototype<BaseType>,
-): ExtendedPropertyDescriptor<FunctionInterceptor<BaseType, Name, FuncType>> | undefined {
-  type FuncInterceptorType = FunctionInterceptor<BaseType, Name, FuncType>;
+): ExtendedPropertyDescriptor<FunctionInterceptor<BaseType[Name], Name, FuncType>> | undefined {
+  type FuncInterceptorType = FunctionInterceptor<BaseType[Name], Name, FuncType>;
 
   const desc = getExtendedPropertyDescriptor<FuncInterceptorType>(shadowPrototype.targetPrototype, name);
   let fi: FuncInterceptorType | undefined | null;
@@ -147,7 +147,7 @@ export function interceptMethod<
   shadowPrototype: ShadowPrototype<BaseType>,
   interceptOutput: boolean = false,
   miCtor?: null | (new (name: string, shadowPrototype: ShadowPrototype<BaseType>, interceptOutput?: boolean, desc?: ExtendedPropertyDescriptor) => MethodInterceptor<Name, BaseType, FuncType>),
-): FunctionInterceptor<BaseType, Name, FuncType> {
+): FunctionInterceptor<BaseType[Name], Name, FuncType> {
   const desc = getMethodInterceptor<Name, BaseType, FuncType>(name, shadowPrototype);
   return desc?.interceptor ?? new (miCtor ?? MethodInterceptor)(name, shadowPrototype, interceptOutput, desc);
 }

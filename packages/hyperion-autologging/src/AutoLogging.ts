@@ -20,7 +20,7 @@ import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
 import * as ALCustomEvent from "./ALCustomEvent";
-
+import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
 /**
  * This type extracts the union of all events types so that external modules
  * don't have to import these types one by one.
@@ -40,7 +40,7 @@ type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions | 'react'>;
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
   {
-    react: (ALSurface.InitOptions)['react'];
+    react: (ALSurface.InitOptions & ALTriggerFlowlet.InitOptions)['react'];
     enableReactComponentVisitors?: boolean;
     componentNameValidator?: ComponentNameValidator;
     flowletPublisher?: PublicInitOptions<ALFlowletPublisher.InitOptions> | null;
@@ -50,6 +50,7 @@ export type InitOptions = Types.Options<
     heartbeat?: ALHeartbeat.InitOptions | null;
     surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions> | null;
     network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
+    triggerFlowlet?: PublicInitOptions<ALTriggerFlowlet.InitOptions> | null;
   }
 >;
 
@@ -74,20 +75,25 @@ export function init(options: InitOptions): boolean {
     setComponentNameValidator(options.componentNameValidator);
   }
 
-  if (typeof global !== 'undefined' && (global as Window)?.document?.createElement != null) {
-    initFlowletTrackers(options.flowletManager);
-  }
-
   const sharedOptions: ALSharedInitOptions = {
     flowletManager: options.flowletManager,
     domSurfaceAttributeName: options.domSurfaceAttributeName,
+  }
+
+  if (typeof global !== 'undefined' && (global as Window)?.document?.createElement != null) {
+    initFlowletTrackers(options.flowletManager);
+    options.triggerFlowlet && ALTriggerFlowlet.init({
+      react: options.react,
+      ...sharedOptions,
+      ...options.triggerFlowlet,
+    });
   }
 
   // Enumerating the cases where we need react interception and visitors
   if (
     options.enableReactComponentVisitors ||
     !options.surface.disableReactDomPropsExtension ||
-    !options.surface.disableReactFlowlet
+    !options.triggerFlowlet?.disableReactFlowlet
   ) {
     IReactComponent.init(options.react);
   }

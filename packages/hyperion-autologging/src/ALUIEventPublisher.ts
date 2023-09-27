@@ -6,6 +6,7 @@
 import { Channel } from "@hyperion/hook/src/Channel";
 import { intercept } from "@hyperion/hyperion-core/src/intercept";
 import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
+import { TriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
@@ -203,7 +204,8 @@ export function publish(options: InitOptions): void {
           flowletName += `,surface:${surface}`;
         }
         flowletName += ')';
-        flowlet = new flowletManager.flowletCtor(flowletName);
+        // flowlet = new flowletManager.flowletCtor(flowletName);
+        flowlet = new TriggerFlowlet(flowletName);
         uiEventFlowletManager.push(flowlet);
         flowlet = flowletManager.push(flowlet);
         activeUIEventFlowlets.set(eventName, flowlet);
@@ -217,15 +219,16 @@ export function publish(options: InitOptions): void {
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
         flowlet,
-        triggerFlowlet: flowlet.data.triggerFlowlet,
+        triggerFlowlet: flowlet,
         surface,
         ...elementText,
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
       };
-      channel.emit('al_ui_event_capture', eventData);
       updateLastUIEvent(eventData);
-      intercept(event);
+      intercept(event); // making sure we can track changes to the Event object
+      setTriggerFlowlet(event, flowlet);
+      channel.emit('al_ui_event_capture', eventData);
     },
       true, // useCapture
     );
@@ -331,5 +334,5 @@ export function publish(options: InitOptions): void {
         flowlet.parent.data.uiEventFlowlet = uiEventFlowlet;
       }
     }
-  })
+  });
 }

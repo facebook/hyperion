@@ -15,15 +15,14 @@ import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsE
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType } from "./ALFlowletManager";
-import * as ALIReactFlowlet from "./ALIReactFlowlet";
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
 
-export type ALChannelSurfaceEventData = ALMetadataEvent & Readonly<{
+export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
   surface: string;
   element?: Element | null;
 }>;
@@ -85,11 +84,11 @@ export type SurfaceComponent = (props:
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
   // IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
-  ALIReactFlowlet.InitOptions &
+  // ALIReactFlowlet.InitOptions &
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
   {
-    react: {
+    react: IReactComponent.InitOptions & {
       ReactModule: {
         createElement: typeof React.createElement;
         useLayoutEffect: typeof React.useLayoutEffect;
@@ -210,8 +209,6 @@ export function init(options: InitOptions): ALSurfaceHOC {
   const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domNonInteractiveSurfaceAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE } = options;
   const { ReactModule } = options.react;
 
-  ALIReactFlowlet.init(options);
-
   setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
 
@@ -280,12 +277,21 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
         const event: ALChannelSurfaceEventData = {
           surface: domAttributeValue,
+          flowlet,
+          triggerFlowlet: flowlet.data.triggerFlowlet,
           metadata,
           element: document.querySelector(`[${domAttributeName}='${domAttributeValue}']`)
         };
         channel.emit('al_surface_mount', event);
         return () => {
-          channel.emit('al_surface_unmount', event);
+          /**
+           * The trigger on the surface or its parent might be updated
+           * so, we should re-read that value again.
+           */
+          channel.emit('al_surface_unmount', {
+            ...event,
+            triggerFlowlet: flowlet.data.triggerFlowlet
+          });
         }
       }, [domAttributeName, domAttributeValue]);
     }

@@ -86,8 +86,9 @@ describe('test XHR interception', () => {
     // const observer = (function <T, V>(this: T, value: V) {
     //   result = [this, value];
     // });
-    IWindow.XMLHttpRequest.onArgsObserverAdd(function (this, value) {
-      expect(value).toBe(undefined);
+    // IWindow.XMLHttpRequest.onArgsObserverAdd(function (this, value) {
+    IXMLHttpRequest.constructor.onValueObserverAdd(function (this, value) {
+      expect(value).toBeInstanceOf(XMLHttpRequest);
     });
 
     IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
