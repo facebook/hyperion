@@ -133,7 +133,12 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   }
   readonly onPop = new Hook<(flowlet: T | null, popSucceeded: boolean, reason: string | undefined) => void>();
 
-  wrap<C extends CallbackType | undefined | null>(listener: C, apiName: string, customFlowlet?: T): C {
+  wrap<C extends CallbackType | undefined | null>(
+    listener: C,
+    apiName: string,
+    customFlowlet?: T,
+    getTriggerFlowlet?: (...args: any) => T | null | undefined
+  ): C {
     if (!listener) {
       return listener;
     }
@@ -141,15 +146,27 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     const flowlet = customFlowlet ?? new this.flowletCtor(apiName, this.top());
     const funcInterceptor = interceptEventListener(listener);
     if (funcInterceptor && !funcInterceptor.testAndSet(IS_FLOWLET_SETUP_PROP_NAME)) {
-      // funcInterceptor.onArgsObserverAdd(() => {
-      //   this.push(currentFLowlet);
-      // });
-      // funcInterceptor.onValueObserverAdd(() => {
-      //   this.pop(currentFLowlet);
-      // })
+      if (!getTriggerFlowlet) {
+        /**
+         * we are not going to pickup an actual trigger later, which means what ever triggered
+         * the current code that is passing the callback, is the trigger inside of that callback
+         * going forward. So, we make a copy of it case the original trigger is replaced with a new one
+         */
+        const currTriggerFlowlet = flowlet.parent?.data.triggerFlowlet;
+        if (currTriggerFlowlet) {
+          flowlet.data.triggerFlowlet = currTriggerFlowlet;
+        }
+      }
       const flowletManager = this;
+
+      // Should we use onArgsAndValueMapper instead of setCustom, although this is safer with the finally call.
       funcInterceptor.setCustom(<any>function (this: any) {
         const handler: Function = funcInterceptor.getOriginal();
+        const triggerFlowlet = getTriggerFlowlet?.apply(this, <any>arguments);
+        if (triggerFlowlet) {
+          flowlet.data.triggerFlowlet = triggerFlowlet;
+        }
+
         if (flowletManager.top() === flowlet) {
           /**
            * We would mostly expect the currentFLowlet to be on the top most of the time
