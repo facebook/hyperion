@@ -217,6 +217,7 @@ export function publish(options: InitOptions): void {
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
         flowlet,
+        triggerFlowlet: flowlet.data.triggerFlowlet,
         surface,
         ...elementText,
         reactComponentName: reactComponentData?.name,

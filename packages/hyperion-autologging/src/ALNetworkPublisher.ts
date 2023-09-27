@@ -83,6 +83,31 @@ function urlAppendParam(url: string, params: URLSearchParams): string {
 }
 const REQUEST_INFO_PROP_NAME = 'requestInfo';
 
+export function getFetchRequestInfo(...args: Parameters<Window['fetch']>): RequestInfo {
+  const [input, init] = args;
+  let request: RequestInfo;
+  if (typeof input === "string") {
+    request = {
+      body: init?.body,
+      method: init?.method ?? "GET",
+      url: input,
+    };
+  } else if (input instanceof Request) {
+    request = {
+      body: input.body,
+      method: input.method,
+      url: input.url,
+    };
+
+  } else {
+    request = {
+      method: "GET",
+      url: input.href,
+    };
+  }
+  return request;
+}
+
 function captureFetch(options: InitOptions): void {
   const { channel, flowletManager, requestUrlMarker } = options;
 
@@ -130,26 +155,7 @@ function captureFetch(options: InitOptions): void {
 
   IWindow.fetch.onArgsAndValueMapperAdd(([input, init]) => {
     let ephemeralRequestEvent: ALNetworkResponseEvent['requestEvent'] | null;
-    let request: RequestInfo;
-    if (typeof input === "string") {
-      request = {
-        body: init?.body,
-        method: init?.method ?? "GET",
-        url: input,
-      };
-    } else if (input instanceof Request) {
-      request = {
-        body: input.body,
-        method: input.method,
-        url: input.url,
-      };
-
-    } else {
-      request = {
-        method: "GET",
-        url: input.href,
-      };
-    }
+    let request: RequestInfo = getFetchRequestInfo(input, init);
 
     if (!options.requestFilter || options.requestFilter(request)) {
       const flowlet = flowletManager.top();
@@ -159,6 +165,7 @@ function captureFetch(options: InitOptions): void {
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
         flowlet,
+        triggerFlowlet: flowlet?.data.triggerFlowlet,
         ...request,
         metadata: {},
       });
@@ -181,12 +188,14 @@ function captureFetch(options: InitOptions): void {
           const requestEvent = intercept.getVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME);
           assert(requestEvent != null, `Unexpected situation! Request info missing from fetch promise object`);
           const flowlet = requestEvent?.flowlet; // Reuse the same flowlet as request, since by now things have changed.
+          const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
           channel.emit('al_network_response', {
             initiatorType: "fetch",
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
             flowlet,
+            triggerFlowlet,
             requestEvent,
             response,
             metadata: {},
@@ -248,6 +257,7 @@ function captureXHR(options: InitOptions): void {
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
         flowlet,
+        triggerFlowlet: flowlet?.data.triggerFlowlet,
         ...request, // assert already ensures request is not undefined
         metadata: {},
       });
@@ -263,6 +273,7 @@ function captureXHR(options: InitOptions): void {
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
             flowlet, // should carry request flowlet forward
+            triggerFlowlet: flowletManager.top()?.data.triggerFlowlet, // Should check its own trigger
             requestEvent,
             response: this,
             metadata: {},

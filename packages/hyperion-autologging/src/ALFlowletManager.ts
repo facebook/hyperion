@@ -3,7 +3,7 @@
  */
 
 import { FlowletManager as BaseFlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
-import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
+import { Flowlet, FlowletDataType } from "@hyperion/hyperion-flowlet/src/Flowlet";
 
 
 
@@ -12,7 +12,7 @@ import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
  * from the data type is the `surface` field. Sonce, ALFlowlet may change
  * overtime, we don't want to create an uncessary dependency on that.
  */
-export interface ALFlowletDataType {
+export interface ALFlowletDataType extends FlowletDataType {
   surface?: string;
   uiEventFlowlet?: ALFlowlet;
 };

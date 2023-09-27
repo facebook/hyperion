@@ -8,7 +8,11 @@ export const onFlowletInit = new Hook<<T extends {} = {}>(flowlet: Flowlet<T>) =
 
 let flowletID: number = 0;
 
-export class Flowlet<T extends {} = {}> {
+export interface FlowletDataType {
+  triggerFlowlet?: Flowlet;
+}
+
+export class Flowlet<T extends {} = FlowletDataType> {
   readonly data: T;
   readonly id: number = flowletID++;
   private _fullName: string | null = null;
