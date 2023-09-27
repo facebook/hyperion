@@ -2,12 +2,13 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Props, Surface } from "./Surface";
+import * as React from "react";
+import { FlowletManager } from "../FlowletManager";
+import { Surface } from "./Surface";
 
 function ResultViewer(props: { text: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
     if (ref.current) {
       ref.current.innerHTML += props.text;
     }
@@ -19,9 +20,9 @@ function ResultViewer(props: { text: string }) {
 }
 
 export default function (/* props: Props */) {
-  const [text, setText] = useState<string>();
+  const [text, setText] = React.useState<string>();
 
-  const clear = useCallback(() => {
+  const clear = React.useCallback(() => {
     setText(void 0)
   }, []);
 
@@ -32,14 +33,17 @@ export default function (/* props: Props */) {
     // "https://www.svgrepo.com/show/4733/samples.svg",
   ];
 
-  const onCallbackFetch = useCallback(() => {
+  const onCallbackFetch = React.useCallback(() => {
     // setText("Loading via fetch ..."); // Note if call these now, the corresponding component will be mounted. We want to mount alap to test the alflowlet flow
     for (const link of links) {
-      fetch(link).then(response => response.text()).then(setText);
+      fetch(link).then(response => response.text()).then(text => {
+        console.log("Fetch result: ", FlowletManager.top());
+        setText(text);
+      });
     }
   }, []);
 
-  const onCallbackXHR = useCallback(() => {
+  const onCallbackXHR = React.useCallback(() => {
     // setText("Loading via xhr ..."); // Note if call these now, the corresponding component will be mounted. We want to mount alap to test the alflowlet flow
     for (const link of links) {
       const xhr = new XMLHttpRequest();
