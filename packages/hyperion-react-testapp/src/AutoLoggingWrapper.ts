@@ -43,31 +43,6 @@ export function init() {
   console.log('csid:', ClientSessionID);
 
   // Better to first setup listeners before initializing AutoLogging so we don't miss any events (e.g. Heartbeat(START))
-  ([
-    'al_surface_mount',
-    'al_surface_unmount',
-    'al_heartbeat_event',
-    'al_ui_event_capture',
-    'al_ui_event_bubble',
-  ] as const).forEach(eventName => {
-    channel.on(eventName).add(ev => {
-      console.log(eventName, ev, performance.now());
-    });
-
-  });
-
-  ([
-    'al_ui_event',
-    'al_surface_mutation_event',
-    'al_network_request',
-    'al_network_response',
-    'al_network_response',
-    'al_flowlet_event',
-  ] as const).forEach(eventName => {
-    channel.on(eventName).add(ev => {
-      console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
-    });
-  });
 
   interface ExtendedElementText extends ALElementText {
     isExtended?: boolean;
@@ -92,7 +67,7 @@ export function init() {
     elementText: {
       updateText(elementText: ExtendedElementText, domSource) {
         elementText.isExtended = true;
-        console.log("Element Text ", elementText, domSource);
+        // console.log("Element Text ", elementText, domSource);
       },
     },
     uiEventPublisher: {
