@@ -4,12 +4,9 @@
 
 'use strict';
 
+import { assert } from "@hyperion/global/src/assert";
 import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData } from './ALSurface';
-import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
-
-import { assert } from "@hyperion/global/src/assert";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from './ALEventIndex';
@@ -17,6 +14,8 @@ import { ALFlowlet } from "./ALFlowletManager";
 import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
+import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData } from './ALSurface';
+import { ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 type ALMutationEvent = ALReactElementEvent & ALElementTextEvent & ALOptionalFlowletEvent & Readonly<
   {
@@ -54,9 +53,7 @@ type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & 
   surface: string,
   element: HTMLElement,
   addTime: number,
-  removeTime?: number,
   addFlowlet: ALFlowlet | null,
-  removeFlowlet: ALFlowlet | null,
   mountEvent: ALSurfaceMutationEventData | null,
 };
 
@@ -75,7 +72,7 @@ export function publish(options: InitOptions): void {
 
   function processNode(event: ALChannelSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
-    const { element, surface, metadata, flowlet, triggerFlowlet } = event;
+    const { element, surface, metadata, triggerFlowlet } = event;
 
     const currFlowlet = flowletManager.top();
     if (!(element instanceof HTMLElement) || /LINK|SCRIPT/.test(element.nodeName)) {
@@ -105,12 +102,21 @@ export function publish(options: InitOptions): void {
             reactComponentName: reactComponentData?.name,
             reactComponentStack: reactComponentData?.stack,
             ...elementText,
-            removeFlowlet: null,
             mountEvent: null,
             metadata,
           };
           activeSurfaces.set(surface, info);
-          emitMutationEvent(action, info);
+
+          channel.emit('al_surface_mutation_event', info.mountEvent = {
+            ...info,
+            event: 'mount_component',
+            eventTimestamp: info.addTime,
+            eventIndex: ALEventIndex.getNextEventIndex(),
+            autoLoggingID: ALID.getOrSetAutoLoggingID(element),
+            flowlet: info.addFlowlet,
+            triggerFlowlet,
+          });
+
         } else if (element != info.element && element.contains(info.element)) {
           /**
           * This means we are seeing a element that is higher in the DOM
@@ -126,8 +132,8 @@ export function publish(options: InitOptions): void {
       case 'removed': {
         const info = activeSurfaces.get(surface);
         if (info && info.element === element) {
-          info.removeFlowlet = currFlowlet;
-          info.removeTime = timestamp;
+          const removeFlowlet = currFlowlet;
+          const removeTime = timestamp;
           activeSurfaces.delete(surface);
           /**
            * We share the same object between the mount and unmount events
@@ -137,7 +143,18 @@ export function publish(options: InitOptions): void {
            * but the perf overhead would be un-necessary.
            * // Object.assign(info.metadata, metadata);
            */
-          emitMutationEvent(action, info);
+          assert(info.mountEvent != null, "Missing mutaion info for unmounting");
+          channel.emit('al_surface_mutation_event', {
+            ...info,
+            event: 'unmount_component',
+            eventTimestamp: removeTime,
+            eventIndex: ALEventIndex.getNextEventIndex(),
+            autoLoggingID: ALID.getOrSetAutoLoggingID(element),
+            mountedDuration: (removeTime - info.addTime) / 1000,
+            flowlet: removeFlowlet,
+            triggerFlowlet,
+            mountEvent: info.mountEvent,
+          });
         }
         break;
       }
@@ -152,42 +169,4 @@ export function publish(options: InitOptions): void {
     processNode(event, 'removed');
   });
 
-
-  function emitMutationEvent(
-    action: 'added' | 'removed',
-    surfaceInfo: SurfaceInfo
-  ): void {
-    const { removeTime, element, mountEvent } = surfaceInfo;
-    switch (action) {
-      case 'added': {
-        const flowlet = surfaceInfo.addFlowlet;
-        channel.emit('al_surface_mutation_event', surfaceInfo.mountEvent = {
-          ...surfaceInfo,
-          event: 'mount_component',
-          eventTimestamp: surfaceInfo.addTime,
-          eventIndex: ALEventIndex.getNextEventIndex(),
-          autoLoggingID: ALID.getOrSetAutoLoggingID(element),
-          flowlet,
-          triggerFlowlet: flowlet?.data.triggerFlowlet,
-        });
-        break;
-      }
-      case 'removed': {
-        assert(mountEvent != null && removeTime != null, "Missing mutaion info for unmounting");
-        const flowlet = surfaceInfo.removeFlowlet;
-        channel.emit('al_surface_mutation_event', {
-          ...surfaceInfo,
-          event: 'unmount_component',
-          eventTimestamp: removeTime,
-          eventIndex: ALEventIndex.getNextEventIndex(),
-          autoLoggingID: ALID.getOrSetAutoLoggingID(element),
-          mountedDuration: (removeTime - surfaceInfo.addTime) / 1000,
-          flowlet,
-          triggerFlowlet: flowlet?.data.triggerFlowlet,
-          mountEvent,
-        });
-        break;
-      }
-    }
-  }
 }
