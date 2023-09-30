@@ -10,7 +10,7 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from './ALEventIndex';
-import { ALFlowlet } from "./ALFlowletManager";
+import { IALFlowlet } from "./ALFlowletManager";
 import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
@@ -53,7 +53,7 @@ type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & 
   surface: string,
   element: HTMLElement,
   addTime: number,
-  addFlowlet: ALFlowlet | null,
+  addFlowlet: IALFlowlet | null,
   mountEvent: ALSurfaceMutationEventData | null,
 };
 

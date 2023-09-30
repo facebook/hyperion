@@ -14,15 +14,35 @@ import { Flowlet, FlowletDataType } from "@hyperion/hyperion-flowlet/src/Flowlet
  */
 export interface ALFlowletDataType extends FlowletDataType {
   surface?: string;
-  uiEventFlowlet?: ALFlowlet;
+  uiEventFlowlet?: IALFlowlet;
+  triggerFlowlet?: IALFlowlet;
 };
 
+export interface IALFlowlet<DataType extends ALFlowletDataType = ALFlowletDataType> extends Flowlet<DataType> { }
+
+function flowletToJSON(flowlet?: Flowlet) {
+  return flowlet ? { id: flowlet.id, name: flowlet.getFullName() } : null;
+}
 export class ALFlowlet<DataType extends ALFlowletDataType = ALFlowletDataType>
-  extends Flowlet<DataType>{
+  extends Flowlet<DataType>
+  implements IALFlowlet<DataType>
+{
+
+  toJSON() {
+    return {
+      ...flowletToJSON(this),
+      data: {
+        surface: this.data.surface,
+        uiEventFlowlet: flowletToJSON(this.data.uiEventFlowlet),
+        triggerFlowletN: flowletToJSON(this.data.triggerFlowlet),
+      },
+    };
+  }
+
 }
 
 export class ALFlowletManager<DataType extends ALFlowletDataType = ALFlowletDataType>
-  extends BaseFlowletManager<ALFlowlet<DataType>>{
+  extends BaseFlowletManager<IALFlowlet<DataType>>{
   constructor() {
     super(ALFlowlet);
   }

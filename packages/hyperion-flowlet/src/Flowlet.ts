@@ -12,7 +12,7 @@ export interface FlowletDataType {
   triggerFlowlet?: Flowlet;
 }
 
-export class Flowlet<T extends {} = FlowletDataType> {
+export class Flowlet<T extends FlowletDataType = FlowletDataType> {
   readonly data: T;
   readonly id: number = flowletID++;
   private _fullName: string | null = null;
@@ -34,5 +34,9 @@ export class Flowlet<T extends {} = FlowletDataType> {
 
   fork(name: string): Flowlet<T> {
     return new Flowlet<T>(name, this);
+  }
+
+  toString(): string {
+    return this.getFullName();
   }
 }
