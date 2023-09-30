@@ -12,7 +12,7 @@ import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInte
 import { TriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
+import { IALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
@@ -42,7 +42,7 @@ export function init(options: InitOptions) {
   const { channel, flowletManager } = options;
 
   const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
-  const activeRootFlowlets = new Set<ALFlowlet>();
+  const activeRootFlowlets = new Set<IALFlowlet>();
 
   function setSurfaceTriggerFlowlet(surface: string | null, triggerFlowlet: TriggerFlowlet | null | undefined): void {
     if (!triggerFlowlet) {
@@ -180,7 +180,7 @@ export function init(options: InitOptions) {
   const IS_FLOWLET_SETUP_PROP = 'isFlowletSetup';
 
   type FlowletRef = {
-    _flowlet?: ALFlowlet | null | undefined
+    _flowlet?: IALFlowlet | null | undefined
   };
   type ComponentWithFlowlet = React.Component<any> & FlowletRef;
 

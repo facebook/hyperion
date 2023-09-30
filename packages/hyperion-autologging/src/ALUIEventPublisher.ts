@@ -6,12 +6,12 @@
 import { Channel } from "@hyperion/hook/src/Channel";
 import { intercept } from "@hyperion/hyperion-core/src/intercept";
 import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
-import { TriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
+import { setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
-import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
+import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, getElementTextEvent, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
@@ -109,7 +109,7 @@ type CommonEventData = (ALUIEvent & ALTimedEvent) & {
  */
 const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
 
-const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], ALFlowlet>();
+const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], IALFlowlet>();
 
 const uiEventFlowletManager = new ALFlowletManager();
 
@@ -204,8 +204,7 @@ export function publish(options: InitOptions): void {
           flowletName += `,surface:${surface}`;
         }
         flowletName += ')';
-        // flowlet = new flowletManager.flowletCtor(flowletName);
-        flowlet = new TriggerFlowlet(flowletName);
+        flowlet = new flowletManager.flowletCtor(flowletName);
         uiEventFlowletManager.push(flowlet);
         flowlet = flowletManager.push(flowlet);
         activeUIEventFlowlets.set(eventName, flowlet);
@@ -273,7 +272,7 @@ export function publish(options: InitOptions): void {
           }
         }
 
-        let flowlet: ALFlowlet | undefined;
+        let flowlet: IALFlowlet | undefined;
         if (shouldPushPopFlowlet(event) && (flowlet = activeUIEventFlowlets.get(eventName)) != null) {
           flowletManager.pop(flowlet);
           activeUIEventFlowlets.delete(eventName);

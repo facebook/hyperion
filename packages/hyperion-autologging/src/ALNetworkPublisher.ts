@@ -8,11 +8,11 @@ import * as IPromise from "@hyperion/hyperion-core/src/IPromise";
 import * as intercept from "@hyperion/hyperion-core/src/intercept";
 import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
+import { getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import * as ALEventIndex from "./ALEventIndex";
 import { ALLoggableEvent, ALOptionalFlowletEvent, ALSharedInitOptions } from "./ALType";
-import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 
 type ALNetworkEvent = ALLoggableEvent & ALOptionalFlowletEvent & Readonly<{
   event: "network";
@@ -175,7 +175,7 @@ function captureFetch(options: InitOptions): void {
     }
 
     const parentTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-    const triggerFlowlet = new TriggerFlowlet(`fetch(method:${request.method},url:${request.url})`, parentTriggerFlowlet);
+    const triggerFlowlet = new flowletManager.flowletCtor(`fetch(method:${request.method},url:${request.url})`, parentTriggerFlowlet);
 
     return value => {
       setTriggerFlowlet(value, triggerFlowlet); // This will be picked by the wrappers of Promis.* callbacks.
@@ -248,7 +248,7 @@ function captureXHR(options: InitOptions): void {
     );
 
     const parentTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-    const triggerFlowlet = new TriggerFlowlet(`xhr(method:${method},url:${url})`, parentTriggerFlowlet);
+    const triggerFlowlet = new flowletManager.flowletCtor(`xhr(method:${method},url:${url})`, parentTriggerFlowlet);
     setTriggerFlowlet(this, triggerFlowlet);
   });
 

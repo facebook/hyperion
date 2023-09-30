@@ -16,11 +16,11 @@ import elk from 'cytoscape-elk';
 import dagre from 'cytoscape-dagre';
 import cola from 'cytoscape-cola';
 import React from "react";
-import { ALFlowlet } from "@hyperion/hyperion-autologging/src/ALFlowletManager";
+import { IALFlowlet } from "@hyperion/hyperion-autologging/src/ALFlowletManager";
 
 
 // TODO: move this out into a config that can be passed to the graph component, which includes the config mapping
-const LAYOUT = {name: 'klay'}; // {name: 'elk | klay' | 'dagre' | 'cola'}
+const LAYOUT = { name: 'klay' }; // {name: 'elk | klay' | 'dagre' | 'cola'}
 
 const ELK_CONFIG = {
   randomize: false, // use random node positions at beginning of layout
@@ -29,10 +29,10 @@ const ELK_CONFIG = {
   fit: true, // Whether to fit
   padding: 20, // Padding on fit
   animate: true, // Whether to transition the node positions
-  animateFilter: function( _node: any, _i: any ){ return true; }, // Whether to animate specific nodes when animation is on; non-animated nodes immediately go to their final positions
+  animateFilter: function (_node: any, _i: any) { return true; }, // Whether to animate specific nodes when animation is on; non-animated nodes immediately go to their final positions
   animationDuration: 500, // Duration of animation in ms if enabled
   animationEasing: undefined, // Easing of animation if enabled
-  transform: function( _node: any, pos: any ){ return pos; }, // A function that applies a transform to the final node position
+  transform: function (_node: any, pos: any) { return pos; }, // A function that applies a transform to the final node position
   ready: undefined, // Callback on layoutready
   stop: undefined, // Callback on layoutstop
   nodeLayoutOptions: undefined, // Per-node options function
@@ -51,19 +51,19 @@ const ELK_CONFIG = {
     'algorithm': 'layered',
     'elk.direction': 'RIGHT',
   },
-  priority: function( _edge: any ){ return null; }, // Edges with a non-nil value are skipped when geedy edge cycle breaking is enabled
+  priority: function (_edge: any) { return null; }, // Edges with a non-nil value are skipped when geedy edge cycle breaking is enabled
 };
 
-const KLAY_CONFIG  = {
+const KLAY_CONFIG = {
   randomize: false, // use random node positions at beginning of layout
   nodeDimensionsIncludeLabels: true, // Boolean which changes whether label dimensions are included when calculating node dimensions
   fit: true, // Whether to fit
   padding: 20, // Padding on fit
   animate: true, // Whether to transition the node positions
-  animateFilter: function( _node: any, _i: any ){ return true; }, // Whether to animate specific nodes when animation is on; non-animated nodes immediately go to their final positions
+  animateFilter: function (_node: any, _i: any) { return true; }, // Whether to animate specific nodes when animation is on; non-animated nodes immediately go to their final positions
   animationDuration: 500, // Duration of animation in ms if enabled
   animationEasing: undefined, // Easing of animation if enabled
-  transform: function( _node: any, pos: any ){ return pos; }, // A function that applies a transform to the final node position
+  transform: function (_node: any, pos: any) { return pos; }, // A function that applies a transform to the final node position
   ready: undefined, // Callback on layoutready
   stop: undefined, // Callback on layoutstop
   klay: {
@@ -95,11 +95,11 @@ const KLAY_CONFIG  = {
     linearSegmentsDeflectionDampening: 0.3, // Dampens the movement of nodes to keep the diagram from getting too large.
     mergeEdges: false, // Edges that have no ports are merged so they touch the connected nodes at the same points.
     mergeHierarchyCrossingEdges: true, // If hierarchical layout is active, hierarchy-crossing edges use as few hierarchical ports as possible.
-    nodeLayering:'NETWORK_SIMPLEX', // Strategy for node layering.
+    nodeLayering: 'NETWORK_SIMPLEX', // Strategy for node layering.
     /* NETWORK_SIMPLEX This algorithm tries to minimize the length of edges. This is the most computationally intensive algorithm. The number of iterations after which it aborts if it hasn't found a result yet can be set with the Maximal Iterations option.
     LONGEST_PATH A very simple algorithm that distributes nodes along their longest path to a sink node.
     INTERACTIVE Distributes the nodes into layers by comparing their positions before the layout algorithm was started. The idea is that the relative horizontal order of nodes as it was before layout was applied is not changed. This of course requires valid positions for all nodes to have been set on the input graph before calling the layout algorithm. The interactive node layering algorithm uses the Interactive Reference Point option to determine which reference point of nodes are used to compare positions. */
-    nodePlacement:'BRANDES_KOEPF', // Strategy for Node Placement
+    nodePlacement: 'BRANDES_KOEPF', // Strategy for Node Placement
     /* BRANDES_KOEPF Minimizes the number of edge bends at the expense of diagram size: diagrams drawn with this algorithm are usually higher than diagrams drawn with other algorithms.
     LINEAR_SEGMENTS Computes a balanced placement.
     INTERACTIVE Tries to keep the preset y coordinates of nodes from the original layout. For dummy nodes, a guess is made to infer their coordinates. Requires the other interactive phase implementations to have run as well.
@@ -110,7 +110,7 @@ const KLAY_CONFIG  = {
     spacing: 20, // Overall setting for the minimal amount of space to be left between objects
     thoroughness: 7 // How much effort should be spent to produce a nice layout..
   },
-  priority: function( _edge: any ){ return null; }, // Edges with a non-nil value are skipped when greedy edge cycle breaking is enabled
+  priority: function (_edge: any) { return null; }, // Edges with a non-nil value are skipped when greedy edge cycle breaking is enabled
 };
 
 const DAGRE_CONFIG = {
@@ -121,10 +121,10 @@ const DAGRE_CONFIG = {
   rankDir: undefined, // 'TB' for top to bottom flow, 'LR' for left to right,
   align: undefined,  // alignment for rank nodes. Can be 'UL', 'UR', 'DL', or 'DR', where U = up, D = down, L = left, and R = right
   acyclicer: undefined, // If set to 'greedy', uses a greedy heuristic for finding a feedback arc set for a graph.
-                        // A feedback arc set is a set of edges that can be removed to make a graph acyclic.
+  // A feedback arc set is a set of edges that can be removed to make a graph acyclic.
   ranker: undefined, // Type of algorithm to assign a rank to each node in the input graph. Possible values: 'network-simplex', 'tight-tree' or 'longest-path'
-  minLen: function( _edge: any ){ return 1; }, // number of ranks to keep between the source and target of the edge
-  edgeWeight: function( _edge: any ){ return 1; }, // higher weight edges are generally made shorter and straighter than lower weight edges
+  minLen: function (_edge: any) { return 1; }, // number of ranks to keep between the source and target of the edge
+  edgeWeight: function (_edge: any) { return 1; }, // higher weight edges are generally made shorter and straighter than lower weight edges
 
   // general layout options
   fit: true, // whether to fit to viewport
@@ -132,17 +132,17 @@ const DAGRE_CONFIG = {
   spacingFactor: undefined, // Applies a multiplicative factor (>0) to expand or compress the overall area that the nodes take up
   nodeDimensionsIncludeLabels: false, // whether labels should be included in determining the space used by a node
   animate: true, // whether to transition the node positions
-  animateFilter: function( _node: any, _i: number ){ return true; }, // whether to animate specific nodes when animation is on; non-animated nodes immediately go to their final positions
+  animateFilter: function (_node: any, _i: number) { return true; }, // whether to animate specific nodes when animation is on; non-animated nodes immediately go to their final positions
   animationDuration: 500, // duration of animation in ms if enabled
   animationEasing: undefined, // easing of animation if enabled
   boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-  transform: function( _node: any, pos: any ){ return pos; }, // a function that applies a transform to the final node position
-  ready: function(){}, // on layoutready
+  transform: function (_node: any, pos: any) { return pos; }, // a function that applies a transform to the final node position
+  ready: function () { }, // on layoutready
   sort: undefined, // a sorting function to order the nodes and edges; e.g. function(a, b){ return a.data('weight') - b.data('weight') }
-                   // because cytoscape dagre creates a directed graph, and directed graphs use the node order as a tie breaker when
-                   // defining the topology of a graph, this sort function can help ensure the correct order of the nodes/edges.
-                   // this feature is most useful when adding and removing the same nodes and edges multiple times in a graph.
-  stop: function(){} // on layoutstop
+  // because cytoscape dagre creates a directed graph, and directed graphs use the node order as a tie breaker when
+  // defining the topology of a graph, this sort function can help ensure the correct order of the nodes/edges.
+  // this feature is most useful when adding and removing the same nodes and edges multiple times in a graph.
+  stop: function () { } // on layoutstop
 };
 
 const COLA_CONFIG = {
@@ -156,15 +156,15 @@ const COLA_CONFIG = {
   nodeDimensionsIncludeLabels: false, // whether labels should be included in determining the space used by a node
 
   // layout event callbacks
-  ready: function(){}, // on layoutready
-  stop: function(){}, // on layoutstop
+  ready: function () { }, // on layoutready
+  stop: function () { }, // on layoutstop
 
   // positioning options
   randomize: false, // use random node positions at beginning of layout
   avoidOverlap: true, // if true, prevents overlap of node bounding boxes
   handleDisconnected: true, // if true, avoids disconnected components from overlapping
   convergenceThreshold: 0.01, // when the alpha value (system energy) falls below this value, the layout stops
-  nodeSpacing: function( _node: any ){ return 10; }, // extra spacing around nodes
+  nodeSpacing: function (_node: any) { return 10; }, // extra spacing around nodes
   flow: { axis: 'x', minSeparation: 30 }, // use DAG/tree flow layout if specified, e.g. { axis: 'y', minSeparation: 30 }
   alignment: undefined, // relative alignment constraints on nodes, e.g. {vertical: [[{node: node1, offset: 0}, {node: node2, offset: 5}]], horizontal: [[{node: node3}, {node: node4}], [{node: node5}, {node: node6}]]}
   gapInequalities: undefined, // list of inequality constraints for the gap between the nodes, e.g. [{"axis":"y", "left":node1, "right":node2, "gap":25}]
@@ -191,15 +191,15 @@ if (LAYOUT.name === 'klay') {
   console.log('[PS] using klay');
   Cytoscape.use(klay);
   CONFIG = KLAY_CONFIG;
-} else if(LAYOUT.name === 'elk') {
+} else if (LAYOUT.name === 'elk') {
   console.log('[PS] using elk');
   Cytoscape.use(elk);
   CONFIG = ELK_CONFIG;
-} else if(LAYOUT.name === 'dagre') {
+} else if (LAYOUT.name === 'dagre') {
   console.log('[PS] using dagre');
   Cytoscape.use(dagre);
   CONFIG = DAGRE_CONFIG;
-} else if(LAYOUT.name === 'cola') {
+} else if (LAYOUT.name === 'cola') {
   console.log('[PS] using cola');
   Cytoscape.use(cola);
   CONFIG = COLA_CONFIG;
@@ -213,9 +213,9 @@ type BaseFlowlet = {
 }
 
 type CopiedFlowlet = BaseFlowlet & {
-    data: {
-      uiEventFlowlet: BaseFlowlet | null,
-    }
+  data: {
+    uiEventFlowlet: BaseFlowlet | null,
+  }
 } | null | undefined;
 
 // TODO: abstract events through an interface?  Imagining an interface that has methods
@@ -223,18 +223,18 @@ type CopiedFlowlet = BaseFlowlet & {
 type EventBody = {
   event: string,
   channelEventName?: string,
-  flowlet?: ALFlowlet | null,
+  flowlet?: IALFlowlet | null,
   copiedFlowlet?: CopiedFlowlet,
   targetElement?: HTMLElement | null,
 } & (
-  ALFlowletEventData |
-  ALUIEventData |
-  ALSurfaceMutationEventData |
-  ALNetworkRequestEvent |
-  ALNetworkResponseEvent |
-  AdsALHeartbeatEventData |
-  ALUIEventCaptureData |
-  ALUIEventBubbleData);
+    ALFlowletEventData |
+    ALUIEventData |
+    ALSurfaceMutationEventData |
+    ALNetworkRequestEvent |
+    ALNetworkResponseEvent |
+    AdsALHeartbeatEventData |
+    ALUIEventCaptureData |
+    ALUIEventBubbleData);
 
 
 type Node = {
@@ -245,7 +245,7 @@ type Node = {
     id: string;
     label: string;
     parent?: string;
-    position?: {x: number, y: number};
+    position?: { x: number, y: number };
     color: string;
   }
 };
@@ -264,7 +264,7 @@ type GraphData = Array<Node | Edge>;
 
 type GraphStyle = Array<{
   selector: 'node' | 'edge',
-  style: {[key: string]: string | number}
+  style: { [key: string]: string | number }
 }>;
 
 type CyProps = {
@@ -359,13 +359,13 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
   const elements: GraphData = [];
   const eventNodes: Array<Node> = [];
   let nodeId = 0;
-  let flowletsSeen: Array<{flowlet: string, flowletNodeId: number}> = [];
+  let flowletsSeen: Array<{ flowlet: string, flowletNodeId: number }> = [];
   for (let i = 0; i < events.length; i++) {
     const event = events[i];
     // Event node
-    const eventName = event.channelEventName != null ? `${event.event}[${event.channelEventName}]`: event.event;
+    const eventName = event.channelEventName != null ? `${event.event}[${event.channelEventName}]` : event.event;
     const srcNode = {
-      scratch: {_event: event},
+      scratch: { _event: event },
       data: {
         color: nodeColor(eventName),
         id: String(nodeId++),
@@ -387,67 +387,67 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
                 source: String(matchFlowlet.flowletNodeId),
                 target: srcNode.data.id,
                 color: edgeColor('flowlet'),
-                label: matchFlowlet.flowletNodeId+'->'+srcNode.data.id,
+                label: matchFlowlet.flowletNodeId + '->' + srcNode.data.id,
               }
             }
           )
         }
         // Processing a new flowlet
         //else {
-          const flowletParentId = nodeId++;
-          flowletsSeen.push({flowlet: flowletName, flowletNodeId: flowletParentId});
-          // Flowlet node
-          const flowletParent = {
-            scratch: {_event: event},
-            data: {
-              color: nodeColor('parent'),
-              id: String(flowletParentId),
-              label: flowletName,
-            }
-          }
-          elements.push(flowletParent);
-          // Edge from src to flowlet parent
-          elements.push(
-            {
-              data: {
-                source: srcNode.data.id,
-                target: String(flowletParentId),
-                color: edgeColor('flowlet'),
-                label: srcNode.data.id+'->'+flowletParentId,
-              }
-            }
-          );
-          const flowletParts = flowletName.split(/\/(?![^(]*\))/).filter(p => p != '');
-          for (let k = 0; k < flowletParts.length; k++) {
-            const nodeId = 'flowlet[' +flowletParentId+ ']'+ 'flowlet-part' + String(k);
-            const previousNodeId = 'flowlet[' +flowletParentId+ ']'+ 'flowlet-part' + String(k-1);
-            elements.push(
-              {
-                scratch: {_event: flowlet},
-                data: {
-                  parent: String(flowletParentId),
-                  color: nodeColor('flowlet-part'),
-                  id: nodeId,
-                  label: flowletParts[k],
-                }
-              }
-            )
-            if (k > 0) {
-              console.log('[PS] Part', flowletParts[k]);
-              // add edge from previous
-              elements.push(
-                {
-                  data: {
-                    source: previousNodeId,
-                    target: nodeId,
-                    color: edgeColor('seq'),
-                    label: previousNodeId+'->'+nodeId,
-                  }
-                }
-              );
-            }
+        const flowletParentId = nodeId++;
+        flowletsSeen.push({ flowlet: flowletName, flowletNodeId: flowletParentId });
+        // Flowlet node
+        const flowletParent = {
+          scratch: { _event: event },
+          data: {
+            color: nodeColor('parent'),
+            id: String(flowletParentId),
+            label: flowletName,
           }
         }
+        elements.push(flowletParent);
+        // Edge from src to flowlet parent
+        elements.push(
+          {
+            data: {
+              source: srcNode.data.id,
+              target: String(flowletParentId),
+              color: edgeColor('flowlet'),
+              label: srcNode.data.id + '->' + flowletParentId,
+            }
+          }
+        );
+        const flowletParts = flowletName.split(/\/(?![^(]*\))/).filter(p => p != '');
+        for (let k = 0; k < flowletParts.length; k++) {
+          const nodeId = 'flowlet[' + flowletParentId + ']' + 'flowlet-part' + String(k);
+          const previousNodeId = 'flowlet[' + flowletParentId + ']' + 'flowlet-part' + String(k - 1);
+          elements.push(
+            {
+              scratch: { _event: flowlet },
+              data: {
+                parent: String(flowletParentId),
+                color: nodeColor('flowlet-part'),
+                id: nodeId,
+                label: flowletParts[k],
+              }
+            }
+          )
+          if (k > 0) {
+            console.log('[PS] Part', flowletParts[k]);
+            // add edge from previous
+            elements.push(
+              {
+                data: {
+                  source: previousNodeId,
+                  target: nodeId,
+                  color: edgeColor('seq'),
+                  label: previousNodeId + '->' + nodeId,
+                }
+              }
+            );
+          }
+        }
+      }
     }
     // Even if flowlet is available assign a sequential edge to last of eventNodes
     if (eventNodes) {
@@ -459,7 +459,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
               source: node.data.id,
               target: srcNode.data.id,
               color: edgeColor('seq'),
-              label: node.data.id+'->'+srcNode.data.id,
+              label: node.data.id + '->' + srcNode.data.id,
             }
           }
         );
@@ -471,7 +471,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
   return elements;
 }
 
-function ALSessionPetriReact(props: CyProps):  React.JSX.Element {
+function ALSessionPetriReact(props: CyProps): React.JSX.Element {
   const [listenerRegistered, setListenerRegistered] = React.useState(false);
   const [hide, setHide] = React.useState(true);
   const cy = React.useRef<cytoscape.Core | null>(null);
@@ -482,7 +482,7 @@ function ALSessionPetriReact(props: CyProps):  React.JSX.Element {
         return;
       }
       cy.current = ref;
-      cy.current?.layout({...LAYOUT, ...CONFIG}).run();
+      cy.current?.layout({ ...LAYOUT, ...CONFIG }).run();
       if (!listenerRegistered) {
         cy.current?.on('click mouseover', 'node', (event) => {
           console.log('[PS]', event.type, event.target.data(), event.target.scratch());
@@ -498,23 +498,23 @@ function ALSessionPetriReact(props: CyProps):  React.JSX.Element {
   );
 
   return <>
-    <button onClick={() => setHide(!hide)}>{hide ? `Show ${props.graphTitle} Graph` :`Hide ${props.graphTitle} Graph`}</button>
+    <button onClick={() => setHide(!hide)}>{hide ? `Show ${props.graphTitle} Graph` : `Hide ${props.graphTitle} Graph`}</button>
     {!hide && (
-    <>
-      <button onClick={() => {const e = Math.random() * 100; cy.current?.add([{ data: { id: 'one' + String(e), label: 'Node ' + e }, position: { x: 0, y: 0 } }])}}>Add Dummy Node</button>
-      <CytoscapeComponent
-        cy={setCytoscape}
-        headless={false}
-        stylesheet={props.stylesheet ?? defaultStylesheet}
-        elements={props.elements}
-        style={{width: props.width, height: props.height}}
+      <>
+        <button onClick={() => { const e = Math.random() * 100; cy.current?.add([{ data: { id: 'one' + String(e), label: 'Node ' + e }, position: { x: 0, y: 0 } }]) }}>Add Dummy Node</button>
+        <CytoscapeComponent
+          cy={setCytoscape}
+          headless={false}
+          stylesheet={props.stylesheet ?? defaultStylesheet}
+          elements={props.elements}
+          style={{ width: props.width, height: props.height }}
         />
-    </>)}
-    </>;
+      </>)}
+  </>;
 }
 
 
-export function ALSessionGraph(): React.JSX.Element{
+export function ALSessionGraph(): React.JSX.Element {
   const [eventBuffer, setEventBuffer] = React.useState<Array<EventBody>>([]);
 
   const addEvent = React.useCallback((event: EventBody): void => {
@@ -524,24 +524,27 @@ export function ALSessionGraph(): React.JSX.Element{
         return eventBuffer;
       }
       // TODO: if we don't copy, then flowlet seems to continue mutating
-      const {flowlet, ...data} = event;
+      const { flowlet, ...data } = event;
       let copied: EventBody = ({
-          ...data,
-          ...{copiedFlowlet: (event.flowlet != null ? {
-                name: event.flowlet.name,
-                fullName: event.flowlet?.getFullName(),
-                id: event.flowlet.id,
-                data: event.flowlet.data.uiEventFlowlet != null ? {
-                  uiEventFlowlet: {
-                    id: event.flowlet.data.uiEventFlowlet.id,
-                    name: event.flowlet.data.uiEventFlowlet.name,
-                    fullName: event.flowlet.data.uiEventFlowlet.getFullName(),
-                  }
-                } : {uiEventFlowlet: null}
-              } : undefined)},
+        ...data,
+        ...{
+          copiedFlowlet: (event.flowlet != null ? {
+            name: event.flowlet.name,
+            fullName: event.flowlet?.getFullName(),
+            id: event.flowlet.id,
+            data: event.flowlet.data.uiEventFlowlet != null ? {
+              uiEventFlowlet: {
+                id: event.flowlet.data.uiEventFlowlet.id,
+                name: event.flowlet.data.uiEventFlowlet.name,
+                fullName: event.flowlet.data.uiEventFlowlet.getFullName(),
+              }
+            } : { uiEventFlowlet: null }
+          } : undefined)
+        },
       } as EventBody);
       return [...eventBuffer, copied];
-  })}, []);
+    })
+  }, []);
 
   React.useEffect(() => {
     // Set up listeners
@@ -555,7 +558,7 @@ export function ALSessionGraph(): React.JSX.Element{
       // 'al_ui_event_bubble',
     ];
     uiEvents.forEach(eventName => {
-      const listener = uiChannel?.on(eventName).add(e => addEvent({...e, channelEventName: eventName}));
+      const listener = uiChannel?.on(eventName).add(e => addEvent({ ...e, channelEventName: eventName }));
       if (listener) {
         removeListeners.push(
           () => uiChannel?.removeListener(eventName, listener)
@@ -603,17 +606,17 @@ export function ALSessionGraph(): React.JSX.Element{
   }, [addEvent]);
 
   return (
-    <div style={{width:"100%", display:"inline-block"}}>
+    <div style={{ width: "100%", display: "inline-block" }}>
       {/* <div style={{textAlign:"left", float:"left", width: "50px"}}>
         <pre>{JSON.stringify(eventBuffer.map((e, i) => {return {id: i, ev: e.event};}), undefined, 2)}</pre>
       </div> */}
-      <div style={{textAlign:"left"}}>
+      <div style={{ textAlign: "left" }}>
         <ALSessionPetriReact
           graphTitle={'Flowlet (Non UI)'}
           height={'200px'}
           width={'100%'}
           elements={formatEventBuffer(eventBuffer, false, true)} />
-        <br/>
+        <br />
         <ALSessionPetriReact
           graphTitle={'UI Flowlet'}
           height={'200px'}

@@ -14,7 +14,7 @@ import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
-import { ALFlowletDataType } from "./ALFlowletManager";
+import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
@@ -63,7 +63,7 @@ export type ALChannelSurfaceEvent = Readonly<{
 }>;
 
 type DataType = ALFlowletDataType;
-type FlowletType = Flowlet<DataType>;
+type FlowletType = IALFlowlet;
 type ALChannelEventType = ALChannelSurfaceEvent;
 type ALChannel = Channel<ALChannelEventType>;
 
