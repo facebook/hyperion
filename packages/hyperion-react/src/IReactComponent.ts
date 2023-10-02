@@ -59,6 +59,8 @@ class ReactClassComponentShadowPrototype<PropsType> extends ShadowPrototype<Reac
 
   componentDidCatch = interceptMethod('componentDidCatch', this);
 
+  setState = interceptMethod('setState', this);
+
   constructor(
     component: Class<ReactClassComponent<PropsType>> & { displayName?: string },
     classComponentParentClass: ReactClassComponent<PropsType>,
@@ -110,6 +112,14 @@ export type InitOptions = Types.Options<
     };
     IReactModule: IReact.IReactModuleExports;
     IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
+
+    enableInterceptClassComponentConstructor?: boolean;
+    enableInterceptClassComponentMethods?: boolean;
+    enableInterceptFunctionComponentRender?: boolean;
+
+    enableInterceptDomElement?: boolean;
+    enableInterceptComponentElement?: boolean;
+    enableInterceptSpecialElement?: boolean;
   }
 >;
 
@@ -134,11 +144,14 @@ export function init(options: InitOptions): void {
     component: Class<TReactClassComponent>,
     classComponentParentClass: TReactClassComponent,
   ): Class<TReactClassComponent> {
+    if (!options.enableInterceptClassComponentMethods && !options.enableInterceptClassComponentConstructor) {
+      return component;
+    }
     // For class components, we just need to intercept them once
-    // if (interceptionInfo.has(component)) {
-    //   return component;
-    // }
-    // interceptionInfo.set(component, null);
+    if (interceptionInfo.has(component)) {
+      return component;
+    }
+    interceptionInfo.set(component, null);
 
     let info = interceptionInfo.get(classComponentParentClass);
     if (!info) {
@@ -149,12 +162,15 @@ export function init(options: InitOptions): void {
       interceptionInfo.set(classComponentParentClass, info);
       onReactClassComponentIntercept.call(info);
     }
-    return info.ctor.interceptor;
 
-    // return component;
+    return options.enableInterceptClassComponentConstructor ? info.ctor.interceptor : component;
   }
 
   function processReactFunctionComponent(functionComponent: TReactFunctionComponent): TReactFunctionComponent {
+    if (!options.enableInterceptFunctionComponentRender) {
+      return functionComponent;
+    }
+
     /**
      * For functional components, we should always replace them with the
      * intercepted version of them.
@@ -180,89 +196,105 @@ export function init(options: InitOptions): void {
     void,
     mixed
   >({
-    domElement: (component, props) => {
-      onReactDOMElement.call(component, props);
-    },
-
-    component: (component, props) => {
-      let interceptedComponent: mixed = component;
-      /**
-       * This is a react component, and can be a class component constructor
-       * or functional component.
-       *
-       * Note that react itself has no types, and flow compiler has some built-in
-       * hard coded types just to be able to handle react types.
-       * (see all the React$* types in react.js)
-       * So, sadly the code bellow effectively cannot rely on types much.
-       * 
-       * We need to check for two conditions:
-       * 1- the component is a class constructor and it inherits from ReactModule.Component
-       *    or something that has a .render() function. 
-       * 2- the component is a normal function, i.e. the .prototype is a plain object with just one .constructor in it.
-         *  That means the __proto__ of this object is an empty object (i.e. the __proto__ of that object is null)
-         *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/prototype#:~:text=prototype%20property%2C%20by%20default
-       */
-
-      // $FlowIgnore[prop-missing]
-      const classComponentParentClass = component.prototype;
-
-      if (
-        classComponentParentClass instanceof ReactModule.Component ||
-        typeof classComponentParentClass?.render === 'function' || // possibly created via React.createClass
-        Object.getPrototypeOf(Object.getPrototypeOf(classComponentParentClass)) || // not a plain function, may be with some other lifecycle methods. 
-        classComponentParentClass === ReactModule.Component.prototype // in case buggy code didn't properly inherit from ReactModule.Component
-      ) {
-        // $FlowIgnore[incompatible-exact]
-        // $FlowIgnore[incompatible-type]
-        // $FlowIgnore[incompatible-type-arg]
-        // @ts-ignore
-        const classComponent: Class<TReactClassComponent> = component;
-        interceptedComponent = processReactClassComponent(
-          classComponent,
-          // $FlowIgnore[incompatible-exact]
-          // $FlowIgnore[incompatible-call]
-          classComponentParentClass,
-        );
-        onReactClassComponentElement.call(classComponent, props);
-      } else {
-        // $FlowIgnore[incompatible-use]
-        // $FlowIgnore[prop-missing]
-        // @ts-ignore
-        const functionalComponent: TReactFunctionComponent = component;
-        interceptedComponent =
-          processReactFunctionComponent(functionalComponent);
-        onReactFunctionComponentElement.call(functionalComponent, props);
+    domElement: options.enableInterceptDomElement
+      ? (component, props) => {
+        onReactDOMElement.call(component, props);
       }
-      return interceptedComponent;
-    },
+      : void 0,
 
-    forwardRef: (component, props) => {
-      if (component.render && typeof component.render === 'function') {
-        // $FlowIgnore[incompatible-type] // https://fb.workplace.com/groups/flow/permalink/9565274296854433/
-        // @ts-ignore
-        component.render = processReactFunctionComponent(component.render);
-      }
-      onReactSpecialObjectElement.call(component, props);
-    },
+    component:
+      options.enableInterceptComponentElement
+        || options.enableInterceptFunctionComponentRender
+        || options.enableInterceptClassComponentMethods
+        || options.enableInterceptClassComponentConstructor
+        ? (component, props) => {
+          let interceptedComponent: mixed = component;
+          /**
+           * This is a react component, and can be a class component constructor
+           * or functional component.
+           *
+           * Note that react itself has no types, and flow compiler has some built-in
+           * hard coded types just to be able to handle react types.
+           * (see all the React$* types in react.js)
+           * So, sadly the code bellow effectively cannot rely on types much.
+           * 
+           * We need to check for two conditions:
+           * 1- the component is a class constructor and it inherits from ReactModule.Component
+           *    or something that has a .render() function. 
+           * 2- the component is a normal function, i.e. the .prototype is a plain object with just one .constructor in it.
+             *  That means the __proto__ of this object is an empty object (i.e. the __proto__ of that object is null)
+             *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/prototype#:~:text=prototype%20property%2C%20by%20default
+           */
 
-    memo: (component, _props) => {
-      if (typeof component.type === 'object') {
-        const comp = component.type;
-        if (comp.render && typeof comp.render === 'function') {
+          // $FlowIgnore[prop-missing]
+          const classComponentParentClass = component.prototype;
+
+          if (
+            classComponentParentClass instanceof ReactModule.Component ||
+            typeof classComponentParentClass?.render === 'function' || // possibly created via React.createClass
+            Object.getPrototypeOf(Object.getPrototypeOf(classComponentParentClass)) || // not a plain function, may be with some other lifecycle methods. 
+            classComponentParentClass === ReactModule.Component.prototype // in case buggy code didn't properly inherit from ReactModule.Component
+          ) {
+            // $FlowIgnore[incompatible-exact]
+            // $FlowIgnore[incompatible-type]
+            // $FlowIgnore[incompatible-type-arg]
+            // @ts-ignore
+            const classComponent: Class<TReactClassComponent> = component;
+            interceptedComponent = processReactClassComponent(
+              classComponent,
+              // $FlowIgnore[incompatible-exact]
+              // $FlowIgnore[incompatible-call]
+              classComponentParentClass,
+            );
+            onReactClassComponentElement.call(classComponent, props);
+          } else {
+            // $FlowIgnore[incompatible-use]
+            // $FlowIgnore[prop-missing]
+            // @ts-ignore
+            const functionalComponent: TReactFunctionComponent = component;
+            interceptedComponent =
+              processReactFunctionComponent(functionalComponent);
+            onReactFunctionComponentElement.call(functionalComponent, props);
+          }
+          return interceptedComponent;
+        }
+        : void 0,
+
+    forwardRef: options.enableInterceptSpecialElement
+      ? (component, props) => {
+        if (component.render && typeof component.render === 'function') {
           // $FlowIgnore[incompatible-type] // https://fb.workplace.com/groups/flow/permalink/9565274296854433/
           // @ts-ignore
-          comp.render = processReactFunctionComponent(comp.render);
+          component.render = processReactFunctionComponent(component.render);
+        }
+        onReactSpecialObjectElement.call(component, props);
+      }
+      : void 0,
+
+    memo: options.enableInterceptSpecialElement
+      ? (component, _props) => {
+        if (typeof component.type === 'object') {
+          const comp = component.type;
+          if (comp.render && typeof comp.render === 'function') {
+            // $FlowIgnore[incompatible-type] // https://fb.workplace.com/groups/flow/permalink/9565274296854433/
+            // @ts-ignore
+            comp.render = processReactFunctionComponent(comp.render);
+          }
         }
       }
-    },
+      : void 0,
 
-    provider: (component, props) => {
-      onReactSpecialObjectElement.call(component, props);
-    },
+    provider: options.enableInterceptSpecialElement
+      ? (component, props) => {
+        onReactSpecialObjectElement.call(component, props);
+      }
+      : void 0,
 
-    context: (component, props) => {
-      onReactSpecialObjectElement.call(component, props);
-    },
+    context: options.enableInterceptSpecialElement
+      ? (component, props) => {
+        onReactSpecialObjectElement.call(component, props);
+      }
+      : void 0,
   });
 
   function interceptArgs(

@@ -19,7 +19,7 @@ class ClassCompWithSurface extends React.Component<{}>{
   }
   render(): React.ReactNode {
     if (ALSurfaceContext) {
-      const outterFlowlet = FlowletManager.top();
+      const outerFlowlet = FlowletManager.top();
       return <ALSurfaceContext.Consumer>
         {value => {
           const surface = value.surface;
@@ -30,7 +30,7 @@ class ClassCompWithSurface extends React.Component<{}>{
             <tr><th>Surface</th><td>{surface}</td></tr>
             <tr><th>Surface Flowlet: </th><td>{surfaceFlowlet?.getFullName()}</td></tr>
             <tr><th>Inner Render Flowlet: </th><td>{flowlet?.getFullName()}</td></tr>
-            <tr><th>Outter Render Flowlet: </th><td>{outterFlowlet?.getFullName()}</td></tr>
+            <tr><th>Outer Render Flowlet: </th><td>{outerFlowlet?.getFullName()}</td></tr>
           </tbody></table>;
           this.foo();
           FlowletManager.pop(newFlowlet);
