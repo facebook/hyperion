@@ -92,8 +92,9 @@ export function init(options: InitOptions): boolean {
   // Enumerating the cases where we need react interception and visitors
   if (
     options.enableReactComponentVisitors ||
-    !options.surface.disableReactDomPropsExtension ||
-    !options.triggerFlowlet?.disableReactFlowlet
+    (!options.surface.disableReactDomPropsExtension && options.react.enableInterceptDomElement) ||
+    (options.triggerFlowlet && options.react.enableInterceptClassComponentMethods) ||
+    (!options.triggerFlowlet?.disableReactFlowlet && (options.react.enableInterceptFunctionComponentRender || options.react.enableInterceptClassComponentConstructor))
   ) {
     IReactComponent.init(options.react);
   }
