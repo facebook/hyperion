@@ -165,6 +165,16 @@ export function init(options: InitOptions) {
     return value;
   });
 
+  IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
+    const setState = shadowComponent.setState;
+    if (!setState.testAndSet('isTriggerFlowletSetup')) {
+      setState.onArgsObserverAdd(() => {
+        const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+        setSurfaceTriggerFlowlet(null, triggerFlowlet);
+      });
+    }
+  });
+
   if (options.disableReactFlowlet) return;
   IReactComponent.init(options.react);
 

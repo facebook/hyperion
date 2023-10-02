@@ -34,7 +34,6 @@
     "web-vitals": "^3.4.0"
   },
   "scripts": {
-    "test": "",
     "start": "vite",
     "build": "tsc && vite build",
     "serve": "vite preview",
