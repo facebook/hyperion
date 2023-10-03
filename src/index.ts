@@ -42,6 +42,7 @@ export { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 // hyperionFlowletCore
 export { Flowlet, onFlowletInit } from "@hyperion/hyperion-flowlet/src/Flowlet";
 export { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
+export { getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 
 // hyperionFlowlet
 export { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
