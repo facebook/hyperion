@@ -20,21 +20,36 @@ export interface ALFlowletDataType extends FlowletDataType {
 
 export interface IALFlowlet<DataType extends ALFlowletDataType = ALFlowletDataType> extends Flowlet<DataType> { }
 
-function flowletToJSON(flowlet?: Flowlet) {
-  return flowlet ? { id: flowlet.id, name: flowlet.getFullName() } : null;
+interface FlowletJSON {
+  id: number;
+  name: string;
 }
+
+export interface ALFlowletJSON extends FlowletJSON {
+  data: {
+    surface?: string;
+    uiEventFlowlet: FlowletJSON | null | undefined;
+    triggerFlowlet: FlowletJSON | null | undefined;
+  },
+};
+
+function flowletToJSON(flowlet: Flowlet): FlowletJSON {
+  return { id: flowlet.id, name: flowlet.getFullName() };
+}
+
+
 export class ALFlowlet<DataType extends ALFlowletDataType = ALFlowletDataType>
   extends Flowlet<DataType>
   implements IALFlowlet<DataType>
 {
 
-  toJSON() {
+  toJSON(): ALFlowletJSON {
     return {
       ...flowletToJSON(this),
       data: {
         surface: this.data.surface,
-        uiEventFlowlet: flowletToJSON(this.data.uiEventFlowlet),
-        triggerFlowletN: flowletToJSON(this.data.triggerFlowlet),
+        uiEventFlowlet: this.data.uiEventFlowlet && flowletToJSON(this.data.uiEventFlowlet),
+        triggerFlowlet: this.data.triggerFlowlet && flowletToJSON(this.data.triggerFlowlet),
       },
     };
   }
