@@ -44,24 +44,24 @@ export function init(options: InitOptions) {
   const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
   const activeRootFlowlets = new Set<IALFlowlet>();
 
-  function setSurfaceTriggerFlowlet(surface: string | null, triggerFlowlet: TriggerFlowlet | null | undefined): void {
+  function setSurfaceTriggerFlowlet(_surface: string | null, triggerFlowlet: TriggerFlowlet | null | undefined): void {
     if (!triggerFlowlet) {
       return; // nothing to do
     }
 
-    if (!surface) {
-      // We don't know the actual surface (options are off!) update everything
-      for (const root of activeRootFlowlets) {
-        root.data.triggerFlowlet = triggerFlowlet;
-      }
-      return;
+    // We don't know the actual surface (options are off!) update everything
+    for (const root of activeRootFlowlets) {
+      root.data.triggerFlowlet = triggerFlowlet;
     }
 
-    // The following may not happen until react interception and flowlets actually are enabled. 
-    const surfaceFlowlet = ALSurfaceContextDataMap.get(surface);
-    if (surfaceFlowlet) {
-      surfaceFlowlet.data.triggerFlowlet = triggerFlowlet;
-    }
+    // Temporarily disable this until we can re-enable react-flowlet logic bellow
+    // if (surface) {
+    //   // The following may not happen until react interception and flowlets actually are enabled. 
+    //   const surfaceFlowlet = ALSurfaceContextDataMap.get(surface);
+    //   if (surfaceFlowlet) {
+    //     surfaceFlowlet.data.triggerFlowlet = triggerFlowlet;
+    //   }
+    // }
 
   }
 
@@ -145,26 +145,6 @@ export function init(options: InitOptions) {
     });
   });
 
-  IReactModule.useState.onValueMapperAdd(value => {
-    value[1] = flowletManager.wrap(value[1], IReactModule.useState.name);
-    const setterInterceptor = getFunctionInterceptor(value[1]);
-    setterInterceptor?.onArgsObserverAdd(() => {
-      /**
-       * when someone calls the setter, before anything happens we pickup the
-       * trigger flowlet from the top of the stack. 
-       * Then we assign this trigger flowlet to all surfcce flowlet roots so that
-       * any other method that is called during rending of the components can see the trigger.
-       * 
-       * Since the wrapped setter will call .push() after args observer is called,
-       * we can still access .top() of the caller.
-       */
-      const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-      setSurfaceTriggerFlowlet(null, triggerFlowlet);
-    });
-
-    return value;
-  });
-
   IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
     const setState = shadowComponent.setState;
     if (!setState.testAndSet('isTriggerFlowletSetup')) {
@@ -180,12 +160,12 @@ export function init(options: InitOptions) {
 
 
   /**
- * The following interceptor methods (onArgsObserver/onValueObserver) run immediately 
- * before & after intercepted method. So, we can push before and pop after so that
- * the body of the method has access to flowlet.
- * For class components, we store the flowlet in the `this` object.
- * For function components, we have to keep that value and close on it (we could use useRef)
- */
+  * The following interceptor methods (onArgsObserver/onValueObserver) run immediately 
+  * before & after intercepted method. So, we can push before and pop after so that
+  * the body of the method has access to flowlet.
+  * For class components, we store the flowlet in the `this` object.
+  * For function components, we have to keep that value and close on it (we could use useRef)
+  */
 
   const IS_FLOWLET_SETUP_PROP = 'isFlowletSetup';
 
