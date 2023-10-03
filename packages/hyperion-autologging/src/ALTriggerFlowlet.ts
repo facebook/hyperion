@@ -97,10 +97,14 @@ export function init(options: InitOptions) {
   [
     IReactModule.useCallback,
   ].forEach(fi => {
-    fi.onArgsMapperAdd(args => {
-      args[0] = flowletManager.wrap(args[0], fi.name);
-      return args;
+    // fi.onArgsMapperAdd(args => {
+    //   args[0] = flowletManager.wrap(args[0], fi.name);
+    //   return args;
+    // });
+    fi.onValueMapperAdd(value => {
+      return flowletManager.wrap(value, fi.name);
     });
+
   });
 
   [

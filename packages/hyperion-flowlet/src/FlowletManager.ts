@@ -143,12 +143,13 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       return listener;
     }
 
-    const flowlet = customFlowlet ?? new this.flowletCtor(apiName, this.top());
     const funcInterceptor = interceptEventListener(listener);
     if (funcInterceptor && !funcInterceptor.testAndSet(IS_FLOWLET_SETUP_PROP_NAME)) {
+
+      const flowlet = customFlowlet ?? new this.flowletCtor(apiName, this.top());
       if (!getTriggerFlowlet) {
         /**
-         * we are not going to pickup an actual trigger later, which means what ever triggered
+         * we are not going to pickup an actual trigger later, which means whatever triggered
          * the current code that is passing the callback, is the trigger inside of that callback
          * going forward. So, we make a copy of it case the original trigger is replaced with a new one
          */
@@ -157,6 +158,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
           flowlet.data.triggerFlowlet = currTriggerFlowlet;
         }
       }
+
       const flowletManager = this;
 
       // Should we use onArgsAndValueMapper instead of setCustom, although this is safer with the finally call.
@@ -165,6 +167,9 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
         const triggerFlowlet = getTriggerFlowlet?.apply(this, <any>arguments);
         if (triggerFlowlet) {
           flowlet.data.triggerFlowlet = triggerFlowlet;
+        } else {
+          // Lets delete the existing value to enaure we don't carry it from the previous invocation
+          delete flowlet.data.triggerFlowlet;
         }
 
         if (flowletManager.top() === flowlet) {
