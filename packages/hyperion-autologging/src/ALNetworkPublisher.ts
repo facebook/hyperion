@@ -28,6 +28,7 @@ type ALNetworkEvent = ALLoggableEvent & ALOptionalFlowletEvent & Readonly<{
 type RequestInfo = {
   method: string;
   url: string;
+  uri: URL;
   body?: RequestInit['body'],
 }
 export type ALNetworkRequestEvent = ALNetworkEvent & Readonly<RequestInfo>;
@@ -72,9 +73,12 @@ export type InitOptions = Types.Options<
      * If passed, it will enable the app to mark any desired request with
      * extra information (e.g. flowlet)
      */
-    requestUrlMarker?: (request: RequestInfo, params: URLSearchParams) => void;
+    requestUrlMarker?: (request: Omit<RequestInfo, 'uri'>, params: URLSearchParams) => void;
   }
 >;
+function parseToURL(url: string): URL {
+  return new URL(url, "http://undefined");
+}
 
 function urlAppendParam(url: string, params: URLSearchParams): string {
   // Note that it is not easy to use URL since we don't quite know the base of relative urls
@@ -92,18 +96,21 @@ export function getFetchRequestInfo(...args: Parameters<Window['fetch']>): Reque
       body: init?.body,
       method: init?.method ?? "GET",
       url: input,
+      uri: parseToURL(input),
     };
   } else if (input instanceof Request) {
     request = {
       body: input.body,
       method: input.method,
       url: input.url,
+      uri: parseToURL(input.url),
     };
 
   } else {
     request = {
       method: "GET",
       url: input.href,
+      uri: input,
     };
   }
   return request;
@@ -175,7 +182,7 @@ function captureFetch(options: InitOptions): void {
     }
 
     const parentTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-    const triggerFlowlet = new flowletManager.flowletCtor(`fetch(method:${request.method},url:${request.url})`, parentTriggerFlowlet);
+    const triggerFlowlet = new flowletManager.flowletCtor(`fetch(method:${request.method},url:${request.uri.pathname})`, parentTriggerFlowlet);
 
     return value => {
       setTriggerFlowlet(value, triggerFlowlet); // This will be picked by the wrappers of Promis.* callbacks.
@@ -241,14 +248,25 @@ function captureXHR(options: InitOptions): void {
   }
 
   IXMLHttpRequest.open.onArgsObserverAdd(function (this, method, url) {
+    const request: RequestInfo = typeof url === 'string'
+      ? {
+        method,
+        url,
+        uri: parseToURL(url)
+      }
+      : {
+        method,
+        url: url.href,
+        uri: url
+      };
     intercept.setVirtualPropertyValue<RequestInfo>(
       this,
       REQUEST_INFO_PROP_NAME,
-      { method, url: typeof url === 'string' ? url : url.href }
+      request,
     );
 
     const parentTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-    const triggerFlowlet = new flowletManager.flowletCtor(`xhr(method:${method},url:${url})`, parentTriggerFlowlet);
+    const triggerFlowlet = new flowletManager.flowletCtor(`xhr(method:${method},url:${request.uri.pathname})`, parentTriggerFlowlet);
     setTriggerFlowlet(this, triggerFlowlet);
   });
 
