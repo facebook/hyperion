@@ -87,7 +87,8 @@ export function init() {
       IJsxRuntimeModule,
     },
     surface: {
-      channel
+      channel,
+      disableReactDomPropsExtension: true // repro what's happening in ads manager. This is always true unless user pass am_al_react_extend_dom_props
     },
     elementText: {
       updateText(elementText: ExtendedElementText, domSource) {

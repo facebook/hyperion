@@ -284,19 +284,14 @@ export function init(options: InitOptions): ALSurfaceHOC {
     }
 
     ReactModule.useLayoutEffect(() => {
-      nodeRef && console.log('danika in useEffect', {nodeRef, current: nodeRef.current})
-      nodeRef && nodeRef.current?.setAttribute(domAttributeName, domAttributeValue);
-      console.log('danika in useEffect after', {nodeRef, x: nodeRef?.current?.getAttributeNames()});
-      // ref.current is only not null after subsequent render. This is because ref.current will only get initialized when the <div/> has mounted. I think the Surface wrapper mounts first.
-      });
+      const nodeRefCurrent = props.nodeRef?.current;
 
-      const {nodeRef} = props;
-    nodeRef && console.log('danika', {nodeRef, current: nodeRef.current})
-    if(nodeRef?.current != null){
-      // we never hit here
-      nodeRef.current?.setAttribute(domAttributeName, domAttributeValue);
-      console.log('danika after', {nodeRef, x: nodeRef.current.getAttributeNames()});
-    }
+      if (nodeRefCurrent == null) {
+        return;
+      }
+      nodeRefCurrent.setAttribute(domAttributeName, domAttributeValue);
+    }, [props.nodeRef]);
+
 
     flowlet.data.surface = surfacePath;
     let children = props.children;
@@ -304,7 +299,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     if (!options.disableReactDomPropsExtension) {
       const foundDomElement = propagateFlowletDown(props.children, surfaceData);
 
-      if (foundDomElement !== true) {
+      if (foundDomElement !== true && props.nodeRef == null) {
         /**
          * We could not find a dom node to safely add the attribute to it.
          *
@@ -320,18 +315,18 @@ export function init(options: InitOptions): ALSurfaceHOC {
           "span",
           {
             "data-surface-wrapper": "1",
-            style: { display: 'contents' }
+            style: { display: 'contents', backgroundColor: 'pink' },
           },
           props.children
         );
         propagateFlowletDown(children, surfaceData);
       }
-    } else {
+    } else if (props.nodeRef == null) {
       children = ReactModule.createElement(
         "span",
         {
           "data-surface-wrapper": "1",
-          style: { display: 'contents' },
+          style: { display: 'contents', backgroundColor: 'pink' },
           [domAttributeName]: domAttributeValue,
         },
         props.children
