@@ -12,7 +12,7 @@ import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import { ALSurfaceContext, useALSurfaceContext } from "./ALSurfaceContext";
 
-export type InitOptions<> = Types.Options<
+export type InitOptions = Types.Options<
   {
     react: IReactComponent.InitOptions & {
       ReactModule: {
@@ -55,7 +55,7 @@ export function init(options: InitOptions) {
   });
 
   /**
- * The following interceptor methods (onArgsObserver/onValueObserver) run immediately 
+ * The following interceptor methods (onArgsObserver/onValueObserver) run immediately
  * before & after intercepted method. So, we can push before and pop after so that
  * the body of the method has access to flowlet.
  * For class components, we store the flowlet in the `this` object.
@@ -143,5 +143,3 @@ export function init(options: InitOptions) {
   );
 
 }
-
-
