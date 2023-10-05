@@ -32,7 +32,7 @@ export enum ALSurfaceCapability {
   TrackInteraction = 1 << 0, // Mark all interaction events with this surface
   TrackMutation = 1 << 1, // report mount/unmount of this surface
   // TrackVisibility = 1 << 2, // track when mounted surface's visibility changes
-  // TrackBoundingRect = 1 << 3, // Report the size of the bounding rect of the surface on the screen.  
+  // TrackBoundingRect = 1 << 3, // Report the size of the bounding rect of the surface on the screen.
 }
 
 const AllSurfaceCapabilityValues = [
@@ -51,7 +51,8 @@ function surfaceCapabilityToString(capability?: ALSurfaceCapability): string {
 export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
-  capability?: ALSurfaceCapability, // a one-hot encoding what the surface can do. 
+  capability?: ALSurfaceCapability, // a one-hot encoding what the surface can do.
+  nodeRef?: React.MutableRefObject<HTMLElement | null | undefined>,
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
@@ -236,7 +237,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     if (!proxiedContext) {
       const surface = flowlet.name;
       nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
-      const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled! 
+      const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled!
       if (!trackInteraction) {
         surfacePath = parentSurface ?? SURFACE_SEPARATOR;
         domAttributeName = domNonInteractiveSurfaceAttributeName;
@@ -280,6 +281,21 @@ export function init(options: InitOptions): ALSurfaceHOC {
           channel.emit('al_surface_unmount', event);
         }
       }, [domAttributeName, domAttributeValue]);
+    }
+
+    ReactModule.useLayoutEffect(() => {
+      nodeRef && console.log('danika in useEffect', {nodeRef, current: nodeRef.current})
+      nodeRef && nodeRef.current?.setAttribute(domAttributeName, domAttributeValue);
+      console.log('danika in useEffect after', {nodeRef, x: nodeRef?.current?.getAttributeNames()});
+      // ref.current is only not null after subsequent render. This is because ref.current will only get initialized when the <div/> has mounted. I think the Surface wrapper mounts first.
+      });
+
+      const {nodeRef} = props;
+    nodeRef && console.log('danika', {nodeRef, current: nodeRef.current})
+    if(nodeRef?.current != null){
+      // we never hit here
+      nodeRef.current?.setAttribute(domAttributeName, domAttributeValue);
+      console.log('danika after', {nodeRef, x: nodeRef.current.getAttributeNames()});
     }
 
     flowlet.data.surface = surfacePath;
