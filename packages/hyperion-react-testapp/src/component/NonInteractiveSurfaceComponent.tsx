@@ -11,10 +11,12 @@ export default function (_props: {}): React.ReactElement {
   console.log('Root render');
   const [count, setCount] = useState(0);
   const refR2 = useRef(null)
+  const EMPTY_REF = {current: null};
+
   return (
     <SurfaceComp surface='S1'>
       <div>S1</div>
-      <SurfaceComp surface='R1' capability={ALSurfaceCapability.TrackMutation}>
+      <SurfaceComp surface='R1' capability={ALSurfaceCapability.TrackMutation} nodeRef={EMPTY_REF}>
         <div>R1</div>
         <SurfaceComp surface='S2'>
           <div>/S1/S2</div>

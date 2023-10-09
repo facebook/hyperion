@@ -315,7 +315,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
           "span",
           {
             "data-surface-wrapper": "1",
-            style: { display: 'contents', backgroundColor: 'pink' },
+            style: { display: 'contents', },
           },
           props.children
         );
@@ -326,7 +326,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         "span",
         {
           "data-surface-wrapper": "1",
-          style: { display: 'contents', backgroundColor: 'pink' },
+          style: { display: 'contents', },
           [domAttributeName]: domAttributeValue,
         },
         props.children
