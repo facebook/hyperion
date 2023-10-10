@@ -87,7 +87,7 @@ export function init() {
       IJsxRuntimeModule,
     },
     surface: {
-      channel,
+      channel
     },
     elementText: {
       updateText(elementText: ExtendedElementText, domSource) {
