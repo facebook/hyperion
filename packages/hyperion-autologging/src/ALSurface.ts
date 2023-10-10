@@ -271,6 +271,13 @@ export function init(options: InitOptions): ALSurfaceHOC {
       metadata.surface_capability = surfaceCapabilityToString(props.capability);
 
       ReactModule.useLayoutEffect(() => {
+        const nodeRef = props.nodeRef;
+        const nodeRefCurrent = nodeRef?.current;
+        if(nodeRef != null && nodeRefCurrent == null){
+          return;
+        }
+        nodeRefCurrent != null && nodeRefCurrent.setAttribute(domAttributeName, domAttributeValue);
+
         const event: ALChannelSurfaceEventData = {
           surface: domAttributeValue,
           metadata,
@@ -283,54 +290,46 @@ export function init(options: InitOptions): ALSurfaceHOC {
       }, [domAttributeName, domAttributeValue]);
     }
 
-    ReactModule.useLayoutEffect(() => {
-      const nodeRefCurrent = props.nodeRef?.current;
-
-      if (nodeRefCurrent == null) {
-        return;
-      }
-      nodeRefCurrent.setAttribute(domAttributeName, domAttributeValue);
-    }, [props.nodeRef]);
-
 
     flowlet.data.surface = surfacePath;
     let children = props.children;
+    if (props.nodeRef == null){
+      if (!options.disableReactDomPropsExtension) {
+        const foundDomElement = propagateFlowletDown(props.children, surfaceData);
 
-    if (!options.disableReactDomPropsExtension) {
-      const foundDomElement = propagateFlowletDown(props.children, surfaceData);
-
-      if (foundDomElement !== true && props.nodeRef == null) {
-        /**
-         * We could not find a dom node to safely add the attribute to it.
-         *
-         * We wrap the content in a dom node ourselves. Note that this will trigger
-         * all the right logic and automatically add the attributes for us, and
-         * this time we should succeed propagating surface/flowlet down.
-         * This option works in almost all cases, but later we add an option to
-         * the surface to prevent this option and fall back to the more expensive
-         * algorithm as before (will add later)
-         *
-         */
+        if (foundDomElement !== true) {
+          /**
+           * We could not find a dom node to safely add the attribute to it.
+           *
+           * We wrap the content in a dom node ourselves. Note that this will trigger
+           * all the right logic and automatically add the attributes for us, and
+           * this time we should succeed propagating surface/flowlet down.
+           * This option works in almost all cases, but later we add an option to
+           * the surface to prevent this option and fall back to the more expensive
+           * algorithm as before (will add later)
+           *
+           */
+          children = ReactModule.createElement(
+            "span",
+            {
+              "data-surface-wrapper": "1",
+              style: { display: 'contents', },
+            },
+            props.children
+          );
+          propagateFlowletDown(children, surfaceData);
+        }
+      } else{
         children = ReactModule.createElement(
           "span",
           {
             "data-surface-wrapper": "1",
             style: { display: 'contents', },
+            [domAttributeName]: domAttributeValue,
           },
           props.children
         );
-        propagateFlowletDown(children, surfaceData);
       }
-    } else if (props.nodeRef == null) {
-      children = ReactModule.createElement(
-        "span",
-        {
-          "data-surface-wrapper": "1",
-          style: { display: 'contents', },
-          [domAttributeName]: domAttributeValue,
-        },
-        props.children
-      );
     }
 
     // We want to override the intercepted values
