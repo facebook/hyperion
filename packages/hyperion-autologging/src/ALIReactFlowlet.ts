@@ -12,7 +12,7 @@ import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 import { ALSurfaceContext, useALSurfaceContext } from "./ALSurfaceContext";
 
-export type InitOptions = Types.Options<
+export type InitOptions<> = Types.Options<
   {
     react: IReactComponent.InitOptions & {
       ReactModule: {
