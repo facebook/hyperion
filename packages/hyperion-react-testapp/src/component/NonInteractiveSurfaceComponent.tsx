@@ -17,7 +17,7 @@ export default function (_props: {}): React.ReactElement {
     <SurfaceComp surface='S1'>
       <div>S1</div>
       <SurfaceComp surface='R1' capability={ALSurfaceCapability.TrackMutation} nodeRef={EMPTY_REF}>
-        <div>R1</div>
+        <div>R1 (will not be tracked)</div>
         <SurfaceComp surface='S2'>
           <div>/S1/S2</div>
           <SurfaceComp surface='R2' capability={ALSurfaceCapability.TrackMutation} nodeRef={refR2}>
