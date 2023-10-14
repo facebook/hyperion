@@ -97,6 +97,10 @@ export function init(options: InitOptions) {
   [
     IReactModule.useCallback,
   ].forEach(fi => {
+    /**
+     * useCallback will recieve a new callback function each time, but may return a previous
+     * one. So, it might be more efficient to only focus on the return value.
+     */
     // fi.onArgsMapperAdd(args => {
     //   args[0] = flowletManager.wrap(args[0], fi.name);
     //   return args;
