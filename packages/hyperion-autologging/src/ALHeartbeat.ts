@@ -16,6 +16,7 @@ export enum ALHeartbeatType {
   REGAIN_PAGE_VISIBILITY = "REGAIN_PAGE_VISIBILITY",
   SCHEDULED = "SCHEDULED",
   START = "START",
+  STOP = "STOP",
 }
 
 export type AdsALHeartbeatEventData = Readonly<
@@ -106,6 +107,11 @@ export function start(options: InitOptions): void {
   }
   _logHeartbeat(ALHeartbeatType.START);
   _scheduleNextHeartbeat();
+
+  window.addEventListener('beforeunload', () => {
+    // Just in case there are other cleanup work, wait one micro-task and send last heartbeat
+    Promise.resolve().then(stop);
+  });
 }
 
 export function stop(): void {
@@ -117,6 +123,7 @@ export function stop(): void {
     _timedLogger = null;
   }
   _releaseListeners?.();
+  _logHeartbeat(ALHeartbeatType.STOP);
 }
 
 function _logHeartbeat(heartbeatType: ALHeartbeatType): void {
