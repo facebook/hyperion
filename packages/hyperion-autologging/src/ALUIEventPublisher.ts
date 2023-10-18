@@ -6,11 +6,12 @@
 import { Channel } from "@hyperion/hook/src/Channel";
 import { intercept } from "@hyperion/hyperion-core/src/intercept";
 import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
+import { setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
-import { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
+import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, getElementTextEvent, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
@@ -108,7 +109,7 @@ type CommonEventData = (ALUIEvent & ALTimedEvent) & {
  */
 const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
 
-const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], ALFlowlet>();
+const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], IALFlowlet>();
 
 const uiEventFlowletManager = new ALFlowletManager();
 
@@ -217,14 +218,16 @@ export function publish(options: InitOptions): void {
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
         flowlet,
+        triggerFlowlet: flowlet,
         surface,
         ...elementText,
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
       };
-      channel.emit('al_ui_event_capture', eventData);
       updateLastUIEvent(eventData);
-      intercept(event);
+      intercept(event); // making sure we can track changes to the Event object
+      setTriggerFlowlet(event, flowlet);
+      channel.emit('al_ui_event_capture', eventData);
     },
       true, // useCapture
     );
@@ -269,7 +272,7 @@ export function publish(options: InitOptions): void {
           }
         }
 
-        let flowlet: ALFlowlet | undefined;
+        let flowlet: IALFlowlet | undefined;
         if (shouldPushPopFlowlet(event) && (flowlet = activeUIEventFlowlets.get(eventName)) != null) {
           flowletManager.pop(flowlet);
           activeUIEventFlowlets.delete(eventName);
@@ -330,5 +333,5 @@ export function publish(options: InitOptions): void {
         flowlet.parent.data.uiEventFlowlet = uiEventFlowlet;
       }
     }
-  })
+  });
 }

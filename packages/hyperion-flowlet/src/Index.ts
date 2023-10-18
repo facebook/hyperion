@@ -11,6 +11,7 @@ import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
 import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 import { FlowletManager } from "./FlowletManager";
+import { getTriggerFlowlet, setTriggerFlowlet } from "./TriggerFlowlet";
 
 const initialized = new TestAndSet();
 
@@ -161,19 +162,37 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     })
   }
 
-  IPromise.then.onArgsMapperAdd(args => {
-    args[0] = flowletManager.wrap(args[0], IPromise.then.name);
-    args[1] = flowletManager.wrap(args[1], IPromise.then.name);
-    return args;
+  IPromise.then.onArgsAndValueMapperAdd(function (this, args) {
+    const triggerFlowlet = getTriggerFlowlet(this);
+    args[0] = flowletManager.wrap(args[0], IPromise.then.name, void 0, () => triggerFlowlet);
+    args[1] = flowletManager.wrap(args[1], IPromise.then.name, void 0, () => triggerFlowlet);
+    return value => {
+      if (value !== this && triggerFlowlet) {
+        const newTriggerFlowlet = getTriggerFlowlet(value);
+        if (!newTriggerFlowlet) {
+          setTriggerFlowlet(value, triggerFlowlet);
+        }
+      }
+      return value;
+    };
   });
 
-  IPromise.Catch.onArgsMapperAdd(args => {
-    args[0] = flowletManager.wrap(args[0], IPromise.Catch.name);
-    return args;
+  IPromise.Catch.onArgsAndValueMapperAdd(function (this, args) {
+    const triggerFlowlet = getTriggerFlowlet(this);
+    args[0] = flowletManager.wrap(args[0], IPromise.then.name, void 0, () => triggerFlowlet);
+    return value => {
+      if (value !== this && triggerFlowlet) {
+        const newTriggerFlowlet = getTriggerFlowlet(value);
+        if (!newTriggerFlowlet) {
+          setTriggerFlowlet(value, triggerFlowlet);
+        }
+      }
+      return value;
+    };
   });
 
   IEventTarget.addEventListener.onArgsMapperAdd(args => {
-    args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}:${args[0]}`);
+    args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}:${args[0]}`, void 0, (event) => getTriggerFlowlet(event));
     return args;
   });
   IEventTarget.removeEventListener.onArgsMapperAdd(args => {

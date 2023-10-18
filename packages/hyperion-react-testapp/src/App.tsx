@@ -14,8 +14,8 @@ import TextComponent from './component/TextComponent';
 import RecursiveRuncComponent from "./component/RecursiveFuncComponent";
 import { ElementTextTooltip } from "@hyperion/hyperion-autologging-visualizer/src/component/ElementTextTooltip.react";
 import { SyncChannel } from './Channel';
-import { ALSessionGraph } from "@hyperion/hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
 import NonInteractiveSurfaceComponent from './component/NonInteractiveSurfaceComponent';
+import ALEventLogger from './component/ALEventLogger';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -70,10 +70,10 @@ function App() {
 
   return (
     <div className="App">
-      <ALSessionGraph />
-      <label>Select a mode:</label>
-      <select onChange={onChange} value={mode}>
-        {Object.keys(Modes).map(key => <option value={key}>{key}</option>)}
+      <ALEventLogger />
+      <label htmlFor='testSelector'>Select a mode:</label>
+      <select onChange={onChange} value={mode} id='testSelector' aria-label='Mode Selector'>
+        {Object.keys(Modes).map(key => <option key={key} value={key}>{key}</option>)}
       </select>
       {Modes[mode]()}
     </div>

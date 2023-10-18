@@ -7,8 +7,12 @@ import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 import { DOMShadowPrototype } from "./DOMShadowPrototype";
 import { interceptEventHandlerAttribute } from "./EventHandlerAttributeInterceptor";
 import { IEventTargetPrototype } from "./IEventTarget";
+import { interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
+import { IWindowPrototype } from "./IWindow";
 
 export const IXMLHttpRequestPrototype = new DOMShadowPrototype(XMLHttpRequest, IEventTargetPrototype, { sampleObject: new XMLHttpRequest(), registerOnPrototype: true });
+
+export const constructor = interceptConstructorMethod<"XMLHttpRequest", Window, { new(): XMLHttpRequest }>("XMLHttpRequest", IWindowPrototype);
 
 export const open = interceptMethod("open", IXMLHttpRequestPrototype);
 export const send = interceptMethod("send", IXMLHttpRequestPrototype);

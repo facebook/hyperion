@@ -5,10 +5,11 @@
 'use strict';
 
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import { ALFlowlet, ALFlowletManager } from './ALFlowletManager';
+import { IALFlowlet, ALFlowletManager } from './ALFlowletManager';
 
 export type ALFlowletEvent = Readonly<{
-  flowlet: ALFlowlet;
+  flowlet: IALFlowlet;
+  triggerFlowlet: IALFlowlet | null | undefined;
 }>;
 
 export type ALOptionalFlowletEvent = Omit<ALFlowletEvent, 'flowlet'> & Readonly<{

@@ -8,11 +8,11 @@ import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 
 import * as Flowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
-import { ALFlowlet } from "./ALFlowletManager";
+import { IALFlowlet } from "./ALFlowletManager";
 import { ALMetadataEvent } from "./ALType";
 
 export type ALFlowletEventData = ALMetadataEvent & Readonly<{
-  flowlet: ALFlowlet;
+  flowlet: IALFlowlet;
 }>;
 
 export type ALChannelFlowletEvent = Readonly<{

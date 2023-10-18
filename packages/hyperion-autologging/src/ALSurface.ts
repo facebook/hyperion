@@ -14,16 +14,15 @@ import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
-import { ALFlowletDataType } from "./ALFlowletManager";
-import * as ALIReactFlowlet from "./ALIReactFlowlet";
+import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
 
-export type ALChannelSurfaceEventData = ALMetadataEvent & Readonly<{
+export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
   surface: string;
   element?: Element | null;
 }>;
@@ -32,7 +31,7 @@ export enum ALSurfaceCapability {
   TrackInteraction = 1 << 0, // Mark all interaction events with this surface
   TrackMutation = 1 << 1, // report mount/unmount of this surface
   // TrackVisibility = 1 << 2, // track when mounted surface's visibility changes
-  // TrackBoundingRect = 1 << 3, // Report the size of the bounding rect of the surface on the screen.  
+  // TrackBoundingRect = 1 << 3, // Report the size of the bounding rect of the surface on the screen.
 }
 
 const AllSurfaceCapabilityValues = [
@@ -51,7 +50,8 @@ function surfaceCapabilityToString(capability?: ALSurfaceCapability): string {
 export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
-  capability?: ALSurfaceCapability, // a one-hot encoding what the surface can do. 
+  capability?: ALSurfaceCapability, // a one-hot encoding what the surface can do.
+  nodeRef?: React.MutableRefObject<HTMLElement | null | undefined>,
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
@@ -63,7 +63,7 @@ export type ALChannelSurfaceEvent = Readonly<{
 }>;
 
 type DataType = ALFlowletDataType;
-type FlowletType = Flowlet<DataType>;
+type FlowletType = IALFlowlet;
 type ALChannelEventType = ALChannelSurfaceEvent;
 type ALChannel = Channel<ALChannelEventType>;
 
@@ -84,11 +84,11 @@ export type SurfaceComponent = (props:
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
   // IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
-  ALIReactFlowlet.InitOptions &
+  // ALIReactFlowlet.InitOptions &
   ALSurfaceContext.InitOptions &
   SurfaceProxy.InitOptions &
   {
-    react: {
+    react: IReactComponent.InitOptions & {
       ReactModule: {
         createElement: typeof React.createElement;
         useLayoutEffect: typeof React.useLayoutEffect;
@@ -209,8 +209,6 @@ export function init(options: InitOptions): ALSurfaceHOC {
   const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domNonInteractiveSurfaceAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE } = options;
   const { ReactModule } = options.react;
 
-  ALIReactFlowlet.init(options);
-
   setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
 
@@ -236,7 +234,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     if (!proxiedContext) {
       const surface = flowlet.name;
       nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
-      const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled! 
+      const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled!
       if (!trackInteraction) {
         surfacePath = parentSurface ?? SURFACE_SEPARATOR;
         domAttributeName = domNonInteractiveSurfaceAttributeName;
@@ -270,56 +268,74 @@ export function init(options: InitOptions): ALSurfaceHOC {
       metadata.surface_capability = surfaceCapabilityToString(props.capability);
 
       ReactModule.useLayoutEffect(() => {
+        const nodeRef = props.nodeRef;
+        const nodeRefCurrent = nodeRef?.current;
+        if(nodeRef != null && nodeRefCurrent == null){
+          return;
+        }
+        nodeRefCurrent != null && nodeRefCurrent.setAttribute(domAttributeName, domAttributeValue);
+
         const event: ALChannelSurfaceEventData = {
           surface: domAttributeValue,
+          flowlet,
+          triggerFlowlet: flowlet.data.triggerFlowlet,
           metadata,
           element: document.querySelector(`[${domAttributeName}='${domAttributeValue}']`)
         };
         channel.emit('al_surface_mount', event);
         return () => {
-          channel.emit('al_surface_unmount', event);
+          /**
+           * The trigger on the surface or its parent might be updated
+           * so, we should re-read that value again.
+           */
+          channel.emit('al_surface_unmount', {
+            ...event,
+            triggerFlowlet: flowlet.data.triggerFlowlet
+          });
         }
       }, [domAttributeName, domAttributeValue]);
     }
 
+
     flowlet.data.surface = surfacePath;
     let children = props.children;
+    if (props.nodeRef == null){
+      if (!options.disableReactDomPropsExtension) {
+        const foundDomElement = propagateFlowletDown(props.children, surfaceData);
 
-    if (!options.disableReactDomPropsExtension) {
-      const foundDomElement = propagateFlowletDown(props.children, surfaceData);
-
-      if (foundDomElement !== true) {
-        /**
-         * We could not find a dom node to safely add the attribute to it.
-         *
-         * We wrap the content in a dom node ourselves. Note that this will trigger
-         * all the right logic and automatically add the attributes for us, and
-         * this time we should succeed propagating surface/flowlet down.
-         * This option works in almost all cases, but later we add an option to
-         * the surface to prevent this option and fall back to the more expensive
-         * algorithm as before (will add later)
-         *
-         */
+        if (foundDomElement !== true) {
+          /**
+           * We could not find a dom node to safely add the attribute to it.
+           *
+           * We wrap the content in a dom node ourselves. Note that this will trigger
+           * all the right logic and automatically add the attributes for us, and
+           * this time we should succeed propagating surface/flowlet down.
+           * This option works in almost all cases, but later we add an option to
+           * the surface to prevent this option and fall back to the more expensive
+           * algorithm as before (will add later)
+           *
+           */
+          children = ReactModule.createElement(
+            "span",
+            {
+              "data-surface-wrapper": "1",
+              style: { display: 'contents'},
+            },
+            props.children
+          );
+          propagateFlowletDown(children, surfaceData);
+        }
+      } else{
         children = ReactModule.createElement(
           "span",
           {
             "data-surface-wrapper": "1",
-            style: { display: 'contents' }
+            style: { display: 'contents'},
+            [domAttributeName]: domAttributeValue,
           },
           props.children
         );
-        propagateFlowletDown(children, surfaceData);
       }
-    } else {
-      children = ReactModule.createElement(
-        "span",
-        {
-          "data-surface-wrapper": "1",
-          style: { display: 'contents' },
-          [domAttributeName]: domAttributeValue,
-        },
-        props.children
-      );
     }
 
     // We want to override the intercepted values

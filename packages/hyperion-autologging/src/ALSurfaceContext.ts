@@ -6,7 +6,7 @@
 
 import { assert } from '@hyperion/global';
 import type * as React from 'react';
-import { ALFlowlet } from './ALFlowletManager';
+import { IALFlowlet } from './ALFlowletManager';
 import * as Types from "@hyperion/hyperion-util/src/Types";
 
 
@@ -22,7 +22,7 @@ export type InitOptions = Types.Options<{
 export type ALSurfaceContextFilledValue = {
   nonInteractiveSurface: string;
   surface: string;
-  flowlet: ALFlowlet;
+  flowlet: IALFlowlet;
 };
 
 type ALSurfaceContextValue =

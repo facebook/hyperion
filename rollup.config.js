@@ -49,6 +49,7 @@ export default defineConfig({
       "hyperionFlowletCore": [
         "@hyperion/hyperion-flowlet/src/Flowlet",
         "@hyperion/hyperion-flowlet/src/FlowletManager",
+        "@hyperion/hyperion-flowlet/src/TriggerFlowlet",
       ],
       "hyperionFlowlet": [
         "@hyperion/hyperion-flowlet/src/Index",
