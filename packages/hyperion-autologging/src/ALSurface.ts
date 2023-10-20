@@ -100,6 +100,8 @@ export type InitOptions = Types.Options<
     domNonInteractiveSurfaceAttributeName?: string;
     channel: ALChannel;
     disableReactDomPropsExtension?: boolean;
+    // Disables proxying portals with surface.
+    disableSurfaceProxy?: boolean;
   }
 >;
 
@@ -270,7 +272,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       ReactModule.useLayoutEffect(() => {
         const nodeRef = props.nodeRef;
         const nodeRefCurrent = nodeRef?.current;
-        if(nodeRef != null && nodeRefCurrent == null){
+        if (nodeRef != null && nodeRefCurrent == null) {
           return;
         }
         nodeRefCurrent != null && nodeRefCurrent.setAttribute(domAttributeName, domAttributeValue);
@@ -299,7 +301,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     flowlet.data.surface = surfacePath;
     let children = props.children;
-    if (props.nodeRef == null){
+    if (props.nodeRef == null) {
       if (!options.disableReactDomPropsExtension) {
         const foundDomElement = propagateFlowletDown(props.children, surfaceData);
 
@@ -319,18 +321,18 @@ export function init(options: InitOptions): ALSurfaceHOC {
             "span",
             {
               "data-surface-wrapper": "1",
-              style: { display: 'contents'},
+              style: { display: 'contents' },
             },
             props.children
           );
           propagateFlowletDown(children, surfaceData);
         }
-      } else{
+      } else {
         children = ReactModule.createElement(
           "span",
           {
             "data-surface-wrapper": "1",
-            style: { display: 'contents'},
+            style: { display: 'contents' },
             [domAttributeName]: domAttributeValue,
           },
           props.children
@@ -351,7 +353,9 @@ export function init(options: InitOptions): ALSurfaceHOC {
     return result;
   }
 
-  SurfaceProxy.init({ ...options, surfaceComponent: Surface });
+  if (!options.disableSurfaceProxy === true) {
+    SurfaceProxy.init({ ...options, surfaceComponent: Surface });
+  }
 
   function updateFlowlet(
     ext: IReactFlowlet.PropsExtension<DataType, FlowletType> | undefined,
