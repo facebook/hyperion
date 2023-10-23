@@ -77,7 +77,9 @@ export type SurfaceComponent = (props:
      * If this is provided,  then we won't emit mutations for this surface as we are
      * doubly wrapping that surface, for surface attribution purposes.
      */
-    proxiedContext?: ALSurfaceContext.ALSurfaceContextFilledValue
+    proxiedContext?: ALSurfaceContext.ALSurfaceContextFilledValue & {
+      container?: Element | DocumentFragment
+    }
   }
 ) => React.ReactElement;
 
@@ -231,6 +233,8 @@ export function init(options: InitOptions): ALSurfaceHOC {
     const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
     const { surface: parentSurface, nonInteractiveSurface: parentNonInteractiveSurface } = surfaceCtx;
 
+    let addSurfaceWrapper = props.nodeRef == null;
+
     if (!proxiedContext) {
       const surface = flowlet.name;
       nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
@@ -249,7 +253,13 @@ export function init(options: InitOptions): ALSurfaceHOC {
       nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;
       domAttributeName = domSurfaceAttributeName
       domAttributeValue = surfacePath;
-      props.nodeRef?.current?.setAttribute(domAttributeName, domAttributeValue);
+      if (proxiedContext.container instanceof Element) {
+        const container = proxiedContext.container;
+        if (container.childElementCount === 0 || container.getAttribute(domAttributeName) === domAttributeValue) {
+          addSurfaceWrapper = false;
+          container.setAttribute(domAttributeName, domAttributeValue);
+        }
+      }
     }
 
     const surfaceData: SurfaceData = {
@@ -300,7 +310,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     flowlet.data.surface = surfacePath;
     let children = props.children;
-    if (props.nodeRef == null) {
+    if (addSurfaceWrapper) {
       if (!options.disableReactDomPropsExtension) {
         const foundDomElement = propagateFlowletDown(props.children, surfaceData);
 
