@@ -48,8 +48,7 @@ function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions & { contai
       {
         __ext: new SurfacePropsExtension(flowlet),
         flowlet,
-        proxiedContext: surfaceContext,
-        nodeRef: { current: container instanceof Element && container.childElementCount === 0 ? container : null }
+        proxiedContext: { ...surfaceContext, container },
       },
       children
     );
