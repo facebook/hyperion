@@ -51,7 +51,7 @@ export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
   capability?: ALSurfaceCapability, // a one-hot encoding what the surface can do.
-  nodeRef?: React.MutableRefObject<HTMLElement | null | undefined>,
+  nodeRef?: React.MutableRefObject<Element | null | undefined>,
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
@@ -249,6 +249,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;
       domAttributeName = domSurfaceAttributeName
       domAttributeValue = surfacePath;
+      props.nodeRef?.current?.setAttribute(domAttributeName, domAttributeValue);
     }
 
     const surfaceData: SurfaceData = {
@@ -270,7 +271,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       ReactModule.useLayoutEffect(() => {
         const nodeRef = props.nodeRef;
         const nodeRefCurrent = nodeRef?.current;
-        if(nodeRef != null && nodeRefCurrent == null){
+        if (nodeRef != null && nodeRefCurrent == null) {
           return;
         }
         nodeRefCurrent != null && nodeRefCurrent.setAttribute(domAttributeName, domAttributeValue);
@@ -299,7 +300,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     flowlet.data.surface = surfacePath;
     let children = props.children;
-    if (props.nodeRef == null){
+    if (props.nodeRef == null) {
       if (!options.disableReactDomPropsExtension) {
         const foundDomElement = propagateFlowletDown(props.children, surfaceData);
 
@@ -319,18 +320,18 @@ export function init(options: InitOptions): ALSurfaceHOC {
             "span",
             {
               "data-surface-wrapper": "1",
-              style: { display: 'contents'},
+              style: { display: 'contents' },
             },
             props.children
           );
           propagateFlowletDown(children, surfaceData);
         }
-      } else{
+      } else {
         children = ReactModule.createElement(
           "span",
           {
             "data-surface-wrapper": "1",
-            style: { display: 'contents'},
+            style: { display: 'contents' },
             [domAttributeName]: domAttributeValue,
           },
           props.children
