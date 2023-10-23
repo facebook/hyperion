@@ -37,8 +37,8 @@ type ProxyInitOptions =
  * If we can find a way around this limitation, we can use a simpler logic
  * like the following:
  */
-function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions>): React.ReactElement {
-  const { surfaceComponent, children } = props;
+function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions & { container: Element | DocumentFragment }>): React.ReactNode {
+  const { surfaceComponent, children, container } = props;
   const { ReactModule, } = props.react;
   const surfaceContext = useALSurfaceContext();
   const { flowlet } = surfaceContext;
@@ -49,11 +49,13 @@ function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions>): React.R
         __ext: new SurfacePropsExtension(flowlet),
         flowlet,
         proxiedContext: surfaceContext,
+        nodeRef: { current: container instanceof Element && container.childElementCount === 0 ? container : null }
       },
       children
     );
   } else {
-    return ReactModule.createElement(ReactModule.Fragment, {}, children);
+    // return ReactModule.createElement(ReactModule.Fragment, {}, children);
+    return children;
   }
 }
 
@@ -67,10 +69,10 @@ export function init(options: ProxyInitOptions): void {
    * with the same flowlet and surface from the original surface context.
    */
   IReactDOMModule.createPortal.onArgsMapperAdd(args => {
-    const [node, _container] = args;
+    const [node, container] = args;
 
     if (node != null) {
-      args[0] = ReactModule.createElement(SurfaceProxy, options, node);
+      args[0] = ReactModule.createElement(SurfaceProxy, { ...options, container }, node);
     }
     return args;
   });
