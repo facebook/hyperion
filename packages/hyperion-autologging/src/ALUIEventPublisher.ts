@@ -111,6 +111,12 @@ const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
 
 const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], IALFlowlet>();
 
+enum UIEventGroup {
+  MOUSE = 'mouse',
+  // KEY = 'key',
+}
+const groupFlowlets = new Map<EventTarget, {groupFlowlet: IALFlowlet, type: UIEventGroup}>();
+
 const uiEventFlowletManager = new ALFlowletManager();
 
 function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig<DocumentEventMap>, eventName: T, event: DocumentEventMap[T]): CommonEventData | null {
@@ -123,7 +129,6 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
   }
 
   let element: HTMLElement | null = null;
-  let autoLoggingID: ALID | null = null;
   if (interactableElementsOnly) {
     /**
      * Because of how UI events work in browser, one could for example click anywhere
@@ -138,7 +143,6 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     if (element == null) {
       return null;
     }
-    autoLoggingID = getOrSetAutoLoggingID(element);
   }
   else {
     element = event.target instanceof HTMLElement ? event.target : null;
@@ -151,7 +155,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     targetElement: event.target instanceof HTMLElement ? event.target : null,
     eventTimestamp,
     isTrusted: event.isTrusted,
-    autoLoggingID,
+    autoLoggingID: element != null ? getOrSetAutoLoggingID(element) : null,
     metadata: {},
   };
 }
@@ -196,6 +200,21 @@ export function publish(options: InitOptions): void {
       const topFlowlet = flowletManager.top();
       let flowlet = topFlowlet ?? defaultTopFlowlet; // We want to ensure flowlet is always assigned
       if (shouldPushPopFlowlet(event)) {
+        let groupFlowlet;
+        if (event.target != null) {
+          const targetElement = event.target;
+          if (eventName === 'mouseover') {
+            const type = UIEventGroup.MOUSE;
+            groupFlowlet = new flowletManager.flowletCtor(`${type}(element:${autoLoggingID})`);
+            groupFlowlets.set(targetElement, {groupFlowlet, type});
+          } else if (eventName === 'mouseout' || eventName === 'click') {
+            const groupFlowletInfo = groupFlowlets.get(targetElement);
+            if (groupFlowletInfo != null && groupFlowletInfo.type === UIEventGroup.MOUSE) {
+              groupFlowlet = groupFlowletInfo.groupFlowlet;
+            }
+          }
+        }
+
         let flowletName = eventName + `(ts:${eventTimestamp}`;
         if (autoLoggingID) {
           flowletName += `,element:${autoLoggingID}`;
@@ -204,7 +223,7 @@ export function publish(options: InitOptions): void {
           flowletName += `,surface:${surface}`;
         }
         flowletName += ')';
-        flowlet = new flowletManager.flowletCtor(flowletName);
+        flowlet = new flowletManager.flowletCtor(flowletName, groupFlowlet);
         uiEventFlowletManager.push(flowlet);
         flowlet = flowletManager.push(flowlet);
         activeUIEventFlowlets.set(eventName, flowlet);
