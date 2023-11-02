@@ -20,6 +20,15 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     return;
   }
 
+  function getTriggerFlowletFromEvent(event: Event) {
+    /**
+     * The trigger flowlet may be assigned to the event itself (e.g. for interaction events)
+     * or assigned to the event.target (e.g. for XHR events)
+     * So, we try both to conver all cases.
+     */
+    return getTriggerFlowlet(event) ?? getTriggerFlowlet(event.target);
+  }
+
   for (const eventHandler of [
     // IWindow.ondevicemotion,
     // IWindow.ondeviceorientation,
@@ -139,14 +148,24 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     IXMLHttpRequest.onloadend,
     IXMLHttpRequest.onloadstart,
     IXMLHttpRequest.onprogress,
+    IXMLHttpRequest.readystatechange,
     IXMLHttpRequest.ontimeout,
   ]) {
     eventHandler.setter.onArgsMapperAdd(function (this, args: [any]) {
       const func = args[0];
-      args[0] = flowletManager.wrap(func, eventHandler.name);
+      args[0] = flowletManager.wrap(func, eventHandler.name, void 0, getTriggerFlowletFromEvent);
       return args;
     });
   }
+
+  IEventTarget.addEventListener.onArgsMapperAdd(args => {
+    args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}:${args[0]}`, void 0, getTriggerFlowletFromEvent);
+    return args;
+  });
+  IEventTarget.removeEventListener.onArgsMapperAdd(args => {
+    args[1] = flowletManager.getWrappedOrOriginal(args[1]);
+    return args;
+  });
 
   for (const fi of [
     IGlobalThis.setTimeout,
@@ -189,15 +208,6 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
       }
       return value;
     };
-  });
-
-  IEventTarget.addEventListener.onArgsMapperAdd(args => {
-    args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}:${args[0]}`, void 0, (event) => getTriggerFlowlet(event));
-    return args;
-  });
-  IEventTarget.removeEventListener.onArgsMapperAdd(args => {
-    args[1] = flowletManager.getWrappedOrOriginal(args[1]);
-    return args;
   });
 
 }

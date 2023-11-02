@@ -45,7 +45,7 @@ export { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 export { getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 
 // hyperionFlowlet
-export { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/Index";
+export { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
 
 // hyperionReact
 export * as IReact from "@hyperion/hyperion-react/src/IReact";

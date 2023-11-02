@@ -25,6 +25,6 @@ export function setTriggerFlowlet(obj: TriggerFlowletPayload, triggerFlowlet: Tr
   obj.__ext_triggerFlowlet = triggerFlowlet;
 }
 
-export function getTriggerFlowlet(obj: TriggerFlowletPayload): TriggerFlowlet | null | undefined {
+export function getTriggerFlowlet(obj: TriggerFlowletPayload | undefined | null): TriggerFlowlet | null | undefined {
   return obj?.__ext_triggerFlowlet;
 }
