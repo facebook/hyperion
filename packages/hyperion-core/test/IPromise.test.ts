@@ -9,6 +9,39 @@ import * as IPromise from "../src/IPromise";
 import { interceptFunction } from "../src/FunctionInterceptor";
 
 describe('test Promise', () => {
+  test('test promise.constructor', async () => {
+    const argsObserver = jest.fn();
+    const valueObserver = jest.fn();
+
+    const handler = IPromise.constructor.onArgsAndValueMapperAdd(args => {
+      const executor = args[0];
+      const fi = interceptFunction(executor);
+      args[0] = fi.interceptor;
+      fi.onArgsMapperAdd(args => {
+        const resolve = args[0];
+        const resolveFI = interceptFunction(resolve);
+        args[0] = resolveFI.interceptor;
+        resolveFI.onArgsObserverAdd(argsObserver);
+        return args;
+      })
+      return value => {
+        valueObserver(value);
+        return value;
+      }
+    });
+
+    const p = new Promise<number>((resolve, reject) => {
+      Promise.resolve(10).then(resolve, reject);
+    });
+
+    await p;
+
+    expect(argsObserver).toBeCalledWith(10);
+    expect(valueObserver).toBeCalledWith(p);
+
+    IPromise.constructor.onArgsAndValueMapperRemove(handler);
+  });
+
   test('test promise.then', async () => {
     const thenArgsObserver = jest.fn();
     const thenValueObserver = jest.fn();

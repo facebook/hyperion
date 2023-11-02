@@ -438,7 +438,7 @@ describe("test modern classes", () => {
     const fn = jest.fn<number, [number]>(i => i);
     const fi = interceptFunction(fn);
 
-    fi.onArgsAndValueMapperAdd(args => {
+    const handler1 = fi.onArgsAndValueMapperAdd(args => {
       args[0] *= 3;
       return value => {
         return value * 5;
@@ -451,7 +451,7 @@ describe("test modern classes", () => {
     expect(fn.mock.results[0].value).toBe((2 * 3));
     expect(result).toBe((2 * 3) * 5);
 
-    fi.onArgsAndValueMapperAdd(args => {
+    const handler2 = fi.onArgsAndValueMapperAdd(args => {
       args[0] *= 7;
       return value => {
         return value * 11;
@@ -463,6 +463,15 @@ describe("test modern classes", () => {
     expect(fn.mock.calls[1][0]).toBe((2 * 3) * 7);
     expect(fn.mock.results[1].value).toBe(((2 * 3) * 7));
     expect(result).toBe((((2 * 3) * 7) * 5) * 11);
+
+    fi.onArgsAndValueMapperRemove(handler2);
+    fi.onArgsAndValueMapperRemove(handler1);
+
+    result = fi.interceptor(2);
+    expect(fn).toBeCalledTimes(3);
+    expect(fn.mock.calls[2][0]).toBe(2);
+    expect(fn.mock.results[2].value).toBe(2);
+    expect(result).toBe(2);
   });
 
 

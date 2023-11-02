@@ -181,6 +181,15 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     })
   }
 
+  IPromise.constructor.onValueObserverAdd(value => {
+    if (!getTriggerFlowlet(value)) {
+      const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+      if (triggerFlowlet) {
+        setTriggerFlowlet(value, triggerFlowlet);
+      }
+    }
+  });
+
   IPromise.then.onArgsAndValueMapperAdd(function (this, args) {
     const triggerFlowlet = getTriggerFlowlet(this);
     args[0] = flowletManager.wrap(args[0], IPromise.then.name, void 0, () => triggerFlowlet);

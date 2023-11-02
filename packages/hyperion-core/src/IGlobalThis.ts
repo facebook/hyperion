@@ -6,6 +6,7 @@ import globalScope from "@hyperion/global/src/global";
 import { interceptMethod } from "./MethodInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 import { getOwnShadowPrototypeOf } from "./intercept";
+import { interceptConstructorMethod } from "./ConstructorInterceptor";
 
 interface GlobalScope extends Pick<Window, "setTimeout" | "setInterval"> {
   Promise: typeof Promise;
@@ -29,3 +30,4 @@ const IGlobalThisPrototype = getOwnShadowPrototypeOf<ShadowPrototype<GlobalScope
 
 export const setInterval = interceptMethod("setInterval", IGlobalThisPrototype);
 export const setTimeout = interceptMethod("setTimeout", IGlobalThisPrototype);
+export const IPromiseConstructor = interceptConstructorMethod<"Promise", GlobalScope, PromiseConstructor>("Promise", IGlobalThisPrototype);
