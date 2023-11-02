@@ -7,7 +7,7 @@ import { AsyncCounter } from "@hyperion/global/src/AsyncCounter";
 import "jest";
 import { Flowlet } from "../src/Flowlet";
 import { FlowletManager } from "../src/FlowletManager";
-import { initFlowletTrackers } from "../src/Index";
+import { initFlowletTrackers } from "../src/FlowletWrappers";
 
 
 

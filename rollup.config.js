@@ -52,7 +52,7 @@ export default defineConfig({
         "@hyperion/hyperion-flowlet/src/TriggerFlowlet",
       ],
       "hyperionFlowlet": [
-        "@hyperion/hyperion-flowlet/src/Index",
+        "@hyperion/hyperion-flowlet/src/FlowletWrappers",
       ],
       "hyperionReact": [
         "@hyperion/hyperion-react/src/IReact",

@@ -24,4 +24,5 @@ export const onload = interceptEventHandlerAttribute("onload", IXMLHttpRequestPr
 export const onloadend = interceptEventHandlerAttribute("onloadend", IXMLHttpRequestPrototype);
 export const onloadstart = interceptEventHandlerAttribute("onloadstart", IXMLHttpRequestPrototype);
 export const onprogress = interceptEventHandlerAttribute("onprogress", IXMLHttpRequestPrototype);
+export const readystatechange = interceptEventHandlerAttribute("readystatechange", IXMLHttpRequestPrototype);
 export const ontimeout = interceptEventHandlerAttribute("ontimeout", IXMLHttpRequestPrototype);
