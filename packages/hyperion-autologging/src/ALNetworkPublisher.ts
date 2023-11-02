@@ -287,26 +287,32 @@ function captureXHR(options: InitOptions): void {
     //   }
     // });
    */
-  IXMLHttpRequest.constructor.onValueObserverAdd(xhr => {
-    [
-      "abort",
-      "error",
-      "load",
-      "loadend",
-      "loadstart",
-      "progress",
-      "readystatechange",
-      "timeout",
-    ].forEach(eventName => {
-      xhr.addEventListener(eventName, event => {
-        const triggerFlowlet = getTriggerFlowlet(xhr);
-        assert(triggerFlowlet != null, `Expected triggerFlowlet to be assigned to xhr`);
-        if (triggerFlowlet) {
-          setTriggerFlowlet(event, triggerFlowlet);
-        }
+  if (__DEV__) {
+    IXMLHttpRequest.constructor.onValueObserverAdd(xhr => {
+      [
+        "abort",
+        "error",
+        "load",
+        "loadend",
+        "loadstart",
+        "progress",
+        "readystatechange",
+        "timeout",
+      ].forEach(eventName => {
+        xhr.addEventListener(eventName, event => {
+          const triggerFlowlet = getTriggerFlowlet(xhr);
+          const topTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+          const eventTriggerFlowlet = getTriggerFlowlet(event.target);
+          assert(triggerFlowlet != null, `Expected triggerFlowlet to be assigned to xhr`);
+          assert(triggerFlowlet === topTriggerFlowlet, `Expected triggerFlowlet to be on the stack!`);
+          assert(triggerFlowlet === eventTriggerFlowlet, `Expected triggerFlowlet to be on the event.target!`);
+          // if (triggerFlowlet) {
+          //   setTriggerFlowlet(event, triggerFlowlet);
+          // }
+        });
       });
     });
-  });
+  }
 
   IXMLHttpRequest.send.onArgsObserverAdd(function (this, body) {
     const requestRaw = intercept.getVirtualPropertyValue<RequestInfo>(this, REQUEST_INFO_PROP_NAME);
@@ -318,6 +324,8 @@ function captureXHR(options: InitOptions): void {
 
 
     const flowlet = flowletManager.top(); // Before calling requestFilter and losing current top flowlet
+    const triggerFlowlet = getTriggerFlowlet(this);
+
     if (!options.requestFilter || options.requestFilter(request)) {
       let requestEvent: ALNetworkResponseEvent['requestEvent'];
 
@@ -327,7 +335,7 @@ function captureXHR(options: InitOptions): void {
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
         flowlet,
-        triggerFlowlet: flowlet?.data.triggerFlowlet,
+        triggerFlowlet,
         ...request, // assert already ensures request is not undefined
         metadata: {},
       });
@@ -336,13 +344,14 @@ function captureXHR(options: InitOptions): void {
         'loadend',
         event => {
           assert(event.target === this, "Invalid xhr target for loadend event");
+          assert(triggerFlowlet === flowletManager.top()?.data.triggerFlowlet, "top trigger flowlet on the stack not set correctly!");
           channel.emit('al_network_response', {
             initiatorType: "xmlhttprequest",
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
             flowlet, // should carry request flowlet forward
-            triggerFlowlet: flowletManager.top()?.data.triggerFlowlet, // Should check its own trigger
+            triggerFlowlet, //should carry request triggerFlowlet forward as the main trigger
             requestEvent,
             response: this,
             metadata: {},
