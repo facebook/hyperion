@@ -2,9 +2,10 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { registerShadowPrototype, getOwnShadowPrototypeOf } from "./intercept";
+import * as IGlobalThis from "./IGlobalThis";
 import { interceptMethod } from "./MethodInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
+import { getOwnShadowPrototypeOf, registerShadowPrototype } from "./intercept";
 
 const PromisePrototype = Object.getPrototypeOf(Promise.resolve());
 
@@ -15,5 +16,6 @@ const PromisePrototype = Object.getPrototypeOf(Promise.resolve());
  * right (original) set of interceptors, we don't want to have a different ShadowPrototype
  */
 export const IPromisePrototype = getOwnShadowPrototypeOf<ShadowPrototype<Promise<unknown>>>(PromisePrototype) ?? registerShadowPrototype(PromisePrototype, new ShadowPrototype<Promise<unknown>>(PromisePrototype, null));
+export const constructor = IGlobalThis.IPromiseConstructor;
 export const then = interceptMethod("then", IPromisePrototype);
 export const Catch = interceptMethod("catch", IPromisePrototype);

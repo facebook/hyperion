@@ -160,7 +160,7 @@ export class FunctionInterceptor<
   protected onArgsObserver?: OnArgsObserver<FuncType>;
   protected onValueMapper?: OnValueMapper<FuncType>;
   protected onValueObserver?: OnValueObserver<FuncType>;
-  protected onArgsAndValueMapper?: OnArgsAndValueMapper<FuncType>;
+  protected onArgsAndValueMapper?: OnArgsAndValueMapper<FuncType> | null;
 
   protected original: FuncType = unknownFunc;
   private customFunc?: FuncType;
@@ -538,7 +538,11 @@ export class FunctionInterceptor<
     };
     if (__DEV__) {
       // just to make sure we caovered all cases correctly
-      for (let i = InterceptorState.HasArgsMapper | InterceptorState.HasArgsObserver | InterceptorState.HasValueMapper | InterceptorState.HasValueObserver; i >= 0; --i) {
+      for (
+        let i = InterceptorState.HasArgsMapper | InterceptorState.HasArgsObserver | InterceptorState.HasValueMapper | InterceptorState.HasValueObserver | InterceptorState.HasArgsAndValueMapper;
+        i >= 0;
+        --i
+      ) {
         const ctor = ctors[i];
         assert(!!ctor, `unhandled interceptor state ${i}`);
         ctors[i] = fi => {
@@ -634,6 +638,10 @@ export class FunctionInterceptor<
   }
   public onArgsAndValueMapperRemove(cb: OnArgsAndValueMapperFunc<FuncType>): typeof cb {
     if (this.onArgsAndValueMapper?.remove(cb)) {
+      // Since we rely on the output of the callback, we should avoid empty list
+      if (!this.onArgsAndValueMapper.hasCallback()) {
+        this.onArgsAndValueMapper = null;
+      }
       this.updateDispatcherFunc();
     }
     return cb;
