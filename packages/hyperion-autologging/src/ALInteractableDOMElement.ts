@@ -249,6 +249,10 @@ let installHandlers = () => {
   installHandlers = () => { }; // Done doing stuff!
 }
 
+export function isTrackedEvent(eventName: string): boolean {
+  return TrackedEvents.has(eventName);
+}
+
 export function trackInteractable(eventName: string): boolean {
   installHandlers();
   const alreadyTracked = TrackedEvents.has(eventName);

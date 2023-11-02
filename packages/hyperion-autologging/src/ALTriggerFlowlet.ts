@@ -9,10 +9,15 @@ import type * as React from 'react';
 
 import { Channel } from "@hyperion/hook/src/Channel";
 import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
-import { TriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
+import { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
+import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
+import * as FLowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
+import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import { IALFlowlet, ALFlowletManager } from "./ALFlowletManager";
+import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
+import { isTrackedEvent } from "./ALInteractableDOMElement";
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
@@ -43,6 +48,12 @@ export function init(options: InitOptions) {
 
   const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
   const activeRootFlowlets = new Set<IALFlowlet>();
+
+  FLowlet.onFlowletInit.add(flowlet => {
+    if (!flowlet.parent) {
+      activeRootFlowlets.add(flowlet);
+    }
+  });
 
   function setSurfaceTriggerFlowlet(_surface: string | null, triggerFlowlet: TriggerFlowlet | null | undefined): void {
     if (!triggerFlowlet) {
@@ -84,6 +95,29 @@ export function init(options: InitOptions) {
   // Assign triggers to surface flowlets
   channel.addListener('al_ui_event_capture', event => {
     setSurfaceTriggerFlowlet(event.surface, event.triggerFlowlet);
+  });
+
+
+  const TRIGGER_FLOWLET_ADDED = "trigger_flowlet_added";
+  IEventTarget.addEventListener.onArgsObserverAdd(function (this, eventType, _callback) {
+    const topTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+    if (!isTrackedEvent(eventType) && this instanceof Element && !getVirtualPropertyValue(this, TRIGGER_FLOWLET_ADDED)) {
+      setVirtualPropertyValue(this, TRIGGER_FLOWLET_ADDED, true);
+      /**
+       * We could potentially intercept the callback itself and add the following
+       * but that could add too much overhead to every callback.
+       */
+      IEventTarget.addEventListener.getOriginal().call(this, eventType, event => {
+        if (!getTriggerFlowlet(event)) {
+          const parentTriggerFlowlet = new flowletManager.flowletCtor('dom_event_group', topTriggerFlowlet); null;// TODO: add proper event group
+          const triggerFlowlet = new flowletManager.flowletCtor(
+            `${eventType}(ts:${performanceAbsoluteNow()})`,
+            parentTriggerFlowlet
+          );
+          setTriggerFlowlet(event, triggerFlowlet);
+        }
+      });
+    }
   });
 
   /**
