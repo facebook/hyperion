@@ -3,7 +3,7 @@
  */
 
 import { Hook } from "@hyperion/hook";
-import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { InterceptableFunction, getFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { CallbackType, interceptEventListener, isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
 import { Flowlet } from "./Flowlet";
 import { assert, getLogger } from "@hyperion/global";
@@ -190,6 +190,45 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       });
     }
     return isEventListenerObject(listener) || !funcInterceptor ? listener : <C>funcInterceptor.interceptor;
+  }
+
+  /**
+   * In case we wanted a function to push/pop a flowlet name on the stack, we can
+   * use this helper function to create a wrapper that marks the desired flowlet
+   * @param listener 
+   * @param apiName 
+   * @param customFlowlet 
+   * @param getTriggerFlowlet 
+   * @returns 
+   */
+  mark<F extends InterceptableFunction | undefined | null>(
+    func: F,
+    flowletName: string,
+  ): F {
+    if (!func) {
+      return func;
+    }
+
+    const funcInterceptor = interceptFunction(func);
+    if (funcInterceptor && !funcInterceptor.testAndSet(IS_FLOWLET_SETUP_PROP_NAME)) {
+
+      const flowletManager = this;
+
+      // Should we use onArgsAndValueMapper instead of setCustom, although this is safer with the finally call.
+      funcInterceptor.setCustom(<any>function (this: any) {
+        const handler: Function = funcInterceptor.getOriginal();
+        const flowlet = new flowletManager.flowletCtor(flowletName, flowletManager.top());
+        let res;
+        try {
+          flowletManager.push(flowlet);
+          res = handler.apply(this, <any>arguments);
+        } finally {
+          flowletManager.pop(flowlet);
+        }
+        return res;
+      });
+    }
+    return <F>funcInterceptor.interceptor;
   }
 
   getWrappedOrOriginal<T extends CallbackType | undefined | null>(listener: T): T {

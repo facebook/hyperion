@@ -190,4 +190,21 @@ describe("test FlowletManager", () => {
     expect(manager.stackSize()).toBe(0);
   });
 
+  test("mark function", () => {
+    const manager = new FlowletManager(Flowlet);
+
+    const main = manager.push(new Flowlet("main"));
+
+    const bar = () => {
+      expect(manager.top()?.getFullName()).toBe('/main/foo');
+    };
+
+    const foo = () => {
+      bar();
+    }
+
+    const markedFoo = manager.mark(foo, 'foo');
+
+    markedFoo();
+  });
 });
