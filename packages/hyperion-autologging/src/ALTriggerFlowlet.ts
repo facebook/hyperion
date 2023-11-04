@@ -2,8 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
-
+'use strict';
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 
@@ -15,11 +14,13 @@ import * as FLowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
+import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
+import * as ALUIEVentGroupPublishers from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
 
 export type InitOptions<> = Types.Options<
@@ -44,6 +45,8 @@ export function init(options: InitOptions) {
     return;
   }
 
+  ALUIEVentGroupPublishers.init(options);
+
   const { channel, flowletManager } = options;
 
   const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
@@ -67,7 +70,7 @@ export function init(options: InitOptions) {
 
     // Temporarily disable this until we can re-enable react-flowlet logic bellow
     // if (surface) {
-    //   // The following may not happen until react interception and flowlets actually are enabled. 
+    //   // The following may not happen until react interception and flowlets actually are enabled.
     //   const surfaceFlowlet = ALSurfaceContextDataMap.get(surface);
     //   if (surfaceFlowlet) {
     //     surfaceFlowlet.data.triggerFlowlet = triggerFlowlet;
@@ -100,16 +103,20 @@ export function init(options: InitOptions) {
 
   const TRIGGER_FLOWLET_ADDED = "trigger_flowlet_added";
   IEventTarget.addEventListener.onArgsObserverAdd(function (this, eventType, _callback) {
-    const topTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+    if (!ALUIEVentGroupPublishers.isSupported(eventType)) {
+      return;
+    }
+
     if (!isTrackedEvent(eventType) && this instanceof Element && !getVirtualPropertyValue(this, TRIGGER_FLOWLET_ADDED)) {
       setVirtualPropertyValue(this, TRIGGER_FLOWLET_ADDED, true);
       /**
        * We could potentially intercept the callback itself and add the following
        * but that could add too much overhead to every callback.
        */
+      // const topTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
       IEventTarget.addEventListener.getOriginal().call(this, eventType, event => {
         if (!getTriggerFlowlet(event)) {
-          const parentTriggerFlowlet = new flowletManager.flowletCtor('dom_event_group', topTriggerFlowlet); null;// TODO: add proper event group
+          const parentTriggerFlowlet = ALUIEVentGroupPublishers.getGroupRootFlowlet(event);
           const triggerFlowlet = new flowletManager.flowletCtor(
             `${eventType}(ts:${performanceAbsoluteNow()})`,
             parentTriggerFlowlet
