@@ -3,12 +3,13 @@
  */
 
 'use strict';
+import type * as Types from "@hyperion/hyperion-util/src/Types";
+
 import { Channel } from "@hyperion/hook/src/Channel";
 import { intercept } from "@hyperion/hyperion-core/src/intercept";
 import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
 import { setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
-import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
 import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
@@ -17,6 +18,7 @@ import { ALElementTextEvent, getElementTextEvent, getInteractable, trackInteract
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
+import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 
 /**
  * Generates a union type of all handler event and domEvent permutations.
@@ -195,16 +197,16 @@ export function publish(options: InitOptions): void {
        */
       const topFlowlet = flowletManager.top();
       let flowlet = topFlowlet ?? defaultTopFlowlet; // We want to ensure flowlet is always assigned
+      let flowletName = eventName + `(ts:${eventTimestamp}`;
+      if (autoLoggingID) {
+        flowletName += `,element:${autoLoggingID}`;
+      }
+      if (surface) {
+        flowletName += `,surface:${surface}`;
+      }
+      flowletName += ')';
+      flowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
       if (shouldPushPopFlowlet(event)) {
-        let flowletName = eventName + `(ts:${eventTimestamp}`;
-        if (autoLoggingID) {
-          flowletName += `,element:${autoLoggingID}`;
-        }
-        if (surface) {
-          flowletName += `,surface:${surface}`;
-        }
-        flowletName += ')';
-        flowlet = new flowletManager.flowletCtor(flowletName);
         uiEventFlowletManager.push(flowlet);
         flowlet = flowletManager.push(flowlet);
         activeUIEventFlowlets.set(eventName, flowlet);
