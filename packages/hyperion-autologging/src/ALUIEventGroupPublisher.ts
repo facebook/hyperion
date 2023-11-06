@@ -23,23 +23,23 @@ const GroupFlowlets = new Map<EventTarget, { // TODO: should we use a WeakMap
 }>();
 
 const EventInfo: {
-  [eventType: string]: {
+  [key: string]: {
     order: number;
     groupType: UIEventGroup;
   }
 } = {};
-[ //https://patrickhlauke.github.io/touch/tests/event-listener_mouse-only.html
+([ //https://patrickhlauke.github.io/touch/tests/event-listener_mouse-only.html
   'mouseover',
-  'mouseenger',
-  'mousemouve',
+  'mouseenter',
+  'mousemove',
   'mousedown',
   'mouseup',
   'click',
-  'dbclick',
+  // 'dbclick',
   'mouseout',
   'mouseleave',
-].reduce(
-  (prev, event, index) => {
+] as const).reduce(
+  (prev, event: keyof GlobalEventHandlersEventMap, index) => {
     prev[event] = {
       order: index,
       groupType: UIEventGroup.MOUSE
