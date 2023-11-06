@@ -101,14 +101,14 @@ export function init(options: InitOptions) {
   });
 
 
-  const TRIGGER_FLOWLET_ADDED = "trigger_flowlet_added";
+  const IS_TRIGGER_FLOWLET_SETUP_PROP = 'isTriggerFlowletSetup';
   IEventTarget.addEventListener.onArgsObserverAdd(function (this, eventType, _callback) {
     if (!ALUIEVentGroupPublishers.isSupported(eventType)) {
       return;
     }
 
-    if (!isTrackedEvent(eventType) && this instanceof Element && !getVirtualPropertyValue(this, TRIGGER_FLOWLET_ADDED)) {
-      setVirtualPropertyValue(this, TRIGGER_FLOWLET_ADDED, true);
+    if (!isTrackedEvent(eventType) && this instanceof Element && !getVirtualPropertyValue(this, IS_TRIGGER_FLOWLET_SETUP_PROP)) {
+      setVirtualPropertyValue(this, IS_TRIGGER_FLOWLET_SETUP_PROP, true);
       /**
        * We could potentially intercept the callback itself and add the following
        * but that could add too much overhead to every callback.
@@ -159,13 +159,15 @@ export function init(options: InitOptions) {
     fi.onArgsMapperAdd(args => {
       args[0] = flowletManager.wrap(args[0], fi.name);
       const setupInterceptor = getFunctionInterceptor(args[0]);
-      setupInterceptor?.onValueMapperAdd(cleanup => {
-        if (cleanup) {
-          return flowletManager.wrap(cleanup, fi.name + `_cleanup`);
-        } else {
-          return cleanup;
-        }
-      });
+      if (setupInterceptor && !setupInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
+        setupInterceptor.onValueMapperAdd(cleanup => {
+          if (cleanup) {
+            return flowletManager.wrap(cleanup, fi.name + `_cleanup`);
+          } else {
+            return cleanup;
+          }
+        });
+      }
       return args;
     });
   });
@@ -177,26 +179,28 @@ export function init(options: InitOptions) {
     fi.onValueMapperAdd(value => {
       value[1] = flowletManager.wrap(value[1], fi.name);
       const setterInterceptor = getFunctionInterceptor(value[1]);
-      setterInterceptor?.onArgsObserverAdd(() => {
-        /**
-         * when someone calls the setter, before anything happens we pickup the
-         * trigger flowlet from the top of the stack. 
-         * Then we assign this trigger flowlet to all surfcce flowlet roots so that
-         * any other method that is called during rending of the components can see the trigger.
-         * 
-         * Since the wrapped setter will call .push() after args observer is called,
-         * we can still access .top() of the caller.
-         */
-        const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-        setSurfaceTriggerFlowlet(null, triggerFlowlet);
-      });
+      if (setterInterceptor && !setterInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
+        setterInterceptor?.onArgsObserverAdd(() => {
+          /**
+           * when someone calls the setter, before anything happens we pickup the
+           * trigger flowlet from the top of the stack. 
+           * Then we assign this trigger flowlet to all surfcce flowlet roots so that
+           * any other method that is called during rending of the components can see the trigger.
+           * 
+           * Since the wrapped setter will call .push() after args observer is called,
+           * we can still access .top() of the caller.
+           */
+          const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+          setSurfaceTriggerFlowlet(null, triggerFlowlet);
+        });
+      }
       return value;
     });
   });
 
   IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
     const setState = shadowComponent.setState;
-    if (!setState.testAndSet('isTriggerFlowletSetup')) {
+    if (!setState.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
       setState.onArgsObserverAdd(() => {
         const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
         setSurfaceTriggerFlowlet(null, triggerFlowlet);
