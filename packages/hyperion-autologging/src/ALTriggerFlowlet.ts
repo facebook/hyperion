@@ -22,6 +22,7 @@ import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
 import * as ALUIEVentGroupPublishers from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
+import { assert } from "@hyperion/global";
 
 export type InitOptions<> = Types.Options<
   {
@@ -114,16 +115,21 @@ export function init(options: InitOptions) {
        * but that could add too much overhead to every callback.
        */
       // const topTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-      IEventTarget.addEventListener.getOriginal().call(this, eventType, event => {
-        if (!getTriggerFlowlet(event)) {
-          const parentTriggerFlowlet = ALUIEVentGroupPublishers.getGroupRootFlowlet(event);
-          const triggerFlowlet = new flowletManager.flowletCtor(
-            `${eventType}(ts:${performanceAbsoluteNow()})`,
-            parentTriggerFlowlet
-          );
-          setTriggerFlowlet(event, triggerFlowlet);
-        }
-      });
+      IEventTarget.addEventListener.getOriginal().call(
+        this,
+        eventType,
+        event => {
+          if (!getTriggerFlowlet(event)) {
+            const parentTriggerFlowlet = ALUIEVentGroupPublishers.getGroupRootFlowlet(event);
+            const triggerFlowlet = new flowletManager.flowletCtor(
+              `${eventType}(ts:${performanceAbsoluteNow()})`,
+              parentTriggerFlowlet
+            );
+            setTriggerFlowlet(event, triggerFlowlet);
+          }
+        },
+        true, // useCapture
+      );
     }
   });
 
@@ -198,6 +204,7 @@ export function init(options: InitOptions) {
     });
   });
 
+  assert(options.react.enableInterceptClassComponentMethods, "Trigger Flowlet would need interception of class component methods");
   IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
     const setState = shadowComponent.setState;
     if (!setState.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
