@@ -226,30 +226,28 @@ export function init(options: InitOptions): void {
              *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/prototype#:~:text=prototype%20property%2C%20by%20default
            */
 
-          // $FlowIgnore[prop-missing]
           const classComponentParentClass = component.prototype;
+          let classComponentParentClassParent;
 
           if (
-            classComponentParentClass instanceof ReactModule.Component ||
-            typeof classComponentParentClass?.render === 'function' || // possibly created via React.createClass
-            Object.getPrototypeOf(Object.getPrototypeOf(classComponentParentClass)) || // not a plain function, may be with some other lifecycle methods. 
-            classComponentParentClass === ReactModule.Component.prototype // in case buggy code didn't properly inherit from ReactModule.Component
+            classComponentParentClass && (
+              classComponentParentClass instanceof ReactModule.Component ||
+              typeof classComponentParentClass.render === 'function' || // possibly created via React.createClass
+              (
+                (classComponentParentClassParent = Object.getPrototypeOf(classComponentParentClass)) &&
+                Object.getPrototypeOf(classComponentParentClassParent)
+              ) || // not a plain function, may be with some other lifecycle methods. 
+              classComponentParentClass === ReactModule.Component.prototype // in case buggy code didn't properly inherit from ReactModule.Component
+            )
           ) {
-            // $FlowIgnore[incompatible-exact]
-            // $FlowIgnore[incompatible-type]
-            // $FlowIgnore[incompatible-type-arg]
             // @ts-ignore
             const classComponent: Class<TReactClassComponent> = component;
             interceptedComponent = processReactClassComponent(
               classComponent,
-              // $FlowIgnore[incompatible-exact]
-              // $FlowIgnore[incompatible-call]
               classComponentParentClass,
             );
             onReactClassComponentElement.call(classComponent, props);
           } else {
-            // $FlowIgnore[incompatible-use]
-            // $FlowIgnore[prop-missing]
             // @ts-ignore
             const functionalComponent: TReactFunctionComponent = component;
             interceptedComponent =

@@ -48,6 +48,7 @@ export function init() {
     isExtended?: boolean;
   }
 
+  const enableReactFlowlet = true;
   AutoLogging.init({
     flowletManager,
     domSurfaceAttributeName,
@@ -56,7 +57,7 @@ export function init() {
       channel
     },
     triggerFlowlet: {
-      disableReactFlowlet: true,
+      disableReactFlowlet: !enableReactFlowlet,
       channel,
     },
     react: {
@@ -64,6 +65,9 @@ export function init() {
       IReactDOMModule,
       IReactModule,
       IJsxRuntimeModule,
+      enableInterceptClassComponentMethods: true,
+      enableInterceptClassComponentConstructor: enableReactFlowlet,
+      enableInterceptFunctionComponentRender: enableReactFlowlet,
     },
     surface: {
       channel
