@@ -6,6 +6,7 @@ import * as React from "react";
 import { SyncChannel } from "../Channel";
 import { ALChannelEvent } from "@hyperion/hyperion-autologging/src/AutoLogging";
 import { ALSessionGraph } from "@hyperion/hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
+import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
 
 const EventsWithFlowlet = [
   'al_ui_event',
@@ -23,12 +24,29 @@ const EventsWithoutFlowlet = [
   'al_ui_event_bubble',
 ] as const;
 
+const PersistedValues: { [name: string]: LocalStoragePersistentData<boolean> } = {};
+function persistedValue(name: string): LocalStoragePersistentData<boolean> {
+  let value = PersistedValues[name];
+  if (!value) {
+    value = PersistedValues[name] = new LocalStoragePersistentData<boolean>(
+      name,
+      () => /^al_(ui|surface_mutation)_event$/.test(name),
+      value => value ? '1' : '0',
+      value => value === '1'
+    );
+  }
+  return value;
+}
+
 function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEnable: () => (() => void) }) {
   const { eventName } = props;
-  const [checked, setChecked] = React.useState<boolean>(/^al_(ui|surface_mutation)_event$/.test(eventName));
+  const value = persistedValue(eventName);
+  const [checked, setChecked] = React.useState<boolean>(value.getValue());
 
   const onChange = React.useCallback((event: React.ChangeEvent) => {
-    setChecked(!checked);
+    const newValue = !checked;
+    value.setValue(newValue);
+    setChecked(newValue);
   }, []);
   React.useEffect(() => {
     const handler = SyncChannel.on(eventName).add(ev => {

@@ -16,6 +16,7 @@ import { ElementTextTooltip } from "@hyperion/hyperion-autologging-visualizer/sr
 import { SyncChannel } from './Channel';
 import NonInteractiveSurfaceComponent from './component/NonInteractiveSurfaceComponent';
 import ALEventLogger from './component/ALEventLogger';
+import { LocalStoragePersistentData } from '@hyperion/hyperion-util/src/PersistentData';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -35,35 +36,44 @@ function InitComp() {
   </div>);
 }
 
-function App() {
-  const maxDepth = 1000;
+const maxDepth = 1000;
+const Modes = {
+  'mutationOnlySurface': () => <NonInteractiveSurfaceComponent></NonInteractiveSurfaceComponent>,
+  'network': () => <DynamicSvgComponent></DynamicSvgComponent>,
+  'nested': () => <ElementTextTooltip channel={SyncChannel}>
+    <div>
+      {/* <Counter></Counter> */}
+    </div>
+    <div>
+      <NestedComponent></NestedComponent>
+      <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
+    </div>
+    <div>
+      <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
+    </div>
+    <div>
+      <ElementNameComponent />
+    </div>
+    <TextComponent />
+    <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
+  </ElementTextTooltip>,
+};
+type ModeNames = keyof typeof Modes;
+const PersistedOptionValue = new LocalStoragePersistentData<ModeNames>(
+  'mode_drop_down',
+  () => 'mutationOnlySurface',
+  value => String(value),
+  value => value in Modes ? value as ModeNames : 'mutationOnlySurface'
+);
 
-  const Modes = {
-    'mutationOnlySurface': () => <NonInteractiveSurfaceComponent></NonInteractiveSurfaceComponent>,
-    'network': () => <DynamicSvgComponent></DynamicSvgComponent>,
-    'nested': () => <ElementTextTooltip channel={SyncChannel}>
-      <div>
-        {/* <Counter></Counter> */}
-      </div>
-      <div>
-        <NestedComponent></NestedComponent>
-        <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
-      </div>
-      <div>
-        <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
-      </div>
-      <div>
-        <ElementNameComponent />
-      </div>
-      <TextComponent />
-      <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
-    </ElementTextTooltip>,
-  };
-  const [mode, setMode] = useState<keyof typeof Modes>('mutationOnlySurface');
+function App() {
+
+  const [mode, setMode] = useState<ModeNames>(PersistedOptionValue.getValue());
 
   const onChange = useCallback<ChangeEventHandler<HTMLSelectElement>>((event) => {
     const value = event.target.value;
     if (value === 'mutationOnlySurface' || value === 'network' || value === 'nested') {
+      PersistedOptionValue.setValue(value);
       setMode(value);
     }
   }, []);
