@@ -35,7 +35,7 @@ export * as SyncMutationObserver from "@hyperion/hyperion-util/src/SyncMutationO
 
 // hyperionUtil
 export { ClientSessionID } from "@hyperion/hyperion-util/src/ClientSessionID";
-export { SessionPersistentData } from "@hyperion/hyperion-util/src/SessionPersistentData";
+export { SessionPersistentData, LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
 export { default as TestAndSet } from "@hyperion/hyperion-util/src/TestAndSet";
 export { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 
