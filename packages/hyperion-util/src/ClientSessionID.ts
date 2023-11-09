@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { SessionPersistentData } from "./SessionPersistentData";
+import { SessionPersistentData } from "./PersistentData";
 import { guid } from "./guid";
 
 export const ClientSessionID: string = new SessionPersistentData<string>(
