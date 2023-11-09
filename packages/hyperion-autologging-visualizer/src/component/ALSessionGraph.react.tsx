@@ -433,7 +433,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
             }
           )
           if (k > 0) {
-            console.log('[PS] Part', flowletParts[k]);
+            // console.log('[PS] Part', flowletParts[k]);
             // add edge from previous
             elements.push(
               {
