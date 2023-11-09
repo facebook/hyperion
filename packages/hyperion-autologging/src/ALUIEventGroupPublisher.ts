@@ -15,35 +15,35 @@ enum UIEventGroup {
   KEY = 'key',
 }
 
-
-const GroupFlowlets = new Map<EventTarget, { // TODO: should we use a WeakMap
+interface GroupFlowletInfo {
   groupFlowlet: IALFlowlet,
   type: UIEventGroup,
-  firstEventOrder: number;
-}>();
+  eventOrder: number;
+  eventName?: string;
+  target?: Element;
+}
+
+const GroupFlowlets = new Map<EventTarget, GroupFlowletInfo>(); // TODO: should we use a WeakMap
 
 const EventInfo: {
-  [key: string]: {
+  [key in keyof GlobalEventHandlersEventMap]?: {
     order: number;
     groupType: UIEventGroup;
   }
 } = {};
 ([ //https://patrickhlauke.github.io/touch/tests/event-listener_mouse-only.html
-  'mouseover',
-  'mouseenter',
-  'mousemove',
-  'mousedown',
-  'mouseup',
-  'click',
-  // 'dbclick',
-  'mouseout',
-  'mouseleave',
+  ['mouseover', 'mouseenter'],
+  // ['mousemove'], // We dont really seem to need this, and it may cause perf regression
+  ['mousedown', 'mouseup', 'click', /* 'dbclick' */],
+  ['mouseout', 'mouseleave']
 ] as const).reduce(
-  (prev, event: keyof GlobalEventHandlersEventMap, index) => {
-    prev[event] = {
-      order: index,
-      groupType: UIEventGroup.MOUSE
-    };
+  (prev, events, index) => {
+    events.forEach(event => {
+      prev[event] = {
+        order: index,
+        groupType: UIEventGroup.MOUSE
+      }
+    });
     return prev;
   },
   EventInfo
@@ -60,25 +60,34 @@ export function isSupported(eventType: string): boolean {
 
 export function getGroupRootFlowlet(event: Event): IALFlowlet | null | undefined {
   const targetElement = event.target;
-  const eventInfo = EventInfo[event.type];
-  if (targetElement && eventInfo && _options) {
+  const eventInfo = EventInfo[event.type as keyof GlobalEventHandlersEventMap]; // We do know event.type is a valid name
+  if (targetElement instanceof Element && eventInfo && _options) {
     let groupRootFlowlet = GroupFlowlets.get(targetElement);
     if (
-      !groupRootFlowlet
-      || eventInfo.order < groupRootFlowlet.firstEventOrder
-      || eventInfo.groupType !== groupRootFlowlet.type
+      groupRootFlowlet
+      && groupRootFlowlet.eventOrder <= eventInfo.order
+      && groupRootFlowlet.type === eventInfo.groupType
     ) {
-      const type = eventInfo.groupType;
-      const groupFlowlet = new _options.flowletManager.flowletCtor(`${type}(ts:${performanceAbsoluteNow()})`);
-      GroupFlowlets.set(targetElement, {
-        groupFlowlet,
-        type,
-        firstEventOrder: eventInfo.order
-      });
-      return groupFlowlet;
-    } else {
+      groupRootFlowlet.eventOrder = eventInfo.order;
+      groupRootFlowlet.eventName = event.type;
       return groupRootFlowlet.groupFlowlet;
     }
+
+    const type = eventInfo.groupType;
+    const groupFlowlet = new _options.flowletManager.flowletCtor(`${type}(ts:${performanceAbsoluteNow()})`);
+    groupRootFlowlet = {
+      groupFlowlet,
+      type,
+      eventOrder: eventInfo.order,
+    }
+    if (__DEV__) {
+      // The following is useful during debugging
+      groupRootFlowlet.eventName = event.type;
+      groupRootFlowlet.target = targetElement;
+
+    }
+    GroupFlowlets.set(targetElement, groupRootFlowlet);
+    return groupFlowlet;
   }
   return null;
 }
