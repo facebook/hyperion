@@ -4,6 +4,15 @@
 		{
 			"type": "npm",
 			"script": "build",
+			"path": "./",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build all",
+			"detail": "tsc"
+		},
+		{
+			"type": "npm",
+			"script": "build",
 			"path": "packages/hyperion-core/",
 			"group": "build",
 			"problemMatcher": [],

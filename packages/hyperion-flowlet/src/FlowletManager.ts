@@ -195,11 +195,11 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   /**
    * In case we wanted a function to push/pop a flowlet name on the stack, we can
    * use this helper function to create a wrapper that marks the desired flowlet
-   * @param listener 
-   * @param apiName 
-   * @param customFlowlet 
-   * @param getTriggerFlowlet 
-   * @returns 
+   * @param listener
+   * @param apiName
+   * @param customFlowlet
+   * @param getTriggerFlowlet
+   * @returns
    */
   mark<F extends InterceptableFunction | undefined | null>(
     func: F,
