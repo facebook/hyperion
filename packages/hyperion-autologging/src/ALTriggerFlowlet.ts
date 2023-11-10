@@ -6,11 +6,12 @@
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 
+import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
 import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
-import * as FLowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
+import * as Flowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
@@ -20,9 +21,8 @@ import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
-import * as ALUIEVentGroupPublishers from "./ALUIEventGroupPublisher";
+import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
-import { assert } from "@hyperion/global";
 
 export type InitOptions<> = Types.Options<
   {
@@ -46,14 +46,14 @@ export function init(options: InitOptions) {
     return;
   }
 
-  ALUIEVentGroupPublishers.init(options);
+  ALUIEventGroupPublishers.init(options);
 
   const { channel, flowletManager } = options;
 
   const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
   const activeRootFlowlets = new Set<IALFlowlet>();
 
-  FLowlet.onFlowletInit.add(flowlet => {
+  Flowlet.onFlowletInit.add(flowlet => {
     if (!flowlet.parent) {
       activeRootFlowlets.add(flowlet);
     }
@@ -104,7 +104,7 @@ export function init(options: InitOptions) {
 
   const IS_TRIGGER_FLOWLET_SETUP_PROP = 'isTriggerFlowletSetup';
   IEventTarget.addEventListener.onArgsObserverAdd(function (this, eventType, _callback) {
-    if (!ALUIEVentGroupPublishers.isSupported(eventType)) {
+    if (!ALUIEventGroupPublishers.isSupported(eventType)) {
       return;
     }
 
@@ -115,12 +115,20 @@ export function init(options: InitOptions) {
        * but that could add too much overhead to every callback.
        */
       // const topTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+      /**
+       * Here we catch application code calling addEventListener to add a handler for an event.
+       * We then want to do one extra event handler of our own, before every other handler the very first time such event handler is installed.
+       * This handler ensures that the event has the right extended fields.
+       * Here if we call the normal addEventListener, it will again bring us back to this very interception and we go into an infinite loop!
+       * We do know that the goal of this callback is to update the triggerFlowlet and nothing else matters. So, we can bypass all of 
+       * the other logic by calling the original function.
+       */
       IEventTarget.addEventListener.getOriginal().call(
         this,
         eventType,
         event => {
           if (!getTriggerFlowlet(event)) {
-            const parentTriggerFlowlet = ALUIEVentGroupPublishers.getGroupRootFlowlet(event);
+            const parentTriggerFlowlet = ALUIEventGroupPublishers.getGroupRootFlowlet(event);
             const triggerFlowlet = new flowletManager.flowletCtor(
               `${eventType}(ts:${performanceAbsoluteNow()})`,
               parentTriggerFlowlet
