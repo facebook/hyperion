@@ -8,6 +8,7 @@ import { Flowlet } from "../src/Flowlet";
 describe("test Flowlet", () => {
   test("test Flowlet methods", () => {
     const f1 = new Flowlet<{
+      triggerFlowlet: any,
       i?: number;
     }>("f1");
 
@@ -21,6 +22,17 @@ describe("test Flowlet", () => {
     f2.data.i = 20;
     expect(f2.data.i).toBe(20);
 
+  });
+
+  test("long flowlet chain", () => {
+    let flowlet = new Flowlet<{}>('f1');
+    for (let i = 0; i < 100000; ++i) {
+      flowlet = flowlet.fork('f');
+    }
+
+    const name = flowlet.getFullName();
+    expect(name.length).toBeGreaterThan(1000);
+    expect(name).toMatch(/[.][.][.](?:[/]f)+/);
   });
 
 });
