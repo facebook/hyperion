@@ -35,4 +35,8 @@ describe("test Flowlet", () => {
     expect(name).toMatch(/[.][.][.](?:[/]f)+/);
   });
 
+  test("include id in the flowlet name", () => {
+    let flowlet = new Flowlet<{}>('f1');
+    expect(flowlet.getFullName(true)).toMatch(/f1:\d+/);
+  });
 });
