@@ -5,13 +5,12 @@
 'use strict';
 
 
-import type * as React from 'react';
-import { useALSurfaceContext } from './ALSurfaceContext';
 import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
-import { SurfacePropsExtension } from './ALSurfacePropsExtension';
-import { SurfaceComponent } from './ALSurface';
-import { ALFlowletManager } from './ALFlowletManager';
 import * as Types from "@hyperion/hyperion-util/src/Types";
+import type * as React from 'react';
+import { ALFlowletManager } from './ALFlowletManager';
+import { SurfaceComponent } from './ALSurface';
+import { useALSurfaceContext } from './ALSurfaceContext';
 
 
 export type InitOptions = Types.Options<{
@@ -41,13 +40,12 @@ function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions & { contai
   const { surfaceComponent, children, container } = props;
   const { ReactModule, } = props.react;
   const surfaceContext = useALSurfaceContext();
-  const { flowlet } = surfaceContext;
-  if (surfaceContext.surface != null && flowlet != null) {
+  const { surface } = surfaceContext;
+  if (surface != null) {
     return ReactModule.createElement(
       surfaceComponent,
       {
-        __ext: new SurfacePropsExtension(flowlet),
-        flowlet,
+        surface,
         proxiedContext: { ...surfaceContext, container },
       },
       children
