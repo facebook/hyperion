@@ -11,7 +11,6 @@ import { Channel } from "@hyperion/hook/src/Channel";
 import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
-import * as Flowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
@@ -23,6 +22,7 @@ import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
 import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
+import * as  Flowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
 
 export type InitOptions<> = Types.Options<
   {
@@ -46,18 +46,49 @@ export function init(options: InitOptions) {
     return;
   }
 
-  ALUIEventGroupPublishers.init(options);
-
   const { channel, flowletManager } = options;
 
-  const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
-  const activeRootFlowlets = new Set<IALFlowlet>();
+  let currTriggerFlowlet = new flowletManager.flowletCtor('pageload');
+  currTriggerFlowlet.data.triggerFlowlet = currTriggerFlowlet;
 
+  const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
+  const activeRootFlowlets = new class {
+    private _values = new Set<IALFlowlet>();
+    add(flowlet: IALFlowlet): this {
+      if (
+        !flowlet.parent && // only care about root flowlets
+        flowlet !== flowlet.data.triggerFlowlet // no need to add trigger flowlets themselves
+      ) {
+        this._values.add(flowlet);
+        flowlet.data.triggerFlowlet ||= currTriggerFlowlet;
+      }
+      return this;
+    }
+
+    delete(flowlet: IALFlowlet): boolean {
+      if (!flowlet.parent && flowlet.data.surface) {
+        /**
+         * Since all surfaces will have a common root, the following
+         * should never happen. But, for the sake of resiliance, the
+         * code will keep the top surface flowlets always alive.
+         */
+        return false;
+      }
+      return this._values.delete(flowlet);
+    }
+
+    values(): Set<IALFlowlet> {
+      return this._values;
+    }
+  }();
+
+  // TODO: do we need to add every flowlet here or just Surface ones?
   Flowlet.onFlowletInit.add(flowlet => {
     if (!flowlet.parent) {
       activeRootFlowlets.add(flowlet);
     }
   });
+  activeRootFlowlets.add(flowletManager.root);
 
   function setSurfaceTriggerFlowlet(_surface: string | null, triggerFlowlet: TriggerFlowlet | null | undefined): void {
     if (!triggerFlowlet) {
@@ -65,7 +96,7 @@ export function init(options: InitOptions) {
     }
 
     // We don't know the actual surface (options are off!) update everything
-    for (const root of activeRootFlowlets) {
+    for (const root of activeRootFlowlets.values()) {
       root.data.triggerFlowlet = triggerFlowlet;
     }
 
@@ -77,9 +108,9 @@ export function init(options: InitOptions) {
     //     surfaceFlowlet.data.triggerFlowlet = triggerFlowlet;
     //   }
     // }
-
+    currTriggerFlowlet = triggerFlowlet;
   }
-
+  setSurfaceTriggerFlowlet(null, currTriggerFlowlet);
 
   // Track surface flowlet roots
   channel.addListener('al_surface_mount', event => {
