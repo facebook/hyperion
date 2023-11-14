@@ -48,7 +48,7 @@ export function init() {
     isExtended?: boolean;
   }
 
-  const enableReactFlowlet = true;
+  const enableReactFlowlet = false;
   AutoLogging.init({
     flowletManager,
     domSurfaceAttributeName,
@@ -70,7 +70,8 @@ export function init() {
       enableInterceptFunctionComponentRender: enableReactFlowlet,
     },
     surface: {
-      channel
+      channel,
+      disableReactDomPropsExtension: true,
     },
     elementText: {
       updateText(elementText: ExtendedElementText, domSource) {

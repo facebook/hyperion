@@ -20,6 +20,7 @@ import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
 import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { assert } from "@hyperion/global";
 
 
 export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
@@ -70,9 +71,9 @@ type ALChannel = Channel<ALChannelEventType>;
 
 export type SurfaceComponent = (props:
   IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> &
-  Omit<ALSurfaceProps, 'surface'> &
+  ALSurfaceProps &
   {
-    flowlet: FlowletType;
+    // flowlet: FlowletType;
     /** The optional incoming surface that we are re-wrapping via a proxy.
      * If this is provided,  then we won't emit mutations for this surface as we are
      * doubly wrapping that surface, for surface attribution purposes.
@@ -219,11 +220,13 @@ export function init(options: InitOptions): ALSurfaceHOC {
     domAttributeValue: string;
   }
 
+  const SurfaceDataMap = new Map<string, SurfaceData>();
+
   const Surface: SurfaceComponent = props => {
-    const { __ext, flowlet, proxiedContext } = props;
-    if (__ext && __ext.flowlet !== flowlet) {
-      __ext.flowlet = flowlet;
-    }
+    const { /* __ext, */ surface, proxiedContext } = props;
+    // if (__ext && __ext.flowlet !== flowlet) {
+    //   __ext.flowlet = flowlet;
+    // }
 
     let surfacePath: string;
     let nonInteractiveSurfacePath: string;
@@ -236,7 +239,6 @@ export function init(options: InitOptions): ALSurfaceHOC {
     let addSurfaceWrapper = props.nodeRef == null;
 
     if (!proxiedContext) {
-      const surface = flowlet.name;
       nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
       const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled!
       if (!trackInteraction) {
@@ -262,20 +264,35 @@ export function init(options: InitOptions): ALSurfaceHOC {
       }
     }
 
-    const surfaceData: SurfaceData = {
-      surface: surfacePath,
-      nonInteractiveSurface: nonInteractiveSurfacePath,
-      flowlet,
-      domAttributeName,
-      domAttributeValue,
-    };
+    let surfaceData: SurfaceData | undefined = SurfaceDataMap.get(nonInteractiveSurfacePath);
+    let flowlet: FlowletType;
+    if (!surfaceData) {
+      assert(!proxiedContext, "Proxied surface should always have surface data already");
+
+      /**
+       * In case surfaces are unmounted, we want them all to have one common
+       * ancestor so that we can assign triggerFlowlet to it and have them all
+       * pick it up. This is specially useful to link event to unmount
+       */
+      flowlet = new flowletManager.flowletCtor(surface, surfaceCtx.flowlet ?? flowletManager.root);
+      flowlet.data.surface = nonInteractiveSurfacePath;
+      surfaceData = {
+        surface: surfacePath,
+        nonInteractiveSurface: nonInteractiveSurfacePath,
+        flowlet,
+        domAttributeName,
+        domAttributeValue,
+      };
+      SurfaceDataMap.set(nonInteractiveSurfacePath, surfaceData);
+    } else {
+      flowlet = surfaceData.flowlet;
+    }
 
     if (options.channel && !proxiedContext) {
       const { channel } = options;
       // Emit surface mutation events on mount/unmount
       const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
       metadata.original_flowlet = flowlet.getFullName();
-
       metadata.surface_capability = surfaceCapabilityToString(props.capability);
 
       ReactModule.useLayoutEffect(() => {
@@ -308,7 +325,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     }
 
 
-    flowlet.data.surface = surfacePath;
+    // flowlet.data.surface = surfacePath;
     let children = props.children;
     if (addSurfaceWrapper) {
       if (!options.disableReactDomPropsExtension) {
@@ -442,29 +459,14 @@ export function init(options: InitOptions): ALSurfaceHOC {
     },
   });
 
-  return ({ surface, ...rest }, renderer) => {
-    const topFlowlet = flowletManager.top();
-
-    let flowlet: FlowletType;
-    if (topFlowlet == null || topFlowlet?.name !== surface) {
-      flowlet = flowletManager.push(new flowletManager.flowletCtor(surface, topFlowlet));
-      flowlet.data.surface =
-        (flowlet.parent?.data?.surface ?? '') + SURFACE_SEPARATOR + surface;
-    } else {
-      flowlet = topFlowlet;
-    }
-
+  return (props, renderer) => {
     return children => {
       const result = ReactModule.createElement(
         Surface,
-        {
-          flowlet,
-          ...rest
-        },
+        props,
         renderer ? renderer(children) : children
       );
 
-      flowletManager.pop(flowlet);
       return result;
     };
   };

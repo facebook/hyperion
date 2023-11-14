@@ -10,12 +10,11 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from './ALEventIndex';
-import { IALFlowlet } from "./ALFlowletManager";
 import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
 import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData } from './ALSurface';
-import { ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
+import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 type ALMutationEvent = ALReactElementEvent & ALElementTextEvent & ALOptionalFlowletEvent & Readonly<
   {
@@ -49,11 +48,10 @@ export type ALChannelSurfaceMutationEvent = Readonly<{
 
 export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>;
 
-type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & {
+type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & ALFlowletEvent & {
   surface: string,
   element: HTMLElement,
   addTime: number,
-  addFlowlet: IALFlowlet | null,
   mountEvent: ALSurfaceMutationEventData | null,
 };
 
@@ -72,7 +70,7 @@ export function publish(options: InitOptions): void {
 
   function processNode(event: ALChannelSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
-    const { element, surface, metadata, triggerFlowlet } = event;
+    const { element, surface, metadata } = event;
 
     const currFlowlet = flowletManager.top();
     if (!(element instanceof HTMLElement) || /LINK|SCRIPT/.test(element.nodeName)) {
@@ -94,11 +92,16 @@ export function publish(options: InitOptions): void {
           } else {
             elementText = getElementTextEvent(null, surface);
           }
+          if (currFlowlet) {
+            metadata.add_flowlet = currFlowlet?.getFullName();
+          }
           info = {
+            ...event,
             surface,
-            element: element,
+            element,
             addTime: timestamp,
-            addFlowlet: currFlowlet,
+            flowlet: event.flowlet,
+            triggerFlowlet: event.triggerFlowlet,
             reactComponentName: reactComponentData?.name,
             reactComponentStack: reactComponentData?.stack,
             ...elementText,
@@ -113,8 +116,6 @@ export function publish(options: InitOptions): void {
             eventTimestamp: info.addTime,
             eventIndex: ALEventIndex.getNextEventIndex(),
             autoLoggingID: ALID.getOrSetAutoLoggingID(element),
-            flowlet: info.addFlowlet,
-            triggerFlowlet,
           });
 
         } else if (element != info.element && element.contains(info.element)) {
@@ -124,15 +125,16 @@ export function publish(options: InitOptions): void {
           * So, we can just update the surface=>element info.
           *  */
           info.element = element;
-          info.addFlowlet = currFlowlet;
           info.addTime = timestamp;
+          if (currFlowlet) {
+            info.metadata.add_flowlet = currFlowlet.getFullName();
+          }
         }
         break;
       }
       case 'removed': {
         const info = activeSurfaces.get(surface);
         if (info && info.element === element) {
-          const removeFlowlet = currFlowlet;
           const removeTime = timestamp;
           activeSurfaces.delete(surface);
           /**
@@ -144,6 +146,9 @@ export function publish(options: InitOptions): void {
            * // Object.assign(info.metadata, metadata);
            */
           assert(info.mountEvent != null, "Missing mutaion info for unmounting");
+          if (currFlowlet) {
+            info.metadata.remove_flowlet = currFlowlet.getFullName();
+          }
           channel.emit('al_surface_mutation_event', {
             ...info,
             event: 'unmount_component',
@@ -151,8 +156,6 @@ export function publish(options: InitOptions): void {
             eventIndex: ALEventIndex.getNextEventIndex(),
             autoLoggingID: ALID.getOrSetAutoLoggingID(element),
             mountedDuration: (removeTime - info.addTime) / 1000,
-            flowlet: removeFlowlet,
-            triggerFlowlet,
             mountEvent: info.mountEvent,
           });
         }
