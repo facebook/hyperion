@@ -13,6 +13,7 @@ import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 enum UIEventGroup {
   MOUSE = 'mouse',
   KEY = 'key',
+  INPUT = 'input',
 }
 
 interface GroupFlowletInfo {
@@ -31,28 +32,41 @@ const EventInfo: {
     groupType: UIEventGroup;
   }
 } = {};
-([ //https://patrickhlauke.github.io/touch/tests/event-listener_mouse-only.html
-  ['mouseover', 'mouseenter'],
-  // ['mousemove'], // We dont really seem to need this, and it may cause perf regression
-  ['mousedown', 'mouseup', 'click', /* 'dbclick' */],
-  ['mouseout', 'mouseleave']
-] as const).reduce(
-  (prev, events, index) => {
-    events.forEach(event => {
-      prev[event] = {
-        order: index,
-        groupType: UIEventGroup.MOUSE
-      }
-    });
-    return prev;
-  },
-  EventInfo
+function updateInfo(type: UIEventGroup, events: ((keyof GlobalEventHandlersEventMap)[])[]) {
+  events.reduce(
+    (prev, events, index) => {
+      events.forEach(event => {
+        prev[event] = {
+          order: index,
+          groupType: type
+        }
+      });
+      return prev;
+    },
+    EventInfo
+  );
+}
+updateInfo(
+  UIEventGroup.MOUSE,
+  [ //https://patrickhlauke.github.io/touch/tests/event-listener_mouse-only.html
+    ['mouseover', 'mouseenter'],
+    // ['mousemove'], // We dont really seem to need this, and it may cause perf regression
+    ['mousedown', 'mouseup', 'click', /* 'dbclick' */],
+    ['mouseout', 'mouseleave']
+  ]
+);
+updateInfo(
+  UIEventGroup.INPUT,
+  [ //https://patrickhlauke.github.io/touch
+    ['input', 'change'],
+  ]
 );
 
 export type InitOptions = Types.Options<
   Pick<ALSharedInitOptions, 'flowletManager'>
 >;
 let _options: InitOptions | null = null;
+
 
 export function isSupported(eventType: string): boolean {
   return eventType in EventInfo;
@@ -74,7 +88,12 @@ export function getGroupRootFlowlet(event: Event): IALFlowlet | null | undefined
     }
 
     const type = eventInfo.groupType;
-    const groupFlowlet = new _options.flowletManager.flowletCtor(`${type}(ts:${performanceAbsoluteNow()})`);
+    /**
+     * As we keep track all root flowlets for the trigger flowlet tracking
+     * we use a common parent for all ui events to avoid tracking each ui event's
+     * flowlet individually.
+     */
+    const groupFlowlet = new _options.flowletManager.flowletCtor(`${type}(ts:${performanceAbsoluteNow()})`, _options.flowletManager.root);
     groupRootFlowlet = {
       groupFlowlet,
       type,

@@ -10,6 +10,7 @@ import { Channel } from "@hyperion/hook/src/Channel";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as Types from "@hyperion/hyperion-util/src/Types";
+import * as ALCustomEvent from "./ALCustomEvent";
 import * as ALFlowletPublisher from "./ALFlowletPublisher";
 import * as ALHeartbeat from "./ALHeartbeat";
 import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
@@ -17,10 +18,10 @@ import * as ALNetworkPublisher from "./ALNetworkPublisher";
 import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
 import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
-import { ALSharedInitOptions } from "./ALType";
-import * as ALUIEventPublisher from "./ALUIEventPublisher";
-import * as ALCustomEvent from "./ALCustomEvent";
 import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
+import { ALSharedInitOptions } from "./ALType";
+import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
+import * as ALUIEventPublisher from "./ALUIEventPublisher";
 /**
  * This type extracts the union of all events types so that external modules
  * don't have to import these types one by one.
@@ -87,6 +88,8 @@ export function init(options: InitOptions): boolean {
       ...sharedOptions,
       ...options.triggerFlowlet,
     });
+    ALUIEventGroupPublishers.init(options);
+
   }
 
   // Enumerating the cases where we need react interception and visitors
