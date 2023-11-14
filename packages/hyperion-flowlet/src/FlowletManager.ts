@@ -29,7 +29,10 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
 
   private _scheduler: TimedTrigger | null = null;
 
+  public readonly root: T;
   constructor(public flowletCtor: new (flowletName: string, parent?: T | null) => T) {
+    this.root = new flowletCtor("");
+
     if (__DEV__) {
       this.onPush.add(flowlet => {
         assert(flowlet != null, `Unexpected NULL flowlet value pushed to stack!`);
@@ -77,8 +80,8 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     }
   }
 
-  top(): T | null {
-    return this._top;
+  top(): T {
+    return this._top ?? this.root;
   }
 
   private updateTop() {
