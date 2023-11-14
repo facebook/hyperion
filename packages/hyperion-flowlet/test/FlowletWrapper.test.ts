@@ -71,7 +71,7 @@ describe("test flow of flowlets", () => {
     );
 
     expect(manager.pop(main)).toBe(main);
-    expect(manager.top()).toBe(null);
+    expect(manager.top()).toBe(manager.root);
 
     const r = await counter.reachTarget();
     clearInterval(id);
