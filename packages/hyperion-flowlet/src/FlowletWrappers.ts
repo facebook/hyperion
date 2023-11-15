@@ -20,13 +20,13 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     return;
   }
 
-  function getTriggerFlowletFromEvent(event: Event) {
+  function getTriggerFlowletFromEvent(event?: Event) {
     /**
      * The trigger flowlet may be assigned to the event itself (e.g. for interaction events)
      * or assigned to the event.target (e.g. for XHR events)
      * So, we try both to conver all cases.
      */
-    return getTriggerFlowlet(event) ?? getTriggerFlowlet(event.target);
+    return getTriggerFlowlet(event) ?? getTriggerFlowlet(event?.target);
   }
 
   for (const eventHandler of [
