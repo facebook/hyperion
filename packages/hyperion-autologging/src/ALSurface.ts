@@ -327,6 +327,9 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     // flowlet.data.surface = surfacePath;
     let children = props.children;
+
+    const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
+
     if (addSurfaceWrapper) {
       if (!options.disableReactDomPropsExtension) {
         const foundDomElement = propagateFlowletDown(props.children, surfaceData);
@@ -344,7 +347,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
            *
            */
           children = ReactModule.createElement(
-            "span",
+            wrapperElementType,
             {
               "data-surface-wrapper": "1",
               style: { display: 'contents' },
@@ -355,7 +358,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         }
       } else {
         children = ReactModule.createElement(
-          "span",
+          wrapperElementType,
           {
             "data-surface-wrapper": "1",
             style: { display: 'contents' },
