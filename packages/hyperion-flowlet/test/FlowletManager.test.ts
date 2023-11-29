@@ -212,20 +212,20 @@ describe("test FlowletManager", () => {
     const manager = new FlowletManager(Flowlet);
     const main = manager.push(new Flowlet("main"));
 
-    const bar = (param) => {
+    const bar = param => {
       if (param === 'foo') {
-        expect(manager.top()?.getFullName()).toBe(`/main/foo`);
+        expect(manager.top()?.getFullName()).toBe('/main/foo');
       } else if (param === 'foobar') {
-        expect(manager.top()?.getFullName()).toBe(`/main/foobar`);
+        expect(manager.top()?.getFullName()).toBe('/main/foobar');
       } else {
         expect(false).toBeTruthy();
       }
     };
-    const foo = (param) => {
+    const foo = param => {
       bar(param);
     };
 
-    const getFlowletName = (param) => param;
+    const getFlowletName = param => param;
     const markedFoo = manager.mark(foo, getFlowletName);
 
     markedFoo('foo');
