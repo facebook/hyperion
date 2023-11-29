@@ -102,4 +102,35 @@ describe('test Promise', () => {
 
   });
 
+  test("test Promise behavior back to normal", async () => {
+    const result = await Promise.resolve(1).then(value => value + 1);
+    expect(result).toBe(2);
+
+    const observer = jest.fn();
+    await Promise.reject(1).catch(observer);
+    expect(observer).toBeCalledTimes(1);
+  });
+
+
+  ([
+    [IPromise.all, () => Promise.all([Promise.resolve(1), Promise.resolve(2)])],
+    [IPromise.allSettled, () => Promise.allSettled([Promise.resolve(1), Promise.reject(2)])],
+    // [IPromise.any, () => Promise.any([Promise.resolve(1), Promise.resolve(2)])],
+    [IPromise.race, () => Promise.race([1, Promise.resolve(2)])],
+    [IPromise.reject, () => Promise.reject(1)],
+    [IPromise.resolve, () => Promise.resolve(2)],
+  ] as const).forEach(([interceptor, tester]) => {
+    test(`test Promise.${interceptor.name} static method`, async () => {
+      const argsObserver = jest.fn();
+      const handler = interceptor.onArgsObserverAdd(values => {
+        argsObserver(values);
+      });
+      try {
+        await tester();
+      } catch { }
+      expect(argsObserver).toBeCalledTimes(1);
+      interceptor.onArgsObserverRemove(handler);
+    });
+  });
+
 });
