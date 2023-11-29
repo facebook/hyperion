@@ -156,10 +156,10 @@ export class FunctionInterceptor<
   Name extends string,
   FuncType extends InterceptableFunction
 > extends PropertyInterceptor {
-  protected onArgsMapper?: OnArgsMapper<FuncType>;
-  protected onArgsObserver?: OnArgsObserver<FuncType>;
-  protected onValueMapper?: OnValueMapper<FuncType>;
-  protected onValueObserver?: OnValueObserver<FuncType>;
+  protected onArgsMapper?: OnArgsMapper<FuncType> | null;
+  protected onArgsObserver?: OnArgsObserver<FuncType> | null;
+  protected onValueMapper?: OnValueMapper<FuncType> | null;
+  protected onValueObserver?: OnValueObserver<FuncType> | null;
   protected onArgsAndValueMapper?: OnArgsAndValueMapper<FuncType> | null;
 
   protected original: FuncType = unknownFunc;
@@ -582,6 +582,10 @@ export class FunctionInterceptor<
   }
   public onArgsMapperRemove(cb: OnArgsMapperFunc<FuncType>): typeof cb {
     if (this.onArgsMapper?.remove(cb)) {
+      // Since we rely on the output of the callback, we should avoid empty list
+      if (!this.onArgsMapper.hasCallback()) {
+        this.onArgsMapper = null;
+      }
       this.updateDispatcherFunc();
     }
     return cb
@@ -596,6 +600,10 @@ export class FunctionInterceptor<
   }
   public onArgsObserverRemove(cb: OnArgsObserverFunc<FuncType>): typeof cb {
     if (this.onArgsObserver?.remove(cb)) {
+      // Since we rely on the output of the callback, we should avoid empty list
+      if (!this.onArgsObserver.hasCallback()) {
+        this.onArgsObserver = null;
+      }
       this.updateDispatcherFunc();
     }
     return cb
@@ -610,6 +618,10 @@ export class FunctionInterceptor<
   }
   public onValueMapperRemove(cb: OnValueMapperFunc<FuncType>): typeof cb {
     if (this.onValueMapper?.remove(cb)) {
+      // Since we rely on the output of the callback, we should avoid empty list
+      if (!this.onValueMapper.hasCallback()) {
+        this.onValueMapper = null;
+      }
       this.updateDispatcherFunc();
     }
     return cb
