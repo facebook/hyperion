@@ -199,14 +199,12 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
    * In case we wanted a function to push/pop a flowlet name on the stack, we can
    * use this helper function to create a wrapper that marks the desired flowlet
    * @param listener
-   * @param apiName
-   * @param customFlowlet
-   * @param getTriggerFlowlet
+   * @param getFlowletName
    * @returns
    */
   mark<F extends InterceptableFunction | undefined | null>(
     func: F,
-    flowletName: string,
+    getFlowletName: (...args: any) => string,
   ): F {
     if (!func) {
       return func;
@@ -220,6 +218,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       // Should we use onArgsAndValueMapper instead of setCustom, although this is safer with the finally call.
       funcInterceptor.setCustom(<any>function (this: any) {
         const handler: Function = funcInterceptor.getOriginal();
+        const flowletName = getFlowletName.apply(this, <any>arguments);
         const flowlet = new flowletManager.flowletCtor(flowletName, flowletManager.top());
         let res;
         try {
