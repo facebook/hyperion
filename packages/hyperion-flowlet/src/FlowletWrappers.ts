@@ -11,7 +11,7 @@ import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
 import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
 import { FlowletManager } from "./FlowletManager";
-import { getTriggerFlowlet, setTriggerFlowlet } from "./TriggerFlowlet";
+import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "./TriggerFlowlet";
 
 const initialized = new TestAndSet();
 
@@ -181,14 +181,56 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     })
   }
 
-  IPromise.constructor.onValueObserverAdd(value => {
-    if (!getTriggerFlowlet(value)) {
-      const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-      if (triggerFlowlet) {
-        setTriggerFlowlet(value, triggerFlowlet);
+  for (const fi of [
+    IPromise.constructor,
+    IPromise.resolve,
+    IPromise.reject
+  ]) {
+    fi.onValueObserverAdd(value => {
+      if (!getTriggerFlowlet(value)) {
+        const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+        if (triggerFlowlet) {
+          setTriggerFlowlet(value, triggerFlowlet);
+        }
       }
-    }
-  });
+    });
+  }
+
+  for (const fi of [
+    IPromise.all,
+    IPromise.allSettled,
+    IPromise.any,
+    IPromise.race
+  ]) {
+    fi.onArgsAndValueMapperAdd(args => {
+      const iterable = args[0];
+      return value => {
+        const topTriggerFlowlet = getTriggerFlowlet(value) ?? flowletManager.top()?.data.triggerFlowlet;
+        const triggerFlowlets: TriggerFlowlet[] = [];
+        // Args can be iterable, so we use the modern for-loop https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all#parameters
+        for (const arg of iterable) {
+          if (arg instanceof Promise) {
+            const triggerFlowlet = getTriggerFlowlet(arg);
+            if (triggerFlowlet) {
+              triggerFlowlets.push(triggerFlowlet);
+            }
+          }
+        }
+
+        if (triggerFlowlets.length > 0) {
+          const flowletName = `${fi.name}{${triggerFlowlets.map(f => f.id).join(",")}}`;
+          const triggerFlowlet = new flowletManager.flowletCtor(flowletName, topTriggerFlowlet);
+          setTriggerFlowlet(value, triggerFlowlet);
+        } else if (topTriggerFlowlet) {
+          setTriggerFlowlet(value, topTriggerFlowlet);
+        }
+
+        return value;
+      }
+    });
+
+  }
+
 
   IPromise.then.onArgsAndValueMapperAdd(function (this, args) {
     const triggerFlowlet = getTriggerFlowlet(this);
