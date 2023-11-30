@@ -8,10 +8,18 @@ import "jest";
 import { Flowlet } from "../src/Flowlet";
 import { FlowletManager } from "../src/FlowletManager";
 import { initFlowletTrackers } from "../src/FlowletWrappers";
+import { getTriggerFlowlet } from "../src/TriggerFlowlet";
 
 
 
 describe("test flow of flowlets", () => {
+  const flowletManager = new FlowletManager(Flowlet);
+
+  beforeAll(() => {
+    initFlowletTrackers(flowletManager);
+
+  })
+
   beforeEach(() => {
     if (!window.Worker) {
       window.Worker = <any>{}; // Just so jest does not fail
@@ -23,11 +31,9 @@ describe("test flow of flowlets", () => {
   }
 
   test("test FlowletManager methods and events", async () => {
-    const manager = new FlowletManager(Flowlet);
-    const main = manager.push(new Flowlet("main"));
+    const manager = flowletManager;
+    const main = manager.top() ?? manager.push(new Flowlet("main"));
     const counter = new AsyncCounter(0);
-
-    initFlowletTrackers(manager);
 
     const id = setInterval(
       () => { // async step 1
@@ -79,9 +85,7 @@ describe("test flow of flowlets", () => {
   });
 
   test("add/remove listeners", async () => {
-    const manager = new FlowletManager(Flowlet);
-    const main = manager.push(new Flowlet("main"));
-    initFlowletTrackers(manager);
+    const main = flowletManager.top() ?? flowletManager.push(new Flowlet("main"));
 
     const div = window.document.createElement("div");
     div.id = main.getFullName();
@@ -121,5 +125,32 @@ describe("test flow of flowlets", () => {
     expect(r2).toBe(2);
     expect(counter1.getCount()).toBe(2); // Should not have run again
     expect(counter2.getCount()).toBe(2);
-  })
+  });
+
+  test("Promise trigger flowlet", async () => {
+    const main = flowletManager.top() ?? flowletManager.push(new Flowlet("main"));
+    const tf = new flowletManager.flowletCtor("tf");
+    main.data.triggerFlowlet = tf;
+    const p0 = new Promise(resolve => resolve(0));
+    expect(getTriggerFlowlet(p0)).toBe(tf);
+
+    const p1 = Promise.resolve(1);
+    expect(getTriggerFlowlet(p1)).toBe(tf);
+
+    const all = Promise.all([p0, p1]);
+    expect(getTriggerFlowlet(all)?.getFullName()).toMatch(/all\{\d+,\d+\}/);
+
+    const race = Promise.race([p0, p1]);
+    expect(getTriggerFlowlet(race)?.getFullName()).toMatch(/race\{\d+,\d+\}/);
+
+    let p2;
+    try { // Need try/catch to handle reject
+      p2 = Promise.reject(2);
+    } catch {
+    } finally {
+      expect(getTriggerFlowlet(p2)).toBe(tf);
+    }
+    const allSettled = Promise.allSettled([p0, p1, p2]);
+    expect(getTriggerFlowlet(allSettled)?.getFullName()).toMatch(/allSettled\{\d+,\d+,\d+\}/);
+  });
 });
