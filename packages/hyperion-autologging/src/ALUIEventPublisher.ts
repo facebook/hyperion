@@ -169,7 +169,6 @@ export function publish(options: InitOptions): void {
   const { uiEvents, flowletManager, channel, domSurfaceAttributeName } = options;
 
   let lastUIEvent: CurrentUIEvent | null;
-  const defaultTopFlowlet = new flowletManager.flowletCtor("/");
 
   uiEvents.forEach((eventConfig => {
     const { eventName, cacheElementReactInfo = false } = eventConfig;
@@ -186,26 +185,26 @@ export function publish(options: InitOptions): void {
       if (!uiEventData) {
         return;
       }
-      const { element, targetElement, autoLoggingID, eventTimestamp } = uiEventData;
+      const { element, targetElement, autoLoggingID } = uiEventData;
 
       const surface = getSurfacePath(targetElement, domSurfaceAttributeName);
       /**
        * Regardless of element, we want to set the flowlet on this event.
        * If we do have an element, we include its id in the flowlet.
        * Since it is possible to interact with the same exact element multiple times,
-       * we need yet another distinguishing fact, for which we use timestamp
+       * we need yet another distinguishing fact, for which we rely on flowlet id to be part of the name
        */
-      const topFlowlet = flowletManager.top();
-      let flowlet = topFlowlet ?? defaultTopFlowlet; // We want to ensure flowlet is always assigned
-      let flowletName = eventName + `(ts:${eventTimestamp}`;
-      if (autoLoggingID) {
-        flowletName += `,element:${autoLoggingID}`;
-      }
+      let flowletName = eventName + `(`;
+      let separator = '';
       if (surface) {
-        flowletName += `,surface:${surface}`;
+        flowletName += `${separator}surface=${surface}`;
+        separator = '&';
+      }
+      if (autoLoggingID) {
+        flowletName += `${separator}element=${autoLoggingID}`;
       }
       flowletName += ')';
-      flowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
+      let flowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
       if (shouldPushPopFlowlet(event)) {
         uiEventFlowletManager.push(flowlet);
         flowlet = flowletManager.push(flowlet);
