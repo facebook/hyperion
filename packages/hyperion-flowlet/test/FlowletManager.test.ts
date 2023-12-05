@@ -6,6 +6,7 @@ import "jest";
 import { Flowlet } from "../src/Flowlet";
 
 import { FlowletManager } from "../src/FlowletManager";
+import { getFullNamePattern } from "./FlowletTestUtil";
 
 describe("test FlowletManager", () => {
   jest.useFakeTimers();
@@ -25,7 +26,7 @@ describe("test FlowletManager", () => {
     const p1 = manager.pop(f2);
     const f1_1 = manager.push(f1.fork("f1.1"));
 
-    expect(f1_1.getFullName()).toBe("/main/f1/f1.1");
+    expect(f1_1.getFullName()).toMatch(getFullNamePattern("/main/f1/f1.1"));
 
     expect(manager.top()).toStrictEqual(f1_1);
     expect(manager.pop(f1_1)).toStrictEqual(f1_1);
@@ -89,12 +90,12 @@ describe("test FlowletManager", () => {
 
     const f1 = manager.push(new Flowlet("f1"));
     batchRunner.schedule(() => {
-      expect(manager.top()?.parent).toStrictEqual(f1);
+      expect(manager.top().parent).toStrictEqual(f1);
     });
 
     const f2 = manager.push(f1.fork("f2"));
     batchRunner.schedule(() => {
-      expect(manager.top()?.parent).toStrictEqual(f2);
+      expect(manager.top().parent).toStrictEqual(f2);
     });
 
     manager.pop(f2);
@@ -123,7 +124,7 @@ describe("test FlowletManager", () => {
     const f1 = manager.push(new Flowlet("f1"));
     const ExceptionText = "Test Exception";
     const func = () => {
-      expect(manager.top() === f1 || manager.top()?.parent === f1).toBe(true);
+      expect(manager.top() === f1 || manager.top().parent === f1).toBe(true);
       throw ExceptionText;
     }
     const wrapped = manager.wrap(func, 'test error');
@@ -196,7 +197,7 @@ describe("test FlowletManager", () => {
     const main = manager.push(new Flowlet("main"));
 
     const bar = () => {
-      expect(manager.top()?.getFullName()).toBe('/main/foo');
+      expect(manager.top().getFullName()).toMatch(getFullNamePattern('/main/foo'));
     };
 
     const foo = () => {
@@ -214,9 +215,9 @@ describe("test FlowletManager", () => {
 
     const bar = param => {
       if (param === 'foo') {
-        expect(manager.top()?.getFullName()).toBe('/main/foo');
+        expect(manager.top().getFullName()).toMatch(getFullNamePattern('/main/foo'));
       } else if (param === 'foobar') {
-        expect(manager.top()?.getFullName()).toBe('/main/foobar');
+        expect(manager.top().getFullName()).toMatch(getFullNamePattern('/main/foobar'));
       } else {
         expect(false).toBeTruthy();
       }

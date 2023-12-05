@@ -31,7 +31,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
 
   public readonly root: T;
   constructor(public flowletCtor: new (flowletName: string, parent?: T | null) => T) {
-    this.root = new flowletCtor("");
+    this.root = new flowletCtor("/");
 
     if (__DEV__) {
       this.onPush.add(flowlet => {
