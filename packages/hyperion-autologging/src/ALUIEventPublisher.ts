@@ -318,7 +318,7 @@ export function publish(options: InitOptions): void {
    */
   flowletManager.onPush.add((flowlet, _reason) => {
     const uiEventFlowlet = uiEventFlowletManager.top();
-    if (uiEventFlowlet && flowlet.data.uiEventFlowlet !== uiEventFlowlet) {
+    if (uiEventFlowletManager.stackSize() > 0 && flowlet.data.uiEventFlowlet !== uiEventFlowlet) {
       flowlet.data.uiEventFlowlet = uiEventFlowlet;
       if (flowlet.name === "useState" && flowlet.parent) {
         /**
