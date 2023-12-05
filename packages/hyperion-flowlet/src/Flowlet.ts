@@ -28,7 +28,7 @@ export class Flowlet<T extends FlowletDataType = FlowletDataType> {
     onFlowletInit.call<T>(this);
   }
 
-  getFullName(includeId:boolean = false): string {
+  getFullName(): string {
     if (!this._fullName) {
       // The following is easiest approach, but does not work for very long chains!
       // this._fullName = `${this.parent?.getFullName() ?? ""}/${this.name}`;
@@ -46,10 +46,7 @@ export class Flowlet<T extends FlowletDataType = FlowletDataType> {
       let prefix: string = f ? (f._fullName ?? '...') : '';
       for (let j = rawFlowlets.length-1; j>=0; --j){
         let flowlet = rawFlowlets[j];
-        flowlet._fullName = prefix = prefix + "/" + flowlet.name;
-        if (includeId){
-          flowlet._fullName += ":" + flowlet.id;
-        }
+        flowlet._fullName = prefix = prefix + "/" + flowlet.name + ":" + flowlet.id;
       }
     }
     if (__DEV__){
