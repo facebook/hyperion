@@ -4,7 +4,6 @@
 
 'use strict';
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import { IALFlowlet } from "./ALFlowletManager";
 import { ALSharedInitOptions } from "./ALType";
 import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
@@ -93,7 +92,7 @@ export function getGroupRootFlowlet(event: Event): IALFlowlet | null | undefined
      * we use a common parent for all ui events to avoid tracking each ui event's
      * flowlet individually.
      */
-    const groupFlowlet = new _options.flowletManager.flowletCtor(`${type}(ts:${performanceAbsoluteNow()})`, _options.flowletManager.root);
+    const groupFlowlet = new _options.flowletManager.flowletCtor(type, _options.flowletManager.root);
     groupRootFlowlet = {
       groupFlowlet,
       type,
