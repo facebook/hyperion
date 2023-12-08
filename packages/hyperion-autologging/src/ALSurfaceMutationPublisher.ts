@@ -101,7 +101,6 @@ export function publish(options: InitOptions): void {
             element,
             addTime: timestamp,
             flowlet: event.flowlet,
-            triggerFlowlet: event.triggerFlowlet,
             reactComponentName: reactComponentData?.name,
             reactComponentStack: reactComponentData?.stack,
             ...elementText,
@@ -116,6 +115,7 @@ export function publish(options: InitOptions): void {
             eventTimestamp: info.addTime,
             eventIndex: ALEventIndex.getNextEventIndex(),
             autoLoggingID: ALID.getOrSetAutoLoggingID(element),
+            triggerFlowlet: event.triggerFlowlet,
           });
 
         } else if (element != info.element && element.contains(info.element)) {
@@ -157,6 +157,7 @@ export function publish(options: InitOptions): void {
             autoLoggingID: ALID.getOrSetAutoLoggingID(element),
             mountedDuration: (removeTime - info.addTime) / 1000,
             mountEvent: info.mountEvent,
+            triggerFlowlet: event.triggerFlowlet, // the trigger has changed from what was saved in info
           });
         }
         break;
