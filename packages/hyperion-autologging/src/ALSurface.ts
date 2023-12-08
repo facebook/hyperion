@@ -102,7 +102,7 @@ export type InitOptions = Types.Options<
     domFlowletAttributeName?: string;
     domNonInteractiveSurfaceAttributeName?: string;
     channel: ALChannel;
-    disableReactDomPropsExtension?: boolean;
+    enableReactDomPropsExtension?: boolean;
   }
 >;
 
@@ -123,7 +123,7 @@ class SurfaceDOMString<
 }
 
 function setupDomElementSurfaceAttribute(options: InitOptions): void {
-  if (options.disableReactDomPropsExtension) {
+  if (!options.enableReactDomPropsExtension) {
     return;
   }
 
@@ -331,7 +331,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
 
     if (addSurfaceWrapper) {
-      if (!options.disableReactDomPropsExtension) {
+      if (options.enableReactDomPropsExtension) {
         const foundDomElement = propagateFlowletDown(props.children, surfaceData);
 
         if (foundDomElement !== true) {

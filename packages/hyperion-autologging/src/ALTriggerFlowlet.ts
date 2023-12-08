@@ -8,7 +8,7 @@ import type * as React from 'react';
 
 import { assert } from "@hyperion/global";
 import { Channel } from "@hyperion/hook/src/Channel";
-import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { getFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
@@ -36,7 +36,11 @@ export type InitOptions<> = Types.Options<
     };
     flowletManager: ALFlowletManager;
     channel: Channel<ALChannelSurfaceEvent & ALChannelUIEvent>;
-    disableReactFlowlet?: boolean;
+    enableFlowletConstructorTracking?: boolean;
+    enablePerSurfaceTracking?: boolean;
+    enableReactCallbacksTracking?: boolean;
+    enableReactMethodFlowlet?: boolean;
+    enableReactSetStateTracking?: boolean;
   }
 >;
 
@@ -51,7 +55,6 @@ export function init(options: InitOptions) {
   let currTriggerFlowlet = new flowletManager.flowletCtor('pageload');
   currTriggerFlowlet.data.triggerFlowlet = currTriggerFlowlet;
 
-  const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
   const activeRootFlowlets = new class {
     private _values = new Set<IALFlowlet>();
     add(flowlet: IALFlowlet): this {
@@ -82,15 +85,9 @@ export function init(options: InitOptions) {
     }
   }();
 
-  // TODO: do we need to add every flowlet here or just Surface ones?
-  Flowlet.onFlowletInit.add(flowlet => {
-    if (!flowlet.parent) {
-      activeRootFlowlets.add(flowlet);
-    }
-  });
   activeRootFlowlets.add(flowletManager.root);
 
-  function setSurfaceTriggerFlowlet(_surface: string | null, triggerFlowlet: TriggerFlowlet | null | undefined): void {
+  let setActiveTriggerFlowlet: (triggerFlowlet: TriggerFlowlet | null | undefined, surface: string | null) => void = (triggerFlowlet, _surface) => {
     if (!triggerFlowlet) {
       return; // nothing to do
     }
@@ -100,38 +97,14 @@ export function init(options: InitOptions) {
       root.data.triggerFlowlet = triggerFlowlet;
     }
 
-    // Temporarily disable this until we can re-enable react-flowlet logic bellow
-    // if (surface) {
-    //   // The following may not happen until react interception and flowlets actually are enabled.
-    //   const surfaceFlowlet = ALSurfaceContextDataMap.get(surface);
-    //   if (surfaceFlowlet) {
-    //     surfaceFlowlet.data.triggerFlowlet = triggerFlowlet;
-    //   }
-    // }
     currTriggerFlowlet = triggerFlowlet;
   }
-  setSurfaceTriggerFlowlet(null, currTriggerFlowlet);
-
-  // Track surface flowlet roots
-  channel.addListener('al_surface_mount', event => {
-    const { surface, flowlet } = event;
-    ALSurfaceContextDataMap.set(surface, flowlet);
-    let rootFlowlet = flowlet;
-    while (rootFlowlet.parent) {
-      rootFlowlet = rootFlowlet.parent;
-    }
-    activeRootFlowlets.add(rootFlowlet);
-  });
-  channel.addListener('al_surface_unmount', event => {
-    ALSurfaceContextDataMap.delete(event.surface);
-    activeRootFlowlets.delete(event.flowlet);
-  });
+  setActiveTriggerFlowlet(currTriggerFlowlet, null);
 
   // Assign triggers to surface flowlets
   channel.addListener('al_ui_event_capture', event => {
-    setSurfaceTriggerFlowlet(event.surface, event.triggerFlowlet);
+    setActiveTriggerFlowlet(event.triggerFlowlet, event.surface);
   });
-
 
   const IS_TRIGGER_FLOWLET_SETUP_PROP = 'isTriggerFlowletSetup';
   IEventTarget.addEventListener.onArgsObserverAdd(function (this, eventType, _callback) {
@@ -172,6 +145,55 @@ export function init(options: InitOptions) {
     }
   });
 
+  // Temporarily disable this until we can re-enable react-flowlet logic bellow
+  if (options.enablePerSurfaceTracking) {
+    const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
+
+    const interceptedSetter = interceptFunction(setActiveTriggerFlowlet);
+    setActiveTriggerFlowlet = interceptedSetter.interceptor;
+    interceptedSetter.onArgsObserverAdd((triggerFlowlet, surface) => {
+      if (surface && triggerFlowlet) {
+        // The following may not happen until react interception and flowlets actually are enabled.
+        const surfaceFlowlet = ALSurfaceContextDataMap.get(surface);
+        if (surfaceFlowlet) {
+          surfaceFlowlet.data.triggerFlowlet = triggerFlowlet;
+        }
+      }
+    });
+
+    // Track surface flowlet roots
+    channel.addListener('al_surface_mount', event => {
+      const { surface, flowlet } = event;
+      ALSurfaceContextDataMap.set(surface, flowlet);
+      let rootFlowlet = flowlet;
+      while (rootFlowlet.parent) {
+        rootFlowlet = rootFlowlet.parent;
+      }
+      activeRootFlowlets.add(rootFlowlet);
+    });
+    channel.addListener('al_surface_unmount', event => {
+      ALSurfaceContextDataMap.delete(event.surface);
+      activeRootFlowlets.delete(event.flowlet);
+    });
+  }
+
+  if (options.enableFlowletConstructorTracking) {
+    //@ts-expect-error
+    flowletManager.root.data.isRootet = true;
+
+    // TODO: do we need to add every flowlet here or just Surface ones?
+    Flowlet.onFlowletInit.add(flowlet => {
+      //@ts-expect-error
+      if (!flowlet.data.isRootet) {
+        console.error('Unexpected unrooted flowlet: ', flowlet.getFullName());
+      }
+
+      if (!flowlet.parent) {
+        activeRootFlowlets.add(flowlet);
+      }
+    });
+  }
+
   /**
    * We wrapp the callback function of the following api to ensure they can
    * make a copy of the triggerFlowlet based on the semantics of the FlowletManager.wrap()
@@ -180,172 +202,173 @@ export function init(options: InitOptions) {
    */
   const { IReactModule } = options.react;
 
-  [
-    IReactModule.useCallback,
-  ].forEach(fi => {
-    /**
-     * useCallback will recieve a new callback function each time, but may return a previous
-     * one. So, it might be more efficient to only focus on the return value.
-     */
-    // fi.onArgsMapperAdd(args => {
-    //   args[0] = flowletManager.wrap(args[0], fi.name);
-    //   return args;
-    // });
-    fi.onValueMapperAdd(value => {
-      return flowletManager.wrap(value, fi.name);
+  if (options.enableReactCallbacksTracking) {
+    [
+      IReactModule.useCallback,
+    ].forEach(fi => {
+      /**
+       * useCallback will recieve a new callback function each time, but may return a previous
+       * one. So, it might be more efficient to only focus on the return value.
+       */
+      // fi.onArgsMapperAdd(args => {
+      //   args[0] = flowletManager.wrap(args[0], fi.name);
+      //   return args;
+      // });
+      fi.onValueMapperAdd(value => {
+        return flowletManager.wrap(value, fi.name);
+      });
+
     });
 
-  });
-
-  [
-    IReactModule.useEffect,
-    IReactModule.useLayoutEffect,
-  ].forEach(fi => {
-    fi.onArgsMapperAdd(args => {
-      args[0] = flowletManager.wrap(args[0], fi.name);
-      const setupInterceptor = getFunctionInterceptor(args[0]);
-      if (setupInterceptor && !setupInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
-        setupInterceptor.onValueMapperAdd(cleanup => {
-          if (cleanup) {
-            return flowletManager.wrap(cleanup, fi.name + `_cleanup`);
-          } else {
-            return cleanup;
-          }
-        });
-      }
-      return args;
+    [
+      IReactModule.useEffect,
+      IReactModule.useLayoutEffect,
+    ].forEach(fi => {
+      fi.onArgsMapperAdd(args => {
+        args[0] = flowletManager.wrap(args[0], fi.name);
+        const setupInterceptor = getFunctionInterceptor(args[0]);
+        if (setupInterceptor && !setupInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
+          setupInterceptor.onValueMapperAdd(cleanup => {
+            if (cleanup) {
+              return flowletManager.wrap(cleanup, fi.name + `_cleanup`);
+            } else {
+              return cleanup;
+            }
+          });
+        }
+        return args;
+      });
     });
-  });
+  }
 
-  [
-    IReactModule.useState,
-    IReactModule.useReducer
-  ].forEach(fi => {
-    fi.onValueMapperAdd(value => {
-      value[1] = flowletManager.wrap(value[1], fi.name);
-      const setterInterceptor = getFunctionInterceptor(value[1]);
-      if (setterInterceptor && !setterInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
-        setterInterceptor?.onArgsObserverAdd(() => {
-          /**
-           * when someone calls the setter, before anything happens we pickup the
-           * trigger flowlet from the top of the stack. 
-           * Then we assign this trigger flowlet to all surfcce flowlet roots so that
-           * any other method that is called during rending of the components can see the trigger.
-           * 
-           * Since the wrapped setter will call .push() after args observer is called,
-           * we can still access .top() of the caller.
-           */
+  if (options.enableReactSetStateTracking) {
+    [
+      IReactModule.useState,
+      IReactModule.useReducer
+    ].forEach(fi => {
+      fi.onValueMapperAdd(value => {
+        value[1] = flowletManager.wrap(value[1], fi.name);
+        const setterInterceptor = getFunctionInterceptor(value[1]);
+        if (setterInterceptor && !setterInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
+          setterInterceptor?.onArgsObserverAdd(() => {
+            /**
+             * when someone calls the setter, before anything happens we pickup the
+             * trigger flowlet from the top of the stack. 
+             * Then we assign this trigger flowlet to all surfcce flowlet roots so that
+             * any other method that is called during rending of the components can see the trigger.
+             * 
+             * Since the wrapped setter will call .push() after args observer is called,
+             * we can still access .top() of the caller.
+             */
+            const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+            setActiveTriggerFlowlet(triggerFlowlet, null);
+          });
+        }
+        return value;
+      });
+    });
+
+    assert(options.react.enableInterceptClassComponentMethods, "Trigger Flowlet would need interception of class component methods");
+    IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
+      const setState = shadowComponent.setState;
+      if (!setState.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
+        setState.onArgsObserverAdd(() => {
           const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-          setSurfaceTriggerFlowlet(null, triggerFlowlet);
+          setActiveTriggerFlowlet(triggerFlowlet, null);
         });
       }
-      return value;
     });
-  });
+  }
 
-  assert(options.react.enableInterceptClassComponentMethods, "Trigger Flowlet would need interception of class component methods");
-  IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
-    const setState = shadowComponent.setState;
-    if (!setState.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
-      setState.onArgsObserverAdd(() => {
-        const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-        setSurfaceTriggerFlowlet(null, triggerFlowlet);
-      });
-    }
-  });
-
-  if (options.disableReactFlowlet) return;
-  IReactComponent.init(options.react);
-
-
-  /**
-  * The following interceptor methods (onArgsObserver/onValueObserver) run immediately
-  * before & after intercepted method. So, we can push before and pop after so that
-  * the body of the method has access to flowlet.
-  * For class components, we store the flowlet in the `this` object.
-  * For function components, we have to keep that value and close on it (we could use useRef)
-  */
-
-  const IS_FLOWLET_SETUP_PROP = 'isFlowletSetup';
-
-  type FlowletRef = {
-    _flowlet?: IALFlowlet | null | undefined
-  };
-  type ComponentWithFlowlet = React.Component<any> & FlowletRef;
-
-  IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
-    const ictor = shadowComponent.ctor;
-    const component: any = ictor.getOriginal();
-
+  if (options.enableReactMethodFlowlet) {
     /**
-     * Just achieve more coverage, for legacy components, if there is not context defined
-     * we use the https://legacy.reactjs.org/docs/legacy-context.html model to get a context
-     * assigned to the component and then read the surface info from there
-     */
-    if (!component.contextType && !component.contextTypes) {
-      component.contextType = ALSurfaceContext; // Just to be consistent
-      (ictor.interceptor as any).contextType = ALSurfaceContext; // the real constructor used by the application
+    * The following interceptor methods (onArgsObserver/onValueObserver) run immediately
+    * before & after intercepted method. So, we can push before and pop after so that
+    * the body of the method has access to flowlet.
+    * For class components, we store the flowlet in the `this` object.
+    * For function components, we have to keep that value and close on it (we could use useRef)
+    */
 
-      ictor.onValueObserverAdd((value: ComponentWithFlowlet & { context?: any }) => {
-        value._flowlet = value.context?.flowlet;
-      });
-    }
+    const IS_FLOWLET_SETUP_PROP = 'isFlowletSetup';
 
-    const methods = [
-      shadowComponent.render,
-      shadowComponent.componentWillMount,
-      shadowComponent.componentDidMount,
-      shadowComponent.componentWillReceiveProps,
-      shadowComponent.shouldComponentUpdate,
-      shadowComponent.componentWillUpdate,
-      shadowComponent.componentDidUpdate,
-      shadowComponent.componentWillUnmount,
-      shadowComponent.componentDidCatch,
-    ];
+    type FlowletRef = {
+      _flowlet?: IALFlowlet | null | undefined
+    };
+    type ComponentWithFlowlet = React.Component<any> & FlowletRef;
 
-    methods.forEach(method => {
-      if (method.testAndSet(IS_FLOWLET_SETUP_PROP)) {
-        return;
+    IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
+      const ictor = shadowComponent.ctor;
+      const component: any = ictor.getOriginal();
+
+      /**
+       * Just achieve more coverage, for legacy components, if there is not context defined
+       * we use the https://legacy.reactjs.org/docs/legacy-context.html model to get a context
+       * assigned to the component and then read the surface info from there
+       */
+      if (!component.contextType && !component.contextTypes) {
+        component.contextType = ALSurfaceContext; // Just to be consistent
+        (ictor.interceptor as any).contextType = ALSurfaceContext; // the real constructor used by the application
+
+        ictor.onValueObserverAdd((value: ComponentWithFlowlet & { context?: any }) => {
+          value._flowlet = value.context?.flowlet;
+        });
       }
 
-      method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
-        const activeFlowlet = this._flowlet;
-        if (activeFlowlet) {
-          flowletManager.push(activeFlowlet);
+      const methods = [
+        shadowComponent.render,
+        shadowComponent.componentWillMount,
+        shadowComponent.componentDidMount,
+        shadowComponent.componentWillReceiveProps,
+        shadowComponent.shouldComponentUpdate,
+        shadowComponent.componentWillUpdate,
+        shadowComponent.componentDidUpdate,
+        shadowComponent.componentWillUnmount,
+        shadowComponent.componentDidCatch,
+      ];
+
+      methods.forEach(method => {
+        if (method.testAndSet(IS_FLOWLET_SETUP_PROP)) {
+          return;
         }
-      });
 
-      method.onValueObserverAdd(function (this: ComponentWithFlowlet) {
-        const activeFlowlet = this._flowlet;
-        if (activeFlowlet) {
-          flowletManager.pop(activeFlowlet);
-        }
-      });
-    });
-  });
-
-  IReactComponent.onReactFunctionComponentIntercept.add(
-    fi => {
-      if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
-
-        fi.onArgsAndValueMapperAdd(([_props]) => {
-          const ctx = useALSurfaceContext();
-          const activeFlowlet = ctx?.flowlet;
+        method.onArgsObserverAdd(function (this: ComponentWithFlowlet) {
+          const activeFlowlet = this._flowlet;
           if (activeFlowlet) {
             flowletManager.push(activeFlowlet);
-            return (value) => {
-              flowletManager.pop(activeFlowlet);
-              return value;
-            };
-          } else {
-            return value => value; // Nothing to do here
           }
         });
 
-      }
-    },
-  );
+        method.onValueObserverAdd(function (this: ComponentWithFlowlet) {
+          const activeFlowlet = this._flowlet;
+          if (activeFlowlet) {
+            flowletManager.pop(activeFlowlet);
+          }
+        });
+      });
+    });
 
+    IReactComponent.onReactFunctionComponentIntercept.add(
+      fi => {
+        if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
+
+          fi.onArgsAndValueMapperAdd(([_props]) => {
+            const ctx = useALSurfaceContext();
+            const activeFlowlet = ctx?.flowlet;
+            if (activeFlowlet) {
+              flowletManager.push(activeFlowlet);
+              return (value) => {
+                flowletManager.pop(activeFlowlet);
+                return value;
+              };
+            } else {
+              return value => value; // Nothing to do here
+            }
+          });
+
+        }
+      },
+    );
+  }
 }
 
 

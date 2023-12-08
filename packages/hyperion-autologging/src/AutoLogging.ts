@@ -93,11 +93,30 @@ export function init(options: InitOptions): boolean {
   }
 
   // Enumerating the cases where we need react interception and visitors
+  const reactOptions = options.react;
+  if (typeof reactOptions.enableInterceptDomElement !== 'boolean') {
+    reactOptions.enableInterceptDomElement =
+      options.surface.enableReactDomPropsExtension;
+  }
+  if (typeof reactOptions.enableInterceptClassComponentConstructor !== "boolean") {
+    reactOptions.enableInterceptClassComponentConstructor =
+      options.triggerFlowlet?.enableReactMethodFlowlet;
+  }
+  if (typeof reactOptions.enableInterceptClassComponentMethods !== "boolean") {
+    reactOptions.enableInterceptClassComponentMethods =
+      options.triggerFlowlet?.enableReactSetStateTracking ||
+      options.triggerFlowlet?.enableReactMethodFlowlet;
+  }
+  if (typeof reactOptions.enableInterceptFunctionComponentRender !== "boolean") {
+    reactOptions.enableInterceptFunctionComponentRender =
+      options.triggerFlowlet?.enableReactMethodFlowlet
+  }
   if (
     options.enableReactComponentVisitors ||
-    (!options.surface.disableReactDomPropsExtension && options.react.enableInterceptDomElement) ||
-    (options.triggerFlowlet && options.react.enableInterceptClassComponentMethods) ||
-    (!options.triggerFlowlet?.disableReactFlowlet && (options.react.enableInterceptFunctionComponentRender || options.react.enableInterceptClassComponentConstructor))
+    reactOptions.enableInterceptClassComponentConstructor ||
+    reactOptions.enableInterceptClassComponentMethods ||
+    reactOptions.enableInterceptDomElement ||
+    reactOptions.enableInterceptFunctionComponentRender
   ) {
     IReactComponent.init(options.react);
   }
