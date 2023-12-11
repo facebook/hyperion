@@ -218,7 +218,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
         }
 
         if (triggerFlowlets.length > 0) {
-          const flowletName = `${fi.name}{${triggerFlowlets.map(f => f.id).join(",")}}`;
+          const flowletName = `Promise.${fi.name}(${triggerFlowlets.map(f => f.id).join(",")})`;
           const triggerFlowlet = new flowletManager.flowletCtor(flowletName, topTriggerFlowlet);
           setTriggerFlowlet(value, triggerFlowlet);
         } else if (topTriggerFlowlet) {

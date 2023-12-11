@@ -138,10 +138,10 @@ describe("test flow of flowlets", () => {
     expect(getTriggerFlowlet(p1)).toBe(tf);
 
     const all = Promise.all([p0, p1]);
-    expect(getTriggerFlowlet(all)?.getFullName()).toMatch(/all\{\d+,\d+\}/);
+    expect(getTriggerFlowlet(all)?.getFullName()).toMatch(/Promise.all\(\d+,\d+\)/);
 
     const race = Promise.race([p0, p1]);
-    expect(getTriggerFlowlet(race)?.getFullName()).toMatch(/race\{\d+,\d+\}/);
+    expect(getTriggerFlowlet(race)?.getFullName()).toMatch(/Promise.race\(\d+,\d+\)/);
 
     let p2;
     try { // Need try/catch to handle reject
@@ -151,6 +151,6 @@ describe("test flow of flowlets", () => {
       expect(getTriggerFlowlet(p2)).toBe(tf);
     }
     const allSettled = Promise.allSettled([p0, p1, p2]);
-    expect(getTriggerFlowlet(allSettled)?.getFullName()).toMatch(/allSettled\{\d+,\d+,\d+\}/);
+    expect(getTriggerFlowlet(allSettled)?.getFullName()).toMatch(/Promise.allSettled\(\d+,\d+,\d+\)/);
   });
 });
