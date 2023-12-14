@@ -134,7 +134,7 @@ export function init(options: InitOptions) {
           if (!getTriggerFlowlet(event)) {
             const parentTriggerFlowlet = ALUIEventGroupPublishers.getGroupRootFlowlet(event);
             const triggerFlowlet = new flowletManager.flowletCtor(
-              `${eventType}(ts:${performanceAbsoluteNow()})`,
+              `${eventType}(ts=${performanceAbsoluteNow()})`,
               parentTriggerFlowlet
             );
             setTriggerFlowlet(event, triggerFlowlet);

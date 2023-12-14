@@ -9,7 +9,7 @@ export { PipeableEmitter, Channel } from "@hyperion/hook/src/Channel";
 // hyperionCore
 export { setAssertLoggerOptions } from "@hyperion/global/src/assert";
 export { intercept, getVirtualPropertyValue, setVirtualPropertyValue, getOwnShadowPrototypeOf, registerShadowPrototype } from "@hyperion/hyperion-core/src/intercept";
-export { interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+export { interceptFunction, getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 export { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
 export { interceptConstructor, interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
 export * as IRequire from "@hyperion/hyperion-core/src/IRequire";
