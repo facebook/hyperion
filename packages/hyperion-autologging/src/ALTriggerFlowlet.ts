@@ -145,7 +145,7 @@ export function init(options: InitOptions) {
     }
   });
 
-  // Temporarily disable this until we can re-enable react-flowlet logic bellow
+  // Temporarily disable this until we can re-enable react-flowlet logic below
   if (options.enablePerSurfaceTracking) {
     const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
 
@@ -178,13 +178,26 @@ export function init(options: InitOptions) {
   }
 
   if (options.enableFlowletConstructorTracking) {
+    /**
+     * To know if root of a flowlet is added to list, we would need
+     * to walk up the .parent chain to find the root.
+     * Since we know most of the flowlets will be created from the
+     * FlowletManager.root, we use a the following trick:
+     * We add a known field the root's data and check chat in children's
+     * data (data fields inherit from each other).
+     * If we don't find the field, we have two options:
+     * 1- Now walk up the .parent chain (slow path)
+     * 2- Consider this case error and fix it in the code.
+     * For now, we choose 2 since there is no real legit case for a
+     * 'rootless' flowlet!
+     */
     //@ts-expect-error
-    flowletManager.root.data.isRootet = true;
+    flowletManager.root.data.isRooted = true;
 
     // TODO: do we need to add every flowlet here or just Surface ones?
     Flowlet.onFlowletInit.add(flowlet => {
       //@ts-expect-error
-      if (!flowlet.data.isRootet) {
+      if (!flowlet.data.isRooted) {
         console.error('Unexpected unrooted flowlet: ', flowlet.getFullName());
       }
 
