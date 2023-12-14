@@ -182,7 +182,7 @@ function captureFetch(options: InitOptions): void {
     }
 
     const parentTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-    const triggerFlowlet = new flowletManager.flowletCtor(`fetch(method:${request.method}&url:${request.uri.pathname})`, parentTriggerFlowlet);
+    const triggerFlowlet = new flowletManager.flowletCtor(`fetch(method=${request.method}&url=${request.uri.pathname})`, parentTriggerFlowlet);
 
     return value => {
       setTriggerFlowlet(value, triggerFlowlet); // This will be picked by the wrappers of Promis.* callbacks.
@@ -266,7 +266,7 @@ function captureXHR(options: InitOptions): void {
     );
 
     const parentTriggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-    const triggerFlowlet = new flowletManager.flowletCtor(`xhr(method:${method}&url:${request.uri.pathname})`, parentTriggerFlowlet);
+    const triggerFlowlet = new flowletManager.flowletCtor(`xhr(method=${method}&url=${request.uri.pathname})`, parentTriggerFlowlet);
     setTriggerFlowlet(this, triggerFlowlet);
   });
 

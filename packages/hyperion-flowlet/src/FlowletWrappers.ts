@@ -159,7 +159,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
   }
 
   IEventTarget.addEventListener.onArgsMapperAdd(args => {
-    args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}:${args[0]}`, void 0, getTriggerFlowletFromEvent);
+    args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}(${args[0]})`, void 0, getTriggerFlowletFromEvent);
     return args;
   });
   IEventTarget.removeEventListener.onArgsMapperAdd(args => {
@@ -218,7 +218,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
         }
 
         if (triggerFlowlets.length > 0) {
-          const flowletName = `Promise.${fi.name}(${triggerFlowlets.map(f => f.id).join(",")})`;
+          const flowletName = `Promise.${fi.name}(${triggerFlowlets.map(f => f.id).join("&")})`;
           const triggerFlowlet = new flowletManager.flowletCtor(flowletName, topTriggerFlowlet);
           setTriggerFlowlet(value, triggerFlowlet);
         } else if (topTriggerFlowlet) {
