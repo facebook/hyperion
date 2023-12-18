@@ -11,7 +11,7 @@ import { VirtualAttribute } from "../src/VirtualAttribute";
 describe('test Element', () => {
   test('test getAttribute', () => {
     let result: any[] = [];
-    const observer = IElement.getAttribute.onBeforeCallArgsObserverAdd(function (this, value) {
+    const observer = IElement.getAttribute.onBeforeCallObserverAdd(function (this, value) {
       result.push(this);
       result.push(value);
     });
@@ -21,7 +21,7 @@ describe('test Element', () => {
     elem.getAttribute("test");
     expect(result).toStrictEqual([elem, "test"]);
 
-    IElement.getAttribute.onBeforeCallArgsObserverRemove(observer);
+    IElement.getAttribute.onBeforeCallObserverRemove(observer);
   });
 
   test('test innerHTML', () => {
@@ -30,11 +30,11 @@ describe('test Element', () => {
     let addedNodes: Node[] = [];
     let removedNodes: Node[] = [];
 
-    IElement.innerHTML.setter.onBeforeCallArgsObserverAdd(function (this, value) {
+    IElement.innerHTML.setter.onBeforeCallObserverAdd(function (this, value) {
       target = this;
       removedNodes = [...target.childNodes]; // child nodes is a live list, should make a copy
     });
-    IElement.innerHTML.setter.onAfterReturnValueObserverAdd(function (this) {
+    IElement.innerHTML.setter.onAfterCallObserverAdd(function (this) {
       // Now it is done, we can read the results
       expect(this).toBe(target);
       addedNodes = [...target.childNodes];
@@ -60,10 +60,10 @@ describe('test Element', () => {
 
 
     const vId = IElement.IElementtPrototype.getVirtualProperty<VirtualAttribute>("id");
-    vId.rawValue.getter.onAfterReturnValueObserverAdd(observer);
-    vId.rawValue.setter.onBeforeCallArgsObserverAdd(observer);
-    vId.processedValue.getter.onAfterReturnValueObserverAdd(observer);
-    vId.processedValue.setter.onBeforeCallArgsObserverAdd(observer);
+    vId.rawValue.getter.onAfterCallObserverAdd(observer);
+    vId.rawValue.setter.onBeforeCallObserverAdd(observer);
+    vId.processedValue.getter.onAfterCallObserverAdd(observer);
+    vId.processedValue.setter.onBeforeCallObserverAdd(observer);
 
     const elem = window.document.createElement("div");
     [

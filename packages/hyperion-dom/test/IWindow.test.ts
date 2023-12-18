@@ -16,8 +16,8 @@ describe('test Window interception', () => {
       result.push([this, value]);
     });
 
-    IWindow.fetch.onBeforeCallArgsObserverAdd(observer);
-    IWindow.fetch.onAfterReturnValueObserverAdd(observer);
+    IWindow.fetch.onBeforeCallObserverAdd(observer);
+    IWindow.fetch.onAfterCallObserverAdd(observer);
 
     if (typeof window.fetch !== "function") {
       window.fetch = function () {

@@ -14,7 +14,7 @@ export function trackElementsWithAttributes(attributeNames: string[]): ResultHoo
   for (let i = 0, len = attributeNames.length; i < len; ++i) {
     const attr = attributeNames[i];
     const vattr = interceptElementAttribute(attr, IElementtPrototype);
-    vattr.raw.setter.onBeforeCallArgsObserverAdd(function (this, value) {
+    vattr.raw.setter.onBeforeCallObserverAdd(function (this, value) {
       hook.call(this, attr, value);
     });
   }

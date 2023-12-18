@@ -16,7 +16,7 @@ export type MutationEvent = MutationAction<"added"> | MutationAction<"removed">;
 
 export const onDOMMutation = new Hook<(mutationEvent: MutationEvent) => void>();
 
-INode.appendChild.onBeforeCallArgsObserverAdd(function (this, value) {
+INode.appendChild.onBeforeCallObserverAdd(function (this, value) {
   onDOMMutation.call({
     action: "added",
     target: this,
@@ -24,7 +24,7 @@ INode.appendChild.onBeforeCallArgsObserverAdd(function (this, value) {
   });
 });
 
-INode.insertBefore.onBeforeCallArgsObserverAdd(function (this, newNode, _referenceNode) {
+INode.insertBefore.onBeforeCallObserverAdd(function (this, newNode, _referenceNode) {
   onDOMMutation.call({
     action: "added",
     target: this,
@@ -32,7 +32,7 @@ INode.insertBefore.onBeforeCallArgsObserverAdd(function (this, newNode, _referen
   });
 });
 
-INode.removeChild.onBeforeCallArgsObserverAdd(function (this, node) {
+INode.removeChild.onBeforeCallObserverAdd(function (this, node) {
   onDOMMutation.call({
     action: "removed",
     target: this,
@@ -40,7 +40,7 @@ INode.removeChild.onBeforeCallArgsObserverAdd(function (this, node) {
   });
 });
 
-INode.replaceChild.onBeforeCallArgsObserverAdd(function (this, newChild, oldChild) {
+INode.replaceChild.onBeforeCallObserverAdd(function (this, newChild, oldChild) {
   onDOMMutation.call({
     action: "removed",
     target: this,
@@ -53,7 +53,7 @@ INode.replaceChild.onBeforeCallArgsObserverAdd(function (this, newChild, oldChil
   });
 });
 
-IElement.innerHTML.setter.onBeforeCallArgsObserverAdd(function (this, _value) {
+IElement.innerHTML.setter.onBeforeCallObserverAdd(function (this, _value) {
   // Happens before actual call, so current children will be removed
   onDOMMutation.call({
     action: "removed",
@@ -61,7 +61,7 @@ IElement.innerHTML.setter.onBeforeCallArgsObserverAdd(function (this, _value) {
     nodes: Array.from(this.childNodes),
   });
 });
-IElement.innerHTML.setter.onAfterReturnValueObserverAdd(function (this) {
+IElement.innerHTML.setter.onAfterCallObserverAdd(function (this) {
   // Happens after actual call, so current children will are the ones added
   onDOMMutation.call({
     action: "added",
@@ -70,7 +70,7 @@ IElement.innerHTML.setter.onAfterReturnValueObserverAdd(function (this) {
   });
 });
 
-IElement.insertAdjacentElement.onBeforeCallArgsObserverAdd(function (this, where, element) {
+IElement.insertAdjacentElement.onBeforeCallObserverAdd(function (this, where, element) {
   const target = where === "afterbegin" || where === "beforeend" ? this : this.parentNode;
   if (target) {
     onDOMMutation.call({

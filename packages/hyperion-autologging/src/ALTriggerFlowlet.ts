@@ -107,7 +107,7 @@ export function init(options: InitOptions) {
   });
 
   const IS_TRIGGER_FLOWLET_SETUP_PROP = 'isTriggerFlowletSetup';
-  IEventTarget.addEventListener.onBeforeCallArgsObserverAdd(function (this, eventType, _callback) {
+  IEventTarget.addEventListener.onBeforeCallObserverAdd(function (this, eventType, _callback) {
     if (!ALUIEventGroupPublishers.isSupported(eventType)) {
       return;
     }
@@ -151,7 +151,7 @@ export function init(options: InitOptions) {
 
     const interceptedSetter = interceptFunction(setActiveTriggerFlowlet);
     setActiveTriggerFlowlet = interceptedSetter.interceptor;
-    interceptedSetter.onBeforeCallArgsObserverAdd((triggerFlowlet, surface) => {
+    interceptedSetter.onBeforeCallObserverAdd((triggerFlowlet, surface) => {
       if (surface && triggerFlowlet) {
         // The following may not happen until react interception and flowlets actually are enabled.
         const surfaceFlowlet = ALSurfaceContextDataMap.get(surface);
@@ -227,7 +227,7 @@ export function init(options: InitOptions) {
       //   args[0] = flowletManager.wrap(args[0], fi.name);
       //   return args;
       // });
-      fi.onAfterReturnValueMapperAdd(value => {
+      fi.onAfterCallMapperAdd(value => {
         return flowletManager.wrap(value, fi.name);
       });
 
@@ -237,11 +237,11 @@ export function init(options: InitOptions) {
       IReactModule.useEffect,
       IReactModule.useLayoutEffect,
     ].forEach(fi => {
-      fi.onBeforeCallArgsMapperAdd(args => {
+      fi.onBeforeCallMapperAdd(args => {
         args[0] = flowletManager.wrap(args[0], fi.name);
         const setupInterceptor = getFunctionInterceptor(args[0]);
         if (setupInterceptor && !setupInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
-          setupInterceptor.onAfterReturnValueMapperAdd(cleanup => {
+          setupInterceptor.onAfterCallMapperAdd(cleanup => {
             if (cleanup) {
               return flowletManager.wrap(cleanup, fi.name + `_cleanup`);
             } else {
@@ -259,11 +259,11 @@ export function init(options: InitOptions) {
       IReactModule.useState,
       IReactModule.useReducer
     ].forEach(fi => {
-      fi.onAfterReturnValueMapperAdd(value => {
+      fi.onAfterCallMapperAdd(value => {
         value[1] = flowletManager.wrap(value[1], fi.name);
         const setterInterceptor = getFunctionInterceptor(value[1]);
         if (setterInterceptor && !setterInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
-          setterInterceptor?.onBeforeCallArgsObserverAdd(() => {
+          setterInterceptor?.onBeforeCallObserverAdd(() => {
             /**
              * when someone calls the setter, before anything happens we pickup the
              * trigger flowlet from the top of the stack. 
@@ -285,7 +285,7 @@ export function init(options: InitOptions) {
     IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
       const setState = shadowComponent.setState;
       if (!setState.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
-        setState.onBeforeCallArgsObserverAdd(() => {
+        setState.onBeforeCallObserverAdd(() => {
           const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
           setActiveTriggerFlowlet(triggerFlowlet, null);
         });
@@ -322,7 +322,7 @@ export function init(options: InitOptions) {
         component.contextType = ALSurfaceContext; // Just to be consistent
         (ictor.interceptor as any).contextType = ALSurfaceContext; // the real constructor used by the application
 
-        ictor.onAfterReturnValueObserverAdd((value: ComponentWithFlowlet & { context?: any }) => {
+        ictor.onAfterCallObserverAdd((value: ComponentWithFlowlet & { context?: any }) => {
           value._flowlet = value.context?.flowlet;
         });
       }
@@ -344,14 +344,14 @@ export function init(options: InitOptions) {
           return;
         }
 
-        method.onBeforeCallArgsObserverAdd(function (this: ComponentWithFlowlet) {
+        method.onBeforeCallObserverAdd(function (this: ComponentWithFlowlet) {
           const activeFlowlet = this._flowlet;
           if (activeFlowlet) {
             flowletManager.push(activeFlowlet);
           }
         });
 
-        method.onAfterReturnValueObserverAdd(function (this: ComponentWithFlowlet) {
+        method.onAfterCallObserverAdd(function (this: ComponentWithFlowlet) {
           const activeFlowlet = this._flowlet;
           if (activeFlowlet) {
             flowletManager.pop(activeFlowlet);
@@ -364,7 +364,7 @@ export function init(options: InitOptions) {
       fi => {
         if (!fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
 
-          fi.onBeforeCallArgsAndAfterReturnValueMapperAdd(([_props]) => {
+          fi.onBeforeAndAfterCallMapperAdd(([_props]) => {
             const ctx = useALSurfaceContext();
             const activeFlowlet = ctx?.flowlet;
             if (activeFlowlet) {

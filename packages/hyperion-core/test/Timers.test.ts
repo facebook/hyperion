@@ -24,7 +24,7 @@ describe('Test interception via test. ', () => {
      * Goal is to see everyting continue to function correctly.
      */
     const x = require("../src/IGlobalThis");
-    x.setTimeout.onBeforeCallArgsObserverAdd(() => {
+    x.setTimeout.onBeforeCallObserverAdd(() => {
       console.log("something");
     });
 
