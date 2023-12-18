@@ -14,8 +14,8 @@ describe('test Document interception', () => {
       result = [this, value];
     });
 
-    IDocument.createElement.onBeforeCallArgsObserverAdd(observer);
-    IDocument.createElement.onAfterReturnValueObserverAdd(value => result.push(value));
+    IDocument.createElement.onBeforeCallObserverAdd(observer);
+    IDocument.createElement.onAfterCallObserverAdd(value => result.push(value));
 
     let elem: Node;
     elem = window.document.createElement("P");

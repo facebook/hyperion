@@ -317,7 +317,7 @@ export function init(options: InitOptions): void {
     }
     : */ interceptArgs;
 
-  const handler = IJsxRuntimeModule.jsx.onBeforeCallArgsMapperAdd(args => {
+  const handler = IJsxRuntimeModule.jsx.onBeforeCallMapperAdd(args => {
     /**
      * TODO: T132536682 remove this guard later to speed things up
      * NOTE: tried using ErrorGuard.guard, and ErrorGuard.applyWithGuard but
@@ -339,8 +339,8 @@ export function init(options: InitOptions): void {
     return args;
   });
   if (IJsxRuntimeModule.jsxs !== IJsxRuntimeModule.jsx) {
-    IJsxRuntimeModule.jsxs.onBeforeCallArgsMapperAdd(handler);
+    IJsxRuntimeModule.jsxs.onBeforeCallMapperAdd(handler);
   }
-  IJsxRuntimeModule.jsxDEV.onBeforeCallArgsMapperAdd(handler);
-  IReactModule.createElement.onBeforeCallArgsMapperAdd(handler);
+  IJsxRuntimeModule.jsxDEV.onBeforeCallMapperAdd(handler);
+  IReactModule.createElement.onBeforeCallMapperAdd(handler);
 }

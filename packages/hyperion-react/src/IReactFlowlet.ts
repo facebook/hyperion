@@ -111,7 +111,7 @@ export function init<
        * the body of the method has access to flowlet.
        * We will expand these methods to other lifecycle methods later.
        */
-      method.onBeforeCallArgsAndAfterReturnValueMapperAdd(function (this: ComponentWithFlowlet) {
+      method.onBeforeAndAfterCallMapperAdd(function (this: ComponentWithFlowlet) {
         const activeFlowlet = flowletPusher(this.props);
         return (value) => {
           if (activeFlowlet) {
@@ -129,7 +129,7 @@ export function init<
       if (fi.testAndSet(IS_FLOWLET_SETUP_PROP)) {
         return;
       }
-      fi.onBeforeCallArgsAndAfterReturnValueMapperAdd(([props]) => {
+      fi.onBeforeAndAfterCallMapperAdd(([props]) => {
         const activeFlowlet = flowletPusher(props);
         return (value) => {
           if (activeFlowlet) {

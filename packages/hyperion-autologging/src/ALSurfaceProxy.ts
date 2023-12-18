@@ -65,7 +65,7 @@ export function init(options: ProxyInitOptions): void {
    * continue to work. So, we use that fact and wrap the node in another Surface
    * with the same flowlet and surface from the original surface context.
    */
-  IReactDOMModule.createPortal.onBeforeCallArgsMapperAdd(args => {
+  IReactDOMModule.createPortal.onBeforeCallMapperAdd(args => {
     const [node, container] = args;
 
     if (node != null) {
