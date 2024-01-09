@@ -52,7 +52,7 @@ export function init(options: InitOptions) {
 
   const { channel, flowletManager } = options;
 
-  let currTriggerFlowlet = new flowletManager.flowletCtor('pageload');
+  let currTriggerFlowlet = new flowletManager.flowletCtor('pageload', flowletManager.root);
   currTriggerFlowlet.data.triggerFlowlet = currTriggerFlowlet;
 
   const activeRootFlowlets = new class {

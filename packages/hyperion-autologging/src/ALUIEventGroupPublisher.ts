@@ -107,7 +107,7 @@ export function getGroupRootFlowlet(event: Event): IALFlowlet | null | undefined
     GroupFlowlets.set(targetElement, groupRootFlowlet);
     return groupFlowlet;
   }
-  return null;
+  return _options?.flowletManager.root;
 }
 
 let initialized = new TestAndSet();

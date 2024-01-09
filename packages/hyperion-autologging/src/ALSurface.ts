@@ -52,7 +52,7 @@ export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
   capability?: ALSurfaceCapability, // a one-hot encoding what the surface can do.
-  nodeRef?: React.MutableRefObject<Element | null | undefined>,
+  nodeRef?: React.RefObject<Element | null | undefined>,
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
