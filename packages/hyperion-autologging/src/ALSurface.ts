@@ -100,7 +100,6 @@ export type InitOptions = Types.Options<
       IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     };
     domFlowletAttributeName?: string;
-    domNonInteractiveSurfaceAttributeName?: string;
     channel: ALChannel;
     enableReactDomPropsExtension?: boolean;
   }
@@ -131,7 +130,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   // We should make sure the following enabled for our particular usage in this function.
   IReactComponent.init(options.react);
 
-  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domFlowletAttributeName, domNonInteractiveSurfaceAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE } = options;
+  const { flowletManager, domFlowletAttributeName } = options;
   /**
   * if flowlets are disabled, but we still want to extend the props, we use
   * the following placeholder flowlet to let the rest of the logic work.
@@ -159,8 +158,8 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
      * its own tree. The null surface attributes will be filtered later.
      */
     if (allowedTags.has(component)) {
-      props[domSurfaceAttributeName] = new SurfaceDOMString(flowlet);
-      props[domNonInteractiveSurfaceAttributeName] = new SurfaceDOMString(flowlet);
+      props[AUTO_LOGGING_SURFACE] = new SurfaceDOMString(flowlet);
+      props[AUTO_LOGGING_NON_INTERACTIVE_SURFACE] = new SurfaceDOMString(flowlet);
 
       if (__DEV__) {
         if (domFlowletAttributeName) {
@@ -193,8 +192,8 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
     attrValue: any,
   ) {
     switch (attrName) {
-      case domSurfaceAttributeName:
-      case domNonInteractiveSurfaceAttributeName:
+      case AUTO_LOGGING_SURFACE:
+      case AUTO_LOGGING_NON_INTERACTIVE_SURFACE:
         if (
           attrValue === '' ||
           attrValue === 'null' ||
@@ -214,7 +213,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
         if (
           this.nodeName === 'SPAN' && (
             this.hasAttribute(SURFACE_WRAPPER_ATTRIBUTE_NAME) ||
-            this.hasAttribute(domSurfaceAttributeName)
+            this.hasAttribute(AUTO_LOGGING_SURFACE)
           )
         ) {
           return true;
@@ -227,7 +226,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
 
 
 export function init(options: InitOptions): ALSurfaceHOC {
-  const { flowletManager, domSurfaceAttributeName = AUTO_LOGGING_SURFACE, domNonInteractiveSurfaceAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE } = options;
+  const { flowletManager} = options;
   const { ReactModule } = options.react;
 
   setupDomElementSurfaceAttribute(options);
@@ -261,17 +260,17 @@ export function init(options: InitOptions): ALSurfaceHOC {
       const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled!
       if (!trackInteraction) {
         surfacePath = parentSurface ?? SURFACE_SEPARATOR;
-        domAttributeName = domNonInteractiveSurfaceAttributeName;
+        domAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE;
         domAttributeValue = nonInteractiveSurfacePath;
       } else {
         surfacePath = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
-        domAttributeName = domSurfaceAttributeName;
+        domAttributeName = AUTO_LOGGING_SURFACE;
         domAttributeValue = surfacePath;
       }
     } else {
       surfacePath = proxiedContext.surface;
       nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;
-      domAttributeName = domSurfaceAttributeName
+      domAttributeName = AUTO_LOGGING_SURFACE
       domAttributeValue = surfacePath;
       if (proxiedContext.container instanceof Element) {
         const container = proxiedContext.container;

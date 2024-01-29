@@ -50,5 +50,4 @@ export type ALReactElementEvent = Readonly<{
 
 export type ALSharedInitOptions = Types.Options<{
   flowletManager: ALFlowletManager;
-  domSurfaceAttributeName: string;
 }>;

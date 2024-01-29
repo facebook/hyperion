@@ -9,7 +9,7 @@ import { Channel } from "@hyperion/hook/src/Channel";
 import * as ElementTextTooltip from "./component/ElementTextTooltip.react";
 
 export type InitOptions = Types.Options<
-  Pick<AutoLogging.InitOptions, 'flowletManager' | 'domSurfaceAttributeName'> &
+  Pick<AutoLogging.InitOptions, 'flowletManager'> &
   {
     channel: Channel<AutoLogging.ALChannelEvent>
   }
