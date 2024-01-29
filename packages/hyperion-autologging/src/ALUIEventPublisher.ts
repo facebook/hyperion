@@ -19,7 +19,6 @@ import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
-import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 
 /**
  * Generates a union type of all handler event and domEvent permutations.
@@ -188,7 +187,7 @@ export function publish(options: InitOptions): void {
       }
       const { element, targetElement, autoLoggingID } = uiEventData;
 
-      const surface = getSurfacePath(targetElement, AUTO_LOGGING_SURFACE);
+      const surface = getSurfacePath(targetElement);
       /**
        * Regardless of element, we want to set the flowlet on this event.
        * If we do have an element, we include its id in the flowlet.

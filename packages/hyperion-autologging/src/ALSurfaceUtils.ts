@@ -4,11 +4,20 @@
 
 'use strict';
 
-export function getSurfacePath(node: HTMLElement | null, domSurfaceAttributeName: string): string| null {
-  const domSurfaceSelector = `[${domSurfaceAttributeName}]`;
-  return getAncestralSurfaceNode(node, domSurfaceSelector)?.getAttribute(domSurfaceAttributeName) ?? null;
+import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
+
+export function getSurfacePath(node: HTMLElement | null): string| null {
+  return getAncestralSurfaceNode(node)?.getAttribute(AUTO_LOGGING_SURFACE) ?? null;
 }
 
-export function getAncestralSurfaceNode(node: Element | null, domSurfaceSelector: string): Element| null {
-  return node?.closest(domSurfaceSelector) ?? null;
+export function getAncestralSurfaceNode(node: Element | null): Element| null {
+  return node?.closest(`[${AUTO_LOGGING_SURFACE}]`) ?? null;
+}
+
+export function getElementSurface(node: Element | null): string| null {
+  return node?.getAttribute(AUTO_LOGGING_SURFACE) ?? null;
+}
+
+export function getElementsWithSurfaces(): NodeListOf<Element> {
+  return document.querySelectorAll(`[${AUTO_LOGGING_SURFACE}]`);
 }
