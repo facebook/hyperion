@@ -78,7 +78,6 @@ export function init(options: InitOptions): boolean {
 
   const sharedOptions: ALSharedInitOptions = {
     flowletManager: options.flowletManager,
-    domSurfaceAttributeName: options.domSurfaceAttributeName,
   }
 
   if (typeof global !== 'undefined' && (global as Window)?.document?.createElement != null) {
