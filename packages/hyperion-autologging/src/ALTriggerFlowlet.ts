@@ -38,9 +38,14 @@ export type InitOptions<> = Types.Options<
     channel: Channel<ALChannelSurfaceEvent & ALChannelUIEvent>;
     enableFlowletConstructorTracking?: boolean;
     enablePerSurfaceTracking?: boolean;
-    enableReactCallbacksTracking?: boolean;
-    enableReactMethodFlowlet?: boolean;
+    enableReactUseCallbackTracking?: boolean;
+    enableReactUseEffectTracking?: boolean;
+    enableReactUseLayoutEffectTracking?: boolean;
+    enableReactUseStateTracking?: boolean;
+    enableReactUseReducerTracking?: boolean;
     enableReactSetStateTracking?: boolean;
+
+    enableReactMethodFlowlet?: boolean;
   }
 >;
 
@@ -215,7 +220,7 @@ export function init(options: InitOptions) {
    */
   const { IReactModule } = options.react;
 
-  if (options.enableReactCallbacksTracking) {
+  if (options.enableReactUseCallbackTracking) {
     [
       IReactModule.useCallback,
     ].forEach(fi => {
@@ -232,55 +237,64 @@ export function init(options: InitOptions) {
       });
 
     });
-
-    [
-      IReactModule.useEffect,
-      IReactModule.useLayoutEffect,
-    ].forEach(fi => {
-      fi.onBeforeCallMapperAdd(args => {
-        args[0] = flowletManager.wrap(args[0], fi.name);
-        const setupInterceptor = getFunctionInterceptor(args[0]);
-        if (setupInterceptor && !setupInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
-          setupInterceptor.onAfterCallMapperAdd(cleanup => {
-            if (cleanup) {
-              return flowletManager.wrap(cleanup, fi.name + `_cleanup`);
-            } else {
-              return cleanup;
-            }
-          });
-        }
-        return args;
-      });
-    });
   }
 
-  if (options.enableReactSetStateTracking) {
-    [
-      IReactModule.useState,
-      IReactModule.useReducer
-    ].forEach(fi => {
-      fi.onAfterCallMapperAdd(value => {
-        value[1] = flowletManager.wrap(value[1], fi.name);
-        const setterInterceptor = getFunctionInterceptor(value[1]);
-        if (setterInterceptor && !setterInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
-          setterInterceptor?.onBeforeCallObserverAdd(() => {
-            /**
-             * when someone calls the setter, before anything happens we pickup the
-             * trigger flowlet from the top of the stack. 
-             * Then we assign this trigger flowlet to all surfcce flowlet roots so that
-             * any other method that is called during rending of the components can see the trigger.
-             * 
-             * Since the wrapped setter will call .push() after args observer is called,
-             * we can still access .top() of the caller.
-             */
-            const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
-            setActiveTriggerFlowlet(triggerFlowlet, null);
-          });
-        }
-        return value;
-      });
+  [
+    IReactModule.useEffect,
+    IReactModule.useLayoutEffect,
+  ].filter(fi =>
+    (options.enableReactUseEffectTracking && fi === IReactModule.useEffect)
+    ||
+    (options.enableReactUseLayoutEffectTracking && fi === IReactModule.useLayoutEffect)
+  ).forEach(fi => {
+    fi.onBeforeCallMapperAdd(args => {
+      args[0] = flowletManager.wrap(args[0], fi.name);
+      const setupInterceptor = getFunctionInterceptor(args[0]);
+      if (setupInterceptor && !setupInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
+        setupInterceptor.onAfterCallMapperAdd(cleanup => {
+          if (cleanup) {
+            return flowletManager.wrap(cleanup, fi.name + `_cleanup`);
+          } else {
+            return cleanup;
+          }
+        });
+      }
+      return args;
     });
+  });
 
+
+  [
+    IReactModule.useState,
+    IReactModule.useReducer
+  ].filter(fi =>
+    (options.enableReactUseStateTracking && fi === IReactModule.useState)
+    ||
+    (options.enableReactUseReducerTracking && fi === IReactModule.useReducer)
+  ).forEach(fi => {
+    fi.onAfterCallMapperAdd(value => {
+      value[1] = flowletManager.wrap(value[1], fi.name);
+      const setterInterceptor = getFunctionInterceptor(value[1]);
+      if (setterInterceptor && !setterInterceptor.testAndSet(IS_TRIGGER_FLOWLET_SETUP_PROP)) {
+        setterInterceptor?.onBeforeCallObserverAdd(() => {
+          /**
+           * when someone calls the setter, before anything happens we pickup the
+           * trigger flowlet from the top of the stack. 
+           * Then we assign this trigger flowlet to all surfcce flowlet roots so that
+           * any other method that is called during rending of the components can see the trigger.
+           * 
+           * Since the wrapped setter will call .push() after args observer is called,
+           * we can still access .top() of the caller.
+           */
+          const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
+          setActiveTriggerFlowlet(triggerFlowlet, null);
+        });
+      }
+      return value;
+    });
+  });
+
+  if (options.enableReactSetStateTracking) {
     assert(options.react.enableInterceptClassComponentMethods, "Trigger Flowlet would need interception of class component methods");
     IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
       const setState = shadowComponent.setState;
