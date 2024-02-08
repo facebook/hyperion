@@ -11,6 +11,7 @@ import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 
 const AL_ELEMENT_INFO_PROPNAME = '__alInfo';
 const AUTO_LOGGING_COMPONENT_TYPE = 'data-auto-logging-component-type';
+export type BailTraversalFunc = (foundReactComponent: boolean, depth: number) => boolean;
 
 export default class ALElementInfo {
   element: Element;
@@ -44,6 +45,10 @@ export default class ALElementInfo {
 
   static getOrCreate(element: Element): ALElementInfo {
     return ALElementInfo.get(element) ?? new ALElementInfo(element);
+  }
+
+  static getReactComponentData(element: Element, bailTraversalFunc?: BailTraversalFunc): ReactComponentData | null {
+    return getReactComponentData_THIS_CAN_BREAK(element, bailTraversalFunc);
   }
 
   getReactComponentData(): ReactComponentData | null {
