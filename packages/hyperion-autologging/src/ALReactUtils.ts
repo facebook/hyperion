@@ -4,6 +4,8 @@
 
 'use strict';
 
+import { BailTraversalFunc } from "./ALElementInfo";
+
 export type ReactComponentData = Readonly<{
   name: string | null,
   stack: Array<string>,
@@ -62,6 +64,7 @@ const getReactComponentName = (
 
 export function getReactComponentData_THIS_CAN_BREAK(
   node: Element | null,
+  bailTraversal?: BailTraversalFunc
 ): ReactComponentData | null {
   if (node == null) {
     return null;
@@ -72,7 +75,12 @@ export function getReactComponentData_THIS_CAN_BREAK(
     let name: string | null = null;
     const stack: Array<string> = [];
     let fiber = getReactInternalFiber(element);
+    let depth = 0;
     while (fiber) {
+      if (bailTraversal != null && bailTraversal(name != null, depth++)) {
+        stack.push('...');
+        break;
+      }
       const fiberType = fiber.type;
       if (fiberType == null || typeof fiberType === 'string') {
         fiber = fiber.return;
