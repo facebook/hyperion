@@ -48,7 +48,7 @@ export default class ALElementInfo {
   }
 
   static getReactComponentData(element: Element, bailTraversalFunc?: BailTraversalFunc): ReactComponentData | null {
-    return getReactComponentData_THIS_CAN_BREAK(element, bailTraversalFunc);
+    return ALElementInfo.get(element)?.getReactComponentData() ?? getReactComponentData_THIS_CAN_BREAK(element, bailTraversalFunc);
   }
 
   getReactComponentData(): ReactComponentData | null {
