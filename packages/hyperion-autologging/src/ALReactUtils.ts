@@ -9,6 +9,7 @@ import { BailTraversalFunc } from "./ALElementInfo";
 export type ReactComponentData = Readonly<{
   name: string | null,
   stack: Array<string>,
+  isTruncated: boolean,
 }>;
 
 export type ComponentNameValidator = (name: string) => boolean;
@@ -76,9 +77,11 @@ export function getReactComponentData_THIS_CAN_BREAK(
     const stack: Array<string> = [];
     let fiber = getReactInternalFiber(element);
     let depth = 0;
+    let isTruncated = false;
     while (fiber) {
       if (bailTraversal != null && bailTraversal(name != null, depth++)) {
         stack.push('...');
+        isTruncated = true;
         break;
       }
       const fiberType = fiber.type;
@@ -98,7 +101,7 @@ export function getReactComponentData_THIS_CAN_BREAK(
       }
       fiber = fiber.return;
     }
-    return stack.length > 0 ? { name, stack } : null;
+    return stack.length > 0 ? { name, stack, isTruncated } : null;
   } catch (err) {
     if (__DEV__) {
       throw err;
