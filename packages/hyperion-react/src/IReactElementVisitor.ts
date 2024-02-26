@@ -174,6 +174,7 @@ function optimizeVisitors<
     [IReactConsts.REACT_FORWARD_REF_TYPE]: ctor('forwardRef'),
     [IReactConsts.REACT_MEMO_TYPE]: ctor('memo'),
     [IReactConsts.REACT_PROVIDER_TYPE]: ctor('provider'),
+    [IReactConsts.REACT_CONSUMER_TYPE]: ctor('context'), // this is same as 'context'
     [IReactConsts.REACT_CONTEXT_TYPE]: ctor('context'),
     [IReactConsts.REACT_FRAGMENT_TYPE]: ctor('fragment'),
     [IReactConsts.REACT_SUSPENSE_TYPE]: ctor(),
@@ -263,6 +264,7 @@ function getVisitor<
           case IReactConsts.REACT_PROVIDER_TYPE:
             visitor = visitors.provider;
             break;
+          case IReactConsts.REACT_CONSUMER_TYPE:
           case IReactConsts.REACT_CONTEXT_TYPE:
             visitor = visitors.context;
             break;

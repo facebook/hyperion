@@ -38,6 +38,7 @@ export const REACT_FRAGMENT_TYPE: Sym = SymbolFor(0xeacb, 'react.fragment');
 export const REACT_STRICT_MODE_TYPE: Sym = SymbolFor(0xeacc, 'react.strict_mode');
 export const REACT_PROFILER_TYPE: Sym = SymbolFor(0xead2, 'react.profiler');
 export const REACT_PROVIDER_TYPE: Sym = SymbolFor(0xeacd, 'react.provider');
+export const REACT_CONSUMER_TYPE: Sym = SymbolFor(0xeace, 'react.consumer'); // same as context
 export const REACT_CONTEXT_TYPE: Sym = SymbolFor(0xeace, 'react.context');
 export const REACT_FORWARD_REF_TYPE: Sym = SymbolFor(0xead0, 'react.forward_ref');
 export const REACT_SUSPENSE_LIST_TYPE: Sym = SymbolFor(0xead8, 'react.suspense_list');
