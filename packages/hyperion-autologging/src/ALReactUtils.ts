@@ -46,9 +46,24 @@ type ReactInternalFiberType = Readonly<{
 }>;
 
 const getReactInternalFiber = (element: Element): ReactInternalFiber | null => {
-  const key = Object.keys(element).find(key => key.startsWith('__reactFiber$'));
+  let fiberKey: string | null = null;
+  let listeningKeyFound = false;
+  // Iterate the keys of the element, looking for react specific props
+  // If this is a reactListening node, then fiber will not be available, attempt to grab fiber from the parent element.
+  for (const key of Object.keys(element)) {
+    if (key.startsWith('__reactFiber$')) {
+      fiberKey = key;
+      break;
+      // Note this does not have the $ suffix, or begin with two _
+    } else if (key.startsWith('_reactListening')) {
+      listeningKeyFound = true;
+    }
+  }
+  if (fiberKey == null && listeningKeyFound) {
+    return getReactInternalFiber(element.parentElement as Element);
+  }
   const el = element as { [k: string]: any };
-  return key != null ? el[key] : null;
+  return fiberKey != null ? el[fiberKey] : null;
 };
 
 const getReactComponentName = (
