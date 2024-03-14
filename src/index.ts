@@ -62,3 +62,4 @@ export * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 export { ALSurfaceCapability } from "@hyperion/hyperion-autologging/src/ALSurface";
 export * as ALSurfaceUtils from "@hyperion/hyperion-autologging/src/ALSurfaceUtils";
 export * as ALCustomEvent from '@hyperion/hyperion-autologging/src/ALCustomEvent';
+export { enableEventHandlers, disableEventHandlers } from "@hyperion/hyperion-autologging/src/ALUIEventPublisher";
