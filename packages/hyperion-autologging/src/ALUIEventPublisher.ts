@@ -158,6 +158,38 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
   };
 }
 
+
+// Keep track of event handlers
+const uiEventHandlers = new Map<UIEventConfig['eventName'], {
+  captureHandler: (event: Event) => void,
+  bubbleHandler: (event: Event) => void,
+  active: boolean,
+}>;
+
+export function disableEventHandlers(eventName: UIEventConfig['eventName']): void {
+  const handlerConfig = uiEventHandlers.get(eventName);
+  if (handlerConfig?.active === true) {
+    window.document.removeEventListener(eventName, handlerConfig.captureHandler, true);
+    window.document.removeEventListener(eventName, handlerConfig.bubbleHandler, false);
+    uiEventHandlers.set(eventName, {
+      ...handlerConfig,
+      active: false,
+    });
+  }
+}
+
+export function enableEventHandlers(eventName: UIEventConfig['eventName']): void {
+  const handlerConfig = uiEventHandlers.get(eventName);
+  if (handlerConfig?.active === false) {
+    window.document.addEventListener(eventName, handlerConfig.captureHandler, true);
+    window.document.addEventListener(eventName, handlerConfig.bubbleHandler, false);
+    uiEventHandlers.set(eventName, {
+      ...handlerConfig,
+      active: true,
+    });
+  }
+}
+
 /**
  *
  * @param options - Configuration for determining which events to capture and emit events via provided channel.
@@ -180,7 +212,7 @@ export function publish(options: InitOptions): void {
     }
 
     // Track event in the capturing phase
-    window.document.addEventListener(eventName, (event) => {
+    const captureHandler = (event: Event): void => {
       const uiEventData = getCommonEventData(eventConfig, eventName, event);
       if (!uiEventData) {
         return;
@@ -229,7 +261,9 @@ export function publish(options: InitOptions): void {
       intercept(event); // making sure we can track changes to the Event object
       setTriggerFlowlet(event, flowlet);
       channel.emit('al_ui_event_capture', eventData);
-    },
+    };
+    window.document.addEventListener(eventName,
+      captureHandler,
       true, // useCapture
     );
 
@@ -245,43 +279,51 @@ export function publish(options: InitOptions): void {
     });
 
     // Track event in the bubbling phase
+    const bubbleHandler = (event: Event): void => {
+      const uiEventData = getCommonEventData(eventConfig, eventName, event);
+      if (!uiEventData) {
+        return;
+      }
+
+      channel.emit('al_ui_event_bubble', uiEventData);
+
+      /**
+       * We want the actual event fire after all bubble listeners are done
+       * Therefore, we fire the second one here, instead of registering a
+       * listener for the bubble events.
+       */
+      if (lastUIEvent != null) {
+        const { data, timedEmitter } = lastUIEvent;
+        if (data.event === eventName && data.domEvent.target === event.target) {
+          /**
+           * In case during al_ui_event_bubble subscribers have updated the
+           * metadata of the event, we combine them into the metadata of the
+           * al_ui_event_capture event.
+           */
+          Object.assign(data.metadata, uiEventData.metadata);
+          timedEmitter.run();
+        }
+      }
+
+      let flowlet: IALFlowlet | undefined;
+      if (shouldPushPopFlowlet(event) && (flowlet = activeUIEventFlowlets.get(eventName)) != null) {
+        flowletManager.pop(flowlet);
+        activeUIEventFlowlets.delete(eventName);
+        uiEventFlowletManager.pop(flowlet);
+      }
+    };
     window.document.addEventListener(
       eventName,
-      (event) => {
-        const uiEventData = getCommonEventData(eventConfig, eventName, event);
-        if (!uiEventData) {
-          return;
-        }
-
-        channel.emit('al_ui_event_bubble', uiEventData);
-
-        /**
-         * We want the actual event fire after all bubble listeners are done
-         * Therefore, we fire the second one here, instead of registering a
-         * listener for the bubble events.
-         */
-        if (lastUIEvent != null) {
-          const { data, timedEmitter } = lastUIEvent;
-          if (data.event === eventName && data.domEvent.target === event.target) {
-            /**
-             * In case during al_ui_event_bubble subscribers have updated the
-             * metadata of the event, we combine them into the metadata of the
-             * al_ui_event_capture event.
-             */
-            Object.assign(data.metadata, uiEventData.metadata);
-            timedEmitter.run();
-          }
-        }
-
-        let flowlet: IALFlowlet | undefined;
-        if (shouldPushPopFlowlet(event) && (flowlet = activeUIEventFlowlets.get(eventName)) != null) {
-          flowletManager.pop(flowlet);
-          activeUIEventFlowlets.delete(eventName);
-          uiEventFlowletManager.pop(flowlet);
-        }
-      },
+      bubbleHandler,
       false, // useCapture
     );
+
+    // Set our registered handlers
+    uiEventHandlers.set(eventName, {
+      captureHandler,
+      bubbleHandler,
+      active: true,
+    });
   }));
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
