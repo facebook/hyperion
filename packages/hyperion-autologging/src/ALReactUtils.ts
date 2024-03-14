@@ -30,6 +30,9 @@ export function setComponentNameValidator(validator: ComponentNameValidator): vo
   componentNameValidator = validator;
 }
 
+// Store the hash used for react internal attributes once found, and attempt to reuse it
+let reactInternalHash: string | null = null;
+
 type ReactInternalFiber = Readonly<{
   key: string | null,
   // memoizedProps can be any object
@@ -45,25 +48,42 @@ type ReactInternalFiberType = Readonly<{
   render: ReactInternalFiberType,
 }>;
 
+const reactFiberPrefix = '__reactFiber$';
+
 const getReactInternalFiber = (element: Element): ReactInternalFiber | null => {
+  let fiber: ReactInternalFiber | null = null;
   let fiberKey: string | null = null;
   let listeningKeyFound = false;
-  // Iterate the keys of the element, looking for react specific props
-  // If this is a reactListening node, then fiber will not be available, attempt to grab fiber from the parent element.
+  const el = element as { [k: string]: any };
+  // Check if we have an internal hash, and use it if we can
+  if (reactInternalHash != null) {
+    fiber = el[reactFiberPrefix + reactInternalHash];
+  }
+  // Found from cached hash
+  if (fiber != null) {
+    return fiber;
+  }
+  // Otherwise fallback and iterate the keys.
+  // If this is a reactListening node, then fiber will not be available mark that we saw this attribute.
   for (const key of Object.keys(element)) {
-    if (key.startsWith('__reactFiber$')) {
+    if (key.startsWith(reactFiberPrefix)) {
       fiberKey = key;
+      reactInternalHash = key.replace(reactFiberPrefix, '');
       break;
       // Note this does not have the $ suffix, or begin with two _
     } else if (key.startsWith('_reactListening')) {
       listeningKeyFound = true;
     }
   }
-  if (fiberKey == null && listeningKeyFound) {
-    return getReactInternalFiber(element.parentElement as Element);
+  // No fiber found
+  if (fiberKey == null) {
+    // If we saw this was a listening installed node, attempt to grab fiber from the parent element.
+    if (listeningKeyFound && element.parentElement != null) {
+      return getReactInternalFiber(element.parentElement);
+    }
+    return null;
   }
-  const el = element as { [k: string]: any };
-  return fiberKey != null ? el[fiberKey] : null;
+  return el[fiberKey];
 };
 
 const getReactComponentName = (
