@@ -258,7 +258,14 @@ describe("Text various element text options", () => {
       <div id="addEventListener"></div>
     `);
 
-    ALInteractableDOMElement.trackInteractable("click");
+    ALInteractableDOMElement.UIEventHandlers.set(
+      'click', {
+      captureHandler: () => { },
+      bubbleHandler: () => { },
+      active: false
+    }
+    );
+    ALInteractableDOMElement.enableUIEventHandlers('click');
 
     let node = document.getElementById("attribute");
     expect(node).not.toBeNull();
@@ -275,6 +282,22 @@ describe("Text various element text options", () => {
     if (node) {
       node.addEventListener("click", () => { });
       expect(node.getAttribute("data-clickable")).toBe("1");
+    }
+
+    ALInteractableDOMElement.UIEventHandlers.set(
+      'mouseover', {
+      captureHandler: () => { },
+      bubbleHandler: () => { },
+      active: false
+    }
+    );
+    ALInteractableDOMElement.enableUIEventHandlers('mouseover');
+
+    node = document.getElementById("addEventListener");
+    expect(node).not.toBeNull();
+    if (node) {
+      node.addEventListener("mouseover", () => { });
+      expect(node.getAttribute("data-mouseoverable")).toBe("1");
     }
   });
 });
