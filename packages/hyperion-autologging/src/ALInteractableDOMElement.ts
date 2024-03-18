@@ -7,6 +7,7 @@ import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import type * as Types from "@hyperion/hyperion-util/src/Types";
+import { UIEventConfig } from "./ALUIEventPublisher";
 
 'use strict';
 
@@ -49,7 +50,7 @@ function eventHandlerTrackerAttribute(eventName: string): string {
 
 export function getInteractable(
   node: EventTarget | null,
-  eventName: string,
+  eventName: UIEventConfig['eventName'],
   returnInteractableNode: boolean = false,
 ): HTMLElement | null {
   // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
@@ -82,7 +83,33 @@ function ignoreInteractiveElement(node: HTMLElement) {
   );
 }
 
-const TrackedEvents = new Set<string>();
+// Keep track of event handlers
+export const UIEventHandlers = new Map<UIEventConfig['eventName'] | string, {
+  captureHandler: (event: Event) => void,
+  bubbleHandler: (event: Event) => void,
+  active: boolean,
+}>;
+
+export function disableUIEventHandlers(eventName: UIEventConfig['eventName']): void {
+  const handlerConfig = UIEventHandlers.get(eventName);
+  if (handlerConfig?.active === true) {
+    window.document.removeEventListener(eventName, handlerConfig.captureHandler, true);
+    window.document.removeEventListener(eventName, handlerConfig.bubbleHandler, false);
+    handlerConfig.active = false;
+  }
+}
+
+export function enableUIEventHandlers(eventName: UIEventConfig['eventName']): void {
+  const handlerConfig = UIEventHandlers.get(eventName);
+  if (handlerConfig?.active === false) {
+    // Install interactable attribute handlers
+    installHandlers();
+    // Install event handlers
+    window.document.addEventListener(eventName, handlerConfig.captureHandler, true);
+    window.document.addEventListener(eventName, handlerConfig.bubbleHandler, false);
+    handlerConfig.active = true;
+  }
+}
 
 let installHandlers = () => {
   IEventTarget.addEventListener.onBeforeCallObserverAdd(function (
@@ -90,7 +117,7 @@ let installHandlers = () => {
     event,
     _listener,
   ) {
-    if (TrackedEvents.has(event) && this instanceof HTMLElement) {
+    if (UIEventHandlers.has(event) && this instanceof HTMLElement) {
       if (!ignoreInteractiveElement(this)) {
         const attribute = eventHandlerTrackerAttribute(event);
         this.setAttribute(attribute, '1');
@@ -111,7 +138,7 @@ let installHandlers = () => {
 
   IReactComponent.onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
     if (props != null) {
-      TrackedEvents.forEach(event => {
+      Array.from(UIEventHandlers.keys()).forEach(event => {
         if (props[SYNTHETIC_EVENT_HANDLER_MAP[event]] != null) {
           props[eventHandlerTrackerAttribute(event)] = '1';
         }
@@ -249,15 +276,8 @@ let installHandlers = () => {
   installHandlers = () => { }; // Done doing stuff!
 }
 
-export function isTrackedEvent(eventName: string): boolean {
-  return TrackedEvents.has(eventName);
-}
-
-export function trackInteractable(eventName: string): boolean {
-  installHandlers();
-  const alreadyTracked = TrackedEvents.has(eventName);
-  TrackedEvents.add(eventName);
-  return alreadyTracked;
+export function isTrackedEvent(eventName: UIEventConfig['eventName'] | string): boolean {
+  return UIEventHandlers.has(eventName);
 }
 
 export function extractCleanText(text: string): string {

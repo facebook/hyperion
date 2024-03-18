@@ -14,7 +14,7 @@ import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsol
 import ALElementInfo from './ALElementInfo';
 import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
-import { ALElementTextEvent, getElementTextEvent, getInteractable, trackInteractable } from "./ALInteractableDOMElement";
+import { ALElementTextEvent, getElementTextEvent, getInteractable, isTrackedEvent, UIEventHandlers, enableUIEventHandlers } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
@@ -78,7 +78,7 @@ type ALChannel = Channel<ALChannelUIEvent>;
 
 type EventHandlerMap = DocumentEventMap;
 
-type UIEventConfig<T = EventHandlerMap> = {
+export type UIEventConfig<T = EventHandlerMap> = {
   [K in keyof T]: Readonly<{
     eventName: K,
     // A callable filter for this event, returning true if the event should be emitted, or false if it should be discarded up front
@@ -158,38 +158,6 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
   };
 }
 
-
-// Keep track of event handlers
-const uiEventHandlers = new Map<UIEventConfig['eventName'], {
-  captureHandler: (event: Event) => void,
-  bubbleHandler: (event: Event) => void,
-  active: boolean,
-}>;
-
-export function disableEventHandlers(eventName: UIEventConfig['eventName']): void {
-  const handlerConfig = uiEventHandlers.get(eventName);
-  if (handlerConfig?.active === true) {
-    window.document.removeEventListener(eventName, handlerConfig.captureHandler, true);
-    window.document.removeEventListener(eventName, handlerConfig.bubbleHandler, false);
-    uiEventHandlers.set(eventName, {
-      ...handlerConfig,
-      active: false,
-    });
-  }
-}
-
-export function enableEventHandlers(eventName: UIEventConfig['eventName']): void {
-  const handlerConfig = uiEventHandlers.get(eventName);
-  if (handlerConfig?.active === false) {
-    window.document.addEventListener(eventName, handlerConfig.captureHandler, true);
-    window.document.addEventListener(eventName, handlerConfig.bubbleHandler, false);
-    uiEventHandlers.set(eventName, {
-      ...handlerConfig,
-      active: true,
-    });
-  }
-}
-
 /**
  *
  * @param options - Configuration for determining which events to capture and emit events via provided channel.
@@ -206,7 +174,7 @@ export function publish(options: InitOptions): void {
     const { eventName, cacheElementReactInfo = false } = eventConfig;
 
     // the following will ensure that repeated items in the list won't have double handlers
-    if (trackInteractable(eventName)) {
+    if (isTrackedEvent(eventName)) {
       // Already handled
       return;
     }
@@ -262,10 +230,6 @@ export function publish(options: InitOptions): void {
       setTriggerFlowlet(event, flowlet);
       channel.emit('al_ui_event_capture', eventData);
     };
-    window.document.addEventListener(eventName,
-      captureHandler,
-      true, // useCapture
-    );
 
     /**
      * If any of the actual event handlers call stopPropagation, we know that
@@ -312,18 +276,16 @@ export function publish(options: InitOptions): void {
         uiEventFlowletManager.pop(flowlet);
       }
     };
-    window.document.addEventListener(
-      eventName,
-      bubbleHandler,
-      false, // useCapture
-    );
 
-    // Set our registered handlers
-    uiEventHandlers.set(eventName, {
+    // Set our handlers to register
+    UIEventHandlers.set(eventName, {
       captureHandler,
       bubbleHandler,
-      active: true,
+      active: false,
     });
+
+    // Enable the events handlers as well as interactable tracking
+    enableUIEventHandlers(eventName);
   }));
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {
