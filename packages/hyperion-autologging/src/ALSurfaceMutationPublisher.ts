@@ -8,6 +8,7 @@ import { assert } from "@hyperion/global/src/assert";
 import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
+import * as ALCustomEvent from "./ALCustomEvent";
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from './ALEventIndex';
 import * as ALID from './ALID';
@@ -46,7 +47,7 @@ export type ALChannelSurfaceMutationEvent = Readonly<{
 }
 >;
 
-export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>;
+export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent & ALCustomEvent.ALChannelCustomEvent>;
 
 type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & ALFlowletEvent & {
   surface: string,
@@ -171,5 +172,4 @@ export function publish(options: InitOptions): void {
   channel.addListener('al_surface_unmount', event => {
     processNode(event, 'removed');
   });
-
 }
