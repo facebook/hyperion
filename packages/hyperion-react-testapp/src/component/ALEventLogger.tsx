@@ -7,6 +7,7 @@ import { SyncChannel } from "../Channel";
 import { ALChannelEvent } from "@hyperion/hyperion-autologging/src/AutoLogging";
 import { ALSessionGraph } from "@hyperion/hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
 import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
+import { ALFlowletEvent } from "@hyperion/hyperion-autologging/src/ALType";
 
 const EventsWithFlowlet = [
   'al_ui_event',
@@ -14,6 +15,8 @@ const EventsWithFlowlet = [
   'al_network_request',
   'al_network_response',
   'al_flowlet_event',
+  'al_custom_event',
+  'al_element_value_event',
 ] as const;
 
 const EventsWithoutFlowlet = [
@@ -47,8 +50,8 @@ function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEna
     const newValue = !checked;
     value.setValue(newValue);
     setChecked(newValue);
-  }, []);
-  React.useEffect(() => {
+  }, [eventName, checked]);
+  React.useLayoutEffect(() => {
     const handler = SyncChannel.on(eventName).add(ev => {
       // console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
       if (checked) {
@@ -56,7 +59,7 @@ function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEna
       }
     });
     return () => { SyncChannel.on(eventName).remove(handler); };
-  })
+  }, [eventName, checked]);
 
   return <div>
     <input type="checkbox" id={eventName} onChange={onChange} defaultChecked={checked} ></input>

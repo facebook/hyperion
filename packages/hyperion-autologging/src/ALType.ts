@@ -6,6 +6,7 @@
 
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import { IALFlowlet, ALFlowletManager } from './ALFlowletManager';
+import { ALID } from "./ALID";
 
 export type ALFlowletEvent = Readonly<{
   callFlowlet: IALFlowlet;
@@ -41,6 +42,7 @@ export type ALMetadataEvent = Readonly<{
  */
 export type ALLoggableEvent = ALTimedEvent & ALMetadataEvent & Readonly<{
   eventIndex: number;
+  relatedEventIndex?: number;
 }>;
 
 export type ALReactElementEvent = Readonly<{
@@ -50,4 +52,9 @@ export type ALReactElementEvent = Readonly<{
 
 export type ALSharedInitOptions = Types.Options<{
   flowletManager: ALFlowletManager;
+}>;
+
+export type ALElementEvent = Readonly<{
+  element: HTMLElement;
+  autoLoggingID: ALID;
 }>;
