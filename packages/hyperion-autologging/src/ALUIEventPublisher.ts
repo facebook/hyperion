@@ -105,8 +105,7 @@ type CommonEventData = (ALUIEvent & ALTimedEvent) & {
 
 // Entrypoint to set up tracking and enable handlers
 export function trackAndEnableUIEventHandlers(eventName: UIEventConfig['eventName'], eventHandlerConfig: Omit<TrackEventHandlerConfig, 'active'>): void {
-  const config = { active: false, ...eventHandlerConfig };
-  enableUIEventHandlers(eventName, config);
+  enableUIEventHandlers(eventName, eventHandlerConfig);
 }
 
 /**

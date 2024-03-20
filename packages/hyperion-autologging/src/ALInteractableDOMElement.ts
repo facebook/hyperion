@@ -7,7 +7,7 @@ import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import type * as Types from "@hyperion/hyperion-util/src/Types";
-import { UIEventConfig } from "./ALUIEventPublisher";
+import type { UIEventConfig } from "./ALUIEventPublisher";
 
 'use strict';
 
@@ -103,13 +103,13 @@ export function disableUIEventHandlers(eventName: UIEventConfig['eventName']): v
   }
 }
 
-export function enableUIEventHandlers(eventName: UIEventConfig['eventName'], eventHandlerConfig?: TrackEventHandlerConfig | undefined): void {
-  let handlerConfig = UIEventHandlers.get(eventName) ?? eventHandlerConfig;
+export function enableUIEventHandlers(eventName: UIEventConfig['eventName'], eventHandlerConfig?: Omit<TrackEventHandlerConfig, "active"> | undefined): void {
+  let handlerConfig = UIEventHandlers.get(eventName);
   // Incoming config
   if (eventHandlerConfig != null) {
     // Disable the existing handlers if present, before installing the new ones
     disableUIEventHandlers(eventName);
-    handlerConfig = eventHandlerConfig;
+    handlerConfig = { ...eventHandlerConfig, active: false };
   }
   if (handlerConfig?.active === false) {
     // Install interactable attribute handlers
