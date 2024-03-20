@@ -14,7 +14,7 @@ import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsol
 import ALElementInfo from './ALElementInfo';
 import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
-import { ALElementTextEvent, getElementTextEvent, getInteractable, isTrackedEvent, UIEventHandlers, enableUIEventHandlers } from "./ALInteractableDOMElement";
+import { ALElementTextEvent, getElementTextEvent, getInteractable, isTrackedEvent, enableUIEventHandlers, TrackEventHandlerConfig } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALFlowletEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
@@ -102,6 +102,12 @@ type CommonEventData = (ALUIEvent & ALTimedEvent) & {
   // The event.target element,  as opposed to element which represents the interactableElement
   targetElement: HTMLElement | null,
 };
+
+// Entrypoint to set up tracking and enable handlers
+export function trackAndEnableUIEventHandlers(eventName: UIEventConfig['eventName'], eventHandlerConfig: Omit<TrackEventHandlerConfig, 'active'>): void {
+  const config = { active: false, ...eventHandlerConfig };
+  enableUIEventHandlers(eventName, config);
+}
 
 /**
  *
@@ -277,15 +283,11 @@ export function publish(options: InitOptions): void {
       }
     };
 
-    // Set our handlers to register
-    UIEventHandlers.set(eventName, {
+    // Enable the events handlers as well as interactable tracking
+    trackAndEnableUIEventHandlers(eventName, {
       captureHandler,
       bubbleHandler,
-      active: false,
     });
-
-    // Enable the events handlers as well as interactable tracking
-    enableUIEventHandlers(eventName);
   }));
 
   function updateLastUIEvent(eventData: ALUIEventCaptureData) {

@@ -84,30 +84,43 @@ function ignoreInteractiveElement(node: HTMLElement) {
 }
 
 // Keep track of event handlers
-export const UIEventHandlers = new Map<UIEventConfig['eventName'] | string, {
+export type TrackEventHandlerConfig = Readonly<{
   captureHandler: (event: Event) => void,
   bubbleHandler: (event: Event) => void,
   active: boolean,
 }>;
+export const UIEventHandlers = new Map<UIEventConfig['eventName'] | string, TrackEventHandlerConfig>;
 
 export function disableUIEventHandlers(eventName: UIEventConfig['eventName']): void {
   const handlerConfig = UIEventHandlers.get(eventName);
   if (handlerConfig?.active === true) {
     window.document.removeEventListener(eventName, handlerConfig.captureHandler, true);
     window.document.removeEventListener(eventName, handlerConfig.bubbleHandler, false);
-    handlerConfig.active = false;
+    UIEventHandlers.set(eventName, {
+      ...handlerConfig,
+      active: false,
+    });
   }
 }
 
-export function enableUIEventHandlers(eventName: UIEventConfig['eventName']): void {
-  const handlerConfig = UIEventHandlers.get(eventName);
+export function enableUIEventHandlers(eventName: UIEventConfig['eventName'], eventHandlerConfig?: TrackEventHandlerConfig | undefined): void {
+  let handlerConfig = UIEventHandlers.get(eventName) ?? eventHandlerConfig;
+  // Incoming config
+  if (eventHandlerConfig != null) {
+    // Disable the existing handlers if present, before installing the new ones
+    disableUIEventHandlers(eventName);
+    handlerConfig = eventHandlerConfig;
+  }
   if (handlerConfig?.active === false) {
     // Install interactable attribute handlers
     installHandlers();
     // Install event handlers
     window.document.addEventListener(eventName, handlerConfig.captureHandler, true);
     window.document.addEventListener(eventName, handlerConfig.bubbleHandler, false);
-    handlerConfig.active = true;
+    UIEventHandlers.set(eventName, {
+      ...handlerConfig,
+      active: true,
+    });
   }
 }
 
@@ -138,7 +151,7 @@ let installHandlers = () => {
 
   IReactComponent.onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
     if (props != null) {
-      Array.from(UIEventHandlers.keys()).forEach(event => {
+      UIEventHandlers.forEach((_, event) => {
         if (props[SYNTHETIC_EVENT_HANDLER_MAP[event]] != null) {
           props[eventHandlerTrackerAttribute(event)] = '1';
         }

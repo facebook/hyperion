@@ -8,6 +8,7 @@ import "jest";
 
 import * as ALInteractableDOMElement from "../src/ALInteractableDOMElement";
 import * as DomFragment from "./DomFragment";
+import { UIEventConfig, trackAndEnableUIEventHandlers } from "../src/ALUIEventPublisher";
 
 function createTestDom(): DomFragment.DomFragment {
   return DomFragment.html(`
@@ -64,7 +65,7 @@ function getText(id: string): string | null {
 }
 
 describe("Test interactable detection algorithm", () => {
-  function interactable(node: HTMLElement | null, eventName: string, interactableOnly: boolean = true): HTMLElement | null {
+  function interactable(node: HTMLElement | null, eventName: UIEventConfig['eventName'], interactableOnly: boolean = true): HTMLElement | null {
     return ALInteractableDOMElement.getInteractable(node, eventName, interactableOnly);
   }
 
@@ -258,14 +259,10 @@ describe("Text various element text options", () => {
       <div id="addEventListener"></div>
     `);
 
-    ALInteractableDOMElement.UIEventHandlers.set(
-      'click', {
+    trackAndEnableUIEventHandlers('click', {
       captureHandler: () => { },
       bubbleHandler: () => { },
-      active: false
-    }
-    );
-    ALInteractableDOMElement.enableUIEventHandlers('click');
+    });
 
     let node = document.getElementById("attribute");
     expect(node).not.toBeNull();
@@ -284,14 +281,10 @@ describe("Text various element text options", () => {
       expect(node.getAttribute("data-clickable")).toBe("1");
     }
 
-    ALInteractableDOMElement.UIEventHandlers.set(
-      'mouseover', {
+    trackAndEnableUIEventHandlers('mouseover', {
       captureHandler: () => { },
       bubbleHandler: () => { },
-      active: false
-    }
-    );
-    ALInteractableDOMElement.enableUIEventHandlers('mouseover');
+    });
 
     node = document.getElementById("addEventListener");
     expect(node).not.toBeNull();
