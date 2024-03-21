@@ -6,7 +6,7 @@ import * as IGlobalThis from "@hyperion/hyperion-core/src/IGlobalThis";
 import * as IPromise from "@hyperion/hyperion-core/src/IPromise";
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 // import * as IGlobalEventHandlers from "@hyperion/hyperion-dom/src/IGlobalEventHandlers";
-// import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
+import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 // import * as IWorker from "@hyperion/hyperion-dom/src/IWorker";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
 import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
@@ -178,7 +178,27 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
       }
       args[0] = flowletManager.wrap(handler, fi.name);
       return args;
-    })
+    });
+  }
+
+  for (const fi of [
+    IWindow.requestIdleCallback,
+  ]) {
+    fi.onBeforeCallMapperAdd(args => {
+      let handler = args[0];
+      args[0] = flowletManager.wrap(handler, fi.name);
+      return args;
+    });
+  }
+
+  for (const fi of [
+    IWindow.requestAnimationFrame,
+  ]) {
+    fi.onBeforeCallMapperAdd(args => {
+      let handler = args[0];
+      args[0] = flowletManager.wrap(handler, fi.name);
+      return args;
+    });
   }
 
   for (const fi of [
