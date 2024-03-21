@@ -16,7 +16,7 @@ import { useALSurfaceContext } from './ALSurfaceContext';
 export type InitOptions = Types.Options<{
   react: {
     ReactModule: { createElement: typeof React.createElement, Fragment: typeof React.Fragment };
-    IReactDOMModule: IReactDOM.IReactDOMModuleExports;
+    IReactDOMModule: IReactDOM.IReactDOMModuleExports | Promise<IReactDOM.IReactDOMModuleExports>;
   };
   flowletManager: ALFlowletManager;
 }>;
@@ -58,6 +58,25 @@ function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions & { contai
 
 export function init(options: ProxyInitOptions): void {
   const { IReactDOMModule, ReactModule } = options.react;
+
+  /**
+   * In case an application loads ReactDOM dynamically and on demand,
+   * the following will allow an async configuration of the logic
+   */
+  if (IReactDOMModule instanceof Promise) {
+    IReactDOMModule.then(iReactDOMModule => {
+      init({
+        ...options,
+        react: {
+          ...options.react,
+          IReactDOMModule: iReactDOMModule,
+        }
+      })
+    });
+
+    return;
+  }
+
   /**
    * When createPortal is called, the react components will be added to a
    * separate container DOM node and shown in place later.
