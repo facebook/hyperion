@@ -139,7 +139,6 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
   wrap<C extends CallbackType | undefined | null>(
     listener: C,
     apiName: string,
-    customFlowlet?: T,
     getTriggerFlowlet?: (...args: any) => T | null | undefined
   ): C {
     if (!listener) {
@@ -149,7 +148,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     const funcInterceptor = interceptEventListener(listener);
     if (funcInterceptor && !funcInterceptor.testAndSet(IS_FLOWLET_SETUP_PROP_NAME)) {
 
-      const flowlet = customFlowlet ?? new this.flowletCtor(apiName, this.top());
+      const flowlet = new this.flowletCtor(apiName, this.top());
       if (!getTriggerFlowlet) {
         /**
          * we are not going to pickup an actual trigger later, which means whatever triggered
