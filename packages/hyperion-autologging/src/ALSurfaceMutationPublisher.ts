@@ -58,6 +58,10 @@ type SurfaceInfo = ALSurfaceMutationEventData & Types.Writeable<ALElementEvent> 
 
 const activeSurfaces = new Map<string, SurfaceInfo>();
 
+export function getSurfaceMountInfo(surface: string): ALSurfaceMutationEventData | undefined {
+  return activeSurfaces.get(surface);
+}
+
 export type InitOptions = Types.Options<
   ALSharedInitOptions &
   {
@@ -163,10 +167,10 @@ export function publish(options: InitOptions): void {
   }
 
   channel.addListener('al_surface_mount', event => {
-    processNode(event, 'added');
+    !event.isProxy && processNode(event, 'added');
   });
 
   channel.addListener('al_surface_unmount', event => {
-    processNode(event, 'removed');
+    !event.isProxy && processNode(event, 'removed');
   });
 }
