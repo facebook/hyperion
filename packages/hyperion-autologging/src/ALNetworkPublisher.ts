@@ -166,14 +166,14 @@ function captureFetch(options: InitOptions): void {
     let request: RequestInfo = getFetchRequestInfo(input, init);
 
     if (!options.requestFilter || options.requestFilter(request)) {
-      const flowlet = flowletManager.top();
+      const callFlowlet = flowletManager.top();
       channel.emit("al_network_request", ephemeralRequestEvent = {
         initiatorType: "fetch",
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
-        flowlet,
-        triggerFlowlet: flowlet?.data.triggerFlowlet,
+        callFlowlet,
+        triggerFlowlet: callFlowlet?.data.triggerFlowlet,
         ...request,
         metadata: {},
       });
@@ -200,7 +200,7 @@ function captureFetch(options: InitOptions): void {
         value.then(response => {
           const requestEvent = intercept.getVirtualPropertyValue<ALNetworkRequestEvent>(value, REQUEST_INFO_PROP_NAME);
           assert(requestEvent != null, `Unexpected situation! Request info missing from fetch promise object`);
-          const flowlet = requestEvent?.flowlet; // Reuse the same flowlet as request, since by now things have changed.
+          const callFlowlet = requestEvent?.callFlowlet; // Reuse the same flowlet as request, since by now things have changed.
 
           // const triggerFlowlet = flowletManager.top()?.data.triggerFlowlet;
           assert(triggerFlowlet === flowletManager.top()?.data.triggerFlowlet, `Broken trigger flowlet chain!`);
@@ -210,7 +210,7 @@ function captureFetch(options: InitOptions): void {
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
-            flowlet,
+            callFlowlet,
             triggerFlowlet,
             requestEvent,
             response,
@@ -323,7 +323,7 @@ function captureXHR(options: InitOptions): void {
     };
 
 
-    const flowlet = flowletManager.top(); // Before calling requestFilter and losing current top flowlet
+    const callFlowlet = flowletManager.top(); // Before calling requestFilter and losing current top callFlowlet
     const triggerFlowlet = getTriggerFlowlet(this);
 
     if (!options.requestFilter || options.requestFilter(request)) {
@@ -334,7 +334,7 @@ function captureXHR(options: InitOptions): void {
         event: "network",
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
-        flowlet,
+        callFlowlet,
         triggerFlowlet,
         ...request, // assert already ensures request is not undefined
         metadata: {},
@@ -350,7 +350,7 @@ function captureXHR(options: InitOptions): void {
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
-            flowlet, // should carry request flowlet forward
+            callFlowlet, // should carry request flowlet forward
             triggerFlowlet, //should carry request triggerFlowlet forward as the main trigger
             requestEvent,
             response: this,

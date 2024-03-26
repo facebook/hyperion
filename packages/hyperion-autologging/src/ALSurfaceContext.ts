@@ -22,7 +22,7 @@ export type InitOptions = Types.Options<{
 export type ALSurfaceContextFilledValue = {
   nonInteractiveSurface: string;
   surface: string;
-  flowlet: IALFlowlet;
+  callFlowlet: IALFlowlet;
 };
 
 type ALSurfaceContextValue =
@@ -30,13 +30,13 @@ type ALSurfaceContextValue =
   | {
     nonInteractiveSurface: null;
     surface: null;
-    flowlet: null;
+    callFlowlet: null;
   };
 
 const DefaultSurfaceContext: ALSurfaceContextValue = {
   nonInteractiveSurface: null,
   surface: null,
-  flowlet: null,
+  callFlowlet: null,
 };
 
 export let ALSurfaceContext: React.Context<ALSurfaceContextValue> | null = null;

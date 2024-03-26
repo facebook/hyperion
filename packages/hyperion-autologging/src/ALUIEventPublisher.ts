@@ -209,11 +209,11 @@ export function publish(options: InitOptions): void {
         flowletName += `${separator}element=${autoLoggingID}`;
       }
       flowletName += ')';
-      let flowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
+      let callFlowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
       if (shouldPushPopFlowlet(event)) {
-        uiEventFlowletManager.push(flowlet);
-        flowlet = flowletManager.push(flowlet);
-        activeUIEventFlowlets.set(eventName, flowlet);
+        uiEventFlowletManager.push(callFlowlet);
+        callFlowlet = flowletManager.push(callFlowlet);
+        activeUIEventFlowlets.set(eventName, callFlowlet);
       }
       let reactComponentData: ReactComponentData | null = null;
       if (targetElement && cacheElementReactInfo) {
@@ -223,8 +223,8 @@ export function publish(options: InitOptions): void {
       const elementText = getElementTextEvent(element, surface);
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
-        flowlet,
-        triggerFlowlet: flowlet,
+        callFlowlet,
+        triggerFlowlet: callFlowlet,
         surface,
         ...elementText,
         reactComponentName: reactComponentData?.name,
@@ -232,7 +232,7 @@ export function publish(options: InitOptions): void {
       };
       updateLastUIEvent(eventData);
       intercept(event); // making sure we can track changes to the Event object
-      setTriggerFlowlet(event, flowlet);
+      setTriggerFlowlet(event, callFlowlet);
       channel.emit('al_ui_event_capture', eventData);
     };
 
@@ -274,11 +274,11 @@ export function publish(options: InitOptions): void {
         }
       }
 
-      let flowlet: IALFlowlet | undefined;
-      if (shouldPushPopFlowlet(event) && (flowlet = activeUIEventFlowlets.get(eventName)) != null) {
-        flowletManager.pop(flowlet);
+      let callFlowlet: IALFlowlet | undefined;
+      if (shouldPushPopFlowlet(event) && (callFlowlet = activeUIEventFlowlets.get(eventName)) != null) {
+        flowletManager.pop(callFlowlet);
         activeUIEventFlowlets.delete(eventName);
-        uiEventFlowletManager.pop(flowlet);
+        uiEventFlowletManager.pop(callFlowlet);
       }
     };
 
@@ -320,11 +320,11 @@ export function publish(options: InitOptions): void {
    * This mechanism works because of how various 'creation time flowlets' are pushed/popped on
    * the stack.
    */
-  flowletManager.onPush.add((flowlet, _reason) => {
+  flowletManager.onPush.add((callFlowlet, _reason) => {
     const uiEventFlowlet = uiEventFlowletManager.top();
-    if (uiEventFlowletManager.stackSize() > 0 && flowlet.data.uiEventFlowlet !== uiEventFlowlet) {
-      flowlet.data.uiEventFlowlet = uiEventFlowlet;
-      if (flowlet.name === "useState" && flowlet.parent) {
+    if (uiEventFlowletManager.stackSize() > 0 && callFlowlet.data.uiEventFlowlet !== uiEventFlowlet) {
+      callFlowlet.data.uiEventFlowlet = uiEventFlowlet;
+      if (callFlowlet.name === "useState" && callFlowlet.parent) {
         /**
          * We know that useState will trigger an update on the corresponding component
          * The parent of the useState's flowlet is 'usually' a surface flowlet.
@@ -336,7 +336,7 @@ export function publish(options: InitOptions): void {
          * look for that marking and updat the flowlet.
          *
          */
-        flowlet.parent.data.uiEventFlowlet = uiEventFlowlet;
+        callFlowlet.parent.data.uiEventFlowlet = uiEventFlowlet;
       }
     }
   });

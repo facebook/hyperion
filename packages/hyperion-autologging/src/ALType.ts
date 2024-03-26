@@ -8,12 +8,12 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import { IALFlowlet, ALFlowletManager } from './ALFlowletManager';
 
 export type ALFlowletEvent = Readonly<{
-  flowlet: IALFlowlet;
+  callFlowlet: IALFlowlet;
   triggerFlowlet: IALFlowlet | null | undefined;
 }>;
 
-export type ALOptionalFlowletEvent = Omit<ALFlowletEvent, 'flowlet'> & Readonly<{
-  flowlet: ALFlowletEvent['flowlet'] | null;
+export type ALOptionalFlowletEvent = Omit<ALFlowletEvent, 'callFlowlet'> & Readonly<{
+  callFlowlet: ALFlowletEvent['callFlowlet'] | null;
 }>;
 
 export type ALTimedEvent = Readonly<{

@@ -72,7 +72,7 @@ export function publish(options: InitOptions): void {
     const timestamp = performanceAbsoluteNow();
     const { element, surface, metadata } = event;
 
-    const currFlowlet = flowletManager.top();
+    const callFlowlet = flowletManager.top();
     if (!(element instanceof HTMLElement) || /LINK|SCRIPT/.test(element.nodeName)) {
       return;
     }
@@ -92,15 +92,14 @@ export function publish(options: InitOptions): void {
           } else {
             elementText = getElementTextEvent(null, surface);
           }
-          if (currFlowlet) {
-            metadata.add_flowlet = currFlowlet?.getFullName();
+          if (callFlowlet) {
+            metadata.add_call_flowlet = callFlowlet?.getFullName();
           }
           info = {
             ...event,
             surface,
             element,
             addTime: timestamp,
-            flowlet: event.flowlet,
             reactComponentName: reactComponentData?.name,
             reactComponentStack: reactComponentData?.stack,
             ...elementText,
@@ -126,8 +125,8 @@ export function publish(options: InitOptions): void {
           *  */
           info.element = element;
           info.addTime = timestamp;
-          if (currFlowlet) {
-            info.metadata.add_flowlet = currFlowlet.getFullName();
+          if (callFlowlet) {
+            info.metadata.add_call_flowlet = callFlowlet.getFullName();
           }
         }
         break;
@@ -146,8 +145,8 @@ export function publish(options: InitOptions): void {
            * // Object.assign(info.metadata, metadata);
            */
           assert(info.mountEvent != null, "Missing mutaion info for unmounting");
-          if (currFlowlet) {
-            info.metadata.remove_flowlet = currFlowlet.getFullName();
+          if (callFlowlet) {
+            info.metadata.remove_call_flowlet = callFlowlet.getFullName();
           }
           channel.emit('al_surface_mutation_event', {
             ...info,

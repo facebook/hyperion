@@ -20,7 +20,7 @@ import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
-import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
+import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
 import * as  Flowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
 
@@ -60,21 +60,21 @@ export function init(options: InitOptions) {
   let currTriggerFlowlet = new flowletManager.flowletCtor('pageload', flowletManager.root);
   currTriggerFlowlet.data.triggerFlowlet = currTriggerFlowlet;
 
-  const activeRootFlowlets = new class {
+  const activeRootCallFlowlets = new class {
     private _values = new Set<IALFlowlet>();
-    add(flowlet: IALFlowlet): this {
+    add(callFlowlet: IALFlowlet): this {
       if (
-        !flowlet.parent && // only care about root flowlets
-        flowlet !== flowlet.data.triggerFlowlet // no need to add trigger flowlets themselves
+        !callFlowlet.parent && // only care about root flowlets
+        callFlowlet !== callFlowlet.data.triggerFlowlet // no need to add trigger flowlets themselves
       ) {
-        this._values.add(flowlet);
-        flowlet.data.triggerFlowlet ||= currTriggerFlowlet;
+        this._values.add(callFlowlet);
+        callFlowlet.data.triggerFlowlet ||= currTriggerFlowlet;
       }
       return this;
     }
 
-    delete(flowlet: IALFlowlet): boolean {
-      if (!flowlet.parent && flowlet.data.surface) {
+    delete(callFlowlet: IALFlowlet): boolean {
+      if (!callFlowlet.parent && callFlowlet.data.surface) {
         /**
          * Since all surfaces will have a common root, the following
          * should never happen. But, for the sake of resiliance, the
@@ -82,7 +82,7 @@ export function init(options: InitOptions) {
          */
         return false;
       }
-      return this._values.delete(flowlet);
+      return this._values.delete(callFlowlet);
     }
 
     values(): Set<IALFlowlet> {
@@ -90,7 +90,7 @@ export function init(options: InitOptions) {
     }
   }();
 
-  activeRootFlowlets.add(flowletManager.root);
+  activeRootCallFlowlets.add(flowletManager.root);
 
   let setActiveTriggerFlowlet: (triggerFlowlet: TriggerFlowlet | null | undefined, surface: string | null) => void = (triggerFlowlet, _surface) => {
     if (!triggerFlowlet) {
@@ -98,7 +98,7 @@ export function init(options: InitOptions) {
     }
 
     // We don't know the actual surface (options are off!) update everything
-    for (const root of activeRootFlowlets.values()) {
+    for (const root of activeRootCallFlowlets.values()) {
       root.data.triggerFlowlet = triggerFlowlet;
     }
 
@@ -106,14 +106,14 @@ export function init(options: InitOptions) {
   }
   setActiveTriggerFlowlet(currTriggerFlowlet, null);
 
-  // Assign triggers to surface flowlets
+  // Assign triggers to surface callFlowlets
   channel.addListener('al_ui_event_capture', event => {
     setActiveTriggerFlowlet(event.triggerFlowlet, event.surface);
   });
 
   const IS_TRIGGER_FLOWLET_SETUP_PROP = 'isTriggerFlowletSetup';
   IEventTarget.addEventListener.onBeforeCallObserverAdd(function (this, eventType, _callback) {
-    if (!ALUIEventGroupPublishers.isSupported(eventType)) {
+    if (!ALUIEventGroupPublisher.isSupported(eventType)) {
       return;
     }
 
@@ -129,7 +129,7 @@ export function init(options: InitOptions) {
        * We then want to do one extra event handler of our own, before every other handler the very first time such event handler is installed.
        * This handler ensures that the event has the right extended fields.
        * Here if we call the normal addEventListener, it will again bring us back to this very interception and we go into an infinite loop!
-       * We do know that the goal of this callback is to update the triggerFlowlet and nothing else matters. So, we can bypass all of 
+       * We do know that the goal of this callback is to update the triggerFlowlet and nothing else matters. So, we can bypass all of
        * the other logic by calling the original function.
        */
       IEventTarget.addEventListener.getOriginal().call(
@@ -137,7 +137,7 @@ export function init(options: InitOptions) {
         eventType,
         event => {
           if (!getTriggerFlowlet(event)) {
-            const parentTriggerFlowlet = ALUIEventGroupPublishers.getGroupRootFlowlet(event);
+            const parentTriggerFlowlet = ALUIEventGroupPublisher.getGroupRootFlowlet(event);
             const triggerFlowlet = new flowletManager.flowletCtor(
               `${eventType}(ts=${performanceAbsoluteNow()})`,
               parentTriggerFlowlet
@@ -152,33 +152,33 @@ export function init(options: InitOptions) {
 
   // Temporarily disable this until we can re-enable react-flowlet logic below
   if (options.enablePerSurfaceTracking) {
-    const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['flowlet']>();
+    const ALSurfaceContextDataMap = new Map<ALSurfaceContextFilledValue['surface'], ALSurfaceContextFilledValue['callFlowlet']>();
 
     const interceptedSetter = interceptFunction(setActiveTriggerFlowlet);
     setActiveTriggerFlowlet = interceptedSetter.interceptor;
     interceptedSetter.onBeforeCallObserverAdd((triggerFlowlet, surface) => {
       if (surface && triggerFlowlet) {
         // The following may not happen until react interception and flowlets actually are enabled.
-        const surfaceFlowlet = ALSurfaceContextDataMap.get(surface);
-        if (surfaceFlowlet) {
-          surfaceFlowlet.data.triggerFlowlet = triggerFlowlet;
+        const surfaceCallFlowlet = ALSurfaceContextDataMap.get(surface);
+        if (surfaceCallFlowlet) {
+          surfaceCallFlowlet.data.triggerFlowlet = triggerFlowlet;
         }
       }
     });
 
     // Track surface flowlet roots
     channel.addListener('al_surface_mount', event => {
-      const { surface, flowlet } = event;
-      ALSurfaceContextDataMap.set(surface, flowlet);
-      let rootFlowlet = flowlet;
-      while (rootFlowlet.parent) {
-        rootFlowlet = rootFlowlet.parent;
+      const { surface, callFlowlet } = event;
+      ALSurfaceContextDataMap.set(surface, callFlowlet);
+      let rootCallFlowlet = callFlowlet;
+      while (rootCallFlowlet.parent) {
+        rootCallFlowlet = rootCallFlowlet.parent;
       }
-      activeRootFlowlets.add(rootFlowlet);
+      activeRootCallFlowlets.add(rootCallFlowlet);
     });
     channel.addListener('al_surface_unmount', event => {
       ALSurfaceContextDataMap.delete(event.surface);
-      activeRootFlowlets.delete(event.flowlet);
+      activeRootCallFlowlets.delete(event.callFlowlet);
     });
   }
 
@@ -207,7 +207,7 @@ export function init(options: InitOptions) {
       }
 
       if (!flowlet.parent) {
-        activeRootFlowlets.add(flowlet);
+        activeRootCallFlowlets.add(flowlet);
       }
     });
   }
@@ -216,7 +216,7 @@ export function init(options: InitOptions) {
    * We wrapp the callback function of the following api to ensure they can
    * make a copy of the triggerFlowlet based on the semantics of the FlowletManager.wrap()
    * which means once they are called, they have a copy of this token and we can change the
-   * activeRootFlowlets safely later.
+   * activeRootCallFlowlets safely later.
    */
   const { IReactModule } = options.react;
 
@@ -279,10 +279,10 @@ export function init(options: InitOptions) {
         setterInterceptor?.onBeforeCallObserverAdd(() => {
           /**
            * when someone calls the setter, before anything happens we pickup the
-           * trigger flowlet from the top of the stack. 
+           * trigger flowlet from the top of the stack.
            * Then we assign this trigger flowlet to all surfcce flowlet roots so that
            * any other method that is called during rending of the components can see the trigger.
-           * 
+           *
            * Since the wrapped setter will call .push() after args observer is called,
            * we can still access .top() of the caller.
            */
@@ -319,7 +319,7 @@ export function init(options: InitOptions) {
     const IS_FLOWLET_SETUP_PROP = 'isFlowletSetup';
 
     type FlowletRef = {
-      _flowlet?: IALFlowlet | null | undefined
+      _callFlowlet?: IALFlowlet | null | undefined
     };
     type ComponentWithFlowlet = React.Component<any> & FlowletRef;
 
@@ -337,7 +337,7 @@ export function init(options: InitOptions) {
         (ictor.interceptor as any).contextType = ALSurfaceContext; // the real constructor used by the application
 
         ictor.onAfterCallObserverAdd((value: ComponentWithFlowlet & { context?: any }) => {
-          value._flowlet = value.context?.flowlet;
+          value._callFlowlet = value.context?.callFlowlet;
         });
       }
 
@@ -359,16 +359,16 @@ export function init(options: InitOptions) {
         }
 
         method.onBeforeCallObserverAdd(function (this: ComponentWithFlowlet) {
-          const activeFlowlet = this._flowlet;
-          if (activeFlowlet) {
-            flowletManager.push(activeFlowlet);
+          const activeCallFlowlet = this._callFlowlet;
+          if (activeCallFlowlet) {
+            flowletManager.push(activeCallFlowlet);
           }
         });
 
         method.onAfterCallObserverAdd(function (this: ComponentWithFlowlet) {
-          const activeFlowlet = this._flowlet;
-          if (activeFlowlet) {
-            flowletManager.pop(activeFlowlet);
+          const activeCallFlowlet = this._callFlowlet;
+          if (activeCallFlowlet) {
+            flowletManager.pop(activeCallFlowlet);
           }
         });
       });
@@ -380,11 +380,11 @@ export function init(options: InitOptions) {
 
           fi.onBeforeAndAfterCallMapperAdd(([_props]) => {
             const ctx = useALSurfaceContext();
-            const activeFlowlet = ctx?.flowlet;
-            if (activeFlowlet) {
-              flowletManager.push(activeFlowlet);
+            const activeCallFlowlet = ctx?.callFlowlet;
+            if (activeCallFlowlet) {
+              flowletManager.push(activeCallFlowlet);
               return (value) => {
-                flowletManager.pop(activeFlowlet);
+                flowletManager.pop(activeCallFlowlet);
                 return value;
               };
             } else {
@@ -397,5 +397,3 @@ export function init(options: InitOptions) {
     );
   }
 }
-
-

@@ -12,6 +12,6 @@ export class SurfacePropsExtension<
   DataType extends ALFlowletDataType,
   FlowletType extends Flowlet<DataType>> extends IReactFlowlet.PropsExtension<DataType, FlowletType>  {
   getSurface(): string | undefined {
-    return this.flowlet?.data.surface;
+    return this.callFlowlet?.data.surface;
   }
 }

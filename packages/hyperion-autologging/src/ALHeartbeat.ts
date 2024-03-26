@@ -133,7 +133,6 @@ function _logHeartbeat(heartbeatType: ALHeartbeatType): void {
       event: 'heartbeat',
       eventIndex: ALEventIndex.getNextEventIndex(),
       eventTimestamp: timestamp,
-      // flowlet: AdsALFlowletManager.top(),
       heartbeatType,
       metadata: {},
     });
