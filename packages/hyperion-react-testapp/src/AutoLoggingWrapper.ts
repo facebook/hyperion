@@ -93,6 +93,11 @@ export function init() {
           interactableElementsOnly: false,
           eventFilter: (domEvent) => domEvent.code === 'Enter',
         },
+        {
+          eventName: 'change',
+          cacheElementReactInfo: true,
+          interactableElementsOnly: false,
+        }
       ]
     },
     heartbeat: {
