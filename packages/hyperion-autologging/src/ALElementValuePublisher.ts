@@ -5,6 +5,8 @@
 'use strict';
 
 import type { Channel } from "@hyperion/hook/src/Channel";
+import * as IElement from "@hyperion/hyperion-dom/src/IElement";
+import * as IHTMLInputElement from "@hyperion/hyperion-dom/src/IHTMLInputElement";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from "./ALElementInfo";
@@ -13,8 +15,9 @@ import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from "./ALReactUtils";
 import type { ALChannelSurfaceEvent } from "./ALSurface";
+import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
-import { getAncestralSurfaceNode } from "./ALSurfaceUtils";
+import { getAncestralSurfaceNode, getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 export type ALElementValueEventData = Readonly<
@@ -78,7 +81,11 @@ export function publish(options: InitOptions): void {
 
   function trackElementValues(surface: string, surfaceElement: Element) {
     // The following is expensive, so try to jam everything we are interested in to the selector
-    const elements = surfaceElement.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[type=radio], input[type=checkbox], select');
+    const elements = surfaceElement.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+      'input[type=radio][checked], input[type=checkbox][checked], select:has(option[selected])'
+      // 'input[type=radio], input[type=checkbox], select'
+    );
+
 
     if (!elements.length) {
       // Nothing to add
@@ -89,6 +96,11 @@ export function publish(options: InitOptions): void {
 
     for (let i = 0; i < elements.length; ++i) {
       const element = elements[i];
+      /**
+       * The following function will look for 'interactable' surfaces, so the logic
+       * automatically filter impression only surfaces. This ensure the logic stays
+       * compatible with the UIEvent llogic.
+       */
       const parentSurfaceNode = getAncestralSurfaceNode(element);
       if (parentSurfaceNode === surfaceElement) {
         // We know value is part of this surface only
@@ -139,5 +151,45 @@ export function publish(options: InitOptions): void {
     }
 
     trackElementValues(surface, surfaceElement);
+  });
+
+  /**
+   * Sometimes in react, it first adds the empty input elements, and soon after updates the default value
+   * based on props. In these cases, we do miss the elements in the above algorithm when parent surface is
+   * mounted.
+   * Using interception, we can not only catch such initialization, but also any future change to the value.
+   * When combined with `change` ui event, we can track ALL changes to these input elements at any time.
+   * TODO: we should decide if we want to have `change` event logged as is, or to file a new value event as well.
+   */
+  IHTMLInputElement.checked.setter.onBeforeCallObserverAdd(function (this, value) {
+    if (value) {
+      const surface = getSurfacePath(this);
+      if (!surface) {
+        return;
+      }
+
+      const relatedEventIndex = -1; // Find the last ui event event_index;
+      emitEvent({
+        element: this,
+        surface,
+        relatedEventIndex,
+        value: 'true',
+        metadata: {
+          type: this.getAttribute('type') ?? '',
+        }
+      });
+    }
+  });
+
+  /**
+   * The following is an alternative way to ensure we can catch ANY surface wrapper regardless of how it is added.
+   * However, for now will keep this disabled until we first understand the performance overhead of the rest of the algorithm.
+   */
+  false && IElement.setAttribute.onBeforeCallObserverAdd(function (this, attrName, attrValue) {
+    if (attrName !== AUTO_LOGGING_SURFACE || !(this instanceof HTMLElement)) {
+      return;
+    }
+
+    trackElementValues(attrValue, this);
   });
 }

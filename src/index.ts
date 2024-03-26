@@ -22,6 +22,7 @@ export * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 // export * as INode from "@hyperion/hyperion-dom/src/INode";
 export * as IElement from "@hyperion/hyperion-dom/src/IElement";
 export * as IHTMLElement from "@hyperion/hyperion-dom/src/IHTMLElement";
+export * as IHTMLInputElement from "@hyperion/hyperion-dom/src/IHTMLInputElement";
 export * as ICSSStyleDeclaration from "@hyperion/hyperion-dom/src/ICSSStyleDeclaration";
 // export * as IGlobalEventHandlers from "@hyperion/hyperion-dom/src/IGlobalEventHandlers";
 export * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
