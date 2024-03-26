@@ -79,14 +79,34 @@ export function publish(options: InitOptions): void {
     });
   }
 
+  const QueryString = (function () {
+    /**
+     * Some engines (e.g. Jest) may not be able to handle the more advanced
+     * query selector (e.g. :has(...)).
+     * The following code gracefully degrade to match the capabilities.
+     */
+    function tryQuery(query: string): string | null {
+      try {
+        document.querySelectorAll(query);
+        return query;
+      } catch (e) {
+        console.error('Does not handle ', query);
+      }
+      return null;
+    }
+
+    return tryQuery(
+      'input[type=radio][checked], input[type=checkbox][checked], select:has(option[selected])'
+    ) ?? tryQuery(
+      'input[type=radio][checked], input[type=checkbox][checked], select'
+    ) ?? (
+        'input[type=radio], input[type=checkbox], select'
+      );
+  })();
+
   function trackElementValues(surface: string, surfaceElement: Element) {
     // The following is expensive, so try to jam everything we are interested in to the selector
-    const elements = surfaceElement.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
-      'input[type=radio][checked], input[type=checkbox][checked], select:has(option[selected])'
-      // 'input[type=radio], input[type=checkbox], select'
-    );
-
-
+    const elements = surfaceElement.querySelectorAll<HTMLInputElement | HTMLSelectElement>(QueryString);
     if (!elements.length) {
       // Nothing to add
       return;
