@@ -4,7 +4,6 @@
 
 'use strict';
 
-import { assert } from "@hyperion/global/src/assert";
 import type { Channel } from "@hyperion/hook/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
@@ -15,27 +14,31 @@ import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
 import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData } from './ALSurface';
-import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
+import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
-type ALMutationEvent = ALReactElementEvent & ALElementTextEvent & ALOptionalFlowletEvent & Readonly<
-  {
-    surface: string;
-    element: HTMLElement;
-    autoLoggingID: ALID.ALID;
-  }
-  &
-  (
+type ALMutationEvent =
+  ALReactElementEvent &
+  ALElementTextEvent &
+  ALFlowletEvent &
+  ALMetadataEvent &
+  ALElementEvent &
+  Readonly<
     {
-      event: 'mount_component';
+      surface: string;
     }
-    |
-    {
-      event: 'unmount_component';
-      mountedDuration: number;
-      mountEvent: ALSurfaceMutationEventData;
-    }
-  )
->;
+    &
+    (
+      {
+        event: 'mount_component';
+      }
+      |
+      {
+        event: 'unmount_component';
+        mountedDuration: number;
+        mountEvent: ALSurfaceMutationEventData;
+      }
+    )
+  >;
 
 export type ALSurfaceMutationEventData = Readonly<
   ALLoggableEvent &
@@ -49,11 +52,8 @@ export type ALChannelSurfaceMutationEvent = Readonly<{
 
 export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent & ALCustomEvent.ALChannelCustomEvent>;
 
-type SurfaceInfo = ALReactElementEvent & ALElementTextEvent & ALMetadataEvent & ALFlowletEvent & {
-  surface: string,
-  element: HTMLElement,
+type SurfaceInfo = ALSurfaceMutationEventData & Types.Writeable<ALElementEvent> & {
   addTime: number,
-  mountEvent: ALSurfaceMutationEventData | null,
 };
 
 const activeSurfaces = new Map<string, SurfaceInfo>();
@@ -98,25 +98,21 @@ export function publish(options: InitOptions): void {
           }
           info = {
             ...event,
-            surface,
-            element,
-            addTime: timestamp,
+            event: 'mount_component',
+            eventTimestamp: timestamp,
+            eventIndex: ALEventIndex.getNextEventIndex(),
+            surface, // already in the evet, need to add again?
+            element, // already in the evet, need to add again?
+            autoLoggingID: ALID.getOrSetAutoLoggingID(element),
             reactComponentName: reactComponentData?.name,
             reactComponentStack: reactComponentData?.stack,
             ...elementText,
-            mountEvent: null,
-            metadata,
+            metadata, // already in the evet, need to add again?
+            addTime: timestamp,
           };
           activeSurfaces.set(surface, info);
 
-          channel.emit('al_surface_mutation_event', info.mountEvent = {
-            ...info,
-            event: 'mount_component',
-            eventTimestamp: info.addTime,
-            eventIndex: ALEventIndex.getNextEventIndex(),
-            autoLoggingID: ALID.getOrSetAutoLoggingID(element),
-            triggerFlowlet: event.triggerFlowlet,
-          });
+          channel.emit('al_surface_mutation_event', info);
 
         } else if (element != info.element && element.contains(info.element)) {
           /**
@@ -125,6 +121,7 @@ export function publish(options: InitOptions): void {
           * So, we can just update the surface=>element info.
           *  */
           info.element = element;
+          info.autoLoggingID = ALID.getOrSetAutoLoggingID(element);
           info.addTime = timestamp;
           if (callFlowlet) {
             info.metadata.add_call_flowlet = callFlowlet.getFullName();
@@ -145,7 +142,6 @@ export function publish(options: InitOptions): void {
            * but the perf overhead would be un-necessary.
            * // Object.assign(info.metadata, metadata);
            */
-          assert(info.mountEvent != null, "Missing mutaion info for unmounting");
           if (callFlowlet) {
             info.metadata.remove_call_flowlet = callFlowlet.getFullName();
           }
@@ -154,9 +150,10 @@ export function publish(options: InitOptions): void {
             event: 'unmount_component',
             eventTimestamp: removeTime,
             eventIndex: ALEventIndex.getNextEventIndex(),
-            autoLoggingID: ALID.getOrSetAutoLoggingID(element),
+            relatedEventIndex: info.eventIndex,
             mountedDuration: (removeTime - info.addTime) / 1000,
-            mountEvent: info.mountEvent,
+            mountEvent: info,
+            // flowlet: event.flowlet, // We want to keep the info.flowlet here
             triggerFlowlet: event.triggerFlowlet, // the trigger has changed from what was saved in info
           });
         }
