@@ -153,13 +153,13 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
   ]) {
     eventHandler.setter.onBeforeCallMapperAdd(function (this, args: [any]) {
       const func = args[0];
-      args[0] = flowletManager.wrap(func, eventHandler.name, void 0, getTriggerFlowletFromEvent);
+      args[0] = flowletManager.wrap(func, eventHandler.name, getTriggerFlowletFromEvent);
       return args;
     });
   }
 
   IEventTarget.addEventListener.onBeforeCallMapperAdd(args => {
-    args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}(${args[0]})`, void 0, getTriggerFlowletFromEvent);
+    args[1] = flowletManager.wrap(args[1], `${IEventTarget.addEventListener.name}(${args[0]})`, getTriggerFlowletFromEvent);
     return args;
   });
   IEventTarget.removeEventListener.onBeforeCallMapperAdd(args => {
@@ -254,8 +254,8 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
 
   IPromise.then.onBeforeAndAfterCallMapperAdd(function (this, args) {
     const triggerFlowlet = getTriggerFlowlet(this);
-    args[0] = flowletManager.wrap(args[0], IPromise.then.name, void 0, () => triggerFlowlet);
-    args[1] = flowletManager.wrap(args[1], IPromise.then.name, void 0, () => triggerFlowlet);
+    args[0] = flowletManager.wrap(args[0], IPromise.then.name, () => triggerFlowlet);
+    args[1] = flowletManager.wrap(args[1], IPromise.then.name, () => triggerFlowlet);
     return value => {
       if (value !== this && triggerFlowlet) {
         const newTriggerFlowlet = getTriggerFlowlet(value);
@@ -269,7 +269,7 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
 
   IPromise.Catch.onBeforeAndAfterCallMapperAdd(function (this, args) {
     const triggerFlowlet = getTriggerFlowlet(this);
-    args[0] = flowletManager.wrap(args[0], IPromise.then.name, void 0, () => triggerFlowlet);
+    args[0] = flowletManager.wrap(args[0], IPromise.then.name, () => triggerFlowlet);
     return value => {
       if (value !== this && triggerFlowlet) {
         const newTriggerFlowlet = getTriggerFlowlet(value);
