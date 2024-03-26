@@ -73,7 +73,7 @@ export type SurfaceComponent = (props:
   IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> &
   ALSurfaceProps &
   {
-    // flowlet: FlowletType;
+    // callFlowlet: FlowletType;
     /** The optional incoming surface that we are re-wrapping via a proxy.
      * If this is provided,  then we won't emit mutations for this surface as we are
      * doubly wrapping that surface, for surface attribution purposes.
@@ -99,7 +99,7 @@ export type InitOptions = Types.Options<
       IReactModule: IReact.IReactModuleExports;
       IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     };
-    domFlowletAttributeName?: string;
+    domCallFlowletAttributeName?: string;
     channel: ALChannel;
     enableReactDomPropsExtension?: boolean;
   }
@@ -130,14 +130,14 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   // We should make sure the following enabled for our particular usage in this function.
   IReactComponent.init(options.react);
 
-  const { flowletManager, domFlowletAttributeName } = options;
+  const { flowletManager, domCallFlowletAttributeName } = options;
   /**
   * if flowlets are disabled, but we still want to extend the props, we use
   * the following placeholder flowlet to let the rest of the logic work.
   * This is safer than changing the whole logic since we will eventually
   * enable AM_AL_REACT_FLOWLET fully.
   */
-  const UNKNOWN_FLOWLET = new flowletManager.flowletCtor('UNKNOWN');
+  const UNKNOWN_CALL_FLOWLET = new flowletManager.flowletCtor('UNKNOWN');
 
   const allowedTags = new Set(['div', 'span', 'li', 'button']);
 
@@ -147,7 +147,7 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
       return;
     }
 
-    const flowlet = flowletManager.top() ?? UNKNOWN_FLOWLET;
+    const callFlowlet = flowletManager.top() ?? UNKNOWN_CALL_FLOWLET;
 
     /**
      * This is a dom node and will directly go to dom later, i.e. all of its
@@ -158,17 +158,17 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
      * its own tree. The null surface attributes will be filtered later.
      */
     if (allowedTags.has(component)) {
-      props[AUTO_LOGGING_SURFACE] = new SurfaceDOMString(flowlet);
-      props[AUTO_LOGGING_NON_INTERACTIVE_SURFACE] = new SurfaceDOMString(flowlet);
+      props[AUTO_LOGGING_SURFACE] = new SurfaceDOMString(callFlowlet);
+      props[AUTO_LOGGING_NON_INTERACTIVE_SURFACE] = new SurfaceDOMString(callFlowlet);
 
       if (__DEV__) {
-        if (domFlowletAttributeName) {
+        if (domCallFlowletAttributeName) {
           /**
            * The following may add a lot of attributes to the dom nodes
            * But it is a good way to debug & validate the flow of flowlet on
            * mounted dom
            */
-          props[domFlowletAttributeName] = flowlet.getFullName();
+          props[domCallFlowletAttributeName] = callFlowlet.getFullName();
         }
       }
     }
@@ -241,8 +241,8 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
   const Surface: SurfaceComponent = props => {
     const { /* __ext, */ surface, proxiedContext } = props;
-    // if (__ext && __ext.flowlet !== flowlet) {
-    //   __ext.flowlet = flowlet;
+    // if (__ext && __ext.callFlowlet !== callFlowlet) {
+    //   __ext.callFlowlet = callFlowlet;
     // }
 
     let surfacePath: string;
@@ -282,7 +282,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     }
 
     let surfaceData: SurfaceData | undefined = SurfaceDataMap.get(nonInteractiveSurfacePath);
-    let flowlet: FlowletType;
+    let callFlowlet: FlowletType;
     if (!surfaceData) {
       assert(!proxiedContext, "Proxied surface should always have surface data already");
 
@@ -291,25 +291,25 @@ export function init(options: InitOptions): ALSurfaceHOC {
        * ancestor so that we can assign triggerFlowlet to it and have them all
        * pick it up. This is specially useful to link event to unmount
        */
-      flowlet = new flowletManager.flowletCtor(surface, surfaceCtx.flowlet ?? flowletManager.root);
-      flowlet.data.surface = nonInteractiveSurfacePath;
+      callFlowlet = new flowletManager.flowletCtor(surface, surfaceCtx.callFlowlet ?? flowletManager.root);
+      callFlowlet.data.surface = nonInteractiveSurfacePath;
       surfaceData = {
         surface: surfacePath,
         nonInteractiveSurface: nonInteractiveSurfacePath,
-        flowlet,
+        callFlowlet,
         domAttributeName,
         domAttributeValue,
       };
       SurfaceDataMap.set(nonInteractiveSurfacePath, surfaceData);
     } else {
-      flowlet = surfaceData.flowlet;
+      callFlowlet = surfaceData.callFlowlet;
     }
 
     if (options.channel && !proxiedContext) {
       const { channel } = options;
       // Emit surface mutation events on mount/unmount
       const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
-      metadata.original_flowlet = flowlet.getFullName();
+      metadata.original_call_flowlet = callFlowlet.getFullName();
       metadata.surface_capability = surfaceCapabilityToString(props.capability);
 
       ReactModule.useLayoutEffect(() => {
@@ -322,8 +322,8 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
         const event: ALChannelSurfaceEventData = {
           surface: domAttributeValue,
-          flowlet,
-          triggerFlowlet: flowlet.data.triggerFlowlet,
+          callFlowlet,
+          triggerFlowlet: callFlowlet.data.triggerFlowlet,
           metadata,
           element: document.querySelector(`[${domAttributeName}='${domAttributeValue}']`)
         };
@@ -335,14 +335,14 @@ export function init(options: InitOptions): ALSurfaceHOC {
            */
           channel.emit('al_surface_unmount', {
             ...event,
-            triggerFlowlet: flowlet.data.triggerFlowlet
+            triggerFlowlet: callFlowlet.data.triggerFlowlet
           });
         }
       }, [domAttributeName, domAttributeValue]);
     }
 
 
-    // flowlet.data.surface = surfacePath;
+    // callFlowlet.data.surface = surfacePath;
     let children = props.children;
 
     const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
@@ -357,7 +357,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
            *
            * We wrap the content in a dom node ourselves. Note that this will trigger
            * all the right logic and automatically add the attributes for us, and
-           * this time we should succeed propagating surface/flowlet down.
+           * this time we should succeed propagating surface/callFlowlet down.
            * This option works in almost all cases, but later we add an option to
            * the surface to prevent this option and fall back to the more expensive
            * algorithm as before (will add later)
@@ -387,7 +387,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     }
 
     // We want to override the intercepted values
-    flowletManager.push(flowlet);
+    flowletManager.push(callFlowlet);
     const result = ReactModule.createElement(
       SurfaceContext.Provider,
       {
@@ -395,7 +395,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       },
       children
     );
-    flowletManager.pop(flowlet);
+    flowletManager.pop(callFlowlet);
     return result;
   }
 
@@ -411,13 +411,13 @@ export function init(options: InitOptions): ALSurfaceHOC {
       return;
     }
 
-    const extFlowlet = ext.flowlet;
-    if (!extFlowlet) {
+    const extCallFlowlet = ext.callFlowlet;
+    if (!extCallFlowlet) {
       return;
     }
 
-    if (extFlowlet.data.surface !== params.flowlet.data.surface) {
-      ext.flowlet = params.flowlet;
+    if (extCallFlowlet.data.surface !== params.callFlowlet.data.surface) {
+      ext.callFlowlet = params.callFlowlet;
     }
     if (deep) {
       return propagateFlowletDown(children, params);

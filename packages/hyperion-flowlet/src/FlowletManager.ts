@@ -148,16 +148,16 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
     const funcInterceptor = interceptEventListener(listener);
     if (funcInterceptor && !funcInterceptor.testAndSet(IS_FLOWLET_SETUP_PROP_NAME)) {
 
-      const flowlet = new this.flowletCtor(apiName, this.top());
+      const callFlowlet = new this.flowletCtor(apiName, this.top());
       if (!getTriggerFlowlet) {
         /**
          * we are not going to pickup an actual trigger later, which means whatever triggered
          * the current code that is passing the callback, is the trigger inside of that callback
          * going forward. So, we make a copy of it case the original trigger is replaced with a new one
          */
-        const currTriggerFlowlet = flowlet.parent?.data.triggerFlowlet;
+        const currTriggerFlowlet = callFlowlet.parent?.data.triggerFlowlet;
         if (currTriggerFlowlet) {
-          flowlet.data.triggerFlowlet = currTriggerFlowlet;
+          callFlowlet.data.triggerFlowlet = currTriggerFlowlet;
         }
       }
 
@@ -168,13 +168,13 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
         const handler: Function = funcInterceptor.getOriginal();
         const triggerFlowlet = getTriggerFlowlet?.apply(this, <any>arguments);
         if (triggerFlowlet) {
-          flowlet.data.triggerFlowlet = triggerFlowlet;
+          callFlowlet.data.triggerFlowlet = triggerFlowlet;
         } else {
-          // Lets delete the existing value to enaure we don't carry it from the previous invocation
-          delete flowlet.data.triggerFlowlet;
+          // Let's delete the existing value to ensure we don't carry it from the previous invocation
+          delete callFlowlet.data.triggerFlowlet;
         }
 
-        if (flowletManager.top() === flowlet) {
+        if (flowletManager.top() === callFlowlet) {
           /**
            * We would mostly expect the currentFLowlet to be on the top most of the time
            * but we do this check here just in case we can save extra push/pop
@@ -183,10 +183,10 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
         }
         let res;
         try {
-          flowletManager.push(flowlet); // let's not pass apiName to avoid creating a new flowlet each time.
+          flowletManager.push(callFlowlet); // let's not pass apiName to avoid creating a new flowlet each time.
           res = handler.apply(this, <any>arguments);
         } finally {
-          flowletManager.pop(flowlet, apiName);
+          flowletManager.pop(callFlowlet, apiName);
         }
         return res;
       });
@@ -218,13 +218,13 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       funcInterceptor.setCustom(<any>function (this: any) {
         const handler: Function = funcInterceptor.getOriginal();
         const flowletName = getFlowletName.apply(this, <any>arguments);
-        const flowlet = new flowletManager.flowletCtor(flowletName, flowletManager.top());
+        const callFlowlet = new flowletManager.flowletCtor(flowletName, flowletManager.top());
         let res;
         try {
-          flowletManager.push(flowlet);
+          flowletManager.push(callFlowlet);
           res = handler.apply(this, <any>arguments);
         } finally {
-          flowletManager.pop(flowlet);
+          flowletManager.pop(callFlowlet);
         }
         return res;
       });

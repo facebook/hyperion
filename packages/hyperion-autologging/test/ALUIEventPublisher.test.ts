@@ -8,7 +8,6 @@ import "jest";
 
 import { Channel } from "@hyperion/hook/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
-import { AUTO_LOGGING_SURFACE } from "../src/ALSurfaceConsts";
 import * as ALUIEventPublisher from "../src/ALUIEventPublisher";
 import * as DomFragment from "./DomFragment";
 
@@ -20,7 +19,6 @@ describe("UI event publisher", () => {
 
     ALUIEventPublisher.publish({
       flowletManager,
-      domSurfaceAttributeName: AUTO_LOGGING_SURFACE,
       channel,
       uiEvents: [
         {

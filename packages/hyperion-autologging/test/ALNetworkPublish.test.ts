@@ -9,10 +9,8 @@ import { intercept } from "@hyperion/hyperion-core/src/intercept";
 
 import { Channel } from "@hyperion/hook/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
-import { AUTO_LOGGING_SURFACE } from "../src/ALSurfaceConsts";
 import * as ALNetworkPublisher from "../src/ALNetworkPublisher";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
-import * as ALTriggerFlowlet from "../src/ALTriggerFlowlet";
 
 describe("Network event publisher", () => {
   beforeEach(() => {
@@ -29,7 +27,6 @@ describe("Network event publisher", () => {
 
     ALNetworkPublisher.publish({
       flowletManager,
-      domSurfaceAttributeName: AUTO_LOGGING_SURFACE,
       channel,
     });
 
