@@ -26,6 +26,7 @@ import { assert } from "@hyperion/global";
 export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
   surface: string;
   element?: Element | null;
+  isProxy: boolean;
 }>;
 
 export enum ALSurfaceCapability {
@@ -308,55 +309,57 @@ export function init(options: InitOptions): ALSurfaceHOC {
       callFlowlet = surfaceData.callFlowlet;
     }
 
-    if (!proxiedContext) {
-      // Emit surface mutation events on mount/unmount
-      const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
-      metadata.original_call_flowlet = callFlowlet.getFullName();
-      metadata.surface_capability = surfaceCapabilityToString(props.capability);
+    const isProxy = proxiedContext != null;
 
-      /**
-       * We don't know when react decides to call effect callback, so to be safe make a copy
-       * of what we care about incase by the time callback is called the values have changed.
-       */
-      const triggerFlowlet = callFlowlet.data.triggerFlowlet;
+    // Emit surface mutation events on mount/unmount
+    const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
+    metadata.original_call_flowlet = callFlowlet.getFullName();
+    metadata.surface_capability = surfaceCapabilityToString(props.capability);
 
-      /**
-       * either we are given a ref, or we use our local one. In anycase once
-       * we have the node value, we can accurately assign the attribute, and
-       * also use that for our mount/unmount event.
-       */
-      const nodeRef = props.nodeRef ?? localRef;
+    /**
+     * We don't know when react decides to call effect callback, so to be safe make a copy
+     * of what we care about incase by the time callback is called the values have changed.
+     */
+    const triggerFlowlet = callFlowlet.data.triggerFlowlet;
 
-      ReactModule.useLayoutEffect(() => {
-        __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
-        const element = nodeRef.current;
-        if (element == null) {
-          return;
-        }
-        element.setAttribute(domAttributeName, domAttributeValue);
-        __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
+    /**
+     * either we are given a ref, or we use our local one. In anycase once
+     * we have the node value, we can accurately assign the attribute, and
+     * also use that for our mount/unmount event.
+     */
+    const nodeRef = props.nodeRef ?? localRef;
 
-        const event: ALChannelSurfaceEventData = {
-          surface: domAttributeValue,
-          callFlowlet,
-          triggerFlowlet,
-          metadata,
-          element,
-        };
-        
-        channel.emit('al_surface_mount', event);
-        return () => {
-          /**
-           * The trigger on the surface or its parent might be updated
-           * so, we should re-read that value again.
-           */
-          channel.emit('al_surface_unmount', {
-            ...event,
-            triggerFlowlet: callFlowlet.data.triggerFlowlet
-          });
-        }
-      }, [domAttributeName, domAttributeValue, callFlowlet, triggerFlowlet, nodeRef]);
-    }
+    ReactModule.useLayoutEffect(() => {
+      __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
+      const element = nodeRef.current;
+      if (element == null) {
+        return;
+      }
+      element.setAttribute(domAttributeName, domAttributeValue);
+      __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
+
+      const event: ALChannelSurfaceEventData = {
+        surface: domAttributeValue,
+        callFlowlet,
+        triggerFlowlet,
+        metadata,
+        element,
+        isProxy
+      };
+
+      channel.emit('al_surface_mount', event);
+      return () => {
+        /**
+         * The trigger on the surface or its parent might be updated
+         * so, we should re-read that value again.
+         */
+        channel.emit('al_surface_unmount', {
+          ...event,
+          triggerFlowlet: callFlowlet.data.triggerFlowlet
+        });
+      }
+    }, [domAttributeName, domAttributeValue, callFlowlet, triggerFlowlet, nodeRef]);
+
 
 
     // callFlowlet.data.surface = surfacePath;
