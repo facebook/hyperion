@@ -35,7 +35,6 @@ export type ALChannelEvent = (
   ALHeartbeat.InitOptions['channel'] &
   ALSurfaceMutationPublisher.InitOptions['channel'] &
   ALNetworkPublisher.InitOptions['channel'] &
-  ALElementValuePublisher.InitOptions['channel'] &
   ALCustomEvent.ALCustomEventChannel
 ) extends Channel<infer EventType> ? EventType : never;
 
@@ -53,7 +52,6 @@ export type InitOptions = Types.Options<
     uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions> | null;
     heartbeat?: ALHeartbeat.InitOptions | null;
     surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions> | null;
-    elementValuePublisher?: PublicInitOptions<ALElementValuePublisher.InitOptions> | null,
     network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
     triggerFlowlet?: PublicInitOptions<ALTriggerFlowlet.InitOptions> | null;
   }
@@ -132,17 +130,6 @@ export function init(options: InitOptions): boolean {
     ALFlowletPublisher.publish(options.flowletPublisher);
   }
 
-  if (options.uiEventPublisher) {
-    ALUIEventPublisher.publish({
-      ...sharedOptions,
-      ...options.uiEventPublisher
-    });
-  }
-
-  if (options.heartbeat) {
-    ALHeartbeat.start(options.heartbeat);
-  }
-
   if (options.surfaceMutationPublisher) {
     ALSurfaceMutationPublisher.publish({
       ...sharedOptions,
@@ -150,12 +137,27 @@ export function init(options: InitOptions): boolean {
     });
   }
 
-  if (options.elementValuePublisher) {
+  if (options.uiEventPublisher) {
+    ALUIEventPublisher.publish({
+      ...sharedOptions,
+      ...options.uiEventPublisher
+    });
+
+    /**
+     * The following will depend on the surface mutation events
+     * so we need to make sure it is initialized afterwards
+     */
     ALElementValuePublisher.publish({
       ...sharedOptions,
-      ...options.elementValuePublisher
+      ...options.uiEventPublisher,
+      surfaceChannel: options.surface.channel,
     });
   }
+
+  if (options.heartbeat) {
+    ALHeartbeat.start(options.heartbeat);
+  }
+
 
   if (options.network) {
     ALNetworkPublisher.publish({
