@@ -12,13 +12,15 @@ import { setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
+import * as ALEventIndex from "./ALEventIndex";
 import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
-import { ALElementTextEvent, getElementTextEvent, getInteractable, isTrackedEvent, enableUIEventHandlers, TrackEventHandlerConfig } from "./ALInteractableDOMElement";
+import { ALElementTextEvent, TrackEventHandlerConfig, enableUIEventHandlers, getElementTextEvent, getInteractable, isTrackedEvent } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
-import { ALFlowletEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
+import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
+
 
 /**
  * Generates a union type of all handler event and domEvent permutations.
@@ -45,7 +47,8 @@ export type ALUIEventCaptureData = Readonly<
   ALReactElementEvent &
   ALElementTextEvent &
   {
-    surface: string | null,
+    surface: string | null;
+    value?: string;
   }
 >;
 
@@ -54,7 +57,8 @@ export type ALUIEventBubbleData = Readonly<
 >;
 
 export type ALLoggableUIEvent = Readonly<
-  ALUIEventCaptureData
+  ALUIEventCaptureData &
+  ALLoggableEvent
 >;
 
 export type ALUIEventData = Readonly<
@@ -295,7 +299,10 @@ export function publish(options: InitOptions): void {
       timedEmitter.run();
     }
 
-    const data: ALUIEventData = eventData;
+    const data: ALUIEventData = {
+      ...eventData,
+      eventIndex: ALEventIndex.getNextEventIndex(),
+    };
 
     lastUIEvent = {
       data,

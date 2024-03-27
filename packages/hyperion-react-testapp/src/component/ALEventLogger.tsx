@@ -16,7 +16,6 @@ const EventsWithFlowlet = [
   'al_network_response',
   'al_flowlet_event',
   'al_custom_event',
-  'al_element_value_event',
 ] as const;
 
 const EventsWithoutFlowlet = [

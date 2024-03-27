@@ -4,7 +4,6 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hook/src/Channel";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 import * as IHTMLInputElement from "@hyperion/hyperion-dom/src/IHTMLInputElement";
 import * as Types from "@hyperion/hyperion-util/src/Types";
@@ -12,61 +11,58 @@ import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsol
 import ALElementInfo from "./ALElementInfo";
 import * as ALEventIndex from "./ALEventIndex";
 import * as ALID from './ALID';
-import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
+import { getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from "./ALReactUtils";
-import type { ALChannelSurfaceEvent } from "./ALSurface";
+import * as ALSurface from "./ALSurface";
 import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import { getAncestralSurfaceNode, getSurfacePath } from "./ALSurfaceUtils";
-import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
+import { ALElementEvent, ALSharedInitOptions } from "./ALType";
 
-export type ALElementValueEventData = Readonly<
-  ALLoggableEvent &
-  ALFlowletEvent &
-  ALReactElementEvent &
-  ALElementTextEvent &
-  ALMetadataEvent &
-  ALElementEvent &
-  {
-    surface: string;
-    value: string;
-  }
->;
 
-export type ALChannelElementValueEvent = Readonly<{
-  al_element_value_event: [ALElementValueEventData],
-}
->;
-
-export type ALElementValueChannel = Channel<ALChannelElementValueEvent & ALChannelSurfaceEvent>;
+import * as ALUIEventPublisher from "./ALUIEventPublisher";
 
 
 export type InitOptions = Types.Options<
+  ALUIEventPublisher.InitOptions &
   ALSharedInitOptions &
   {
-    channel: ALElementValueChannel;
-    cacheElementReactInfo: boolean;
+    surfaceChannel: ALSurface.InitOptions['channel']
   }
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel } = options;
+  const { channel, surfaceChannel } = options;
 
-  type PartialALEventValueEventData = Pick<ALElementValueEventData, "surface" | "element" | "value" | "metadata" | "relatedEventIndex">;
+  const changeEvent = options.uiEvents.find(config => config.eventName === 'change');
+
+  if (!changeEvent) {
+    // only enable this feature if `change` event is enabled.
+    return;
+  }
+
+  const { cacheElementReactInfo } = changeEvent;
+
+  type PartialALEventValueEventData =
+    Pick<ALUIEventPublisher.ALUIEventData, "surface" | "value" | "metadata" | "relatedEventIndex"> &
+    Pick<ALElementEvent, "element">;
+
   function emitEvent(elementValueEventData: PartialALEventValueEventData) {
     const { element, surface } = elementValueEventData;
 
-    const elementText = getElementTextEvent(element, surface);
-
     let reactComponentData: ReactComponentData | null = null;
-    if (options.cacheElementReactInfo) {
+    if (cacheElementReactInfo) {
       const elementInfo = ALElementInfo.getOrCreate(element);
       reactComponentData = elementInfo.getReactComponentData();
     }
 
+    const elementText = getElementTextEvent(element, surface);
     const flowlet = options.flowletManager.top();
 
-    channel.emit('al_element_value_event', {
+    channel.emit('al_ui_event', {
+      event: 'change',
+      domEvent: new CustomEvent('change'),
+      isTrusted: false, // We can use this to differnciate between browser events and ours.
       ...elementValueEventData,
       eventIndex: ALEventIndex.getNextEventIndex(),
       eventTimestamp: performanceAbsoluteNow(),
@@ -162,7 +158,7 @@ export function publish(options: InitOptions): void {
     }
   }
 
-  channel.addListener('al_surface_mount', surfaceEventData => {
+  surfaceChannel.addListener('al_surface_mount', surfaceEventData => {
     const surfaceElement = surfaceEventData.element;
     const surface = surfaceEventData.surface;
 
@@ -182,23 +178,21 @@ export function publish(options: InitOptions): void {
    * TODO: we should decide if we want to have `change` event logged as is, or to file a new value event as well.
    */
   IHTMLInputElement.checked.setter.onBeforeCallObserverAdd(function (this, value) {
-    if (value) {
-      const surface = getSurfacePath(this);
-      if (!surface) {
-        return;
-      }
-
-      const relatedEventIndex = -1; // Find the last ui event event_index;
-      emitEvent({
-        element: this,
-        surface,
-        relatedEventIndex,
-        value: 'true',
-        metadata: {
-          type: this.getAttribute('type') ?? '',
-        }
-      });
+    const surface = getSurfacePath(this);
+    if (!surface) {
+      return;
     }
+
+    const relatedEventIndex = -1; // Find the last ui event event_index;
+    emitEvent({
+      element: this,
+      surface,
+      relatedEventIndex,
+      value: '' + value, // convert bool to string
+      metadata: {
+        type: this.getAttribute('type') ?? '',
+      }
+    });
   });
 
   /**

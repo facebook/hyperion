@@ -108,10 +108,6 @@ export function init() {
       channel,
       cacheElementReactInfo: true,
     },
-    elementValuePublisher: {
-      channel,
-      cacheElementReactInfo: true,
-    },
     network: {
       channel,
       requestFilter: request => !/robots/.test(request.url.toString()),
