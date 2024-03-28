@@ -11,6 +11,7 @@ import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrapp
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import * as ALCustomEvent from "./ALCustomEvent";
+import * as ALElementValuePublisher from "./ALElementValuePublisher";
 import * as ALFlowletPublisher from "./ALFlowletPublisher";
 import * as ALHeartbeat from "./ALHeartbeat";
 import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
@@ -22,6 +23,7 @@ import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
+
 /**
  * This type extracts the union of all events types so that external modules
  * don't have to import these types one by one.
@@ -128,10 +130,27 @@ export function init(options: InitOptions): boolean {
     ALFlowletPublisher.publish(options.flowletPublisher);
   }
 
+  if (options.surfaceMutationPublisher) {
+    ALSurfaceMutationPublisher.publish({
+      ...sharedOptions,
+      ...options.surfaceMutationPublisher
+    });
+  }
+
   if (options.uiEventPublisher) {
     ALUIEventPublisher.publish({
       ...sharedOptions,
       ...options.uiEventPublisher
+    });
+
+    /**
+     * The following will depend on the surface mutation events
+     * so we need to make sure it is initialized afterwards
+     */
+    ALElementValuePublisher.publish({
+      ...sharedOptions,
+      ...options.uiEventPublisher,
+      surfaceChannel: options.surface.channel,
     });
   }
 
@@ -139,12 +158,6 @@ export function init(options: InitOptions): boolean {
     ALHeartbeat.start(options.heartbeat);
   }
 
-  if (options.surfaceMutationPublisher) {
-    ALSurfaceMutationPublisher.publish({
-      ...sharedOptions,
-      ...options.surfaceMutationPublisher
-    });
-  }
 
   if (options.network) {
     ALNetworkPublisher.publish({

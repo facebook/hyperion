@@ -11,3 +11,5 @@ export type Options<Options extends [...any[]] | {}> = Beautify<
   ? CombineReadonly<Options>
   : Options
 >;
+
+export type Writeable<T> = { -readonly [P in keyof T]: T[P] };

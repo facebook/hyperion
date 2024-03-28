@@ -18,7 +18,6 @@ export let interceptionStatus = "disabled";
 
 export function init() {
   interceptionStatus = "enabled";
-  const domSurfaceAttributeName = 'data-surfaceid';
   const flowletManager = FlowletManager;
 
   const IReactModule = IReact.intercept("react", React, [])
@@ -29,7 +28,6 @@ export function init() {
 
   Visualizer.init({
     flowletManager,
-    domSurfaceAttributeName,
     channel,
   });
 
@@ -50,7 +48,6 @@ export function init() {
 
   AutoLogging.init({
     flowletManager,
-    domSurfaceAttributeName,
     componentNameValidator: testCompValidator,
     flowletPublisher: {
       channel
@@ -96,6 +93,11 @@ export function init() {
           interactableElementsOnly: false,
           eventFilter: (domEvent) => domEvent.code === 'Enter',
         },
+        {
+          eventName: 'change',
+          cacheElementReactInfo: true,
+          interactableElementsOnly: false,
+        }
       ]
     },
     heartbeat: {

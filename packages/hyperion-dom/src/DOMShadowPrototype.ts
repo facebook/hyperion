@@ -90,7 +90,7 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
 
 }
 
-export const sampleHTMLElement = window.document.head;
+export const sampleHTMLElement: HTMLElement = window.document.head;
 
 export function getVirtualAttribute<Name extends string>(obj: Object, name: Name): VirtualAttribute<Element, Name> | null {
   let shadowProto = getObjectExtension(obj, true)?.shadowPrototype;

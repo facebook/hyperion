@@ -29,6 +29,7 @@ export default defineConfig({
         "@hyperion/hyperion-dom/src/IElement_",
         "@hyperion/hyperion-dom/src/IElement",
         "@hyperion/hyperion-dom/src/IHTMLElement",
+        "@hyperion/hyperion-dom/src/IHTMLInputElement",
         "@hyperion/hyperion-dom/src/IWindow",
         "@hyperion/hyperion-dom/src/IXMLHttpRequest",
         "@hyperion/hyperion-dom/src/ICSSStyleDeclaration",
