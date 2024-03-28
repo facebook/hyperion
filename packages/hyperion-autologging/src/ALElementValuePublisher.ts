@@ -57,7 +57,7 @@ export function publish(options: InitOptions): void {
     }
 
     const elementText = getElementTextEvent(element, surface);
-    const flowlet = options.flowletManager.top();
+    const callFlowlet = options.flowletManager.top();
 
     channel.emit('al_ui_event', {
       event: 'change',
@@ -67,8 +67,8 @@ export function publish(options: InitOptions): void {
       eventIndex: ALEventIndex.getNextEventIndex(),
       eventTimestamp: performanceAbsoluteNow(),
       autoLoggingID: ALID.getOrSetAutoLoggingID(element),
-      flowlet,
-      triggerFlowlet: flowlet.data.triggerFlowlet,
+      callFlowlet,
+      triggerFlowlet: callFlowlet.data.triggerFlowlet,
       ...elementText,
       reactComponentName: reactComponentData?.name,
       reactComponentStack: reactComponentData?.stack,
