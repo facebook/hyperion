@@ -220,7 +220,17 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(targetElement);
         reactComponentData = elementInfo.getReactComponentData();
       }
-      const elementText = getElementTextEvent(element, surface);
+      let elementText = getElementTextEvent(element, surface);
+      /**
+       * If we didn't look for interactable element and text is empty, we might have landed on some
+       * sort of input element or a sub component a compsite component. So, we can now go up the tree
+       * to find the interactable element and then look into that sub-tree for text. 
+       */
+      if (element != null && !eventConfig.interactableElementsOnly && (!elementText.elementName || !elementText.elementText?.text)) {
+        const parentInteractable = getInteractable(element.parentElement, eventName, true);
+        elementText = getElementTextEvent(parentInteractable, surface);
+      }
+
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
         callFlowlet,
