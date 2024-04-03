@@ -7,7 +7,7 @@
 import "jest";
 import { intercept } from "@hyperion/hyperion-core/src/intercept";
 
-import { Channel } from "@hyperion/hook/src/Channel";
+import { Channel } from "@hyperion/hyperion-hook/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
 import * as ALNetworkPublisher from "../src/ALNetworkPublisher";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";

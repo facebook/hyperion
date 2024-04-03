@@ -6,14 +6,14 @@
   "workspaces": [
     "../hyperion-devtools",
     "../hyperion-global",
-    "../hook",
+    "../hyperion-hook",
     "../hyperion-react",
     "../hyperion-autologging",
     "../hyperion-autologging-visualizer"
   ],
   "dependencies": {
     "@hyperion/hyperion-global": "*",
-    "@hyperion/hook": "*",
+    "@hyperion/hyperion-hook": "*",
     "@hyperion/hyperion-autologging": "*",
     "@hyperion/hyperion-autologging-visualizer": "*",
     "@hyperion/hyperion-react": "*",

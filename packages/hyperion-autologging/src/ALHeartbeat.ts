@@ -4,7 +4,7 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hook/src/Channel";
+import type { Channel } from "@hyperion/hyperion-hook/src/Channel";
 import { TimedTrigger } from '@hyperion/hyperion-util/src/TimedTrigger';
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
 import * as Types from "@hyperion/hyperion-util/src/Types";

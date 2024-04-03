@@ -3,7 +3,7 @@
  */
 
 import { assert } from "@hyperion/hyperion-global";
-import { Hook } from "@hyperion/hook";
+import { Hook } from "@hyperion/hyperion-hook";
 import { hasOwnProperty, PropertyInterceptor } from "./PropertyInterceptor";
 
 

@@ -5,7 +5,7 @@
  */
 'use strict';
 
-import { Channel } from "@hyperion/hook/src/Channel";
+import { Channel } from "@hyperion/hyperion-hook/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
 import * as ALFlowletPublisher from "../src/ALFlowletPublisher";
 import { getFullNamePattern } from "@hyperion/hyperion-flowlet/test/FlowletTestUtil";

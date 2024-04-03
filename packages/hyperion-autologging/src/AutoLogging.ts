@@ -6,7 +6,7 @@
 
 import { assert } from "@hyperion/hyperion-global";
 import global from "@hyperion/hyperion-global/src/global";
-import { Channel } from "@hyperion/hook/src/Channel";
+import { Channel } from "@hyperion/hyperion-hook/src/Channel";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as Types from "@hyperion/hyperion-util/src/Types";

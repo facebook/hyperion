@@ -3,8 +3,8 @@
  */
 
 // hyperionHook
-export { Hook } from "@hyperion/hook/src/Hook";
-export { PipeableEmitter, Channel } from "@hyperion/hook/src/Channel";
+export { Hook } from "@hyperion/hyperion-hook/src/Hook";
+export { PipeableEmitter, Channel } from "@hyperion/hyperion-hook/src/Channel";
 
 // hyperionCore
 export { setAssertLoggerOptions } from "@hyperion/hyperion-global/src/assert";

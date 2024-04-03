@@ -9,8 +9,8 @@ export default defineConfig({
     dir: './dist',
     manualChunks: {
       "hyperionHook": [
-        "@hyperion/hook/src/Hook",
-        "@hyperion/hook/src/Channel",
+        "@hyperion/hyperion-hook/src/Hook",
+        "@hyperion/hyperion-hook/src/Channel",
       ],
       "hyperionCore": [
         "@hyperion/hyperion-global/src/assert",

@@ -14,7 +14,7 @@ import type {
 } from './IReact';
 
 import { assert } from '@hyperion/hyperion-global';
-import { Hook } from '@hyperion/hook/src/Hook';
+import { Hook } from '@hyperion/hyperion-hook/src/Hook';
 import { FunctionInterceptor, interceptFunction } from '@hyperion/hyperion-core/src/FunctionInterceptor';
 import { interceptMethod } from '@hyperion/hyperion-core/src/MethodInterceptor';
 import { ShadowPrototype } from '@hyperion/hyperion-core/src/ShadowPrototype';
