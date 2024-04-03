@@ -49,7 +49,7 @@
   ],
   "workspaces": [
     "./packages/hyperion-devtools",
-    "./packages/global",
+    "./packages/hyperion-global",
     "./packages/hook",
     "./packages/hyperion-core",
     "./packages/hyperion-dom",
@@ -61,7 +61,7 @@
     "./packages/hyperion-react-testapp"
   ],
   "dependencies": {
-    "@hyperion/global": "*",
+    "@hyperion/hyperion-global": "*",
     "@hyperion/hook": "*",
     "@hyperion/hyperion-autologging": "*",
     "@hyperion/hyperion-autologging-visualizer": "*",

@@ -6,7 +6,7 @@ import type { FunctionInterceptor, InterceptableObjectType } from './FunctionInt
 
 import { ShadowPrototype, } from './ShadowPrototype';
 import { interceptMethod } from './MethodInterceptor';
-import { assert } from '@hyperion/global';
+import { assert } from '@hyperion/hyperion-global';
 
 export type InterceptedModuleExports<TModuleExports extends InterceptableObjectType> = {
   [K in keyof TModuleExports]: FunctionInterceptor<TModuleExports, string, TModuleExports[K]>;

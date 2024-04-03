@@ -4,7 +4,7 @@
 
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 
-import { assert } from "@hyperion/global";
+import { assert } from "@hyperion/hyperion-global";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";

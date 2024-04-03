@@ -13,14 +13,14 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../global",
+    "../hyperion-global",
     "../hook",
     "../hyperion-dom",
     "../hyperion-react",
     "../hyperion-autologging"
   ],
   "dependencies": {
-    "@hyperion/global": "*",
+    "@hyperion/hyperion-global": "*",
     "@hyperion/hook": "*",
     "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-react": "*",

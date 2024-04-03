@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { assert } from "@hyperion/global";
+import { assert } from "@hyperion/hyperion-global";
 import { FunctionInterceptor, getFunctionInterceptor, InterceptableFunction } from "./FunctionInterceptor";
 import { defineProperty, ExtendedPropertyDescriptor, getExtendedPropertyDescriptor, hasOwnProperty, InterceptionStatus, PropertyInterceptor } from "./PropertyInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";

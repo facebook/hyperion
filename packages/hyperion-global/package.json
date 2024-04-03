@@ -1,6 +1,6 @@
 {
   "scope": "@hyperion",
-  "name": "@hyperion/global",
+  "name": "@hyperion/hyperion-global",
   "description": "global settings and utility functions",
   "version": "0.1.0",
   "license": "MIT",

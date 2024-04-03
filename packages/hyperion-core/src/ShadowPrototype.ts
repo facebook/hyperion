@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { assert } from "@hyperion/global";
+import { assert } from "@hyperion/hyperion-global";
 import { Hook } from "@hyperion/hook";
 import { hasOwnProperty, PropertyInterceptor } from "./PropertyInterceptor";
 
