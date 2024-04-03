@@ -12,7 +12,7 @@
     "test": "npm run build & jest"
   },
   "workspaces": [
-    "../devtools",
+    "../hyperion-devtools",
     "../global",
     "../hook",
     "../hyperion-dom",
@@ -38,7 +38,7 @@
     "@types/react-dom": "^18.2.7"
   },
   "devDependencies": {
-    "@hyperion/devtools": "*",
+    "@hyperion/hyperion-devtools": "*",
     "@types/cytoscape-dagre": "^2.3.1",
     "@types/cytoscape-klay": "^3.1.2",
     "@types/jest": "^29.5.4",

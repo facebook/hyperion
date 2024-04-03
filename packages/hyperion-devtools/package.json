@@ -1,6 +1,6 @@
 {
   "scope": "@hyperion",
-  "name": "@hyperion/devtools",
+  "name": "@hyperion/hyperion-devtools",
   "description": "set of configs and tools for development",
   "version": "0.1.0",
   "license": "MIT",

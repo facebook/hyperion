@@ -1,2 +1,2 @@
-const baseConfig = require('@hyperion/devtools/babel.config');
+const baseConfig = require('@hyperion/hyperion-devtools/babel.config');
 module.exports = baseConfig;
