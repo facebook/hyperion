@@ -6,7 +6,7 @@
 
 import "jest";
 
-import { Channel } from "@hyperion/hook/src/Channel";
+import { Channel } from "@hyperion/hyperion-hook/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
 import * as ALUIEventPublisher from "../src/ALUIEventPublisher";
 import * as DomFragment from "./DomFragment";

@@ -5,7 +5,7 @@
 'use strict';
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 
-import { Channel } from "@hyperion/hook/src/Channel";
+import { Channel } from "@hyperion/hyperion-hook/src/Channel";
 import { intercept } from "@hyperion/hyperion-core/src/intercept";
 import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
 import { setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";

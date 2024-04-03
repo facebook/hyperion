@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Hook } from "@hyperion/hook";
+import { Hook } from "@hyperion/hyperion-hook";
 import { InterceptableFunction, getFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { CallbackType, interceptEventListener, isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
 import { Flowlet } from "./Flowlet";

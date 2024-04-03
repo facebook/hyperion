@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Hook } from "@hyperion/hook";
+import { Hook } from "@hyperion/hyperion-hook";
 import * as INode from "@hyperion/hyperion-dom/src/INode";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 

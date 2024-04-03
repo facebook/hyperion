@@ -1,6 +1,6 @@
 {
   "scope": "@hyperion",
-  "name": "@hyperion/hook",
+  "name": "@hyperion/hyperion-hook",
   "description": "Hook utility to support 'aspects' in the framework",
   "version": "0.1.0",
   "license": "MIT",

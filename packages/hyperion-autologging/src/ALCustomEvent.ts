@@ -4,7 +4,7 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hook/src/Channel";
+import type { Channel } from "@hyperion/hyperion-hook/src/Channel";
 
 import { ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALTimedEvent } from "./ALType";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";

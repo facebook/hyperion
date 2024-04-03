@@ -4,7 +4,7 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hook/src/Channel";
+import type { Channel } from "@hyperion/hyperion-hook/src/Channel";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";

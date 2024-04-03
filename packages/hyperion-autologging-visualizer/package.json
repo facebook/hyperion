@@ -14,14 +14,14 @@
   "workspaces": [
     "../hyperion-devtools",
     "../hyperion-global",
-    "../hook",
+    "../hyperion-hook",
     "../hyperion-dom",
     "../hyperion-react",
     "../hyperion-autologging"
   ],
   "dependencies": {
     "@hyperion/hyperion-global": "*",
-    "@hyperion/hook": "*",
+    "@hyperion/hyperion-hook": "*",
     "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-react": "*",
     "@types/cytoscape": "^3.19.11",

@@ -3,7 +3,7 @@
  */
 
 import { assert } from "@hyperion/hyperion-global";
-import { Channel } from "@hyperion/hook/src/Channel";
+import { Channel } from "@hyperion/hyperion-hook/src/Channel";
 import * as IPromise from "@hyperion/hyperion-core/src/IPromise";
 import * as intercept from "@hyperion/hyperion-core/src/intercept";
 import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
