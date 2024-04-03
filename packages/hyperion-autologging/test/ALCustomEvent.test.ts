@@ -6,7 +6,7 @@
 
 import "jest";
 
-import { Channel } from "@hyperion/hyperion-hook/src/Channel";
+import { Channel } from "@hyperion/hyperion-channel/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
 import { AUTO_LOGGING_SURFACE } from "../src/ALSurfaceConsts";
 import * as ALCustomEvent from "../src/ALCustomEvent";

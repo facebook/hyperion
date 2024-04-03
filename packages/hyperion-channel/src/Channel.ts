@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Hook } from "./Hook";
+import { Hook } from "@hyperion/hyperion-hook/src/Hook";
 
 type Listener<V extends any[]> = (...args: V) => void;
 type Listeners<V extends any[]> = Hook<Listener<V>>;

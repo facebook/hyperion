@@ -5,7 +5,9 @@
   "search.exclude": {
     "**/.git": true,
     "**/node_modules": true,
-    "**/*.js": true,
+    "**/*.js": {
+      "when": "$(basename).ts"
+    },
     "build/*": true,
   },
   "search.useIgnoreFiles": false,

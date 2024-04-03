@@ -51,6 +51,7 @@
     "./packages/hyperion-devtools",
     "./packages/hyperion-global",
     "./packages/hyperion-hook",
+    "./packages/hyperion-channel",
     "./packages/hyperion-core",
     "./packages/hyperion-dom",
     "./packages/hyperion-flowlet",
@@ -63,6 +64,7 @@
   "dependencies": {
     "@hyperion/hyperion-global": "*",
     "@hyperion/hyperion-hook": "*",
+    "@hyperion/hyperion-channel": "*",
     "@hyperion/hyperion-autologging": "*",
     "@hyperion/hyperion-autologging-visualizer": "*",
     "@hyperion/hyperion-core": "*",

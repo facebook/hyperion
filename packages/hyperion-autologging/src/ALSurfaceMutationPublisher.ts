@@ -4,7 +4,7 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hyperion-hook/src/Channel";
+import type { Channel } from "@hyperion/hyperion-channel/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
 import * as ALCustomEvent from "./ALCustomEvent";

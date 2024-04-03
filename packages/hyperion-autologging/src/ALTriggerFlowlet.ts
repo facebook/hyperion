@@ -7,7 +7,7 @@ import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 
 import { assert } from "@hyperion/hyperion-global";
-import { Channel } from "@hyperion/hyperion-hook/src/Channel";
+import { Channel } from "@hyperion/hyperion-channel/src/Channel";
 import { getFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
 import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
