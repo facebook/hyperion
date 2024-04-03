@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "workspaces": [
-    "../devtools",
+    "../hyperion-devtools",
     "../global",
     "../hook",
     "../hyperion-react",

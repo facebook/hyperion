@@ -11,7 +11,7 @@
     "test": "npm run build & jest"
   },
   "workspaces": [
-    "../devtools",
+    "../hyperion-devtools",
     "../global",
     "../hook"
   ],
@@ -20,7 +20,7 @@
     "@hyperion/hook": "^0.1.0"
   },
   "devDependencies": {
-    "@hyperion/devtools": "^0.1.0",
+    "@hyperion/hyperion-devtools": "^0.1.0",
     "@types/jest": "^29.5.3"
   }
 }

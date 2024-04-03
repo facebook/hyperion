@@ -48,7 +48,7 @@
     }
   ],
   "workspaces": [
-    "./packages/devtools",
+    "./packages/hyperion-devtools",
     "./packages/global",
     "./packages/hook",
     "./packages/hyperion-core",
