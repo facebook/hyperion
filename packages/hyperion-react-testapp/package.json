@@ -5,14 +5,14 @@
   "private": true,
   "workspaces": [
     "../hyperion-devtools",
-    "../global",
+    "../hyperion-global",
     "../hook",
     "../hyperion-react",
     "../hyperion-autologging",
     "../hyperion-autologging-visualizer"
   ],
   "dependencies": {
-    "@hyperion/global": "*",
+    "@hyperion/hyperion-global": "*",
     "@hyperion/hook": "*",
     "@hyperion/hyperion-autologging": "*",
     "@hyperion/hyperion-autologging-visualizer": "*",

@@ -20,7 +20,7 @@ import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
 import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
-import { assert } from "@hyperion/global";
+import { assert } from "@hyperion/hyperion-global";
 
 
 export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{

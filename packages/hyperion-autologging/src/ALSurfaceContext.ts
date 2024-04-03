@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { assert } from '@hyperion/global';
+import { assert } from '@hyperion/hyperion-global';
 import type * as React from 'react';
 import { IALFlowlet } from './ALFlowletManager';
 import * as Types from "@hyperion/hyperion-util/src/Types";

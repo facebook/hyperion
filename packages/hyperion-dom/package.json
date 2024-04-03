@@ -12,12 +12,12 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../global",
+    "../hyperion-global",
     "../hook",
     "../hyperion-core"
   ],
   "dependencies": {
-    "@hyperion/global": "^0.1.0",
+    "@hyperion/hyperion-global": "^0.1.0",
     "@hyperion/hook": "^0.1.0",
     "@hyperion/hyperion-core": "^0.1.0"
   },

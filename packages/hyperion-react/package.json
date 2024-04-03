@@ -12,12 +12,12 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../global",
+    "../hyperion-global",
     "../hook",
     "../hyperion-dom"
   ],
   "dependencies": {
-    "@hyperion/global": "^0.1.0",
+    "@hyperion/hyperion-global": "^0.1.0",
     "@hyperion/hook": "^0.1.0",
     "@hyperion/hyperion-dom": "^0.1.0",
     "@types/react": "^18.2.14",

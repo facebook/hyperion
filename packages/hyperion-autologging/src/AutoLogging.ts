@@ -4,8 +4,8 @@
 
 'use strict';
 
-import { assert } from "@hyperion/global";
-import global from "@hyperion/global/src/global";
+import { assert } from "@hyperion/hyperion-global";
+import global from "@hyperion/hyperion-global/src/global";
 import { Channel } from "@hyperion/hook/src/Channel";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";

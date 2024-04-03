@@ -6,7 +6,7 @@ import { Hook } from "@hyperion/hook";
 import { InterceptableFunction, getFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { CallbackType, interceptEventListener, isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
 import { Flowlet } from "./Flowlet";
-import { assert, getLogger } from "@hyperion/global";
+import { assert, getLogger } from "@hyperion/hyperion-global";
 import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
 
 const IS_FLOWLET_SETUP_PROP_NAME = `__isFlowletSetup`;

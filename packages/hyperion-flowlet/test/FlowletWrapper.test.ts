@@ -3,7 +3,7 @@
  * @jest-environment jsdom
 */
 
-import { AsyncCounter } from "@hyperion/global/src/AsyncCounter";
+import { AsyncCounter } from "@hyperion/hyperion-global/src/AsyncCounter";
 import "jest";
 import { Flowlet } from "../src/Flowlet";
 import { FlowletManager } from "../src/FlowletManager";

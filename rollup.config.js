@@ -13,7 +13,7 @@ export default defineConfig({
         "@hyperion/hook/src/Channel",
       ],
       "hyperionCore": [
-        "@hyperion/global/src/assert",
+        "@hyperion/hyperion-global/src/assert",
         "@hyperion/hyperion-core/src/FunctionInterceptor",
         "@hyperion/hyperion-core/src/ConstructorInterceptor",
         "@hyperion/hyperion-core/src/AttributeInterceptor",
@@ -111,8 +111,8 @@ export default defineConfig({
       // mainFields: ['name', 'module', 'main'],
       // customResolveOptions: {
       //   moduleDirectory: [
-      //     "./packages/devtools",
-      //     "./packages/global",
+      //     "./packages/hyperion-devtools",
+      //     "./packages/hyperion-global",
       //     "./packages/hook",
       //     "./packages/hyperion-core",
       //     "./packages/hyperion-dom",
