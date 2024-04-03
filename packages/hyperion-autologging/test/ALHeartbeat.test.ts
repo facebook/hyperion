@@ -5,7 +5,7 @@
  */
 'use strict';
 
-import { Channel } from "@hyperion/hyperion-hook/src/Channel"
+import { Channel } from "@hyperion/hyperion-channel/src/Channel"
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
 import * as ALHeartbeat from "../src/ALHeartbeat";

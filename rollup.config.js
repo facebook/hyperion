@@ -10,7 +10,9 @@ export default defineConfig({
     manualChunks: {
       "hyperionHook": [
         "@hyperion/hyperion-hook/src/Hook",
-        "@hyperion/hyperion-hook/src/Channel",
+      ],
+      "hyperionChannel": [
+        "@hyperion/hyperion-channel/src/Channel",
       ],
       "hyperionCore": [
         "@hyperion/hyperion-global/src/assert",

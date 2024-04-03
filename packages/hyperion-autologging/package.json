@@ -15,21 +15,22 @@
     "../hyperion-devtools",
     "../hyperion-global",
     "../hyperion-hook",
+    "../hyperion-channel",
     "../hyperion-dom",
     "../hyperion-react"
   ],
   "dependencies": {
-    "@hyperion/hyperion-global": "^0.1.0",
-    "@hyperion/hyperion-hook": "^0.1.0",
-    "@hyperion/hyperion-dom": "^0.1.0",
-    "@hyperion/hyperion-react": "^0.1.0"
+    "@hyperion/hyperion-global": "*",
+    "@hyperion/hyperion-hook": "*",
+    "@hyperion/hyperion-dom": "*",
+    "@hyperion/hyperion-react": "*"
   },
   "peerDependencies": {
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.7"
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "^0.1.0",
+    "@hyperion/hyperion-devtools": "*",
     "@types/jest": "^29.5.3"
   },
   "eslintConfig": {
