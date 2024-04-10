@@ -14,15 +14,17 @@
     "../hyperion-devtools",
     "../hyperion-global",
     "../hyperion-hook",
+    "../hyperion-timed-trigger",
     "../hyperion-dom"
   ],
   "dependencies": {
-    "@hyperion/hyperion-global": "^0.1.0",
-    "@hyperion/hyperion-hook": "^0.1.0",
-    "@hyperion/hyperion-dom": "^0.1.0"
+    "@hyperion/hyperion-global": "*",
+    "@hyperion/hyperion-hook": "*",
+    "@hyperion/hyperion-timed-trigger": "*",
+    "@hyperion/hyperion-dom": "*"
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "^0.1.0",
+    "@hyperion/hyperion-devtools": "*",
     "@types/jest": "^29.5.3"
   }
 }

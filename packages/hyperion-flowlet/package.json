@@ -15,11 +15,13 @@
     "../hyperion-global",
     "../hyperion-async-counter",
     "../hyperion-hook",
+    "../hyperion-timed-trigger",
     "../hyperion-dom"
   ],
   "dependencies": {
     "@hyperion/hyperion-global": "*",
     "@hyperion/hyperion-hook": "*",
+    "@hyperion/hyperion-timed-trigger": "*",
     "@hyperion/hyperion-dom": "*"
   },
   "devDependencies": {

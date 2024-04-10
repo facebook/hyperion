@@ -16,12 +16,15 @@
     "../hyperion-global",
     "../hyperion-hook",
     "../hyperion-channel",
+    "../hyperion-timed-trigger",
     "../hyperion-dom",
     "../hyperion-react"
   ],
   "dependencies": {
     "@hyperion/hyperion-global": "*",
     "@hyperion/hyperion-hook": "*",
+    "@hyperion/hyperion-channel": "*",
+    "@hyperion/hyperion-timed-trigger": "*",
     "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-react": "*"
   },

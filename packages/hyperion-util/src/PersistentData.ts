@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { TimedTrigger } from "./TimedTrigger";
+import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
 
 function getStorage(storageName: 'sessionStorage' | 'localStorage'): Storage | null {
   let storage: Storage;
