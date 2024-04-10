@@ -18,7 +18,7 @@ import { Hook } from '@hyperion/hyperion-hook/src/Hook';
 import { FunctionInterceptor, interceptFunction } from '@hyperion/hyperion-core/src/FunctionInterceptor';
 import { interceptMethod } from '@hyperion/hyperion-core/src/MethodInterceptor';
 import { ShadowPrototype } from '@hyperion/hyperion-core/src/ShadowPrototype';
-import TestAndSet from '@hyperion/hyperion-util/src/TestAndSet';
+import TestAndSet from '@hyperion/hyperion-test-and-set/src/TestAndSet';
 import { Class, mixed } from './FlowToTsTypes';
 import * as IReact from './IReact';
 import * as IReactElementVisitor from './IReactElementVisitor';
