@@ -9,7 +9,7 @@ import { Channel } from "@hyperion/hyperion-channel/src/Channel";
 import { intercept } from "@hyperion/hyperion-core/src/intercept";
 import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
 import { setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
-import { TimedTrigger } from "@hyperion/hyperion-util/src/TimedTrigger";
+import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from "./ALEventIndex";

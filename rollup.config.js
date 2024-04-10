@@ -17,6 +17,9 @@ export default defineConfig({
       "hyperionAsyncCounter":[
         "@hyperion/hyperion-async-counter/src/AsyncCounter",
       ],
+      "hyperionTimedTrigger":[
+        "@hyperion/hyperion-timed-trigger/src/TimedTrigger",
+      ],
       "hyperionCore": [
         "@hyperion/hyperion-global/src/assert",
         "@hyperion/hyperion-core/src/FunctionInterceptor",
@@ -50,7 +53,6 @@ export default defineConfig({
         "@hyperion/hyperion-util/src/ClientSessionID",
         "@hyperion/hyperion-util/src/PersistentData",
         "@hyperion/hyperion-util/src/TestAndSet",
-        "@hyperion/hyperion-util/src/TimedTrigger",
       ],
       "hyperionFlowletCore": [
         "@hyperion/hyperion-flowlet/src/Flowlet",

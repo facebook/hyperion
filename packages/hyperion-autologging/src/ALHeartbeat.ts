@@ -5,7 +5,7 @@
 'use strict';
 
 import type { Channel } from "@hyperion/hyperion-channel/src/Channel";
-import { TimedTrigger } from '@hyperion/hyperion-util/src/TimedTrigger';
+import { TimedTrigger } from '@hyperion/hyperion-timed-trigger/src/TimedTrigger';
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
