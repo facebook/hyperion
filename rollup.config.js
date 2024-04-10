@@ -14,6 +14,9 @@ export default defineConfig({
       "hyperionChannel": [
         "@hyperion/hyperion-channel/src/Channel",
       ],
+      "hyperionAsyncCounter":[
+        "@hyperion/hyperion-async-counter/src/AsyncCounter",
+      ],
       "hyperionCore": [
         "@hyperion/hyperion-global/src/assert",
         "@hyperion/hyperion-core/src/FunctionInterceptor",

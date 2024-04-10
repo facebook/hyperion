@@ -2,6 +2,9 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
+// hyperionAsyncCounter
+export { AsyncCounter } from "@hyperion/hyperion-async-counter/src/AsyncCounter";
+
 // hyperionHook
 export { Hook } from "@hyperion/hyperion-hook/src/Hook";
 export { PipeableEmitter, Channel } from "@hyperion/hyperion-channel/src/Channel";

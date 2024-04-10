@@ -50,6 +50,7 @@
   "workspaces": [
     "./packages/hyperion-devtools",
     "./packages/hyperion-global",
+    "./packages/hyperion-async-counter",
     "./packages/hyperion-hook",
     "./packages/hyperion-channel",
     "./packages/hyperion-core",
@@ -63,6 +64,7 @@
   ],
   "dependencies": {
     "@hyperion/hyperion-global": "*",
+    "@hyperion/hyperion-async-counter": "*",
     "@hyperion/hyperion-hook": "*",
     "@hyperion/hyperion-channel": "*",
     "@hyperion/hyperion-autologging": "*",
