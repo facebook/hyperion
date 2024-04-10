@@ -20,6 +20,9 @@ export default defineConfig({
       "hyperionTimedTrigger":[
         "@hyperion/hyperion-timed-trigger/src/TimedTrigger",
       ],
+      "hyperionTestAndSet":[
+        "@hyperion/hyperion-test-and-set/src/TestAndSet",
+      ],
       "hyperionCore": [
         "@hyperion/hyperion-global/src/assert",
         "@hyperion/hyperion-core/src/FunctionInterceptor",
@@ -52,7 +55,6 @@ export default defineConfig({
       "hyperionUtil": [
         "@hyperion/hyperion-util/src/ClientSessionID",
         "@hyperion/hyperion-util/src/PersistentData",
-        "@hyperion/hyperion-util/src/TestAndSet",
       ],
       "hyperionFlowletCore": [
         "@hyperion/hyperion-flowlet/src/Flowlet",

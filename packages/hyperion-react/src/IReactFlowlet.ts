@@ -8,7 +8,7 @@ import { assert } from "@hyperion/hyperion-global";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
 import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
+import TestAndSet from "@hyperion/hyperion-test-and-set/src/TestAndSet";
 import * as IReact from "./IReact";
 import * as IReactPropsExtension from "./IReactPropsExtension";
 

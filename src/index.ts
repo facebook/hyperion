@@ -14,6 +14,9 @@ export { PipeableEmitter, Channel } from "@hyperion/hyperion-channel/src/Channel
 // hyperionTimedTrigger
 export { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
 
+// hyperionTestAndSet
+export { default as TestAndSet } from "@hyperion/hyperion-test-and-set/src/TestAndSet";
+
 // hyperionCore
 export { setAssertLoggerOptions } from "@hyperion/hyperion-global/src/assert";
 export { intercept, getVirtualPropertyValue, setVirtualPropertyValue, getOwnShadowPrototypeOf, registerShadowPrototype } from "@hyperion/hyperion-core/src/intercept";
@@ -45,7 +48,6 @@ export * as SyncMutationObserver from "@hyperion/hyperion-util/src/SyncMutationO
 // hyperionUtil
 export { ClientSessionID } from "@hyperion/hyperion-util/src/ClientSessionID";
 export { SessionPersistentData, LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
-export { default as TestAndSet } from "@hyperion/hyperion-util/src/TestAndSet";
 
 // hyperionFlowletCore
 export { Flowlet, onFlowletInit } from "@hyperion/hyperion-flowlet/src/Flowlet";

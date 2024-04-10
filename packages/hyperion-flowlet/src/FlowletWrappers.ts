@@ -9,7 +9,7 @@ import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 // import * as IWorker from "@hyperion/hyperion-dom/src/IWorker";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
-import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
+import TestAndSet from "@hyperion/hyperion-test-and-set/src/TestAndSet";
 import { FlowletManager } from "./FlowletManager";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "./TriggerFlowlet";
 

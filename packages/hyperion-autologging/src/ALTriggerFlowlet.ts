@@ -14,7 +14,7 @@ import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import TestAndSet from "@hyperion/hyperion-util/src/TestAndSet";
+import TestAndSet from "@hyperion/hyperion-test-and-set/src/TestAndSet";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";

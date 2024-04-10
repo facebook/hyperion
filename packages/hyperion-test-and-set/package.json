@@ -1,0 +1,22 @@
+{
+  "scope": "@hyperion",
+  "name": "@hyperion/hyperion-test-and-set",
+  "description": "A simple utility to test and set values.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "watch": "npm run build -- --watch",
+    "start": "npm run watch",
+    "test": "npm run build & jest"
+  },
+  "workspaces": [
+    "../hyperion-devtools"
+  ],
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@hyperion/hyperion-devtools": "*",
+    "@types/jest": "^29.5.3"
+  }
+}

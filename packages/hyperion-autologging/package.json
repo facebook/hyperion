@@ -17,6 +17,7 @@
     "../hyperion-hook",
     "../hyperion-channel",
     "../hyperion-timed-trigger",
+    "../hyperion-test-and-set",
     "../hyperion-dom",
     "../hyperion-react"
   ],
@@ -25,6 +26,7 @@
     "@hyperion/hyperion-hook": "*",
     "@hyperion/hyperion-channel": "*",
     "@hyperion/hyperion-timed-trigger": "*",
+    "@hyperion/hyperion-test-and-set": "*",
     "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-react": "*"
   },
