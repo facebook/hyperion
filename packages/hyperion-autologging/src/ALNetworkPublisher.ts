@@ -2,13 +2,12 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { assert } from "@hyperion/hyperion-global";
-import { Channel } from "@hyperion/hyperion-channel/src/Channel";
 import * as IPromise from "@hyperion/hyperion-core/src/IPromise";
 import * as intercept from "@hyperion/hyperion-core/src/intercept";
 import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
 import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
 import { getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
+import { assert } from "@hyperion/hyperion-global";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import * as ALEventIndex from "./ALEventIndex";
@@ -57,12 +56,9 @@ export type ALChannelNetworkEvent = Readonly<{
 }>;
 
 
-type ALChannel = Channel<ALChannelNetworkEvent>;
-
 export type InitOptions = Types.Options<
-  ALSharedInitOptions &
+  ALSharedInitOptions<ALChannelNetworkEvent> &
   {
-    channel: ALChannel;
     /**
      * if provided, only requests that pass the filter function
      * will generate request/response events.

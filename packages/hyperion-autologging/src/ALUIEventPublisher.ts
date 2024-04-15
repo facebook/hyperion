@@ -5,7 +5,6 @@
 'use strict';
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 
-import { Channel } from "@hyperion/hyperion-channel/src/Channel";
 import { intercept } from "@hyperion/hyperion-core/src/intercept";
 import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
 import { setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
@@ -78,8 +77,6 @@ type CurrentUIEvent = {
   timedEmitter: TimedTrigger,
 };
 
-type ALChannel = Channel<ALChannelUIEvent>;
-
 type EventHandlerMap = DocumentEventMap;
 
 export type UIEventConfig<T = EventHandlerMap> = {
@@ -95,10 +92,9 @@ export type UIEventConfig<T = EventHandlerMap> = {
 }[keyof T];
 
 export type InitOptions = Types.Options<
-  ALSharedInitOptions &
+  ALSharedInitOptions<ALChannelUIEvent> &
   {
     uiEvents: Array<UIEventConfig>;
-    channel: ALChannel;
   }
 >;
 

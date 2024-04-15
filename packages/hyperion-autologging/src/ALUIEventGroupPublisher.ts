@@ -62,7 +62,7 @@ updateInfo(
 );
 
 export type InitOptions = Types.Options<
-  Pick<ALSharedInitOptions, 'flowletManager'>
+  Pick<ALSharedInitOptions<never>, 'flowletManager'>
 >;
 let _options: InitOptions | null = null;
 

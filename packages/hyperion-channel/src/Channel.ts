@@ -6,18 +6,21 @@ import { Hook } from "@hyperion/hyperion-hook/src/Hook";
 
 type Listener<V extends any[]> = (...args: V) => void;
 type Listeners<V extends any[]> = Hook<Listener<V>>;
-type ChannelListeners<T extends { [key: string]: any[] }> = {
+export type BaseChannelEventType = { [key: string]: any[] };
+type ChannelListeners<T extends BaseChannelEventType> = {
   [P in keyof T]: Listeners<T[P]>
 }
 
-interface IEmitter<TEventToListenerArgsMap extends { [key: string]: any[] }> {
+export type ChannelEventType<ChannelType> = ChannelType extends Channel<infer EventType> ? EventType : never;
+
+interface IEmitter<TEventToListenerArgsMap extends BaseChannelEventType> {
   emit<
     TEvent extends keyof TEventToListenerArgsMap,
     TArgs extends TEventToListenerArgsMap[TEvent]
   >(eventType: TEvent, ...rawArgs: TArgs): void;
 }
 
-export class PipeableEmitter<TEventToListenerArgsMap extends { [key: string]: any[] }> implements IEmitter<TEventToListenerArgsMap>{
+export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventType> implements IEmitter<TEventToListenerArgsMap> {
   private _next: IEmitter<TEventToListenerArgsMap>['emit'] | null = null;
 
   pipe<T extends IEmitter<TEventToListenerArgsMap>>(nextChannel: T, scheduler?: (task: () => void) => void): T {
@@ -42,10 +45,9 @@ export class PipeableEmitter<TEventToListenerArgsMap extends { [key: string]: an
 }
 
 
-export class Channel<TEventToListenerArgsMap extends { [key: string]: any[] }>
+export class Channel<TEventToListenerArgsMap extends BaseChannelEventType>
   extends PipeableEmitter<TEventToListenerArgsMap>
-  implements IEmitter<TEventToListenerArgsMap>
-{
+  implements IEmitter<TEventToListenerArgsMap> {
   private _listeners: ChannelListeners<TEventToListenerArgsMap> = Object.create(null);
 
   private _getOrAddHandler<TEvent extends keyof TEventToListenerArgsMap>(

@@ -4,7 +4,6 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hyperion-channel/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
 import * as ALCustomEvent from "./ALCustomEvent";
@@ -50,8 +49,6 @@ export type ALChannelSurfaceMutationEvent = Readonly<{
 }
 >;
 
-export type ALSurfaceMutationChannel = Channel<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent & ALCustomEvent.ALChannelCustomEvent>;
-
 type SurfaceInfo = ALSurfaceMutationEventData & Types.Writeable<ALElementEvent> & {
   addTime: number,
 };
@@ -63,9 +60,8 @@ export function getSurfaceMountInfo(surface: string): ALSurfaceMutationEventData
 }
 
 export type InitOptions = Types.Options<
-  ALSharedInitOptions &
+  ALSharedInitOptions<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent & ALCustomEvent.ALChannelCustomEvent> &
   {
-    channel: ALSurfaceMutationChannel;
     cacheElementReactInfo: boolean;
   }
 >;
