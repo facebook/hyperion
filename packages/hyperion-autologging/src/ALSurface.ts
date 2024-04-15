@@ -4,9 +4,9 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hyperion-channel/src/Channel";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
+import { assert } from "@hyperion/hyperion-global";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElementVisitor';
@@ -20,7 +20,6 @@ import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
 import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
-import { assert } from "@hyperion/hyperion-global";
 
 
 export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
@@ -67,7 +66,6 @@ export type ALChannelSurfaceEvent = Readonly<{
 type DataType = ALFlowletDataType;
 type FlowletType = IALFlowlet;
 type ALChannelEventType = ALChannelSurfaceEvent;
-type ALChannel = Channel<ALChannelEventType>;
 
 
 export type SurfaceComponent = (props:
@@ -86,7 +84,7 @@ export type SurfaceComponent = (props:
 ) => React.ReactElement;
 
 export type InitOptions = Types.Options<
-  ALSharedInitOptions &
+  ALSharedInitOptions<ALChannelEventType> &
   // IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
   // ALIReactFlowlet.InitOptions &
   ALSurfaceContext.InitOptions &
@@ -102,7 +100,6 @@ export type InitOptions = Types.Options<
       IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     };
     domCallFlowletAttributeName?: string;
-    channel: ALChannel;
     enableReactDomPropsExtension?: boolean;
   }
 >;

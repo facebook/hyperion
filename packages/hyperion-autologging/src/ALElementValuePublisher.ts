@@ -21,18 +21,16 @@ import { ALElementEvent, ALSharedInitOptions } from "./ALType";
 
 
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
+import { ChannelEventType } from "@hyperion/hyperion-channel";
 
 
 export type InitOptions = Types.Options<
   ALUIEventPublisher.InitOptions &
-  ALSharedInitOptions &
-  {
-    surfaceChannel: ALSurface.InitOptions['channel']
-  }
+  ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions & ALSurface.InitOptions)['channel']>>
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel, surfaceChannel } = options;
+  const { channel } = options;
 
   const changeEvent = options.uiEvents.find(config => config.eventName === 'change');
 
@@ -158,7 +156,7 @@ export function publish(options: InitOptions): void {
     }
   }
 
-  surfaceChannel.addListener('al_surface_mount', surfaceEventData => {
+  channel.addListener('al_surface_mount', surfaceEventData => {
     const surfaceElement = surfaceEventData.element;
     const surface = surfaceEventData.surface;
 

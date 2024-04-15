@@ -4,8 +4,9 @@
 
 'use strict';
 
+import type { BaseChannelEventType, Channel } from "@hyperion/hyperion-channel/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import { IALFlowlet, ALFlowletManager } from './ALFlowletManager';
+import { ALFlowletManager, IALFlowlet } from './ALFlowletManager';
 import { ALID } from "./ALID";
 
 export type ALFlowletEvent = Readonly<{
@@ -50,8 +51,9 @@ export type ALReactElementEvent = Readonly<{
   reactComponentStack?: string[] | null;
 }>;
 
-export type ALSharedInitOptions = Types.Options<{
+export type ALSharedInitOptions<ChannelEventType extends BaseChannelEventType = never> = Types.Options<{
   flowletManager: ALFlowletManager;
+  channel: Channel<ChannelEventType>;
 }>;
 
 export type ALElementEvent = Readonly<{

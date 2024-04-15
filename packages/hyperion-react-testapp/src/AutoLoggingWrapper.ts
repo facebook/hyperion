@@ -48,12 +48,12 @@ export function init() {
 
   AutoLogging.init({
     flowletManager,
+    channel,
     componentNameValidator: testCompValidator,
     flowletPublisher: {
       channel
     },
     triggerFlowlet: {
-      channel,
       enableReactMethodFlowlet: false,
       enableFlowletConstructorTracking: false,
     },
@@ -64,7 +64,6 @@ export function init() {
       IJsxRuntimeModule,
     },
     surface: {
-      channel,
       enableReactDomPropsExtension: false,
     },
     elementText: {
@@ -74,7 +73,6 @@ export function init() {
       },
     },
     uiEventPublisher: {
-      channel,
       uiEvents: [
         {
           eventName: 'click',
@@ -105,11 +103,9 @@ export function init() {
       heartbeatInterval: 30 * 1000
     },
     surfaceMutationPublisher: {
-      channel,
       cacheElementReactInfo: true,
     },
     network: {
-      channel,
       requestFilter: request => !/robots/.test(request.url.toString()),
       requestUrlMarker: (request, params) => {
         const flowlet = FlowletManager.top();

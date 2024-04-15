@@ -550,7 +550,7 @@ export function ALSessionGraph(): React.JSX.Element {
     // Set up listeners
     const removeListeners: Array<() => void> = [];
     const options = AutoLogging.getInitOptions();
-    const uiChannel = options.uiEventPublisher?.channel;
+    const uiChannel = options.channel;
     const uiEvents: Array<'al_ui_event' | 'al_ui_event_capture' | 'al_ui_event_bubble'> = [
       'al_ui_event',
       // Pretty noisy,  but may be useful to debug
@@ -565,14 +565,14 @@ export function ALSessionGraph(): React.JSX.Element {
         );
       }
     });
-    const surfaceChannel = options.surfaceMutationPublisher?.channel;
+    const surfaceChannel = options.channel;
     const surfaceListener = surfaceChannel?.on('al_surface_mutation_event').add(addEvent);
     if (surfaceListener) {
       removeListeners.push(
         () => surfaceChannel?.removeListener('al_surface_mutation_event', surfaceListener)
       );
     }
-    const heartbeatChannel = options.heartbeat?.channel;
+    const heartbeatChannel = options.channel;
     const heartbeatListener = heartbeatChannel?.on('al_heartbeat_event').add(addEvent);
     if (heartbeatListener) {
       removeListeners.push(
@@ -587,7 +587,7 @@ export function ALSessionGraph(): React.JSX.Element {
     //     () => flowletChannel?.removeListener('al_flowlet_event', flowletListener)
     //   );
     // }
-    const networkChannel = options.network?.channel;
+    const networkChannel = options.channel;
     const networkEvents: Array<'al_network_request' | 'al_network_response'> = [
       'al_network_request',
       'al_network_response',

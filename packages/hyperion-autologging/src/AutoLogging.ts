@@ -4,10 +4,10 @@
 
 'use strict';
 
+import { ChannelEventType } from "@hyperion/hyperion-channel/src/Channel";
+import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
 import { assert } from "@hyperion/hyperion-global";
 import global from "@hyperion/hyperion-global/src/global";
-import { Channel } from "@hyperion/hyperion-channel/src/Channel";
-import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import * as ALCustomEvent from "./ALCustomEvent";
@@ -28,7 +28,7 @@ import * as ALUIEventPublisher from "./ALUIEventPublisher";
  * This type extracts the union of all events types so that external modules
  * don't have to import these types one by one.
  */
-export type ALChannelEvent = (
+export type ALChannelEvent = ChannelEventType<
   ALFlowletPublisher.InitOptions['channel'] &
   ALSurface.InitOptions['channel'] &
   ALUIEventPublisher.InitOptions['channel'] &
@@ -36,12 +36,12 @@ export type ALChannelEvent = (
   ALSurfaceMutationPublisher.InitOptions['channel'] &
   ALNetworkPublisher.InitOptions['channel'] &
   ALCustomEvent.ALCustomEventChannel
-) extends Channel<infer EventType> ? EventType : never;
+>;
 
-type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions | 'react'>;
+type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions<never> | 'react'>;
 
 export type InitOptions = Types.Options<
-  ALSharedInitOptions &
+  ALSharedInitOptions<ALChannelEvent> &
   {
     react: (ALSurface.InitOptions & ALTriggerFlowlet.InitOptions)['react'];
     enableReactComponentVisitors?: boolean;
@@ -50,7 +50,7 @@ export type InitOptions = Types.Options<
     surface: PublicInitOptions<ALSurface.InitOptions>;
     elementText?: ALInteractableDOMElement.ALElementTextOptions | null;
     uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions> | null;
-    heartbeat?: ALHeartbeat.InitOptions | null;
+    heartbeat?: PublicInitOptions<ALHeartbeat.InitOptions> | null;
     surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions> | null;
     network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
     triggerFlowlet?: PublicInitOptions<ALTriggerFlowlet.InitOptions> | null;
@@ -78,8 +78,9 @@ export function init(options: InitOptions): boolean {
     setComponentNameValidator(options.componentNameValidator);
   }
 
-  const sharedOptions: ALSharedInitOptions = {
+  const sharedOptions: ALSharedInitOptions<ALChannelEvent> = {
     flowletManager: options.flowletManager,
+    channel: options.channel,
   }
 
   if (typeof global !== 'undefined' && (global as Window)?.document?.createElement != null) {
@@ -127,7 +128,10 @@ export function init(options: InitOptions): boolean {
   }
 
   if (options.flowletPublisher) {
-    ALFlowletPublisher.publish(options.flowletPublisher);
+    ALFlowletPublisher.publish({
+      ...sharedOptions,
+      ...options.flowletPublisher
+    });
   }
 
   if (options.surfaceMutationPublisher) {
@@ -150,12 +154,14 @@ export function init(options: InitOptions): boolean {
     ALElementValuePublisher.publish({
       ...sharedOptions,
       ...options.uiEventPublisher,
-      surfaceChannel: options.surface.channel,
     });
   }
 
   if (options.heartbeat) {
-    ALHeartbeat.start(options.heartbeat);
+    ALHeartbeat.start({
+      ...sharedOptions,
+      ...options.heartbeat,
+    });
   }
 
 
