@@ -184,6 +184,8 @@ export function publish(options: InitOptions): void {
       return;
     }
 
+    const tryInteractiveParentTextEventName = !eventConfig.interactableElementsOnly ? eventName : null;
+
     // Track event in the capturing phase
     const captureHandler = (event: Event): void => {
       const uiEventData = getCommonEventData(eventConfig, eventName, event);
@@ -220,16 +222,7 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(targetElement);
         reactComponentData = elementInfo.getReactComponentData();
       }
-      let elementText = getElementTextEvent(element, surface);
-      /**
-       * If we didn't look for interactable element and text is empty, we might have landed on some
-       * sort of input element or a sub component a compsite component. So, we can now go up the tree
-       * to find the interactable element and then look into that sub-tree for text. 
-       */
-      if (element != null && !eventConfig.interactableElementsOnly && (!elementText.elementName || !elementText.elementText?.text)) {
-        const parentInteractable = getInteractable(element.parentElement, eventName, true);
-        elementText = getElementTextEvent(parentInteractable, surface);
-      }
+      let elementText = getElementTextEvent(element, surface, tryInteractiveParentTextEventName);
 
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
