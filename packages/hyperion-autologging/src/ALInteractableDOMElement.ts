@@ -453,7 +453,7 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
   }
 }
 
-export function getElementTextEvent(element: HTMLElement | null, surface: string | null): ALElementTextEvent {
+export function getElementTextEvent(element: HTMLElement | null, surface: string | null, tryInteractableParentEventName?: UIEventConfig['eventName'] | null): ALElementTextEvent {
   if (!element) {
     return {
       elementName: null,
@@ -462,6 +462,19 @@ export function getElementTextEvent(element: HTMLElement | null, surface: string
   }
   const results: ALElementText[] = [];
   getElementName(element, surface, results);
+
+  /**
+ * If we didn't look for interactable element and text is empty, we might have landed on some
+ * sort of input element or a sub component of a compsite component. So, we can now go up the tree
+ * to find the interactable element and then look into that sub-tree for text. 
+ */
+  if (results.length === 0 && tryInteractableParentEventName) {
+    const parentInteractable = getInteractable(element.parentElement, tryInteractableParentEventName, true);
+    if (parentInteractable) {
+      getElementName(parentInteractable, surface, results);
+    }
+  }
+
   const elementText = _options?.getText?.(results) ?? results.reduce(
     (prev, current) => {
       /**

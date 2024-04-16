@@ -4,6 +4,7 @@
 
 'use strict';
 
+import { ChannelEventType } from "@hyperion/hyperion-channel/src/Channel";
 import * as IElement from "@hyperion/hyperion-dom/src/IElement";
 import * as IHTMLInputElement from "@hyperion/hyperion-dom/src/IHTMLInputElement";
 import * as Types from "@hyperion/hyperion-util/src/Types";
@@ -18,10 +19,7 @@ import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import { getAncestralSurfaceNode, getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALSharedInitOptions } from "./ALType";
-
-
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
-import { ChannelEventType } from "@hyperion/hyperion-channel";
 
 
 export type InitOptions = Types.Options<
@@ -41,6 +39,13 @@ export function publish(options: InitOptions): void {
 
   const { cacheElementReactInfo } = changeEvent;
 
+  /**
+   * In most cases, the application may not have 'change' listener. We mainly want to track
+   * interactions that change input values. For now, that will be mostly 'click'. However,
+   * we need to change the interactivity marking to make it possible to know 'there was an event handler'
+   */
+  const tryInteractiveParentTextEventName = !changeEvent.interactableElementsOnly ? 'click' /* changeEvent?.eventName */ : null
+
   type PartialALEventValueEventData =
     Pick<ALUIEventPublisher.ALUIEventData, "surface" | "value" | "metadata" | "relatedEventIndex"> &
     Pick<ALElementEvent, "element">;
@@ -54,7 +59,7 @@ export function publish(options: InitOptions): void {
       reactComponentData = elementInfo.getReactComponentData();
     }
 
-    const elementText = getElementTextEvent(element, surface);
+    const elementText = getElementTextEvent(element, surface, tryInteractiveParentTextEventName);
     const callFlowlet = options.flowletManager.top();
 
     channel.emit('al_ui_event', {
