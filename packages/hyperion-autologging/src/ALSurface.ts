@@ -355,7 +355,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
           triggerFlowlet: callFlowlet.data.triggerFlowlet
         });
       }
-    }, [domAttributeName, domAttributeValue, callFlowlet, triggerFlowlet, nodeRef]);
+    }, [domAttributeName, domAttributeValue, nodeRef]);
 
 
 
