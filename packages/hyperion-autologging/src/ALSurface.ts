@@ -24,8 +24,9 @@ import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
 export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
   surface: string;
-  element?: Element | null;
+  element: Element | null | undefined;
   isProxy: boolean;
+  capability: ALSurfaceCapability;
 }>;
 
 export enum ALSurfaceCapability {
@@ -255,9 +256,12 @@ export function init(options: InitOptions): ALSurfaceHOC {
     let addSurfaceWrapper = props.nodeRef == null;
     let localRef = ReactModule.useRef<Element>();
 
+    // empty .capability field is default, means all enabled!
+    const capability = props.capability ?? (ALSurfaceCapability.TrackInteraction | ALSurfaceCapability.TrackMutation);
+
     if (!proxiedContext) {
       nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
-      const trackInteraction = props.capability == null || (props.capability & ALSurfaceCapability.TrackInteraction); // empty .capability field is default, means all enabled!
+      const trackInteraction = capability & ALSurfaceCapability.TrackInteraction; 
       if (!trackInteraction) {
         surfacePath = parentSurface ?? SURFACE_SEPARATOR;
         domAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE;
@@ -311,7 +315,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     // Emit surface mutation events on mount/unmount
     const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
     metadata.original_call_flowlet = callFlowlet.getFullName();
-    metadata.surface_capability = surfaceCapabilityToString(props.capability);
+    metadata.surface_capability = surfaceCapabilityToString(capability);
 
     /**
      * We don't know when react decides to call effect callback, so to be safe make a copy
@@ -341,7 +345,8 @@ export function init(options: InitOptions): ALSurfaceHOC {
         triggerFlowlet,
         metadata,
         element,
-        isProxy
+        isProxy,
+        capability
       };
 
       channel.emit('al_surface_mount', event);
