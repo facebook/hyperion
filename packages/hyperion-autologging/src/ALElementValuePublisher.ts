@@ -162,6 +162,10 @@ export function publish(options: InitOptions): void {
   }
 
   channel.addListener('al_surface_mount', surfaceEventData => {
+    if (!(surfaceEventData.capability & ALSurface.ALSurfaceCapability.TrackInteraction)) {
+      return; // this is not an interactable surface, so don't even try
+    }
+
     const surfaceElement = surfaceEventData.element;
     const surface = surfaceEventData.surface;
 
@@ -181,6 +185,11 @@ export function publish(options: InitOptions): void {
    * TODO: we should decide if we want to have `change` event logged as is, or to file a new value event as well.
    */
   IHTMLInputElement.checked.setter.onBeforeCallObserverAdd(function (this, value) {
+    // The following avoid string comparison
+    if (this.checked === value) {
+      return; // Value has not changed, just re-assigned
+    }
+
     const surface = getSurfacePath(this);
     if (!surface) {
       return;
