@@ -9,7 +9,7 @@ export { AsyncCounter } from "@hyperion/hyperion-async-counter/src/AsyncCounter"
 export { Hook } from "@hyperion/hyperion-hook/src/Hook";
 
 // hyperionChannel
-export { PipeableEmitter, Channel } from "@hyperion/hyperion-channel/src/Channel";
+export { PipeableEmitter, Channel, PausableChannel } from "@hyperion/hyperion-channel/src/Channel";
 
 // hyperionTimedTrigger
 export { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
