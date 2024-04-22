@@ -97,6 +97,15 @@ export function init() {
           eventName: 'change',
           cacheElementReactInfo: true,
           interactableElementsOnly: false,
+        },
+        {
+          eventName: 'mouseover',
+          cacheElementReactInfo: true,
+          interactableElementsOnly: false,
+        },
+        {
+          eventName: 'hover',
+          hoverDurationThresholdMS: 1000,
         }
       ]
     },
