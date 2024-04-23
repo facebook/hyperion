@@ -24,7 +24,7 @@ import * as ALUIEventPublisher from "./ALUIEventPublisher";
 
 export type InitOptions = Types.Options<
   ALUIEventPublisher.InitOptions &
-  ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions & ALSurface.InitOptions)['channel']>>
+  ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions & ALSurface.InitOptions & ALSurfaceMutationPublisher.InitOptions)['channel']>>
 >;
 
 export function publish(options: InitOptions): void {
@@ -127,6 +127,10 @@ export function publish(options: InitOptions): void {
         switch (element.nodeName) {
           case 'INPUT': {
             const input = element as HTMLInputElement;
+            /**
+             * We know we are lookging for checkbox/radio inputs, so checked is good enough
+             * Also, the following check ensures we are not reading PII from other inputs, in case we expand the search
+             */
             if (input.checked) {
               emitEvent({
                 surface,
@@ -135,6 +139,7 @@ export function publish(options: InitOptions): void {
                 value: 'true',
                 metadata: {
                   type: input.getAttribute('type') ?? '',
+                  is_default: "true",
                 }
               });
             }
@@ -150,7 +155,8 @@ export function publish(options: InitOptions): void {
                 value: select.value,
                 metadata: {
                   type: 'select',
-                  text: select.options[select.selectedIndex].text
+                  text: select.options[select.selectedIndex].text,
+                  is_default: "true",
                 }
               });
             }
@@ -176,6 +182,28 @@ export function publish(options: InitOptions): void {
     trackElementValues(surface, surfaceElement);
   });
 
+  let lastEvent: null | {
+    event: 'mount_component' | 'ui_event';
+    eventIndex: number;
+  } = null;
+  channel.addListener('al_surface_mutation_event', eventData => {
+    if (eventData.event === 'mount_component') {
+      lastEvent = {
+        event: 'mount_component',
+        eventIndex: eventData.eventIndex
+      }
+    }
+  });
+  channel.addListener('al_ui_event', eventData => {
+    if (eventData.event === 'click') {
+      lastEvent = {
+        event: 'ui_event',
+        eventIndex: eventData.eventIndex,
+      }
+    } else {
+      lastEvent = null;
+    }
+  });
   /**
    * Sometimes in react, it first adds the empty input elements, and soon after updates the default value
    * based on props. In these cases, we do miss the elements in the above algorithm when parent surface is
@@ -195,7 +223,7 @@ export function publish(options: InitOptions): void {
       return;
     }
 
-    const relatedEventIndex = -1; // Find the last ui event event_index;
+    const relatedEventIndex = lastEvent?.eventIndex ?? -1; // Find the last ui event event_index;
     emitEvent({
       element: this,
       surface,
@@ -203,6 +231,8 @@ export function publish(options: InitOptions): void {
       value: '' + value, // convert bool to string
       metadata: {
         type: this.getAttribute('type') ?? '',
+        old_value: this.checked + '',
+        is_default: lastEvent?.event === 'mount_component' ? 'true' : 'false',
       }
     });
   });
