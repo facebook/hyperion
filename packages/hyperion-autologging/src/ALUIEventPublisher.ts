@@ -17,7 +17,7 @@ import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, TrackEventHandlerConfig, enableUIEventHandlers, getElementTextEvent, getInteractable, isTrackedEvent } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
-import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent } from "./ALType";
+import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 
 
@@ -100,7 +100,8 @@ export type InitOptions = Types.Options<
 
 type CommonEventData = (ALUIEvent & ALTimedEvent) & {
   // The event.target element,  as opposed to element which represents the interactableElement
-  targetElement: HTMLElement | null,
+  targetElement: HTMLElement | null;
+  value?: string;
 };
 
 // Entrypoint to set up tracking and enable handlers
@@ -151,6 +152,26 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     element = event.target instanceof HTMLElement ? event.target : null;
   }
 
+  let value: string | undefined;
+  const metadata: Metadata = {};
+  if (eventName === 'change' && element) {
+    switch (element.nodeName) {
+      case 'INPUT': {
+        const input = element as HTMLInputElement;
+        value = input.checked + '';
+        metadata.type = input.getAttribute('type') ?? '';
+        break;
+      }
+      case 'SELECT': {
+        const select = element as HTMLSelectElement;
+        value = select.value;
+        metadata.type = 'select';
+        metadata.text = select.options[select.selectedIndex].text;
+        break;
+      }
+    }
+  }
+
   return {
     domEvent: event,
     event: (eventName as any),
@@ -159,7 +180,8 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     eventTimestamp,
     isTrusted: event.isTrusted,
     autoLoggingID,
-    metadata: {},
+    metadata,
+    value,
   };
 }
 
