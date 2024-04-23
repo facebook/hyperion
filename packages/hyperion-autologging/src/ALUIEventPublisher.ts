@@ -185,6 +185,11 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
   };
 }
 
+let lastUIEvent: CurrentUIEvent | null;
+export function getCurrentUIEventData(): ALUIEventData | null | undefined {
+  return lastUIEvent?.data;
+}
+
 /**
  *
  * @param options - Configuration for determining which events to capture and emit events via provided channel.
@@ -195,7 +200,6 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
 export function publish(options: InitOptions): void {
   const { uiEvents, flowletManager, channel } = options;
 
-  let lastUIEvent: CurrentUIEvent | null;
 
   uiEvents.forEach((eventConfig => {
     const { eventName, cacheElementReactInfo = false } = eventConfig;

@@ -79,6 +79,7 @@ export default defineConfig({
         "@hyperion/hyperion-autologging/src/ALElementInfo",
         "@hyperion/hyperion-autologging/src/ALInteractableDOMElement",
         "@hyperion/hyperion-autologging/src/AutoLogging",
+        "@hyperion/hyperion-autologging/src/ALUIEventPublisher",
       ]
     },
     chunkFileNames: "[name].js",
