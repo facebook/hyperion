@@ -89,13 +89,15 @@ export type TrackEventHandlerConfig = Readonly<{
   bubbleHandler: (event: Event) => void,
   active: boolean,
 }>;
-export const UIEventHandlers = new Map<UIEventConfig['eventName'] | string, TrackEventHandlerConfig>;
+const UIEventHandlers = new Map<UIEventConfig['eventName'] | string, TrackEventHandlerConfig>;
+export const UIEventNames = new Set<UIEventConfig['eventName'] | string>;
 
 export function disableUIEventHandlers(eventName: UIEventConfig['eventName']): void {
   const handlerConfig = UIEventHandlers.get(eventName);
   if (handlerConfig?.active === true) {
     window.document.removeEventListener(eventName, handlerConfig.captureHandler, true);
     window.document.removeEventListener(eventName, handlerConfig.bubbleHandler, false);
+    UIEventNames.delete(eventName);
     UIEventHandlers.set(eventName, {
       ...handlerConfig,
       active: false,
@@ -117,6 +119,7 @@ export function enableUIEventHandlers(eventName: UIEventConfig['eventName'], eve
     // Install event handlers
     window.document.addEventListener(eventName, handlerConfig.captureHandler, true);
     window.document.addEventListener(eventName, handlerConfig.bubbleHandler, false);
+    UIEventNames.add(eventName);
     UIEventHandlers.set(eventName, {
       ...handlerConfig,
       active: true,
@@ -130,7 +133,7 @@ let installHandlers = () => {
     event,
     _listener,
   ) {
-    if (UIEventHandlers.has(event) && this instanceof HTMLElement) {
+    if (UIEventNames.has(event) && this instanceof HTMLElement) {
       if (!ignoreInteractiveElement(this)) {
         const attribute = eventHandlerTrackerAttribute(event);
         this.setAttribute(attribute, '1');
@@ -151,7 +154,7 @@ let installHandlers = () => {
 
   IReactComponent.onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
     if (props != null) {
-      UIEventHandlers.forEach((_, event) => {
+      UIEventNames.forEach(event => {
         if (props[SYNTHETIC_EVENT_HANDLER_MAP[event]] != null) {
           props[eventHandlerTrackerAttribute(event)] = '1';
         }
@@ -290,7 +293,7 @@ let installHandlers = () => {
 }
 
 export function isTrackedEvent(eventName: UIEventConfig['eventName'] | string): boolean {
-  return UIEventHandlers.has(eventName);
+  return UIEventNames.has(eventName);
 }
 
 export function extractCleanText(text: string): string {
@@ -466,7 +469,7 @@ export function getElementTextEvent(element: HTMLElement | null, surface: string
   /**
  * If we didn't look for interactable element and text is empty, we might have landed on some
  * sort of input element or a sub component of a compsite component. So, we can now go up the tree
- * to find the interactable element and then look into that sub-tree for text. 
+ * to find the interactable element and then look into that sub-tree for text.
  */
   if (results.length === 0 && tryInteractableParentEventName) {
     const parentInteractable = getInteractable(element.parentElement, tryInteractableParentEventName, true);
