@@ -214,7 +214,7 @@ type BaseFlowlet = {
 
 type CopiedFlowlet = BaseFlowlet & {
   data: {
-    uiEventFlowlet: BaseFlowlet | null,
+    triggerEventFlowlet: BaseFlowlet | null,
   }
 } | null | undefined;
 
@@ -355,7 +355,7 @@ const EdgeColorMap = new Map([
 const edgeColor = (name: string) => EdgeColorMap.get(name) ?? 'gray';
 
 
-function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
+function formatEventBuffer(events: Array<EventBody>, triggerFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
   const elements: GraphData = [];
   const eventNodes: Array<Node> = [];
   let nodeId = 0;
@@ -374,7 +374,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
     }
     elements.push(srcNode);
     // If flowlet insert flowlet parent node
-    const flowlet = uiFlowlet ? event.copiedFlowlet?.data?.uiEventFlowlet : event.copiedFlowlet;
+    const flowlet = triggerFlowlet ? event.copiedFlowlet?.data?.triggerEventFlowlet : event.copiedFlowlet;
     if (flowlet != null) {
       const flowletName = flowletFullName ? flowlet.fullName : flowlet.name;
       if (!(flowletName === '/top' || flowletName === 'top')) {
@@ -532,13 +532,13 @@ export function ALSessionGraph(): React.JSX.Element {
             name: event.callFlowlet.name,
             fullName: event.callFlowlet.getFullName(),
             id: event.callFlowlet.id,
-            data: event.callFlowlet.data.uiEventFlowlet != null ? {
-              uiEventFlowlet: {
-                id: event.callFlowlet.data.uiEventFlowlet.id,
-                name: event.callFlowlet.data.uiEventFlowlet.name,
-                fullName: event.callFlowlet.data.uiEventFlowlet.getFullName(),
+            data: event.callFlowlet.data.triggerFlowlet != null ? {
+              triggerEventFlowlet: {
+                id: event.callFlowlet.data.triggerFlowlet.id,
+                name: event.callFlowlet.data.triggerFlowlet.name,
+                fullName: event.callFlowlet.data.triggerFlowlet.getFullName(),
               }
-            } : { uiEventFlowlet: null }
+            } : { triggerFlowlet: null }
           } : undefined)
         },
       } as EventBody);
