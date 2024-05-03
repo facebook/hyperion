@@ -33,7 +33,7 @@ type CopiedFlowlet = BaseFlowlet & {
 type EventBody = {
   event: string,
   channelEventName?: string,
-  flowlet?: IALFlowlet | null,
+  callFlowlet?: IALFlowlet | null,
   copiedFlowlet?: CopiedFlowlet,
   targetElement?: HTMLElement | null,
 } & (
@@ -286,19 +286,19 @@ export function ALSessionGraph(): React.JSX.Element {
         return eventBuffer;
       }
       // TODO: if we don't copy, then flowlet seems to continue mutating
-      const { flowlet, ...data } = event;
+      const { callFlowlet, ...data } = event;
       let copied: EventBody = ({
         ...data,
         ...{
-          copiedFlowlet: (event.flowlet != null ? {
-            name: event.flowlet.name,
-            fullName: event.flowlet?.getFullName(),
-            id: event.flowlet.id,
-            data: event.flowlet.data.uiEventFlowlet != null ? {
+          copiedFlowlet: (event.callFlowlet != null ? {
+            name: event.callFlowlet.name,
+            fullName: event.callFlowlet.getFullName(),
+            id: event.callFlowlet.id,
+            data: event.callFlowlet.data.uiEventFlowlet != null ? {
               uiEventFlowlet: {
-                id: event.flowlet.data.uiEventFlowlet.id,
-                name: event.flowlet.data.uiEventFlowlet.name,
-                fullName: event.flowlet.data.uiEventFlowlet.getFullName(),
+                id: event.callFlowlet.data.uiEventFlowlet.id,
+                name: event.callFlowlet.data.uiEventFlowlet.name,
+                fullName: event.callFlowlet.data.uiEventFlowlet.getFullName(),
               }
             } : { uiEventFlowlet: null }
           } : undefined)
