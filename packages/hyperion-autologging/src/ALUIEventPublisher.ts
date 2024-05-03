@@ -12,7 +12,7 @@ import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger"
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from "./ALEventIndex";
-import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
+import { IALFlowlet } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, TrackEventHandlerConfig, enableUIEventHandlers, getElementTextEvent, getInteractable, isTrackedEvent } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
@@ -162,10 +162,6 @@ export function trackAndEnableUIEventHandlers(eventName: UIEventConfig['eventNam
  */
 const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
 
-const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], IALFlowlet>();
-
-const uiEventFlowletManager = new ALFlowletManager();
-
 function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig, eventName: T, event: DocumentEventMap[T]): CommonEventData | null {
   const eventTimestamp = performanceAbsoluteNow();
 
@@ -288,9 +284,7 @@ export function publish(options: InitOptions): void {
       flowletName += ')';
       let callFlowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
       if (shouldPushPopFlowlet(event)) {
-        uiEventFlowletManager.push(callFlowlet);
         callFlowlet = flowletManager.push(callFlowlet);
-        activeUIEventFlowlets.set(eventName, callFlowlet);
       }
       let reactComponentData: ReactComponentData | null = null;
       if (targetElement && cacheElementReactInfo) {
@@ -353,10 +347,8 @@ export function publish(options: InitOptions): void {
       }
 
       let callFlowlet: IALFlowlet | undefined;
-      if (shouldPushPopFlowlet(event) && (callFlowlet = activeUIEventFlowlets.get(eventName)) != null) {
+      if (shouldPushPopFlowlet(event)) {
         flowletManager.pop(callFlowlet);
-        activeUIEventFlowlets.delete(eventName);
-        uiEventFlowletManager.pop(callFlowlet);
       }
     };
 
@@ -387,38 +379,4 @@ export function publish(options: InitOptions): void {
       }, MAX_CAPTURE_TO_BUBBLE_DELAY_MS),
     };
   }
-
-  /**
-   * We know the the flowlet.data is going to carry the async flow data based
-   * on where each function was created.
-   * We want to make sure that flow knows what is the actual corresponding
-   * alflowlet which corresponds to execution code at runtime.
-   * Since as of now we only start a new flowlet when there is a UI event, we
-   * add the following code to say whenever a new flowlet is pushed (a.k.a a new async
-   * context is started), we ensure that knows which alflowlet is responsible for it.
-   *
-   * To ensure this info carries forward, we look at the uiEventFlowletManager stack.
-   * This mechanism works because of how various 'creation time flowlets' are pushed/popped on
-   * the stack.
-   */
-  flowletManager.onPush.add((callFlowlet, _reason) => {
-    const uiEventFlowlet = uiEventFlowletManager.top();
-    if (uiEventFlowletManager.stackSize() > 0 && callFlowlet.data.uiEventFlowlet !== uiEventFlowlet) {
-      callFlowlet.data.uiEventFlowlet = uiEventFlowlet;
-      if (callFlowlet.name === "useState" && callFlowlet.parent) {
-        /**
-         * We know that useState will trigger an update on the corresponding component
-         * The parent of the useState's flowlet is 'usually' a surface flowlet.
-         * That because useState is called within a render function, and render function's
-         * flowlet will be picked up from the surface context.
-         * If we update the surface's flowlet, then anything that mount/unmount under that
-         * surface will pickup the correct flowlet.
-         * Another alternative is to mark the surface's flowlet explicitily and here
-         * look for that marking and updat the flowlet.
-         *
-         */
-        callFlowlet.parent.data.uiEventFlowlet = uiEventFlowlet;
-      }
-    }
-  });
 }
