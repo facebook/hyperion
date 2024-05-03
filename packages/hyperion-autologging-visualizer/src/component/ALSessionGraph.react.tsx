@@ -214,7 +214,7 @@ type BaseFlowlet = {
 
 type CopiedFlowlet = BaseFlowlet & {
   data: {
-    uiEventFlowlet: BaseFlowlet | null,
+    triggerEventFlowlet: BaseFlowlet | null,
   }
 } | null | undefined;
 
@@ -223,7 +223,7 @@ type CopiedFlowlet = BaseFlowlet & {
 type EventBody = {
   event: string,
   channelEventName?: string,
-  flowlet?: IALFlowlet | null,
+  callFlowlet?: IALFlowlet | null,
   copiedFlowlet?: CopiedFlowlet,
   targetElement?: HTMLElement | null,
 } & (
@@ -355,7 +355,7 @@ const EdgeColorMap = new Map([
 const edgeColor = (name: string) => EdgeColorMap.get(name) ?? 'gray';
 
 
-function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
+function formatEventBuffer(events: Array<EventBody>, triggerFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
   const elements: GraphData = [];
   const eventNodes: Array<Node> = [];
   let nodeId = 0;
@@ -374,7 +374,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
     }
     elements.push(srcNode);
     // If flowlet insert flowlet parent node
-    const flowlet = uiFlowlet ? event.copiedFlowlet?.data?.uiEventFlowlet : event.copiedFlowlet;
+    const flowlet = triggerFlowlet ? event.copiedFlowlet?.data?.triggerEventFlowlet : event.copiedFlowlet;
     if (flowlet != null) {
       const flowletName = flowletFullName ? flowlet.fullName : flowlet.name;
       if (!(flowletName === '/top' || flowletName === 'top')) {
@@ -524,21 +524,21 @@ export function ALSessionGraph(): React.JSX.Element {
         return eventBuffer;
       }
       // TODO: if we don't copy, then flowlet seems to continue mutating
-      const { flowlet, ...data } = event;
+      const { callFlowlet, ...data } = event;
       let copied: EventBody = ({
         ...data,
         ...{
-          copiedFlowlet: (event.flowlet != null ? {
-            name: event.flowlet.name,
-            fullName: event.flowlet?.getFullName(),
-            id: event.flowlet.id,
-            data: event.flowlet.data.uiEventFlowlet != null ? {
-              uiEventFlowlet: {
-                id: event.flowlet.data.uiEventFlowlet.id,
-                name: event.flowlet.data.uiEventFlowlet.name,
-                fullName: event.flowlet.data.uiEventFlowlet.getFullName(),
+          copiedFlowlet: (event.callFlowlet != null ? {
+            name: event.callFlowlet.name,
+            fullName: event.callFlowlet.getFullName(),
+            id: event.callFlowlet.id,
+            data: event.callFlowlet.data.triggerFlowlet != null ? {
+              triggerEventFlowlet: {
+                id: event.callFlowlet.data.triggerFlowlet.id,
+                name: event.callFlowlet.data.triggerFlowlet.name,
+                fullName: event.callFlowlet.data.triggerFlowlet.getFullName(),
               }
-            } : { uiEventFlowlet: null }
+            } : { triggerFlowlet: null }
           } : undefined)
         },
       } as EventBody);
