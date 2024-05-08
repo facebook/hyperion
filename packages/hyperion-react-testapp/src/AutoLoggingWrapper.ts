@@ -99,7 +99,6 @@ export function init() {
       ]
     },
     heartbeat: {
-      channel,
       heartbeatInterval: 30 * 1000
     },
     surfaceMutationPublisher: {
