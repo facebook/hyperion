@@ -19,6 +19,7 @@ import * as ALNetworkPublisher from "./ALNetworkPublisher";
 import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
 import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
+import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
 import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
@@ -34,6 +35,7 @@ export type ALChannelEvent = ChannelEventType<
   ALUIEventPublisher.InitOptions['channel'] &
   ALHeartbeat.InitOptions['channel'] &
   ALSurfaceMutationPublisher.InitOptions['channel'] &
+  ALSurfaceVisibilityPublisher.InitOptions['channel'] &
   ALNetworkPublisher.InitOptions['channel'] &
   ALCustomEvent.ALCustomEventChannel
 >;
@@ -52,6 +54,7 @@ export type InitOptions = Types.Options<
     uiEventPublisher?: PublicInitOptions<ALUIEventPublisher.InitOptions> | null;
     heartbeat?: PublicInitOptions<ALHeartbeat.InitOptions> | null;
     surfaceMutationPublisher?: PublicInitOptions<ALSurfaceMutationPublisher.InitOptions> | null;
+    surfaceVisibilityPublisher?: PublicInitOptions<ALSurfaceVisibilityPublisher.InitOptions> | null;
     network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
     triggerFlowlet?: PublicInitOptions<ALTriggerFlowlet.InitOptions> | null;
   }
@@ -136,6 +139,13 @@ export function init(options: InitOptions): boolean {
 
   if (options.surfaceMutationPublisher) {
     ALSurfaceMutationPublisher.publish({
+      ...sharedOptions,
+      ...options.surfaceMutationPublisher
+    });
+  }
+
+  if (options.surfaceVisibilityPublisher) {
+    ALSurfaceVisibilityPublisher.publish({
       ...sharedOptions,
       ...options.surfaceMutationPublisher
     });

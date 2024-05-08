@@ -12,7 +12,7 @@ import * as ALEventIndex from './ALEventIndex';
 import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
-import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData } from './ALSurface';
+import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData, ALSurfaceCapability } from './ALSurface';
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 type ALMutationEvent =
@@ -24,6 +24,7 @@ type ALMutationEvent =
   Readonly<
     {
       surface: string;
+      capability: ALSurfaceCapability | null | undefined
     }
     &
     (
