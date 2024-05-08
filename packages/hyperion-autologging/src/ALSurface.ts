@@ -26,27 +26,25 @@ export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Reado
   surface: string;
   element: Element | null | undefined;
   isProxy: boolean;
-  capability: ALSurfaceCapability;
+  capability: ALSurfaceCapability | null | undefined;
 }>;
 
-export enum ALSurfaceCapability {
-  TrackInteraction = 1 << 0, // Mark all interaction events with this surface
-  TrackMutation = 1 << 1, // report mount/unmount of this surface
+export interface ALSurfaceCapability {
+  /**
+   * By default, in addition to reporting mount/unmount of a surface, all
+   * interactions are also marked with a the name of their surface, unless
+   * the following flag is set.
+   */
+  nonInteractive?: boolean;
   // TrackVisibility = 1 << 2, // track when mounted surface's visibility changes
   // TrackBoundingRect = 1 << 3, // Report the size of the bounding rect of the surface on the screen.
 }
 
-const AllSurfaceCapabilityValues = [
-  ALSurfaceCapability.TrackInteraction,
-  ALSurfaceCapability.TrackMutation,
-];
-const AllSurfaceCapabilityValuesString = AllSurfaceCapabilityValues.map(c => ALSurfaceCapability[c]).join(',');
 function surfaceCapabilityToString(capability?: ALSurfaceCapability): string {
   if (!capability) {
-    return AllSurfaceCapabilityValuesString;
+    return '';
   }
-
-  return AllSurfaceCapabilityValues.filter(c => (capability & c) !== 0).map(c => ALSurfaceCapability[c]).join(',');
+  return JSON.stringify(capability);
 }
 
 export type ALSurfaceProps = Readonly<{
@@ -257,12 +255,11 @@ export function init(options: InitOptions): ALSurfaceHOC {
     let localRef = ReactModule.useRef<Element>();
 
     // empty .capability field is default, means all enabled!
-    const capability = props.capability ?? (ALSurfaceCapability.TrackInteraction | ALSurfaceCapability.TrackMutation);
+    const capability = props.capability;
 
     if (!proxiedContext) {
       nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
-      const trackInteraction = capability & ALSurfaceCapability.TrackInteraction; 
-      if (!trackInteraction) {
+      if (capability?.nonInteractive) {
         surfacePath = parentSurface ?? SURFACE_SEPARATOR;
         domAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE;
         domAttributeValue = nonInteractiveSurfacePath;

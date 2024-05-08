@@ -168,7 +168,7 @@ export function publish(options: InitOptions): void {
   }
 
   channel.addListener('al_surface_mount', surfaceEventData => {
-    if (!(surfaceEventData.capability & ALSurface.ALSurfaceCapability.TrackInteraction)) {
+    if (surfaceEventData.capability?.nonInteractive) {
       return; // this is not an interactable surface, so don't even try
     }
 
