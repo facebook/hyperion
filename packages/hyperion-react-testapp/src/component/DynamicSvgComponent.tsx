@@ -14,7 +14,7 @@ function ResultViewer(props: { text: string }) {
     }
   });
 
-  return Surface({ surface: 'result' })(
+  return Surface({ surface: 'result', capability:{trackVisibilityThreshold: .5} })(
     <div ref={ref} style={{ width: "100px" }}></div>
   );
 }

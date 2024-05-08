@@ -15,7 +15,7 @@ import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsE
 import * as Types from "@hyperion/hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
-import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE } from './ALSurfaceConsts';
+import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
@@ -36,8 +36,11 @@ export interface ALSurfaceCapability {
    * the following flag is set.
    */
   nonInteractive?: boolean;
-  // TrackVisibility = 1 << 2, // track when mounted surface's visibility changes
-  // TrackBoundingRect = 1 << 3, // Report the size of the bounding rect of the surface on the screen.
+
+  /**
+   * When set, will track when the provided ratio [0,1] of the surface becomes visible
+   */
+  trackVisibilityThreshold?: number;
 }
 
 function surfaceCapabilityToString(capability?: ALSurfaceCapability): string {
@@ -50,7 +53,7 @@ function surfaceCapabilityToString(capability?: ALSurfaceCapability): string {
 export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
-  capability?: ALSurfaceCapability, // a one-hot encoding what the surface can do.
+  capability?: ALSurfaceCapability,
   nodeRef?: React.RefObject<Element | null | undefined>,
 }>;
 
@@ -103,8 +106,6 @@ export type InitOptions = Types.Options<
   }
 >;
 
-const SURFACE_SEPARATOR = "/";
-const SURFACE_WRAPPER_ATTRIBUTE_NAME = "data-surface-wrapper";
 
 class SurfaceDOMString<
   DataType extends ALFlowletDataType,

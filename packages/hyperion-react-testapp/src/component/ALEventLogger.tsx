@@ -12,6 +12,7 @@ import { ALFlowletEvent } from "@hyperion/hyperion-autologging/src/ALType";
 const EventsWithFlowlet = [
   'al_ui_event',
   'al_surface_mutation_event',
+  'al_surface_visibility_event',
   'al_network_request',
   'al_network_response',
   'al_flowlet_event',
@@ -60,10 +61,10 @@ function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEna
     return () => { SyncChannel.on(eventName).remove(handler); };
   }, [eventName, checked]);
 
-  return <div>
-    <input type="checkbox" id={eventName} onChange={onChange} defaultChecked={checked} ></input>
-    <label htmlFor={eventName}>{eventName}</label>
-  </div>;
+  return <tr>
+    <td><input type="checkbox" id={eventName} onChange={onChange} defaultChecked={checked} ></input></td>
+    <td align="left"><label htmlFor={eventName}>{eventName}</label></td>
+  </tr>;
 }
 
 export default function () {
@@ -71,25 +72,29 @@ export default function () {
 
   return <div>
     <div style={{ display: "flex", justifyContent: "space-around" }}>
-      {
-        EventsWithFlowlet.map(eventName =>
-          <EventField key={eventName} eventName={eventName} onEnable={() => {
-            const handler = SyncChannel.on(eventName).add(ev => {
-              console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
-            });
-            return () => SyncChannel.on(eventName).remove(handler);
-          }} />
-        ).concat(
-          EventsWithoutFlowlet.map(eventName =>
+      <table>
+        <tbody>
+        {
+          EventsWithFlowlet.map(eventName =>
             <EventField key={eventName} eventName={eventName} onEnable={() => {
               const handler = SyncChannel.on(eventName).add(ev => {
-                console.log(eventName, ev, performance.now());
+                console.log(eventName, ev, performance.now(), ev.triggerFlowlet?.getFullName());
               });
               return () => SyncChannel.on(eventName).remove(handler);
             }} />
+          ).concat(
+            EventsWithoutFlowlet.map(eventName =>
+              <EventField key={eventName} eventName={eventName} onEnable={() => {
+                const handler = SyncChannel.on(eventName).add(ev => {
+                  console.log(eventName, ev, performance.now());
+                });
+                return () => SyncChannel.on(eventName).remove(handler);
+              }} />
+            )
           )
-        )
-      }
+        }
+        </tbody>
+      </table>
     </div>
     <div>
       <ALSessionGraph />

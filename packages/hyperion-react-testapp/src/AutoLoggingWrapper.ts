@@ -104,6 +104,7 @@ export function init() {
     surfaceMutationPublisher: {
       cacheElementReactInfo: true,
     },
+    surfaceVisibilityPublisher: {},
     network: {
       requestFilter: request => !/robots/.test(request.url.toString()),
       requestUrlMarker: (request, params) => {
