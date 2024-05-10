@@ -33,6 +33,9 @@ type ALUIEvent<T = EventHandlerMap> = ALTimedEvent & ALMetadataEvent & {
     event: K,
     // Element target associated with the domEvent; With interactableElementsOnly, will be the interactable element target.
     element: HTMLElement | null,
+
+    targetElement: HTMLElement | null,
+
     // Whether the event is generated from a user action or dispatched via script
     isTrusted: boolean,
     // The underlying identifier assigned to this element

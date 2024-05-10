@@ -22,9 +22,9 @@ import * as SurfaceProxy from "./ALSurfaceProxy";
 import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
 
-export type ALChannelSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
+export type ALSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
   surface: string;
-  element: Element | null | undefined;
+  element: Element;
   isProxy: boolean;
   capability: ALSurfaceCapability | null | undefined;
 }>;
@@ -61,8 +61,8 @@ export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
 export type ALSurfaceHOC = (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
 
 export type ALChannelSurfaceEvent = Readonly<{
-  al_surface_mount: [ALChannelSurfaceEventData];
-  al_surface_unmount: [ALChannelSurfaceEventData];
+  al_surface_mount: [ALSurfaceEventData];
+  al_surface_unmount: [ALSurfaceEventData];
 }>;
 
 type DataType = ALFlowletDataType;
@@ -337,7 +337,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       element.setAttribute(domAttributeName, domAttributeValue);
       __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
 
-      const event: ALChannelSurfaceEventData = {
+      const event: ALSurfaceEventData = {
         surface: domAttributeValue,
         callFlowlet,
         triggerFlowlet,
