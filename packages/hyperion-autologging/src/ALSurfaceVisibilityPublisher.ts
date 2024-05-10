@@ -12,7 +12,8 @@ import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALSha
 
 import * as ALEventIndex from './ALEventIndex';
 import { assert } from "@hyperion/hyperion-global";
-
+import { ALChannelSurfaceEvent } from "./ALSurface";
+import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 
 export type ALSurfaceVisibilityEventData =
   ALFlowletEvent &
@@ -23,6 +24,7 @@ export type ALSurfaceVisibilityEventData =
     {
       surface: string;
       event: 'component_visibility';
+      isIntersecting: boolean;
       intersectionEntry: IntersectionObserverEntry;
     }
   >;
@@ -33,7 +35,7 @@ export type ALChannelSurfaceVisibilityEvent = Readonly<{
 >;
 
 export type InitOptions = Types.Options<
-  ALSharedInitOptions<ALChannelSurfaceVisibilityEvent & ALChannelSurfaceMutationEvent>
+  ALSharedInitOptions<ALChannelSurfaceVisibilityEvent & ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>
 >;
 
 
@@ -86,6 +88,31 @@ export function publish(options: InitOptions): void {
       }
     }
 
+    // We need to also handle surface proxies
+    channel.addListener('al_surface_mount', event => {
+      if (!event.isProxy || !event.capability?.trackVisibilityThreshold || !event.element) {
+        return;
+      }
+      const sufraceInfo = ALSurfaceMutationPublisher.getSurfaceMountInfo(event.surface);
+      assert(!!sufraceInfo, "Invalid situation where a mounted surface does not have info");
+      const activeSurfaceInfo = activeSurfaces.get(sufraceInfo.element);
+      if (!activeSurfaceInfo) {
+        return; // Can this ever happen?
+      }
+      const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
+      observer.observe(event.element);
+      activeSurfaces.set(event.element, sufraceInfo);
+    });
+    channel.addListener('al_surface_unmount', event => {
+      if (!event.isProxy || !event.capability?.trackVisibilityThreshold) {
+        return;
+      }
+      if (activeSurfaces.delete(event.element)) {
+        const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
+        observer.unobserve(event.element);
+      }
+    });
+
     function getOrCreateObserver(threshold: number): IntersectionObserver {
       let observer = observers.get(threshold);
       if (!observer) {
@@ -97,17 +124,15 @@ export function publish(options: InitOptions): void {
              */
             const visibleSet = new Map<ALSurfaceMutationEventData, IntersectionObserverEntry[]>();
             for (const entry of entries) {
-              if (entry.isIntersecting) {
-                const element = entry.target;
-                const surfaceEvent = activeSurfaces.get(element) ?? activeSurfaces.get(element.parentElement); // element or its parent, see above for .observe(...)
-                if (surfaceEvent) {
-                  let entries = visibleSet.get(surfaceEvent);
-                  if (!entries) {
-                    entries = [];
-                    visibleSet.set(surfaceEvent, entries);
-                  }
-                  entries.push(entry);
+              const element = entry.target;
+              const surfaceEvent = activeSurfaces.get(element) ?? activeSurfaces.get(element.parentElement); // element or its parent, see above for .observe(...)
+              if (surfaceEvent) {
+                let entries = visibleSet.get(surfaceEvent);
+                if (!entries) {
+                  entries = [];
+                  visibleSet.set(surfaceEvent, entries);
                 }
+                entries.push(entry);
               }
             }
             for (const [surfaceEvent, entries] of visibleSet) {
@@ -130,6 +155,7 @@ export function publish(options: InitOptions): void {
                 metadata: {},
                 callFlowlet: surfaceEvent.callFlowlet,
                 triggerFlowlet: surfaceEvent.triggerFlowlet,
+                isIntersecting: entry.isIntersecting,
                 intersectionEntry: entry,
               })
             }
