@@ -67,6 +67,7 @@ export function publish(options: InitOptions): void {
       domEvent: new CustomEvent('change'),
       isTrusted: false, // We can use this to differnciate between browser events and ours.
       ...elementValueEventData,
+      targetElement: elementValueEventData.element,
       eventIndex: ALEventIndex.getNextEventIndex(),
       eventTimestamp: performanceAbsoluteNow(),
       autoLoggingID: ALID.getOrSetAutoLoggingID(element),

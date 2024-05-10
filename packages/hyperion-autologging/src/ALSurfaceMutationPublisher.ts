@@ -12,7 +12,7 @@ import * as ALEventIndex from './ALEventIndex';
 import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
-import type { ALChannelSurfaceEvent, ALChannelSurfaceEventData, ALSurfaceCapability } from './ALSurface';
+import type { ALChannelSurfaceEvent, ALSurfaceEventData, ALSurfaceCapability } from './ALSurface';
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 type ALMutationEvent =
@@ -70,7 +70,7 @@ export type InitOptions = Types.Options<
 export function publish(options: InitOptions): void {
   const { channel, flowletManager, cacheElementReactInfo } = options;
 
-  function processNode(event: ALChannelSurfaceEventData, action: 'added' | 'removed') {
+  function processNode(event: ALSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
     const { element, surface, metadata } = event;
 
