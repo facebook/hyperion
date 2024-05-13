@@ -17,7 +17,7 @@ import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, TrackEventHandlerConfig, enableUIEventHandlers, getElementTextEvent, getInteractable, isTrackedEvent } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
-import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
+import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 
 
@@ -33,9 +33,8 @@ type ALUIEvent<T = EventHandlerMap> = ALTimedEvent & ALMetadataEvent & {
     event: K,
     // Element target associated with the domEvent; With interactableElementsOnly, will be the interactable element target.
     element: HTMLElement | null,
-
+    // The event.target element,  as opposed to element which represents the interactableElement
     targetElement: HTMLElement | null,
-
     // Whether the event is generated from a user action or dispatched via script
     isTrusted: boolean,
     // The underlying identifier assigned to this element
@@ -48,6 +47,7 @@ export type ALUIEventCaptureData = Readonly<
   ALFlowletEvent &
   ALReactElementEvent &
   ALElementTextEvent &
+  ALPageEvent &
   {
     surface: string | null;
     value?: string;
@@ -64,6 +64,7 @@ export type ALLoggableUIEvent = Readonly<
 >;
 
 export type ALUIEventData = Readonly<
+  ALPageEvent &
   ALLoggableUIEvent
 >;
 
@@ -101,7 +102,7 @@ export type InitOptions = Types.Options<
   }
 >;
 
-type CommonEventData = (ALUIEvent & ALTimedEvent) & {
+type CommonEventData = (ALUIEvent & ALTimedEvent & ALPageEvent) & {
   // The event.target element,  as opposed to element which represents the interactableElement
   targetElement: HTMLElement | null;
   value?: string;
@@ -185,6 +186,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     autoLoggingID,
     metadata,
     value,
+    pageURI: window.location.href,
   };
 }
 

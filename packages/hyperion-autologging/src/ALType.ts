@@ -46,6 +46,11 @@ export type ALLoggableEvent = ALTimedEvent & ALMetadataEvent & Readonly<{
   relatedEventIndex?: number;
 }>;
 
+export type ALPageEvent = {
+  // window.location.href when the event was captured
+  pageURI: string;
+};
+
 export type ALReactElementEvent = Readonly<{
   reactComponentName?: string | null;
   reactComponentStack?: string[] | null;
