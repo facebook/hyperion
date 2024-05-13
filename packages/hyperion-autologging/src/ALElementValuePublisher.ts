@@ -76,6 +76,7 @@ export function publish(options: InitOptions): void {
       ...elementText,
       reactComponentName: reactComponentData?.name,
       reactComponentStack: reactComponentData?.stack,
+      pageURI: window.location.href,
     });
   }
 
