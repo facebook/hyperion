@@ -43,7 +43,7 @@ export interface ALSurfaceCapability {
   trackVisibilityThreshold?: number;
 }
 
-function surfaceCapabilityToString(capability?: ALSurfaceCapability): string {
+function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): string {
   if (!capability) {
     return '';
   }
@@ -256,7 +256,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     let localRef = ReactModule.useRef<Element>();
 
     // empty .capability field is default, means all enabled!
-    const capability = props.capability;
+    const capability = props.capability ?? proxiedContext?.capability;
 
     if (!proxiedContext) {
       nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
@@ -271,7 +271,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       }
     } else {
       surfacePath = proxiedContext.surface;
-      nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;
+      nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;      
       domAttributeName = AUTO_LOGGING_SURFACE
       domAttributeValue = surfacePath;
       if (proxiedContext.container instanceof Element) {
@@ -302,6 +302,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         callFlowlet,
         domAttributeName,
         domAttributeValue,
+        capability,
       };
       SurfaceDataMap.set(nonInteractiveSurfacePath, surfaceData);
     } else {
