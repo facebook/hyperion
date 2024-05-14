@@ -39,7 +39,7 @@ export default function AdsSpeedLabAutoLoggingImpl(_props: {}): React.ReactEleme
       <p>Auto Logging Example</p>
       <FuncComponent message={`1st comp: ${count}`}>
         <ClassComponent message={`2nd comp: ${count}`} />
-        {Surface({ surface: 'LocalSub' })(
+        {Surface({ surface: 'LocalSub', capability: {trackVisibilityThreshold: 0.5} })(
           <>
             <ClassComponent message="nested surface" />
             <PortalComponent message='This is portal'></PortalComponent>

@@ -43,7 +43,9 @@ export function publish(options: InitOptions): void {
   const { channel } = options;
 
   // lookup surfaces that are mounted by their root element 
-  const activeSurfaces = new Map<Element | null, ALSurfaceMutationEventData>();
+  type SurfaceName = string;
+  const activeSurfaces = new Map<SurfaceName, ALSurfaceMutationEventData>();
+  const observedRoots = new Map<Element|null, SurfaceName>();
 
   // We need one observer per threshold
   const observers = new Map<number, IntersectionObserver>();
@@ -62,11 +64,14 @@ export function publish(options: InitOptions): void {
           if (ALSurfaceUtils.isSurfaceWrapper(element)) {
             for (let el = element.firstElementChild; el; el = el.nextElementSibling) {
               observer.observe(el);
+              observedRoots.set(el, event.surface);
             }
           } else {
             observer.observe(element);
+            observedRoots.set(element, event.surface);
           }
-          activeSurfaces.set(element, event);
+          activeSurfaces.set(event.surface, event);
+
         }
 
         break;
@@ -78,11 +83,13 @@ export function publish(options: InitOptions): void {
           if (ALSurfaceUtils.isSurfaceWrapper(element)) {
             for (let el = element.firstElementChild; el; el = el.nextElementSibling) {
               observer.unobserve(el);
+            observedRoots.delete(el);
             }
           } else {
             observer.unobserve(element);
+            observedRoots.delete(element);
           }
-          activeSurfaces.delete(element);
+          activeSurfaces.delete(event.surface);
         }
         break;
       }
@@ -93,21 +100,15 @@ export function publish(options: InitOptions): void {
       if (!event.isProxy || !event.capability?.trackVisibilityThreshold || !event.element) {
         return;
       }
-      const sufraceInfo = ALSurfaceMutationPublisher.getSurfaceMountInfo(event.surface);
-      assert(!!sufraceInfo, "Invalid situation where a mounted surface does not have info");
-      const activeSurfaceInfo = activeSurfaces.get(sufraceInfo.element);
-      if (!activeSurfaceInfo) {
-        return; // Can this ever happen?
-      }
       const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
       observer.observe(event.element);
-      activeSurfaces.set(event.element, sufraceInfo);
+      observedRoots.set(event.element, event.surface);
     });
     channel.addListener('al_surface_unmount', event => {
       if (!event.isProxy || !event.capability?.trackVisibilityThreshold) {
         return;
       }
-      if (activeSurfaces.delete(event.element)) {
+      if (observedRoots.delete(event.element)) {
         const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
         observer.unobserve(event.element);
       }
@@ -125,7 +126,16 @@ export function publish(options: InitOptions): void {
             const visibleSet = new Map<ALSurfaceMutationEventData, IntersectionObserverEntry[]>();
             for (const entry of entries) {
               const element = entry.target;
-              const surfaceEvent = activeSurfaces.get(element) ?? activeSurfaces.get(element.parentElement); // element or its parent, see above for .observe(...)
+              const surface = observedRoots.get(element);
+              if (!surface) {
+                // could this happen when surface is unmounted first, and then becomes not visible?
+                assert(false, `Unexpected situation! tracking visibility of unmounted surface`);
+                continue;
+              }
+              const surfaceEvent = activeSurfaces.get(surface);
+              const otherSurfaceInfo = ALSurfaceMutationPublisher.getSurfaceMountInfo(surface);
+              assert(surfaceEvent === otherSurfaceInfo, "Unexpcted mismatch between the two surface event caches! ");
+
               if (surfaceEvent) {
                 let entries = visibleSet.get(surfaceEvent);
                 if (!entries) {
