@@ -23,7 +23,7 @@ interface GroupFlowletInfo {
   target?: Element;
 }
 
-const GroupFlowlets = new Map<EventTarget, GroupFlowletInfo>(); // TODO: should we use a WeakMap
+const GroupFlowlets = new WeakMap<EventTarget, GroupFlowletInfo>();
 
 const EventInfo: {
   [key in keyof GlobalEventHandlersEventMap]?: {
