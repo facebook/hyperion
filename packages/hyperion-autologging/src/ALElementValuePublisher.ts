@@ -24,11 +24,15 @@ import * as ALUIEventPublisher from "./ALUIEventPublisher";
 
 export type InitOptions = Types.Options<
   ALUIEventPublisher.InitOptions &
-  ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions & ALSurface.InitOptions & ALSurfaceMutationPublisher.InitOptions)['channel']>>
+  ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions & ALSurface.InitOptions & ALSurfaceMutationPublisher.InitOptions)['channel']>> &
+  {
+    // Whether to enable element_value checked=false events on initial surface mount.
+    includeInitialDisabledState?: boolean;
+  }
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel } = options;
+  const { channel, includeInitialDisabledState = false } = options;
 
   const changeEvent = options.uiEvents.find(config => config.eventName === 'change');
 
@@ -133,12 +137,12 @@ export function publish(options: InitOptions): void {
              * We know we are lookging for checkbox/radio inputs, so checked is good enough
              * Also, the following check ensures we are not reading PII from other inputs, in case we expand the search
              */
-            if (input.checked) {
+            if (includeInitialDisabledState || input.checked) {
               emitEvent({
                 surface,
                 element,
                 relatedEventIndex,
-                value: 'true',
+                value: String(input.checked),
                 metadata: {
                   type: input.getAttribute('type') ?? '',
                   is_default: "true",
