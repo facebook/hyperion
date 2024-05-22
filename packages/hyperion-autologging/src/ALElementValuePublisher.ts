@@ -24,11 +24,7 @@ import * as ALUIEventPublisher from "./ALUIEventPublisher";
 
 export type InitOptions = Types.Options<
   ALUIEventPublisher.InitOptions &
-  ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions & ALSurface.InitOptions & ALSurfaceMutationPublisher.InitOptions)['channel']>> &
-  {
-    // Whether to enable element_value checked=false events on initial surface mount.
-    includeInitialDisabledState?: boolean;
-  }
+  ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions & ALSurface.InitOptions & ALSurfaceMutationPublisher.InitOptions)['channel']>>
 >;
 
 export function publish(options: InitOptions): void {
@@ -101,9 +97,9 @@ export function publish(options: InitOptions): void {
     }
 
     return tryQuery(
-      'input[type=radio][checked], input[type=checkbox][checked], select:has(option[selected])'
+      'input[type=radio][checked], input[type=checkbox], select:has(option[selected])'
     ) ?? tryQuery(
-      'input[type=radio][checked], input[type=checkbox][checked], select'
+      'input[type=radio][checked], input[type=checkbox], select'
     ) ?? (
         'input[type=radio], input[type=checkbox], select'
       );
