@@ -98,6 +98,11 @@ export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelUIEvent> &
   {
     uiEvents: Array<UIEventConfig>;
+  } &
+  // For ALElementValuePublisher,  temp to experiment collecting default disabled state for change events
+  {
+    // Whether to enable element_value checked=false events on initial surface mount.
+    includeInitialDisabledState?: boolean;
   }
 >;
 
