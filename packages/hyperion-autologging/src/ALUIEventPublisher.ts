@@ -83,27 +83,26 @@ type CurrentUIEvent = {
 
 type EventHandlerMap = DocumentEventMap;
 
-export type UIEventConfig<T = EventHandlerMap> = {
-  [K in keyof T]: Readonly<{
+type UIEventConfigMap = {
+  [K in keyof EventHandlerMap]: Readonly<{
     eventName: K,
     // A callable filter for this event, returning true if the event should be emitted, or false if it should be discarded up front
-    eventFilter?: (domEvent: T[K]) => boolean;
+    eventFilter?: (domEvent: EventHandlerMap[K]) => boolean;
     // Whether to limit to elements that are "interactable", i.e. those that have event handlers registered to the element.  Defaults to true.
     interactableElementsOnly?: boolean;
     // Whether to cache element's react information on capture, defaults to false.
     cacheElementReactInfo?: boolean;
   }>
-}[keyof T];
+};
+
+// Extend UIEventConfig with additional event-specific configuration
+export type UIEventConfig = UIEventConfigMap[keyof Omit<EventHandlerMap, 'change'>]
+  | (UIEventConfigMap['change'] & { includeInitialDisabledState?: boolean });
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelUIEvent> &
   {
     uiEvents: Array<UIEventConfig>;
-  } &
-  // For ALElementValuePublisher,  temp to experiment collecting default disabled state for change events
-  {
-    // Whether to enable element_value checked=false events on initial surface mount.
-    includeInitialDisabledState?: boolean;
   }
 >;
 
@@ -130,7 +129,7 @@ const activeUIEventFlowlets = new Map<UIEventConfig['eventName'], IALFlowlet>();
 
 const uiEventFlowletManager = new ALFlowletManager();
 
-function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig<DocumentEventMap>, eventName: T, event: DocumentEventMap[T]): CommonEventData | null {
+function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig, eventName: T, event: DocumentEventMap[T]): CommonEventData | null {
   const eventTimestamp = performanceAbsoluteNow();
 
   const { eventFilter, interactableElementsOnly = true } = eventConfig;
