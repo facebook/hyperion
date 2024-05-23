@@ -28,7 +28,7 @@ export type InitOptions = Types.Options<
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel, includeInitialDisabledState = false } = options;
+  const { channel } = options;
 
   const changeEvent = options.uiEvents.find(config => config.eventName === 'change');
 
@@ -37,7 +37,12 @@ export function publish(options: InitOptions): void {
     return;
   }
 
-  const { cacheElementReactInfo } = changeEvent;
+  // Won't refine below property includeInitialDisabledState as being available without this check...
+  if (changeEvent.eventName !== 'change') {
+    return;
+  }
+
+  const { cacheElementReactInfo, includeInitialDisabledState } = changeEvent;
 
   /**
    * In most cases, the application may not have 'change' listener. We mainly want to track
