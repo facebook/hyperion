@@ -24,6 +24,7 @@ import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
+import * as ALDOMSnapshotPublisher from "./ALDOMSnaptshotPublisher";
 
 /**
  * This type extracts the union of all events types so that external modules
@@ -57,6 +58,7 @@ export type InitOptions = Types.Options<
     surfaceVisibilityPublisher?: PublicInitOptions<ALSurfaceVisibilityPublisher.InitOptions> | null;
     network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
     triggerFlowlet?: PublicInitOptions<ALTriggerFlowlet.InitOptions> | null;
+    domSnapshotPublisher?: PublicInitOptions<ALDOMSnapshotPublisher.InitOptions> | null;
   }
 >;
 
@@ -180,6 +182,13 @@ export function init(options: InitOptions): boolean {
       ...sharedOptions,
       ...options.network
     });
+  }
+
+  if (options.domSnapshotPublisher) {
+    ALDOMSnapshotPublisher.publish({
+      ...sharedOptions,
+      ...options.domSnapshotPublisher
+    })
   }
 
   cachedResults = {
