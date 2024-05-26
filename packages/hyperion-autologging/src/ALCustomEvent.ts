@@ -15,7 +15,7 @@ export type ALCustomEventData =
   ALMetadataEvent &
   ALOptionalFlowletEvent &
   ALTimedEvent &
-  Partial<ALLoggableEvent> & Readonly<{
+  ALLoggableEvent & Readonly<{
     event: 'custom';
   }>;
 
@@ -25,15 +25,16 @@ export type ALChannelCustomEvent = Readonly<{
 
 export type ALCustomEventChannel = Channel<ALChannelCustomEvent>;
 
-export function emitALCustomEvent<T extends ALFlowletDataType>(channel: ALCustomEventChannel, flowletManager: ALFlowletManager<T>, metadata: ALMetadataEvent['metadata'], nonLoggable?: boolean): ALCustomEventData {
+export function emitALCustomEvent<T extends ALFlowletDataType>(channel: ALCustomEventChannel, flowletManager: ALFlowletManager<T>, metadata: ALMetadataEvent['metadata'], eventData?: Partial<Pick<ALCustomEventData, 'eventIndex' | 'relatedEventIndex'>>): ALCustomEventData {
   const callFlowlet = flowletManager.top();
   const event: ALCustomEventData = {
     event: 'custom',
     eventTimestamp: performanceAbsoluteNow(),
-    eventIndex: nonLoggable ? void 0 : ALEventIndex.getNextEventIndex(),
+    eventIndex: eventData?.eventIndex ?? ALEventIndex.getNextEventIndex(),
     callFlowlet,
     triggerFlowlet: callFlowlet?.data.triggerFlowlet,
-    metadata
+    metadata,
+    ...eventData,
   }
   channel.emit('al_custom_event', event);
   return event;

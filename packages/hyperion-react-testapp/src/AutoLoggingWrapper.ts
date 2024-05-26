@@ -113,6 +113,15 @@ export function init() {
           params.set('flowlet', flowlet.getFullName());
         }
       }
+    },
+    domSnapshotPublisher: {
+    }
+  });
+  channel.on('al_ui_event').add(eventData => {
+    if (eventData.event === 'click' && eventData.metadata.snapshot) {
+      const div = document.createElement('div');
+      div.innerHTML = eventData.metadata.snapshot;
+      document.body.appendChild(div);
     }
   });
 
