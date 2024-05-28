@@ -101,13 +101,24 @@ export function publish(options: InitOptions): void {
       return null;
     }
 
-    return tryQuery(
-      'input[type=radio][checked], input[type=checkbox], select:has(option[selected])'
-    ) ?? tryQuery(
-      'input[type=radio][checked], input[type=checkbox], select'
-    ) ?? (
-        'input[type=radio], input[type=checkbox], select'
-      );
+    if (includeInitialDisabledState) {
+      // Removes the [checked] for inputs when enabled
+      return tryQuery(
+        'input[type=radio][checked], input[type=checkbox], select:has(option[selected])'
+      ) ?? tryQuery(
+        'input[type=radio][checked], input[type=checkbox], select'
+      ) ?? (
+          'input[type=radio], input[type=checkbox], select'
+        );
+    } else {
+      return tryQuery(
+        'input[type=radio][checked], input[type=checkbox][checked], select:has(option[selected])'
+      ) ?? tryQuery(
+        'input[type=radio][checked], input[type=checkbox][checked], select'
+      ) ?? (
+          'input[type=radio], input[type=checkbox], select'
+        );
+    }
   })();
 
   function trackElementValues(surface: string, surfaceElement: Element) {
