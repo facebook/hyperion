@@ -97,7 +97,14 @@ type UIEventConfigMap = {
 
 // Extend UIEventConfig with additional event-specific configuration
 export type UIEventConfig = UIEventConfigMap[keyof Omit<EventHandlerMap, 'change'>]
-  | (UIEventConfigMap['change'] & { includeInitialDisabledState?: boolean });
+  | (
+    UIEventConfigMap['change'] & {
+      // (Default: true) Whether to include default state of radio/input/select elements when surfaces are mounted.
+      includeInitialDefaultState?: boolean,
+      // (Default: false) When includeInitialDefaultState is enabled, whether to also emit disabled state for input[checked] = false.  Otherwise only enabled state will be emitted.
+      includeInitialDefaultDisabledState?: boolean
+    }
+  );
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelUIEvent> &

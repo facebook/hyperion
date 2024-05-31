@@ -42,7 +42,7 @@ export function publish(options: InitOptions): void {
     return;
   }
 
-  const { cacheElementReactInfo, includeInitialDisabledState } = changeEvent;
+  const { cacheElementReactInfo, includeInitialDefaultState = true, includeInitialDefaultDisabledState = false } = changeEvent;
 
   /**
    * In most cases, the application may not have 'change' listener. We mainly want to track
@@ -101,7 +101,7 @@ export function publish(options: InitOptions): void {
       return null;
     }
 
-    if (includeInitialDisabledState) {
+    if (includeInitialDefaultDisabledState) {
       // Removes the [checked] for inputs when enabled
       return tryQuery(
         'input[type=radio][checked], input[type=checkbox], select:has(option[selected])'
@@ -149,7 +149,7 @@ export function publish(options: InitOptions): void {
              * We know we are lookging for checkbox/radio inputs, so checked is good enough
              * Also, the following check ensures we are not reading PII from other inputs, in case we expand the search
              */
-            if (includeInitialDisabledState || input.checked) {
+            if (includeInitialDefaultDisabledState || input.checked) {
               emitEvent({
                 surface,
                 element,
@@ -185,7 +185,7 @@ export function publish(options: InitOptions): void {
     }
   }
 
-  channel.addListener('al_surface_mount', surfaceEventData => {
+  includeInitialDefaultState && channel.addListener('al_surface_mount', surfaceEventData => {
     if (surfaceEventData.capability?.nonInteractive) {
       return; // this is not an interactable surface, so don't even try
     }
@@ -259,7 +259,7 @@ export function publish(options: InitOptions): void {
    * The following is an alternative way to ensure we can catch ANY surface wrapper regardless of how it is added.
    * However, for now will keep this disabled until we first understand the performance overhead of the rest of the algorithm.
    */
-  false && IElement.setAttribute.onBeforeCallObserverAdd(function (this, attrName, attrValue) {
+  false && includeInitialDefaultState && IElement.setAttribute.onBeforeCallObserverAdd(function (this, attrName, attrValue) {
     if (attrName !== AUTO_LOGGING_SURFACE || !(this instanceof HTMLElement)) {
       return;
     }
