@@ -64,6 +64,11 @@ function getText(id: string): string | null {
   return ALInteractableDOMElement.getElementTextEvent(element, null).elementName;
 }
 
+function getTextFromParent(id: string, parentEvent: UIEventConfig['eventName'] | undefined): string | null {
+  const element = document.getElementById(id);
+  return ALInteractableDOMElement.getElementTextEvent(element, null, parentEvent).elementName;
+}
+
 describe("Test interactable detection algorithm", () => {
   function interactable(node: HTMLElement | null, eventName: UIEventConfig['eventName'], interactableOnly: boolean = true): HTMLElement | null {
     return ALInteractableDOMElement.getInteractable(node, eventName, interactableOnly);
@@ -173,7 +178,7 @@ describe("Test interactable detection algorithm", () => {
   });
 });
 
-describe("Text various element text options", () => {
+describe("Test various element text options", () => {
   test("element with simple text", () => {
     const dom = createTestDom();
 
@@ -190,6 +195,26 @@ describe("Text various element text options", () => {
 
     dom.cleanup();
   });
+
+  test("text extraction from parent handler element coming from interactable element tag input", () => {
+    const dom = DomFragment.html(`
+    <div id="outer">
+      <div id="clickable" data-clickable="1">
+        <span id="text-label">Grab this text</span>
+        <div>
+          <input id="radio-nested-no-text" type="radio" name="contact" value="email" checked="true" />
+        </div>
+      </div>
+    </div>`
+    );
+    expect(getTextFromParent('clickable', "click")).toBe("Grab this text");
+    // Should walk up from input -> clickable div and then extract text
+    expect(getTextFromParent('radio-nested-no-text', "click")).toBe("Grab this text");
+    // Should stop at input and extract nothing,  since parentEvent name is undefined
+    expect(getTextFromParent('radio-nested-no-text', undefined)).toBe("");
+    dom.cleanup();
+  });
+
 
   test("element text callbacks", () => {
     const dom = createTestDom();

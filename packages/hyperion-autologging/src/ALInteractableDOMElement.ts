@@ -52,9 +52,11 @@ export function getInteractable(
   node: EventTarget | null,
   eventName: UIEventConfig['eventName'],
   returnInteractableNode: boolean = false,
+  // Whether to require an actual handler is assigned to determine interactiveness, rather than including "interactive" element tags
+  requireHandlerAssigned: boolean = false,
 ): HTMLElement | null {
   // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
-  const selectorString = `[${eventHandlerTrackerAttribute(eventName)}="1"],input,button,select,option,details,dialog,summary,a[href]`;
+  const selectorString = `[${eventHandlerTrackerAttribute(eventName)}="1"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
   if (node instanceof HTMLElement) {
     for (let element: HTMLElement | null = node; element != null; element = element.parentElement) {
       if (element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames)) {
@@ -456,7 +458,13 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
   }
 }
 
-export function getElementTextEvent(element: HTMLElement | null, surface: string | null, tryInteractableParentEventName?: UIEventConfig['eventName'] | null): ALElementTextEvent {
+export function getElementTextEvent(
+  element: HTMLElement | null,
+  surface: string | null,
+  // Event name to utilize when attempting to resolve text from a parent interactable
+  // Some interactable elements may have no text to extract, in those cases we want to move up the tree to attempt from parent interactable.
+  tryInteractableParentEventName?: UIEventConfig['eventName'] | null
+): ALElementTextEvent {
   if (!element) {
     return {
       elementName: null,
@@ -472,7 +480,13 @@ export function getElementTextEvent(element: HTMLElement | null, surface: string
  * to find the interactable element and then look into that sub-tree for text.
  */
   if (results.length === 0 && tryInteractableParentEventName) {
-    const parentInteractable = getInteractable(element.parentElement, tryInteractableParentEventName, true);
+    const parentInteractable = getInteractable(
+      element.parentElement,
+      tryInteractableParentEventName,
+      true,
+      // Limit to elements with installed handlers for interactiveness check.
+      true
+    );
     if (parentInteractable) {
       getElementName(parentInteractable, surface, results);
     }
