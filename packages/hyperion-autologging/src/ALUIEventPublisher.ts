@@ -226,8 +226,6 @@ export function publish(options: InitOptions): void {
       return;
     }
 
-    const tryInteractiveParentTextEventName = !eventConfig.interactableElementsOnly ? eventName : null;
-
     // Track event in the capturing phase
     const captureHandler = (event: Event): void => {
       const uiEventData = getCommonEventData(eventConfig, eventName, event);
@@ -264,7 +262,7 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(targetElement);
         reactComponentData = elementInfo.getReactComponentData();
       }
-      let elementText = getElementTextEvent(element, surface, tryInteractiveParentTextEventName);
+      let elementText = getElementTextEvent(element, surface, eventName);
 
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
