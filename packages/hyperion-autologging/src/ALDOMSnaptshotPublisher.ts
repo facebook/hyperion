@@ -18,8 +18,10 @@ type TrackingChannels = (ALUIEventPublisher.InitOptions & ALSurfaceVisibilityPub
 type TrackingEvents = ChannelEventType<TrackingChannels>;
 type TrackingEventNames = (keyof TrackingEvents) & ('al_ui_event' | 'al_surface_visibility_event'); // & is added to ensure the event names are a correct subset
 
+export type ALChannelDOMSnapshotPublisherEvent = ChannelEventType<TrackingChannels & ALCustomEventChannel>;
+
 export type InitOptions = Types.Options<
-  ALSharedInitOptions<ChannelEventType<TrackingChannels & ALCustomEventChannel>>
+  ALSharedInitOptions<ALChannelDOMSnapshotPublisherEvent>
   & {
     eventConfig: (TrackingEventNames)[];
   }
@@ -62,7 +64,7 @@ export function publish(options: InitOptions): void {
       }
     );
     eventData.metadata.snapshot_event_index = '' + customEvent.eventIndex;
-    setEventExtension(eventData, 'autologging', {snapshot});
+    setEventExtension(eventData, 'autologging', { snapshot });
   }
 
   options.eventConfig.forEach(eventName => {
