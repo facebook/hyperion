@@ -4,21 +4,21 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    {
-      "name": "Launch Program",
-      "type": "pwa-node",
-      "request": "launch",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}\\packages\\hyperion-core\\test\\ShadowPrototype.ts",
-      "runtimeArgs": [
-        "--preserve-symlinks"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/**/*.js"
-      ]
-    },
+    // {
+    //   "name": "Launch Program",
+    //   "type": "pwa-node",
+    //   "request": "launch",
+    //   "skipFiles": [
+    //     "<node_internals>/**"
+    //   ],
+    //   "program": "${workspaceFolder}\\packages\\hyperion-core\\test\\ShadowPrototype.ts",
+    //   "runtimeArgs": [
+    //     "--preserve-symlinks"
+    //   ],
+    //   "outFiles": [
+    //     "${workspaceFolder}/**/*.js"
+    //   ]
+    // },
     {
       "name": "Debug Jest Tests",
       "type": "node",
@@ -28,8 +28,8 @@
       // "cwd": "${workspaceRoot}/packages/hyperion-devtools",
       // "cwd": "${workspaceRoot}/packages/hyperion-global",
       // "cwd": "${workspaceRoot}/packages/hyperion-hook",
-      "cwd": "${workspaceRoot}/packages/hyperion-channel",
-      // "cwd": "${workspaceRoot}/packages/hyperion-autologging",
+      // "cwd": "${workspaceRoot}/packages/hyperion-channel",
+      "cwd": "${workspaceRoot}/packages/hyperion-autologging",
       // "cwd": "${workspaceRoot}/packages/hyperion-core",
       // "cwd": "${workspaceRoot}/packages/hyperion-dom",
       // "cwd": "${workspaceRoot}/packages/hyperion-flowlet",
