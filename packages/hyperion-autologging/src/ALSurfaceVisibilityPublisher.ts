@@ -8,7 +8,7 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import { ALChannelSurfaceMutationEvent, ALSurfaceMutationEventData } from "./ALSurfaceMutationPublisher";
 import * as ALSurfaceUtils from './ALSurfaceUtils';
-import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
 import * as ALEventIndex from './ALEventIndex';
 import { assert } from "@hyperion/hyperion-global";
@@ -18,6 +18,7 @@ import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 export type ALSurfaceVisibilityEventData =
   ALFlowletEvent &
   ALMetadataEvent &
+  ALExtensibleEvent &
   ALElementEvent &
   ALLoggableEvent &
   Readonly<
@@ -45,7 +46,7 @@ export function publish(options: InitOptions): void {
   // lookup surfaces that are mounted by their root element 
   type SurfaceName = string;
   const activeSurfaces = new Map<SurfaceName, ALSurfaceMutationEventData>();
-  const observedRoots = new Map<Element|null, SurfaceName>();
+  const observedRoots = new Map<Element | null, SurfaceName>();
 
   // We need one observer per threshold
   const observers = new Map<number, IntersectionObserver>();
@@ -83,7 +84,7 @@ export function publish(options: InitOptions): void {
           if (ALSurfaceUtils.isSurfaceWrapper(element)) {
             for (let el = element.firstElementChild; el; el = el.nextElementSibling) {
               observer.unobserve(el);
-            observedRoots.delete(el);
+              observedRoots.delete(el);
             }
           } else {
             observer.unobserve(element);
