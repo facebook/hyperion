@@ -27,8 +27,21 @@ export type Metadata = {
 };
 
 export type ALMetadataEvent = Readonly<{
+  /**
+   * Extended data do be logged along with the event payload later
+   */
   metadata: Metadata;
 }>;
+
+export type ALExtensibleEvent = {
+  /**
+   * Temporary data that application might want to attach to 
+   * event payload but will be dropped when logging or serializing.
+   * The data must be organized with namespaces to avoid collision
+   */
+  __ext?: { [namespace: string]: { [key: string]: any } };
+};
+
 
 /**
  * Generally we will have publishers that generate various events.
@@ -62,6 +75,9 @@ export type ALSharedInitOptions<ChannelEventType extends BaseChannelEventType = 
 }>;
 
 export type ALElementEvent = Readonly<{
+  // Element associated with the event, usually the root of a sub-tree, an interactable target element, or domEvent.target
   element: HTMLElement;
+
+  // The underlying identifier assigned to this element
   autoLoggingID: ALID;
 }>;

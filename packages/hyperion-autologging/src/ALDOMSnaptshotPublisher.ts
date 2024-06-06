@@ -7,15 +7,22 @@
 
 import { ChannelEventType } from "@hyperion/hyperion-channel/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
-import { ALSharedInitOptions } from "./ALType";
+import { ALElementEvent, ALExtensibleEvent, ALLoggableEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
 import { ALCustomEventChannel, emitALCustomEvent } from "./ALCustomEvent";
+import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
+import { setEventExtension } from "./ALEventExtension";
 
 
+type TrackingChannels = (ALUIEventPublisher.InitOptions & ALSurfaceVisibilityPublisher.InitOptions)['channel'];
+type TrackingEvents = ChannelEventType<TrackingChannels>;
+type TrackingEventNames = (keyof TrackingEvents) & ('al_ui_event' | 'al_surface_visibility_event'); // & is added to ensure the event names are a correct subset
 
 export type InitOptions = Types.Options<
-  ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions)['channel'] & ALCustomEventChannel>>
-// Later we can add config similar to UIEventPublisher to better control snapshiots
+  ALSharedInitOptions<ChannelEventType<TrackingChannels & ALCustomEventChannel>>
+  & {
+    eventConfig: (TrackingEventNames)[];
+  }
 >;
 
 export function publish(options: InitOptions): void {
@@ -36,12 +43,11 @@ export function publish(options: InitOptions): void {
     return clone;
   }
 
-  channel.addListener('al_ui_event', eventData => {
-    const { event, element } = eventData;
-    if (event !== 'click' || !element) {
+  function takeEventSnapshot(eventData: Types.Nullable<ALElementEvent> & ALMetadataEvent & ALExtensibleEvent & ALLoggableEvent) {
+    const { element } = eventData;
+    if (!element) {
       return;
     }
-
     const clone = getSnapshot(element);
     const snapshot = clone.outerHTML;
     const customEvent = emitALCustomEvent(
@@ -56,6 +62,24 @@ export function publish(options: InitOptions): void {
       }
     );
     eventData.metadata.snapshot_event_index = '' + customEvent.eventIndex;
-    eventData.metadata.snapshot = snapshot
+    setEventExtension(eventData, 'autologging', {snapshot});
+  }
+
+  options.eventConfig.forEach(eventName => {
+    switch (eventName) {
+      case 'al_ui_event': {
+        channel.addListener('al_ui_event', eventData => {
+          if (eventData.event !== 'click') {
+            return;
+          }
+          takeEventSnapshot(eventData);
+        });
+        break;
+      }
+      case 'al_surface_visibility_event': {
+        channel.addListener('al_surface_visibility_event', takeEventSnapshot);
+        break;
+      }
+    }
   });
 } 

@@ -13,6 +13,8 @@ import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import { SyncChannel } from "./Channel";
 import { FlowletManager } from "./FlowletManager";
+import { ALExtensibleEvent, ALMetadataEvent } from "@hyperion/hyperion-autologging/src/ALType";
+import { getEventExtension } from "@hyperion/hyperion-autologging/src/ALEventExtension";
 
 export let interceptionStatus = "disabled";
 
@@ -115,14 +117,23 @@ export function init() {
       }
     },
     domSnapshotPublisher: {
+      eventConfig: [
+        'al_ui_event',
+        'al_surface_visibility_event'
+      ]
     }
   });
-  channel.on('al_ui_event').add(eventData => {
-    if (eventData.event === 'click' && eventData.metadata.snapshot) {
+
+  // Temp code to test snapshot
+  function showEventSnapshot(eventData: ALExtensibleEvent) {
+    const snapshot = getEventExtension(eventData, 'autologging')?.snapshot;
+    if (typeof snapshot === 'string') {
       const div = document.createElement('div');
-      div.innerHTML = eventData.metadata.snapshot;
+      div.innerHTML = snapshot;
       document.body.appendChild(div);
     }
-  });
+  }
+  channel.on('al_ui_event').add(showEventSnapshot);
+  channel.on('al_surface_visibility_event').add(showEventSnapshot);
 
 }

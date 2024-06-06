@@ -17,7 +17,7 @@ import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, TrackEventHandlerConfig, enableUIEventHandlers, getElementTextEvent, getInteractable, isTrackedEvent } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
-import { ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
+import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 
 
@@ -25,22 +25,28 @@ import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
  * Generates a union type of all handler event and domEvent permutations.
  * e.g. {domEvent: KeyboardEvent, event: 'keydown', ...}
  */
-type ALUIEvent<T = EventHandlerMap> = ALTimedEvent & ALMetadataEvent & {
-  [K in keyof T]: Readonly<{
-    // The typed domEvent associated with the event we are capturing
-    domEvent: T[K],
-    // Event we are capturing
-    event: K,
-    // Element target associated with the domEvent; With interactableElementsOnly, will be the interactable element target.
-    element: HTMLElement | null,
-    // The event.target element,  as opposed to element which represents the interactableElement
+type ALUIEvent<T = EventHandlerMap> =
+  ALTimedEvent &
+  ALMetadataEvent &
+  ALExtensibleEvent &
+  Types.Nullable<ALElementEvent> &
+  {
+    /**
+     * .element field could be either target associated with the domEvent; With interactableElementsOnly, the interactable element target.
+     * .targetElement is the event.target element, as opposed to .element which could represent the interactableElement
+     */
     targetElement: HTMLElement | null,
-    // Whether the event is generated from a user action or dispatched via script
-    isTrusted: boolean,
-    // The underlying identifier assigned to this element
-    autoLoggingID: ALID | null,
-  }>
-}[keyof T];
+  } &
+  {
+    [K in keyof T]: Readonly<{
+      // The typed domEvent associated with the event we are capturing
+      domEvent: T[K],
+      // Event we are capturing
+      event: K,
+      // Whether the event is generated from a user action or dispatched via script
+      isTrusted: boolean,
+    }>
+  }[keyof T];
 
 export type ALUIEventCaptureData = Readonly<
   ALUIEvent &
