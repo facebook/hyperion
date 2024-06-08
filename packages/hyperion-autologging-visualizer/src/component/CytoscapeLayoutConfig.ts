@@ -2,6 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 // import React, {useState, useCallback, useRef, useEffect} from "react";
+import { assert } from '@hyperion/hyperion-global';
 import type cytoscape from 'cytoscape';
 import Cytoscape from 'cytoscape';
 import cola from 'cytoscape-cola';
@@ -11,6 +12,7 @@ import klay from 'cytoscape-klay';
 
 
 const ELK_CONFIG = {
+  name: 'elk',
   randomize: false, // use random node positions at beginning of layout
   nodeDimensionsIncludeLabels: true, // Boolean which changes whether label dimensions are included when calculating node dimensions
   // TODO: this pans back out when enabled,  we may want to make this configurable
@@ -40,10 +42,11 @@ const ELK_CONFIG = {
     'elk.direction': 'RIGHT',
   },
   priority: function (_edge: any) { return null; }, // Edges with a non-nil value are skipped when geedy edge cycle breaking is enabled
-};
+} as const;
 
-const KLAY_CONFIG = {
-  randomize: false, // use random node positions at beginning of layout
+const KLAY_CONFIG: klay.KlayLayoutOptions = {
+  name: 'klay',
+  // randomize: false, // use random node positions at beginning of layout
   nodeDimensionsIncludeLabels: true, // Boolean which changes whether label dimensions are included when calculating node dimensions
   fit: true, // Whether to fit
   padding: 20, // Padding on fit
@@ -99,16 +102,17 @@ const KLAY_CONFIG = {
     thoroughness: 7 // How much effort should be spent to produce a nice layout..
   },
   priority: function (_edge: any) { return null; }, // Edges with a non-nil value are skipped when greedy edge cycle breaking is enabled
-};
+} as const;
 
-const DAGRE_CONFIG = {
+const DAGRE_CONFIG: dagre.DagreLayoutOptions = {
+  name: 'dagre',
   // dagre algo options, uses default value on undefined
   nodeSep: undefined, // the separation between adjacent nodes in the same rank
   edgeSep: undefined, // the separation between adjacent edges in the same rank
   rankSep: undefined, // the separation between each rank in the layout
   rankDir: undefined, // 'TB' for top to bottom flow, 'LR' for left to right,
-  align: undefined,  // alignment for rank nodes. Can be 'UL', 'UR', 'DL', or 'DR', where U = up, D = down, L = left, and R = right
-  acyclicer: undefined, // If set to 'greedy', uses a greedy heuristic for finding a feedback arc set for a graph.
+  // align: undefined,  // alignment for rank nodes. Can be 'UL', 'UR', 'DL', or 'DR', where U = up, D = down, L = left, and R = right
+  // acyclicer: undefined, // If set to 'greedy', uses a greedy heuristic for finding a feedback arc set for a graph.
   // A feedback arc set is a set of edges that can be removed to make a graph acyclic.
   ranker: undefined, // Type of algorithm to assign a rank to each node in the input graph. Possible values: 'network-simplex', 'tight-tree' or 'longest-path'
   minLen: function (_edge: any) { return 1; }, // number of ranks to keep between the source and target of the edge
@@ -131,9 +135,10 @@ const DAGRE_CONFIG = {
   // defining the topology of a graph, this sort function can help ensure the correct order of the nodes/edges.
   // this feature is most useful when adding and removing the same nodes and edges multiple times in a graph.
   stop: function () { } // on layoutstop
-};
+} as const;
 
 const COLA_CONFIG = {
+  name: 'cola',
   animate: true, // whether to show the layout as it's running
   refresh: 1, // number of ticks per frame; higher is faster but more jerky
   maxSimulationTime: 4000, // max length in ms to run the layout
@@ -168,35 +173,45 @@ const COLA_CONFIG = {
   unconstrIter: undefined, // unconstrained initial layout iterations
   userConstIter: undefined, // initial layout iterations with user-specified constraints
   allConstIter: undefined, // initial layout iterations with all constraints including non-overlap
-};
+} as const;
 
-export function getCytoscapeLayoutConfig(name: 'klay' | 'elk' | 'dagre' | 'cola'): cytoscape.LayoutOptions {
-  let CONFIG: typeof KLAY_CONFIG |
+type ConfigType = typeof KLAY_CONFIG |
+  typeof ELK_CONFIG |
+  typeof DAGRE_CONFIG |
+  typeof COLA_CONFIG
+  ;
+
+export function getCytoscapeLayoutConfig(name: ConfigType['name']): cytoscape.LayoutOptions {
+  let config: typeof KLAY_CONFIG |
     typeof ELK_CONFIG |
     typeof DAGRE_CONFIG |
     typeof COLA_CONFIG |
     null = null;
-  if (name === 'klay') {
-    console.log('[PS] using klay');
-    Cytoscape.use(klay);
-    CONFIG = KLAY_CONFIG;
-  } else if (name === 'elk') {
-    console.log('[PS] using elk');
-    Cytoscape.use(elk);
-    CONFIG = ELK_CONFIG;
-  } else if (name === 'dagre') {
-    console.log('[PS] using dagre');
-    Cytoscape.use(dagre);
-    CONFIG = DAGRE_CONFIG;
-  } else if (name === 'cola') {
-    console.log('[PS] using cola');
-    Cytoscape.use(cola);
-    CONFIG = COLA_CONFIG;
+
+  let extension: cytoscape.Ext;
+
+  switch (name) {
+    case 'klay':
+      config = KLAY_CONFIG;
+      extension = klay;
+      break;
+    case 'elk':
+      config = ELK_CONFIG;
+      extension = elk;
+      break;
+    case 'dagre':
+      config = DAGRE_CONFIG;
+      extension = dagre;
+      break;
+    case 'cola':
+      config = COLA_CONFIG;
+      extension = cola;
+      break;
   }
 
-  return ({
-    name,
-    ...CONFIG,
-  });
+  assert(config.name === name, "Invalid config setup");
+  console.log(`using ${config.name} layout config`);
+  Cytoscape.use(extension);
+  return config;
 }
 
