@@ -20,11 +20,11 @@
     "../hyperion-autologging"
   ],
   "dependencies": {
+    "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-global": "*",
     "@hyperion/hyperion-hook": "*",
-    "@hyperion/hyperion-dom": "*",
     "@hyperion/hyperion-react": "*",
-    "@types/cytoscape": "^3.19.11",
+    "@types/cytoscape": "^3.21.2",
     "cytoscape": "^3.26.0",
     "cytoscape-cola": "^2.5.1",
     "cytoscape-dagre": "^2.5.0",
