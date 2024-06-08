@@ -13,7 +13,7 @@ import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import { SyncChannel } from "./Channel";
 import { FlowletManager } from "./FlowletManager";
-import { ALExtensibleEvent, ALMetadataEvent } from "@hyperion/hyperion-autologging/src/ALType";
+import { ALExtensibleEvent } from "@hyperion/hyperion-autologging/src/ALType";
 import { getEventExtension } from "@hyperion/hyperion-autologging/src/ALEventExtension";
 
 export let interceptionStatus = "disabled";

@@ -4,13 +4,13 @@
 
 'use strict';
 
-import { ALExtensibleEvent } from "./ALType";
+import { ALExtensibleEvent, ALExtensibleEventData } from "./ALType";
 
-export function getEventExtension<T extends { [key: string]: any } = { [key: string]: any }>(eventData: ALExtensibleEvent, namespace: string): T | undefined {
+export function getEventExtension<T extends ALExtensibleEventData = ALExtensibleEventData>(eventData: ALExtensibleEvent, namespace: string): T | undefined {
   return eventData.__ext?.[namespace] as T;
 }
 
-export function setEventExtension(eventData: ALExtensibleEvent, namespace: string, data: { [key: string]: any }) {
+export function setEventExtension(eventData: ALExtensibleEvent, namespace: string, data: ALExtensibleEventData) {
   eventData.__ext ??= {};
   const namespaceData = eventData.__ext[namespace] ??= {};
   Object.assign(namespaceData, data);
