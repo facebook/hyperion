@@ -70,6 +70,7 @@ export default defineConfig({
         "@hyperion/hyperion-react/src/IReactComponent",
       ],
       "hyperionAutoLogging": [
+        "@hyperion/hyperion-autologging/src/ALEventExtension",
         "@hyperion/hyperion-autologging/src/ALCustomEvent",
         "@hyperion/hyperion-autologging/src/ALFlowletManager",
         "@hyperion/hyperion-autologging/src/ALSurface",
