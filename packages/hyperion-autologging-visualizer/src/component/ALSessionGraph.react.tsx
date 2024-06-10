@@ -13,7 +13,7 @@ import type cytoscape from 'cytoscape';
 import React from "react";
 import CytoscapeComponent from 'react-cytoscapejs';
 import { getCytoscapeLayoutConfig } from "./CytoscapeLayoutConfig";
-
+import * as ALGraph from "./ALGraph";
 
 
 type BaseFlowlet = {
@@ -47,64 +47,6 @@ type EventBody = {
     ALUIEventBubbleData);
 
 
-type Node = {
-  scratch?: {
-    _event: Object,
-  },
-  data: {
-    id: string;
-    label: string;
-    parent?: string;
-    position?: { x: number, y: number };
-    color: string;
-  }
-};
-
-type Edge = {
-  data: {
-    source: string;
-    target: string;
-    label: string;
-    weight?: number;
-    color: string;
-  }
-}
-
-type GraphData = Array<Node | Edge>;
-
-type GraphStyle = Array<{
-  selector: 'node' | 'edge',
-  style: { [key: string]: string | number }
-}>;
-
-type CyProps = {
-  graphTitle: string;
-  height: string;
-  width: string;
-  elements: GraphData;
-  stylesheet?: GraphStyle;
-};
-
-const defaultStylesheet: GraphStyle = [
-  {
-    selector: 'node',
-    style: {
-      'background-color': 'data(color)',
-      'label': 'data(label)'
-    }
-  },
-  {
-    selector: 'edge',
-    style: {
-      'width': 3,
-      'line-color': 'data(color)',
-      'target-arrow-color': 'data(color)',
-      'target-arrow-shape': 'triangle',
-      'curve-style': 'bezier'
-    }
-  }
-];
-
 // This may be useful if we want to use the underlying library more directly, although the component interface
 // seems to provide enough knobs currently with access to cy object.
 /**
@@ -135,39 +77,11 @@ function _ALSessionPetri(props: CyProps): React.JSX.Element {
  */
 
 
-const NodeColorMap = new Map([
-  ['click', 'green'],
-  ['click[al_ui_event]', 'green'],
-  ['click[al_ui_event_capture]', 'lightgreen'],
-  ['click[al_ui_event_bubble]', 'darkgreen'],
-  ['network_request', 'gold'],
-  ['network_response', 'yellow'],
-  ['network', 'khaki'],
-  ['mount', 'blue'],
-  ['unmount', 'lightblue'],
-  ['mount_component', 'blue'],
-  ['unmount_component', 'lightblue'],
-  ['heartbeat', 'red'],
-  ['ad_spec_change', 'orange'],
-  ['hover', 'purple'],
-  ['parent', 'lightblue'],
-  ['flowlet-part', 'gray'],
-]);
-
-const nodeColor = (name: string) => NodeColorMap.get(name) ?? 'gray';
-
-const EdgeColorMap = new Map([
-  ['flowlet', 'red'],
-  ['seq', 'black'],
-  ['ce', 'blue']
-]);
-
-const edgeColor = (name: string) => EdgeColorMap.get(name) ?? 'gray';
-
+type GraphData = cytoscape.ElementDefinition[];
 
 function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
   const elements: GraphData = [];
-  const eventNodes: Array<Node> = [];
+  const eventNodes: GraphData = [];
   let nodeId = 0;
   let flowletsSeen: Array<{ flowlet: string, flowletNodeId: number }> = [];
   for (let i = 0; i < events.length; i++) {
@@ -177,7 +91,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
     const srcNode = {
       scratch: { _event: event },
       data: {
-        color: nodeColor(eventName),
+        color: ALGraph.nodeColor(eventName),
         id: String(nodeId++),
         label: eventName,
       }
@@ -196,7 +110,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
               data: {
                 source: String(matchFlowlet.flowletNodeId),
                 target: srcNode.data.id,
-                color: edgeColor('flowlet'),
+                color: ALGraph.edgeColor('flowlet'),
                 label: matchFlowlet.flowletNodeId + '->' + srcNode.data.id,
               }
             }
@@ -210,7 +124,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
         const flowletParent = {
           scratch: { _event: event },
           data: {
-            color: nodeColor('parent'),
+            color: ALGraph.nodeColor('parent'),
             id: String(flowletParentId),
             label: flowletName,
           }
@@ -222,7 +136,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
             data: {
               source: srcNode.data.id,
               target: String(flowletParentId),
-              color: edgeColor('flowlet'),
+              color: ALGraph.edgeColor('flowlet'),
               label: srcNode.data.id + '->' + flowletParentId,
             }
           }
@@ -236,7 +150,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
               scratch: { _event: flowlet },
               data: {
                 parent: String(flowletParentId),
-                color: nodeColor('flowlet-part'),
+                color: ALGraph.nodeColor('flowlet-part'),
                 id: nodeId,
                 label: flowletParts[k],
               }
@@ -250,7 +164,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
                 data: {
                   source: previousNodeId,
                   target: nodeId,
-                  color: edgeColor('seq'),
+                  color: ALGraph.edgeColor('seq'),
                   label: previousNodeId + '->' + nodeId,
                 }
               }
@@ -268,7 +182,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
             data: {
               source: node.data.id,
               target: srcNode.data.id,
-              color: edgeColor('seq'),
+              color: ALGraph.edgeColor('seq'),
               label: node.data.id + '->' + srcNode.data.id,
             }
           }
@@ -280,6 +194,15 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
 
   return elements;
 }
+
+
+type CyProps = {
+  graphTitle: string;
+  height: string;
+  width: string;
+  elements: GraphData;
+  stylesheet?: cytoscape.StylesheetStyle;
+};
 
 function ALSessionPetriReact(props: CyProps): React.JSX.Element {
   const [listenerRegistered, setListenerRegistered] = React.useState(false);
@@ -315,7 +238,7 @@ function ALSessionPetriReact(props: CyProps): React.JSX.Element {
         <CytoscapeComponent
           cy={setCytoscape}
           headless={false}
-          stylesheet={props.stylesheet ?? defaultStylesheet}
+          stylesheet={props.stylesheet ?? ALGraph.defaultStylesheet}
           elements={props.elements}
           style={{ width: props.width, height: props.height }}
         />
