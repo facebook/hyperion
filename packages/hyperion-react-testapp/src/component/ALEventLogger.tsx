@@ -6,6 +6,7 @@ import * as React from "react";
 import { SyncChannel } from "../Channel";
 import { ALChannelEvent } from "@hyperion/hyperion-autologging/src/AutoLogging";
 import { ALSessionGraph } from "@hyperion/hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
+import { ALGraphInfo } from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraphInfo.react";
 import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
 import { ALFlowletEvent } from "@hyperion/hyperion-autologging/src/ALType";
 
@@ -74,30 +75,31 @@ export default function () {
     <div style={{ display: "flex", justifyContent: "space-around" }}>
       <table>
         <tbody>
-        {
-          EventsWithFlowlet.map(eventName =>
-            <EventField key={eventName} eventName={eventName} onEnable={() => {
-              const handler = SyncChannel.on(eventName).add(ev => {
-                console.log(eventName, ev, performance.now(), ev.triggerFlowlet?.getFullName());
-              });
-              return () => SyncChannel.on(eventName).remove(handler);
-            }} />
-          ).concat(
-            EventsWithoutFlowlet.map(eventName =>
+          {
+            EventsWithFlowlet.map(eventName =>
               <EventField key={eventName} eventName={eventName} onEnable={() => {
                 const handler = SyncChannel.on(eventName).add(ev => {
-                  console.log(eventName, ev, performance.now());
+                  console.log(eventName, ev, performance.now(), ev.triggerFlowlet?.getFullName());
                 });
                 return () => SyncChannel.on(eventName).remove(handler);
               }} />
+            ).concat(
+              EventsWithoutFlowlet.map(eventName =>
+                <EventField key={eventName} eventName={eventName} onEnable={() => {
+                  const handler = SyncChannel.on(eventName).add(ev => {
+                    console.log(eventName, ev, performance.now());
+                  });
+                  return () => SyncChannel.on(eventName).remove(handler);
+                }} />
+              )
             )
-          )
-        }
+          }
         </tbody>
       </table>
     </div>
     <div>
       <ALSessionGraph />
+      <ALGraphInfo />
     </div>
   </div>;
 }

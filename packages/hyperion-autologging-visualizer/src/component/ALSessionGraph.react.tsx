@@ -79,6 +79,36 @@ function _ALSessionPetri(props: CyProps): React.JSX.Element {
 
 type GraphData = cytoscape.ElementDefinition[];
 
+
+const NodeColorMap = new Map([
+  ['click', 'green'],
+  ['click[al_ui_event]', 'green'],
+  ['click[al_ui_event_capture]', 'lightgreen'],
+  ['click[al_ui_event_bubble]', 'darkgreen'],
+  ['network_request', 'gold'],
+  ['network_response', 'yellow'],
+  ['network', 'khaki'],
+  ['mount', 'blue'],
+  ['unmount', 'lightblue'],
+  ['mount_component', 'blue'],
+  ['unmount_component', 'lightblue'],
+  ['heartbeat', 'red'],
+  ['ad_spec_change', 'orange'],
+  ['hover', 'purple'],
+  ['parent', 'lightblue'],
+  ['flowlet-part', 'gray'],
+]);
+
+const nodeColor = (name: string) => NodeColorMap.get(name) ?? 'gray';
+
+const EdgeColorMap = new Map([
+  ['flowlet', 'red'],
+  ['seq', 'black'],
+  ['ce', 'blue']
+]);
+
+const edgeColor = (name: string) => EdgeColorMap.get(name) ?? 'gray';
+
 function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, flowletFullName: boolean = true): GraphData {
   const elements: GraphData = [];
   const eventNodes: GraphData = [];
@@ -91,7 +121,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
     const srcNode = {
       scratch: { _event: event },
       data: {
-        color: ALGraph.nodeColor(eventName),
+        color: nodeColor(eventName),
         id: String(nodeId++),
         label: eventName,
       }
@@ -110,7 +140,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
               data: {
                 source: String(matchFlowlet.flowletNodeId),
                 target: srcNode.data.id,
-                color: ALGraph.edgeColor('flowlet'),
+                color: edgeColor('flowlet'),
                 label: matchFlowlet.flowletNodeId + '->' + srcNode.data.id,
               }
             }
@@ -124,7 +154,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
         const flowletParent = {
           scratch: { _event: event },
           data: {
-            color: ALGraph.nodeColor('parent'),
+            color: nodeColor('parent'),
             id: String(flowletParentId),
             label: flowletName,
           }
@@ -136,7 +166,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
             data: {
               source: srcNode.data.id,
               target: String(flowletParentId),
-              color: ALGraph.edgeColor('flowlet'),
+              color: edgeColor('flowlet'),
               label: srcNode.data.id + '->' + flowletParentId,
             }
           }
@@ -150,7 +180,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
               scratch: { _event: flowlet },
               data: {
                 parent: String(flowletParentId),
-                color: ALGraph.nodeColor('flowlet-part'),
+                color: nodeColor('flowlet-part'),
                 id: nodeId,
                 label: flowletParts[k],
               }
@@ -164,7 +194,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
                 data: {
                   source: previousNodeId,
                   target: nodeId,
-                  color: ALGraph.edgeColor('seq'),
+                  color: edgeColor('seq'),
                   label: previousNodeId + '->' + nodeId,
                 }
               }
@@ -182,7 +212,7 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
             data: {
               source: node.data.id,
               target: srcNode.data.id,
-              color: ALGraph.edgeColor('seq'),
+              color: edgeColor('seq'),
               label: node.data.id + '->' + srcNode.data.id,
             }
           }
@@ -191,7 +221,6 @@ function formatEventBuffer(events: Array<EventBody>, uiFlowlet: boolean = true, 
     }
     eventNodes.push(srcNode);
   }
-
   return elements;
 }
 

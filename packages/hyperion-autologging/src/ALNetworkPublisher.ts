@@ -206,6 +206,7 @@ function captureFetch(options: InitOptions): void {
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
+            relatedEventIndex: requestEvent.eventIndex,
             callFlowlet,
             triggerFlowlet,
             requestEvent,
@@ -346,6 +347,7 @@ function captureXHR(options: InitOptions): void {
             event: "network",
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
+            relatedEventIndex: requestEvent.eventIndex,
             callFlowlet, // should carry request flowlet forward
             triggerFlowlet, //should carry request triggerFlowlet forward as the main trigger
             requestEvent,
