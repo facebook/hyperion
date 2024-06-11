@@ -13,7 +13,7 @@ import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
 import type { ALChannelSurfaceEvent, ALSurfaceEventData, ALSurfaceCapability } from './ALSurface';
-import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
+import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 
 type ALMutationEvent =
   ALReactElementEvent &
@@ -42,6 +42,7 @@ type ALMutationEvent =
 
 export type ALSurfaceMutationEventData = Readonly<
   ALLoggableEvent &
+  ALPageEvent &
   ALMutationEvent
 >;
 
@@ -110,6 +111,7 @@ export function publish(options: InitOptions): void {
             ...elementText,
             metadata, // already in the evet, need to add again?
             addTime: timestamp,
+            pageURI: window.location.href,
           };
           activeSurfaces.set(surface, info);
 

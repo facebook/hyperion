@@ -8,6 +8,7 @@ import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
 import type cytoscape from 'cytoscape';
 import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfig';
+import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 
 export const defaultStylesheet: cytoscape.Stylesheet[] = [
   {
@@ -30,6 +31,17 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
     }
   },
   {
+    selector: "node.surface", style: {
+      shape: 'round-tag',
+    }
+  },
+  {
+    selector: "node.page", style: {
+      // @ts-ignore
+      shape: 'right-rhomboid',
+    }
+  },
+  {
     selector: ':parent', css: {
       'background-color': 'white',
       'text-valign': 'top',
@@ -43,8 +55,6 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
   {
     selector: 'edge', style: {
       'width': 3,
-      // 'line-color': 'data(color)',
-      // 'target-arrow-color': 'data(color)',
       'target-arrow-shape': 'triangle',
       'curve-style': 'bezier'
     }
@@ -121,6 +131,7 @@ type SupportedALEventData<T extends SupportedALEventNames> = ALChannelEvent[T][0
 
 export class ALGraph {
   layout: cytoscape.Layouts;
+
   constructor(public readonly cy: cytoscape.Core) {
     this.layout = cy.layout(getCytoscapeLayoutConfig('klay'));
     this.layout.run();
@@ -149,24 +160,81 @@ export class ALGraph {
     return edge;
   }
 
-  private getPageUriNodeId(): GraphID {
-    return void 0;
+  private startBatch() {
+    this.cy.startBatch();
+  }
+  private endBatch() {
+    this.layout.stop();
+    this.layout = this.cy.layout(getCytoscapeLayoutConfig('klay'));
+    this.layout.run();
+    this.cy.endBatch();
   }
 
-  private getSurfaceNodeId(): GraphID {
-    return this.getPageUriNodeId();
+  private getPageUriNodeId(pageURI?: string): GraphID {
+    if (!pageURI) {
+      return;
+    }
+
+    if (this.cy.$id(pageURI).empty()) {
+      this.addNode({
+        classes: 'page',
+        data: {
+          id: pageURI,
+          label: pageURI,
+        }
+      })
+    }
+    return pageURI;
   }
 
-  private getComponentNodeId(): GraphID {
-    return this.getSurfaceNodeId();
+  private getSurfaceNodeId(surface: string | null, pageURI: string): GraphID {
+    if (!surface) {
+      return;
+    }
+    const id = surface;
+    if (this.cy.$id(id).empty()) {
+      const prefixIndex = surface.lastIndexOf(SURFACE_SEPARATOR);
+      let surfaceName: string;
+      let parentSurfaceId: GraphID;
+      let pageId: GraphID;
+      if (prefixIndex > 0) {
+        surfaceName = surface.slice(prefixIndex);
+        const parentSurfaceName = surface.slice(0, prefixIndex)
+        parentSurfaceId = this.getSurfaceNodeId(parentSurfaceName, pageURI);
+      } else {
+        // Top surface
+        surfaceName = surface;
+        pageId = this.getPageUriNodeId(pageURI);
+      }
+      this.addNode({
+        classes: 'surface',
+        data: {
+          id,
+          label: surfaceName,
+          // parent: parentSurfaceId,
+        }
+      });
+      this.addEdge(parentSurfaceId, id);
+      this.addEdge(pageId, id);
+    }
+    return id;
   }
 
-  private getLabelNodeId(): GraphID {
-    return this.getComponentNodeId();
+  private getComponentNodeId(_componentName: string | null | undefined): GraphID {
+    return;
   }
 
-  private getTupleNodeId(): GraphID {
-    return this.getLabelNodeId();
+  private getLabelNodeId(_label: string | null): GraphID {
+    return;
+  }
+
+  private getTupleNodeId(eventData: SupportedALEventData<'al_ui_event'>): GraphID {
+    const surfaceId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI);
+    const componentId = this.getComponentNodeId(eventData.reactComponentName);
+    const labelId = this.getLabelNodeId(eventData.elementName);
+    this.addEdge(surfaceId, componentId);
+    this.addEdge(componentId, labelId);
+    return labelId ?? componentId ?? surfaceId;
   }
 
   private getTriggerFlowletNodeId(flowlet: Flowlet | null | undefined): GraphID {
@@ -203,7 +271,6 @@ export class ALGraph {
       },
       classes: [eventName, eventData.event]
     });
-    this.addEdge(this.getTupleNodeId(), id);
     this.addEdge(this.getTriggerFlowletNodeId(eventData.triggerFlowlet), id);
     if (eventData.relatedEventIndex) {
       const relatedId = '' + eventData.relatedEventIndex
@@ -217,14 +284,30 @@ export class ALGraph {
   }
 
   addALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): void {
-    this.cy.startBatch();
+    this.startBatch();
     this.getALEventNodeId(eventName, eventData);
-    this.layout.stop();
-    this.layout = this.cy.elements().layout(getCytoscapeLayoutConfig('klay'));
-    this.layout.run();
-    this.cy.endBatch();
+    this.endBatch();
   }
 
+  addALUIEventNodeId<T extends 'al_ui_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
+    if (this.cy.container()?.contains(eventData.targetElement)) {
+      // Don't want to capture clicks on the graph itself.
+      return;
+    }
+    this.startBatch();
+    const id = this.getALEventNodeId(eventName, eventData);
+    this.addEdge(this.getTupleNodeId(eventData), id);
+    this.endBatch();
+  }
+
+  addSurfaceEvent<T extends 'al_surface_mutation_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
+    this.startBatch();
+    this.addEdge(
+      this.getSurfaceNodeId(eventData.surface, eventData.pageURI),
+      this.getALEventNodeId(eventName, eventData)
+    );
+    this.endBatch();
+  }
 }
 
 

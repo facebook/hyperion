@@ -55,17 +55,22 @@ export function ALGraphInfo(): React.JSX.Element {
         const alEvents = ALGraph.SupportedALEvents;
 
         alEvents.forEach(eventName => {
-          if (eventName === 'al_ui_event') {
-            channel.on(eventName).add(eventData => {
-              if (!container.current?.contains(eventData.targetElement)) {
-                // Don't want to capture clicks on the graph itself.
+          switch (eventName) {
+            case 'al_ui_event':
+              channel.on(eventName).add(eventData => {
+                graph.addALUIEventNodeId(eventName, eventData);
+              });
+              break;
+            case 'al_surface_mutation_event':
+              channel.on(eventName).add(eventData => {
+                graph.addSurfaceEvent(eventName, eventData);
+              });
+              break;
+            default:
+              channel.on(eventName).add(eventData => {
                 graph.addALEventNodeId(eventName, eventData);
-              }
-            });
-          } else {
-            channel.on(eventName).add(eventData => {
-              graph.addALEventNodeId(eventName, eventData);
-            });
+              });
+              break;
           }
         });
       }
