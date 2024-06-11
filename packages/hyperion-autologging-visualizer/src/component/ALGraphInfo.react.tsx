@@ -21,15 +21,7 @@ export function ALGraphInfo(): React.JSX.Element {
   } | null>(null);
 
   const [elements, _setElements] = useState<cytoscape.ElementDefinition[]>([
-    // {
-    //   data: { id: "0", label: "test", color: 'red' }
-    // },
-    // {
-    //   data: { id: "1", label: "bar", color: 'yellow' },
-    // },
-    // {
-    //   data: { source: "0", target: "1", }
-    // }
+    // Add any initial notes to the graph here
   ]);
 
   React.useEffect(
