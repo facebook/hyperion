@@ -350,12 +350,16 @@ export class ALGraph {
     const region = this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
 
     this.addNode({
+      classes: [eventName, eventData.event],
       data: {
         id,
         label: `${eventName}[${eventData.event}]`,
         parent: region?.interaction?.eventsId,
       },
-      classes: [eventName, eventData.event]
+      scratch: {
+        eventName,
+        eventData,
+      },
     });
     this.addEdge(region?.triggerFlowletId, id);
     if (eventData.relatedEventIndex) {

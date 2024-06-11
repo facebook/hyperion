@@ -77,7 +77,7 @@ export function ALGraphInfo(): React.JSX.Element {
     <div
       style={{
         width: "100%",
-        height: "500px",
+        height: "1000px",
         textAlign: "left",
         display: "inline-block",
         borderBlockStyle: 'groove',
