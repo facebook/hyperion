@@ -9,6 +9,7 @@ import { Nullable } from '@hyperion/hyperion-util/src/Types';
 import type cytoscape from 'cytoscape';
 import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfig';
 import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
+import { assert } from '@hyperion/hyperion-global';
 
 export const defaultStylesheet: cytoscape.Stylesheet[] = [
   {
@@ -113,6 +114,11 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
       "background-color": 'cyan'
     }
   },
+  {
+    selector: '.surface', style: {
+      "background-color": 'tan'
+    }
+  },
 
 ];
 
@@ -129,14 +135,39 @@ export const SupportedALEvents = [
 type SupportedALEventNames = (typeof SupportedALEvents)[number] & (keyof ALChannelEvent); // & to filter out typos in the list
 type SupportedALEventData<T extends SupportedALEventNames> = ALChannelEvent[T][0] & Partial<Nullable<ALFlowletEvent>>;
 
+type TriggerFlowletRegion = {
+  // The interaction it belongs to
+  interaction: {
+    flowsId: GraphID,
+    eventsId: GraphID,
+  } | null,
+
+  // Id of this trigger flowlet
+  triggerFlowletId: GraphID,
+}
+
 export class ALGraph {
   layout: cytoscape.Layouts;
+  private readonly appId: GraphID = '_app';
+  private readonly flowsId: GraphID = '_flows';
 
   constructor(public readonly cy: cytoscape.Core) {
     this.layout = cy.layout(getCytoscapeLayoutConfig('klay'));
     this.layout.run();
     cy.style(defaultStylesheet);
     // click handlers with callback HOOKs?
+    this.addNode({
+      data: {
+        id: this.appId,
+        label: "App"
+      }
+    });
+    this.addNode({
+      data: {
+        id: this.flowsId,
+        label: 'Flows',
+      }
+    });
   }
 
   private addNode(node: cytoscape.NodeDefinition): typeof node {
@@ -181,6 +212,7 @@ export class ALGraph {
         data: {
           id: pageURI,
           label: pageURI,
+          parent: this.appId,
         }
       })
     }
@@ -211,10 +243,10 @@ export class ALGraph {
         data: {
           id,
           label: surfaceName,
-          // parent: parentSurfaceId,
+          parent: this.appId, // or? parentSurfaceId,
         }
       });
-      this.addEdge(parentSurfaceId, id);
+      this.addEdge(parentSurfaceId, id, 'surface');
       this.addEdge(pageId, id);
     }
     return id;
@@ -237,41 +269,95 @@ export class ALGraph {
     return labelId ?? componentId ?? surfaceId;
   }
 
-  private getTriggerFlowletNodeId(flowlet: Flowlet | null | undefined): GraphID {
+  private getTriggerFlowletNodeId(flowlet: Flowlet | null | undefined): TriggerFlowletRegion | null {
     if (!flowlet) {
-      return;
+      return null;
     }
 
-    const parentId = this.getTriggerFlowletNodeId(flowlet.parent);
     const id = '' + flowlet.id;
-    const node = this.cy.$id(id);
-    if (node.empty()) {
+    const nodes = this.cy.$id(id);
+    if (nodes.nonempty()) {
+      const node = nodes[0];
+      const triggerFloeletRegion = node.scratch().triggerFloeletRegion;
+      assert(triggerFloeletRegion != null, 'Invalid situatoin in the graph! Must have a region when created!');
+      return triggerFloeletRegion;
+    }
+
+    // Didn't find, need to create
+
+    const triggerFloeletRegion: TriggerFlowletRegion = {
+      triggerFlowletId: id,
+      interaction: null,
+    };
+    let parentId;
+
+    const parentTriggerFloeletRegion = this.getTriggerFlowletNodeId(flowlet.parent);
+    if (!parentTriggerFloeletRegion) {
+      // We are at the root, which we want to leave alone
+      triggerFloeletRegion.interaction = null;// No interaction defined for root.
+      parentId = this.flowsId;
+    } else if (parentTriggerFloeletRegion.interaction) {
+      // we are some middle trigger of interactin, so reuse parents region
+      triggerFloeletRegion.interaction = parentTriggerFloeletRegion.interaction;
+      parentId = triggerFloeletRegion.interaction.flowsId;
+    } else {
+      //We are at the root of interaction, so create a new region
+      const regionId = `${id}_region`;
+      const interaction = triggerFloeletRegion.interaction = {
+        flowsId: `${id}_flows`,
+        eventsId: `${id}_events`,
+      };
       this.addNode({
-        classes: 'flowlet',
         data: {
-          id,
-          label: flowlet.name + ":" + id,
-          // parent: parentId,
+          id: regionId,
+          label: 'interaction',
+          parent: this.flowsId,
         }
       });
-      this.addEdge(parentId, id, 'flowlet');
+      this.addNode({
+        data: {
+          id: interaction.flowsId,
+          label: 'flows',
+          parent: regionId,
+        }
+      });
+      this.addNode({
+        data: {
+          id: interaction.eventsId,
+          label: 'events',
+          parent: regionId,
+        }
+      });
+      parentId = triggerFloeletRegion.interaction.flowsId;
     }
-
-    return id;
+    this.addNode({
+      classes: 'flowlet',
+      data: {
+        id,
+        label: flowlet.name + ":" + id,
+        parent: parentId,
+      },
+      scratch: {
+        triggerFloeletRegion,
+      }
+    });
+    this.addEdge(parentTriggerFloeletRegion?.triggerFlowletId, id);
+    return triggerFloeletRegion;
   }
 
   private getALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     const id = '' + eventData.eventIndex;
-    eventData.event
+    const region = this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
+
     this.addNode({
       data: {
         id,
         label: `${eventName}[${eventData.event}]`,
-        // color: 'red',
+        parent: region?.interaction?.eventsId,
       },
       classes: [eventName, eventData.event]
     });
-    this.addEdge(this.getTriggerFlowletNodeId(eventData.triggerFlowlet), id);
+    this.addEdge(region?.triggerFlowletId, id);
     if (eventData.relatedEventIndex) {
       const relatedId = '' + eventData.relatedEventIndex
       if (this.cy.$id(relatedId).nonempty()) {
@@ -295,14 +381,16 @@ export class ALGraph {
       return;
     }
     this.startBatch();
-    const id = this.getALEventNodeId(eventName, eventData);
-    this.addEdge(this.getTupleNodeId(eventData), id);
+    /* this.addEdge */(
+      this.getALEventNodeId(eventName, eventData),
+      this.getTupleNodeId(eventData)
+    );
     this.endBatch();
   }
 
   addSurfaceEvent<T extends 'al_surface_mutation_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
     this.startBatch();
-    this.addEdge(
+    /* this.addEdge */(
       this.getSurfaceNodeId(eventData.surface, eventData.pageURI),
       this.getALEventNodeId(eventName, eventData)
     );
