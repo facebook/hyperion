@@ -13,4 +13,5 @@ export type Options<Options extends [...any[]] | {}> = Beautify<
 >;
 
 export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+
 export type Nullable<T> = { readonly [P in keyof T]: T[P] | null };
