@@ -74,3 +74,7 @@ export * as ALSurfaceUtils from "@hyperion/hyperion-autologging/src/ALSurfaceUti
 export * as ALCustomEvent from '@hyperion/hyperion-autologging/src/ALCustomEvent';
 export { getCurrentUIEventData } from "@hyperion/hyperion-autologging/src/ALUIEventPublisher";
 export * as ALEventExtension from "@hyperion/hyperion-autologging/src/ALEventExtension";
+
+// hyperionAutoLoggingVisualizer
+export * as ALGraph from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph";
+export { ALGraphInfo } from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraphInfo.react";

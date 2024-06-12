@@ -7,7 +7,7 @@ import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
 import type cytoscape from 'cytoscape';
-import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfig';
+import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigKlay';
 import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 import { assert } from '@hyperion/hyperion-global';
 
@@ -33,13 +33,12 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
   },
   {
     selector: "node.surface", style: {
-      shape: 'round-tag',
+      // shape: 'round-tag',
     }
   },
   {
     selector: "node.page", style: {
-      // @ts-ignore
-      shape: 'right-rhomboid',
+      // shape: 'right-rhomboid',
     }
   },
   {
@@ -48,9 +47,8 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
       'text-valign': 'top',
       'text-halign': 'center',
       'shape': 'round-rectangle',
-      //@ts-ignore
-      'corner-radius': "10",
-      'padding': 10,
+      // 'corner-radius': "10",
+      // 'padding': 10,
     }
   },
   {
@@ -152,9 +150,9 @@ export class ALGraph {
   private readonly flowsId: GraphID = '_flows';
 
   constructor(public readonly cy: cytoscape.Core) {
-    this.layout = cy.layout(getCytoscapeLayoutConfig('klay'));
-    this.layout.run();
     cy.style(defaultStylesheet);
+    this.layout = cy.layout(getCytoscapeLayoutConfig());
+    this.layout.run();
     // click handlers with callback HOOKs?
     this.addNode({
       data: {
@@ -168,6 +166,28 @@ export class ALGraph {
         label: 'Flows',
       }
     });
+
+    this._elements = this.cy.collection();
+    this.cy.on('add', event => {
+      this._elements.merge(event.target);
+      console.log('added', event);
+    });
+
+  }
+  private _elements: cytoscape.CollectionReturnValue;
+  private startBatch() {
+    this._elements = this.cy.collection();
+    this.cy.startBatch();
+  }
+  private endBatch() {
+    this.cy.endBatch();
+    if (this._elements.nonempty()) {
+      // Try to only layout added ones
+      // this._elements?.layout(getCytoscapeLayoutConfig()).run();
+      this.layout.stop();
+      this.layout = this.cy.layout(getCytoscapeLayoutConfig());
+      this.layout.run();
+    }
   }
 
   private addNode(node: cytoscape.NodeDefinition): typeof node {
@@ -189,16 +209,6 @@ export class ALGraph {
     };
     this.cy.add(edge);
     return edge;
-  }
-
-  private startBatch() {
-    this.cy.startBatch();
-  }
-  private endBatch() {
-    this.layout.stop();
-    this.layout = this.cy.layout(getCytoscapeLayoutConfig('klay'));
-    this.layout.run();
-    this.cy.endBatch();
   }
 
   private getPageUriNodeId(pageURI?: string): GraphID {
