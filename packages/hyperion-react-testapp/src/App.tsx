@@ -40,7 +40,7 @@ const maxDepth = 1000;
 const Modes = {
   'mutationOnlySurface': () => <NonInteractiveSurfaceComponent></NonInteractiveSurfaceComponent>,
   'network': () => <DynamicSvgComponent></DynamicSvgComponent>,
-  'nested': () => <ElementTextTooltip channel={SyncChannel}>
+  'nested': () => <>
     <div>
       {/* <Counter></Counter> */}
     </div>
@@ -56,7 +56,7 @@ const Modes = {
     </div>
     <TextComponent />
     <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
-  </ElementTextTooltip>,
+  </>,
 };
 type ModeNames = keyof typeof Modes;
 const PersistedOptionValue = new LocalStoragePersistentData<ModeNames>(

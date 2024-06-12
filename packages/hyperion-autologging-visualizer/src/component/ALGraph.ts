@@ -7,7 +7,8 @@ import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
 import type cytoscape from 'cytoscape';
-import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigKlay';
+// import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigKlay';
+import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigDagre';
 import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 import { assert } from '@hyperion/hyperion-global';
 
@@ -78,13 +79,21 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
     }
   },
   {
+    selector: 'edge.trigger', style: {
+      "line-color": 'salmon',
+      'target-arrow-color': 'salmon',
+      "line-style": 'dashed',
+      "width": '1',
+    }
+  },
+  {
     selector: '.al_ui_event', style: {
       "background-color": 'green'
     }
   },
   {
     selector: '.al_surface_mutation_event.mount_component', style: {
-      "background-color": 'blue'
+      "background-color": 'HotPink'
     }
   },
   {
@@ -132,6 +141,11 @@ export const SupportedALEvents = [
 
 type SupportedALEventNames = (typeof SupportedALEvents)[number] & (keyof ALChannelEvent); // & to filter out typos in the list
 type SupportedALEventData<T extends SupportedALEventNames> = ALChannelEvent[T][0] & Partial<Nullable<ALFlowletEvent>>;
+export type EventInfo<T extends SupportedALEventNames> = {
+  eventName: T,
+  eventData: SupportedALEventData<T>,
+}
+export type EventInfos = EventInfo<SupportedALEventNames>;
 
 type TriggerFlowletRegion = {
   // The interaction it belongs to
@@ -149,11 +163,42 @@ export class ALGraph {
   private readonly appId: GraphID = '_app';
   private readonly flowsId: GraphID = '_flows';
 
-  constructor(public readonly cy: cytoscape.Core) {
+  constructor(
+    public readonly cy: cytoscape.Core,
+    options?: {
+      onEventNodeClick?: (eventInfo: EventInfos) => void
+    }
+  ) {
     cy.style(defaultStylesheet);
     this.layout = cy.layout(getCytoscapeLayoutConfig());
-    this.layout.run();
-    // click handlers with callback HOOKs?
+
+    if (options?.onEventNodeClick) {
+      const onEventNodeClick = options.onEventNodeClick;
+      this.cy.on('click', 'node', event => {
+        const { target } = event;
+        const eventInfo = target.scratch() as EventInfos;
+        console.log('[PS]', event.type, target.data(), eventInfo);
+
+        if (typeof eventInfo.eventName === "string") { // Just to be sure the right kind of data
+          onEventNodeClick(eventInfo);
+        }
+      });
+
+      // cy.on('mouseover', 'node', (event) => {
+      //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+      // });
+      // cy.on('click', 'edge', (event) => {
+      //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+      // });
+    }
+
+    // An optimization to avoid unnecessary relayout
+    this._elements = this.cy.collection();
+    this.cy.on('add', event => {
+      this._elements.merge(event.target);
+      console.log('added', event);
+    });
+
     this.addNode({
       data: {
         id: this.appId,
@@ -167,20 +212,11 @@ export class ALGraph {
       }
     });
 
-    this._elements = this.cy.collection();
-    this.cy.on('add', event => {
-      this._elements.merge(event.target);
-      console.log('added', event);
-    });
+    this.reLayout();
+  }
 
-  }
   private _elements: cytoscape.CollectionReturnValue;
-  private startBatch() {
-    this._elements = this.cy.collection();
-    this.cy.startBatch();
-  }
-  private endBatch() {
-    this.cy.endBatch();
+  private reLayout() {
     if (this._elements.nonempty()) {
       // Try to only layout added ones
       // this._elements?.layout(getCytoscapeLayoutConfig()).run();
@@ -188,6 +224,14 @@ export class ALGraph {
       this.layout = this.cy.layout(getCytoscapeLayoutConfig());
       this.layout.run();
     }
+  }
+  private startBatch() {
+    this._elements = this.cy.collection();
+    this.cy.startBatch();
+  }
+  private endBatch() {
+    this.cy.endBatch();
+    this.reLayout();
   }
 
   private addNode(node: cytoscape.NodeDefinition): typeof node {
@@ -369,9 +413,9 @@ export class ALGraph {
       scratch: {
         eventName,
         eventData,
-      },
+      } as EventInfo<T>,
     });
-    this.addEdge(region?.triggerFlowletId, id);
+    this.addEdge(region?.triggerFlowletId, id, 'trigger');
     if (eventData.relatedEventIndex) {
       const relatedId = '' + eventData.relatedEventIndex
       if (this.cy.$id(relatedId).nonempty()) {

@@ -11,6 +11,7 @@ export function ALGraphInfo(props: {
   channel: Channel<AutoLogging.ALChannelEvent>,
   height: string,
   width: string,
+  renderer: (eventInfo: ALGraph.EventInfos) => React.JSX.Element,
 }): React.JSX.Element {
   /**
    * NOTE: Using the CytoscapeComponent did not work for this approach that
@@ -28,6 +29,9 @@ export function ALGraphInfo(props: {
     // Add any initial notes to the graph here
   ]);
 
+  const [eventInfo, setEventInfo] = useState<ALGraph.EventInfos>();
+  const renderer = props.renderer || (eventInfo => <pre>{eventInfo.eventName}</pre>);
+
   React.useEffect(
     () => {
       if (graphRef.current == null && container.current != null) {
@@ -35,18 +39,16 @@ export function ALGraphInfo(props: {
           container: container.current,
           elements,
         });
-        const graph = new ALGraph.ALGraph(cy);
+        const graph = new ALGraph.ALGraph(
+          cy,
+          {
+            onEventNodeClick: setEventInfo
+          }
+        );
         const channel = new PausableChannel<AutoLogging.ALChannelEvent>();
         graphRef.current = { graph, channel };
 
         props.channel.pipe(channel);
-
-        cy.on('click mouseover', 'node', (event) => {
-          console.log('[PS]', event.type, event.target.data(), event.target.scratch());
-        });
-        cy.on('click', 'edge', (event) => {
-          console.log('[PS]', event.type, event.target.data(), event.target.scratch());
-        });
 
         const alEvents = ALGraph.SupportedALEvents;
 
@@ -78,15 +80,42 @@ export function ALGraphInfo(props: {
   );
 
   return (
-    <div
-      style={{
-        width: props.width || "100%",
-        height: props.height || "1000px",
-        textAlign: "left",
-        display: "inline-block",
-        borderBlockStyle: 'groove',
-        borderBlockColor: 'red'
-      }}
-      ref={container}></div>
+    <table style={{
+      width: props.width || "100%",
+      height: props.height || "1000px",
+    }}>
+      <tbody>
+        <tr>
+          <th>Graph</th>
+          <th>Info</th>
+        </tr>
+        <tr>
+          <td width="80%">
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                textAlign: "left",
+                display: "inline-block",
+                borderBlockStyle: 'groove',
+                borderBlockColor: 'red'
+              }}
+              ref={container}></div>
+          </td>
+          <td>
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                textAlign: "left",
+                display: "inline-block",
+                borderBlockStyle: 'groove',
+                borderBlockColor: 'green'
+              }}
+            >{eventInfo != null ? renderer(eventInfo) : null}</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
 }

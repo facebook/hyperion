@@ -9,6 +9,7 @@ import { ALSessionGraph } from "@hyperion/hyperion-autologging-visualizer/src/co
 import { ALGraphInfo } from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraphInfo.react";
 import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
 import { ALFlowletEvent } from "@hyperion/hyperion-autologging/src/ALType";
+import * as  ALGraph from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph";
 
 const EventsWithFlowlet = [
   'al_ui_event',
@@ -68,6 +69,24 @@ function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEna
   </tr>;
 }
 
+function EventInfoViewer(eventInfo: ALGraph.EventInfos) {
+  return <table>
+    <header>
+      <tr>
+        <th colSpan={2}>{eventInfo.eventName}</th>
+      </tr>
+    </header>
+    <tbody>
+      {
+        Object.entries(eventInfo.eventData).map(prop => {
+          const [key, value] = prop;
+          return <tr><th>{key}</th><td>{String(value)}</td></tr>
+        })
+      }
+    </tbody>
+  </table>
+}
+
 export default function () {
   // Better to first setup listeners before initializing AutoLogging so we don't miss any events (e.g. Heartbeat(START))
 
@@ -99,7 +118,12 @@ export default function () {
     </div>
     <div>
       <ALSessionGraph />
-      <ALGraphInfo channel={SyncChannel} width="100%" height="1000px" />
+      <ALGraphInfo
+        channel={SyncChannel}
+        width="100%"
+        height="1000px"
+        renderer={EventInfoViewer}
+      />
     </div>
   </div>;
 }
