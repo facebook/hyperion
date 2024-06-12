@@ -12,7 +12,7 @@ import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 import type cytoscape from 'cytoscape';
 import React from "react";
 import CytoscapeComponent from 'react-cytoscapejs';
-import { getCytoscapeLayoutConfig } from "./CytoscapeLayoutConfig";
+import { getCytoscapeLayoutConfig } from "./CytoscapeLayoutConfigKlay";
 import * as ALGraph from "./ALGraph";
 
 
@@ -244,7 +244,7 @@ function ALSessionPetriReact(props: CyProps): React.JSX.Element {
         return;
       }
       cy.current = ref;
-      cy.current?.layout(getCytoscapeLayoutConfig('klay')).run();
+      cy.current?.layout(getCytoscapeLayoutConfig()).run();
       if (!listenerRegistered) {
         cy.current?.on('click mouseover', 'node', (event) => {
           console.log('[PS]', event.type, event.target.data(), event.target.scratch());
