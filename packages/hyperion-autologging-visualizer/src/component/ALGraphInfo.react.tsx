@@ -2,12 +2,16 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
-import { PausableChannel } from "@hyperion/hyperion-channel";
+import { Channel, PausableChannel } from "@hyperion/hyperion-channel";
 import cytoscape from 'cytoscape';
 import React, { useState } from "react";
 import * as ALGraph from "./ALGraph";
 
-export function ALGraphInfo(): React.JSX.Element {
+export function ALGraphInfo(props: {
+  channel: Channel<AutoLogging.ALChannelEvent>,
+  height: string,
+  width: string,
+}): React.JSX.Element {
   /**
    * NOTE: Using the CytoscapeComponent did not work for this approach that
    * uses a dynamic approach to update the graph. That component seems to
@@ -26,7 +30,7 @@ export function ALGraphInfo(): React.JSX.Element {
 
   React.useEffect(
     () => {
-      if (graphRef.current == null) {
+      if (graphRef.current == null && container.current != null) {
         const cy = cytoscape({
           container: container.current,
           elements,
@@ -35,7 +39,7 @@ export function ALGraphInfo(): React.JSX.Element {
         const channel = new PausableChannel<AutoLogging.ALChannelEvent>();
         graphRef.current = { graph, channel };
 
-        AutoLogging.getInitOptions().channel.pipe(channel);
+        props.channel.pipe(channel);
 
         cy.on('click mouseover', 'node', (event) => {
           console.log('[PS]', event.type, event.target.data(), event.target.scratch());
@@ -76,8 +80,8 @@ export function ALGraphInfo(): React.JSX.Element {
   return (
     <div
       style={{
-        width: "100%",
-        height: "1000px",
+        width: props.width || "100%",
+        height: props.height || "1000px",
         textAlign: "left",
         display: "inline-block",
         borderBlockStyle: 'groove',

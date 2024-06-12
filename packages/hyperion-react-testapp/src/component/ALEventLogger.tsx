@@ -99,7 +99,7 @@ export default function () {
     </div>
     <div>
       <ALSessionGraph />
-      <ALGraphInfo />
+      <ALGraphInfo channel={SyncChannel} width="100%" height="1000px" />
     </div>
   </div>;
 }

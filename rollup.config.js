@@ -4,6 +4,10 @@ import md5 from 'md5';
 
 export default defineConfig({
   input: 'src/index.js',
+  external: [
+    /cytoscape/,
+    "react",
+  ],
   output: {
     // file: './dist/hyperion.js',
     dir: './dist',
@@ -14,13 +18,13 @@ export default defineConfig({
       "hyperionChannel": [
         "@hyperion/hyperion-channel/src/Channel",
       ],
-      "hyperionAsyncCounter":[
+      "hyperionAsyncCounter": [
         "@hyperion/hyperion-async-counter/src/AsyncCounter",
       ],
-      "hyperionTimedTrigger":[
+      "hyperionTimedTrigger": [
         "@hyperion/hyperion-timed-trigger/src/TimedTrigger",
       ],
-      "hyperionTestAndSet":[
+      "hyperionTestAndSet": [
         "@hyperion/hyperion-test-and-set/src/TestAndSet",
       ],
       "hyperionCore": [
@@ -81,6 +85,10 @@ export default defineConfig({
         "@hyperion/hyperion-autologging/src/ALInteractableDOMElement",
         "@hyperion/hyperion-autologging/src/AutoLogging",
         "@hyperion/hyperion-autologging/src/ALUIEventPublisher",
+      ],
+      "hyperionAutoLoggingVisualizer": [
+        "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph",
+        "@hyperion/hyperion-autologging-visualizer/src/component/ALGraphInfo.react",
       ]
     },
     chunkFileNames: "[name].js",
