@@ -7,8 +7,7 @@ import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
 import type cytoscape from 'cytoscape';
-// import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigKlay';
-import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigDagre';
+import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigFcose';
 import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 import { assert } from '@hyperion/hyperion-global';
 
@@ -162,42 +161,43 @@ export class ALGraph {
   layout: cytoscape.Layouts;
   private readonly appId: GraphID = '_app';
   private readonly flowsId: GraphID = '_flows';
+  private readonly filter: string | null = null;
 
   constructor(
     public readonly cy: cytoscape.Core,
     options?: {
-      onEventNodeClick?: (eventInfo: EventInfos) => void
+      onEventNodeClick?: (eventInfo: EventInfos) => void;
+      filter?: string;
     }
   ) {
     cy.style(defaultStylesheet);
     this.layout = cy.layout(getCytoscapeLayoutConfig());
 
-    if (options?.onEventNodeClick) {
-      const onEventNodeClick = options.onEventNodeClick;
-      this.cy.on('click', 'node', event => {
-        const { target } = event;
-        const eventInfo = target.scratch() as EventInfos;
-        console.log('[PS]', event.type, target.data(), eventInfo);
+    if (options) {
+      this.filter = options.filter ?? null;
 
-        if (typeof eventInfo.eventName === "string") { // Just to be sure the right kind of data
-          onEventNodeClick(eventInfo);
-        }
-      });
+      if (options.onEventNodeClick) {
+        const onEventNodeClick = options.onEventNodeClick;
+        this.cy.on('click', 'node', event => {
+          const { target } = event;
+          const eventInfo = target.scratch() as EventInfos;
+          console.log('[PS]', event.type, target.data(), eventInfo);
 
-      // cy.on('mouseover', 'node', (event) => {
-      //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
-      // });
-      // cy.on('click', 'edge', (event) => {
-      //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
-      // });
+          if (typeof eventInfo.eventName === "string") { // Just to be sure the right kind of data
+            onEventNodeClick(eventInfo);
+          }
+        });
+
+        // cy.on('mouseover', 'node', (event) => {
+        //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+        // });
+        // cy.on('click', 'edge', (event) => {
+        //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+        // });
+      }
     }
-
     // An optimization to avoid unnecessary relayout
     this._elements = this.cy.collection();
-    this.cy.on('add', event => {
-      this._elements.merge(event.target);
-      console.log('added', event);
-    });
 
     this.addNode({
       data: {
@@ -217,25 +217,37 @@ export class ALGraph {
 
   private _elements: cytoscape.CollectionReturnValue;
   private reLayout() {
-    if (this._elements.nonempty()) {
-      // Try to only layout added ones
-      // this._elements?.layout(getCytoscapeLayoutConfig()).run();
-      this.layout.stop();
-      this.layout = this.cy.layout(getCytoscapeLayoutConfig());
-      this.layout.run();
-    }
+    // this._elements?.layout(getCytoscapeLayoutConfig()).run();
+    this.layout.stop();
+    this.layout = this.cy.layout(getCytoscapeLayoutConfig());
+    this.layout.run();
   }
   private startBatch() {
     this._elements = this.cy.collection();
     this.cy.startBatch();
   }
+  private add(element: cytoscape.ElementDefinition) {
+    const elementDef = this.cy.add(element);
+    this._elements.merge(elementDef);
+  }
   private endBatch() {
+    let runLayout = this._elements.nonempty();
+    if (runLayout && this.filter) {
+      // Remove all undesired elements from the graph. Note desired elements showup in '.both' as well
+      const { left: undesired, /* right: desired, both: _ */ } = this._elements.diff(this.filter);
+      this.cy.remove(undesired);
+      runLayout = this._elements.size() > undesired.size();
+    }
+
     this.cy.endBatch();
-    this.reLayout();
+    if (runLayout) {
+      // Try to only layout added ones
+      this.reLayout();
+    }
   }
 
   private addNode(node: cytoscape.NodeDefinition): typeof node {
-    this.cy.add(node);
+    this.add(node);
     return node;
   }
 
@@ -251,7 +263,7 @@ export class ALGraph {
       },
       classes,
     };
-    this.cy.add(edge);
+    this.add(edge);
     return edge;
   }
 
