@@ -123,17 +123,4 @@ export function init() {
       ]
     }
   });
-
-  // Temp code to test snapshot
-  function showEventSnapshot(eventData: ALExtensibleEvent) {
-    const snapshot = getEventExtension(eventData, 'autologging')?.snapshot;
-    if (typeof snapshot === 'string') {
-      const div = document.createElement('div');
-      div.innerHTML = snapshot;
-      document.body.appendChild(div);
-    }
-  }
-  channel.on('al_ui_event').add(showEventSnapshot);
-  channel.on('al_surface_visibility_event').add(showEventSnapshot);
-
 }
