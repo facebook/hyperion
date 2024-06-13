@@ -37,37 +37,8 @@ const StyleCss = `
 .al-graph-info { grid-area: info; }
 `;
 
-type ALGraphOptionsType = {
-  events: {
-    al_ui_event: {
-      click: boolean;
-      change: boolean;
-      [key: string]: boolean;
-    };
-    al_surface_mutation_event: {
-      mount_component: boolean;
-      unmount_component: boolean;
-    };
-    al_network_request: boolean;
-    al_network_response: boolean;
-  };
-  nodes: {
-    tuple: {
-      page_uri: boolean;
-      surface: boolean;
-      component: boolean;
-      text: boolean;
-    };
-    trigger_flowlet: boolean;
-  };
-  edges: {
-    trigger: boolean;
-    related_event_index: boolean;
-    tuple: boolean;
-  };
-};
 
-const ALGraphOptions = new LocalStoragePersistentData<ALGraphOptionsType>(
+const ALGraphOptions = new LocalStoragePersistentData<ALGraph.ALGraphDynamicOptionsType>(
   'alGraphOptions',
   () => ({
     events: {
@@ -173,7 +144,6 @@ export function ALGraphInfo(props: {
   const graphRef = React.useRef<{
     graph: ALGraph.ALGraph,
     channel: PausableChannel<AutoLogging.ALChannelEvent>,
-    options: ALGraphOptionsType, // Make a copy so we can always read the latest in the listeners
   } | null>(null);
 
   const [elements, _setElements] = useState<cytoscape.ElementDefinition[]>([
@@ -182,6 +152,8 @@ export function ALGraphInfo(props: {
 
   const [eventInfo, setEventInfo] = useState<ALGraph.EventInfos>();
   const [options, setOptions] = useState(ALGraphOptions.getValue());
+
+  options.filter ??= props.graphFilter;
 
   const renderer = props.renderer || (eventInfo => <pre>{eventInfo.eventName}</pre>);
 
@@ -196,12 +168,11 @@ export function ALGraphInfo(props: {
           cy,
           {
             onEventNodeClick: setEventInfo,
-            filter: props.graphFilter,
             topContainer: gridContainer.current,
           }
         );
         const channel = new PausableChannel<AutoLogging.ALChannelEvent>();
-        const graphInfo = graphRef.current = { graph, channel, options };
+        graphRef.current = { graph, channel };
 
         props.channel.pipe(channel);
 
@@ -212,24 +183,17 @@ export function ALGraphInfo(props: {
           switch (eventName) {
             case 'al_ui_event':
               channel.on(eventName).add(eventData => {
-                if (graphInfo.options.events[eventName][eventData.event]) {
-                  graph.addALUIEventNodeId(eventName, eventData);
-                }
+                graph.addALUIEventNodeId(eventName, eventData);
               });
               break;
             case 'al_surface_mutation_event':
               channel.on(eventName).add(eventData => {
-                if (graphInfo.options.events[eventName][eventData.event]) {
-                  graph.addSurfaceEvent(eventName, eventData);
-                }
+                graph.addSurfaceEvent(eventName, eventData);
               });
               break;
             default:
               channel.on(eventName).add(eventData => {
-                // The option value may change over time, so check it inside of the handler
-                if (graphInfo.options.events[eventName]) {
-                  graph.addALEventNodeId(eventName, eventData);
-                }
+                graph.addALEventNodeId(eventName, eventData);
               });
               break;
           }
@@ -245,13 +209,13 @@ export function ALGraphInfo(props: {
   React.useEffect(() => {
     if (graphRef.current) {
       // The following ensures that later the event handlers will see the latest value. 
-      graphRef.current.options = options;
+      graphRef.current.graph.setDynamicOptions(options);
     }
   }, [options]);
 
   return (
     <div ref={gridContainer} style={{
-      width: props.width || "100%",
+      width: props.width || "99%",
       height: props.height || "1000px",
     }}>
       <style>{StyleCss}</style>
