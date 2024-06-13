@@ -173,16 +173,21 @@ export class ALGraph {
   private readonly appId: GraphID = '_app';
   private readonly flowsId: GraphID = '_flows';
   private readonly filter: string | null = null;
+  private readonly topContainer: Element | null;
 
   constructor(
     public readonly cy: cytoscape.Core,
     options?: {
       onEventNodeClick?: (eventInfo: EventInfos) => void;
       filter?: string;
+      topContainer?: Element | null;
     }
   ) {
+    this.topContainer = options?.topContainer ?? cy.container();
+
     cy.style(defaultStylesheet);
     this.layout = cy.layout(getCytoscapeLayoutConfig());
+
 
     if (options) {
       this.filter = options.filter ?? null;
@@ -495,7 +500,7 @@ export class ALGraph {
   }
 
   addALUIEventNodeId<T extends 'al_ui_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
-    if (this.cy.container()?.contains(eventData.targetElement)) {
+    if (this.topContainer?.contains(eventData.targetElement)) {
       // Don't want to capture clicks on the graph itself.
       return;
     }
