@@ -251,7 +251,28 @@ export function ALGraphInfo(props: {
             setOptions(newOptions);
           }} />
         </div>
-        <div className="al-graph-filter">Filter</div>
+        <div className="al-graph-filter">Filter:
+          <a href="https://js.cytoscape.org/#selectors" target="_blank" style={{
+            "color": "#fff",
+            "backgroundColor": "#feb22a",
+            "width": "12px",
+            "height": "12px",
+            "display": "inline-block",
+            "borderRadius": "100%",
+            "fontSize": "10px",
+            "textAlign": "center",
+            "textDecoration": "none",
+            "boxShadow": "inset -1px -1px 1px 0px rgba(0,0,0,0.25)",
+            
+          }}>?</a>
+          <input type='text' defaultValue={options.filter} onChange={value => {
+            const newOptions = {
+              ...options,
+              filter: value.target.value,
+            };
+            ALGraphOptions.setValue(newOptions);
+            setOptions(newOptions);
+          }} /></div>
         <div className="al-graph-main" ref={container}></div>
         <div className="al-graph-info">{eventInfo != null ? renderer(eventInfo) : null}</div>
       </div>
