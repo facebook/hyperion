@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 // import React, {useState, useCallback, useRef, useEffect} from "react";
-import { ALFlowletEvent } from '@hyperion/hyperion-autologging/src/ALType';
+import { ALExtensibleEvent, ALFlowletEvent } from '@hyperion/hyperion-autologging/src/ALType';
 import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
@@ -139,7 +139,7 @@ export const SupportedALEvents = [
 ] as const;
 
 type SupportedALEventNames = (typeof SupportedALEvents)[number] & (keyof ALChannelEvent); // & to filter out typos in the list
-type SupportedALEventData<T extends SupportedALEventNames> = ALChannelEvent[T][0] & Partial<Nullable<ALFlowletEvent>>;
+type SupportedALEventData<T extends SupportedALEventNames> = ALChannelEvent[T][0] & Partial<Nullable<ALFlowletEvent>> & ALExtensibleEvent;
 export type EventInfo<T extends SupportedALEventNames> = {
   eventName: T,
   eventData: SupportedALEventData<T>,

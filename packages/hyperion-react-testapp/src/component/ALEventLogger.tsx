@@ -10,6 +10,7 @@ import { ALGraphInfo } from "@hyperion/hyperion-autologging-visualizer/src/compo
 import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
 import { ALFlowletEvent } from "@hyperion/hyperion-autologging/src/ALType";
 import * as  ALGraph from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph";
+import { getEventExtension } from "@hyperion/hyperion-autologging/src/ALEventExtension";
 
 const EventsWithFlowlet = [
   'al_ui_event',
@@ -69,7 +70,18 @@ function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEna
   </tr>;
 }
 
-function EventInfoViewer(eventInfo: ALGraph.EventInfos) {
+function EventInfoViewer(props: { eventInfo: ALGraph.EventInfos }): React.ReactNode {
+  const { eventInfo } = props;
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  React.useEffect(() => {
+    if (ref.current) {
+      const snapshot = getEventExtension<{ snapshot: string }>(eventInfo.eventData, 'autologging')?.snapshot;
+      if (snapshot) {
+        ref.current.innerHTML = snapshot;
+      }
+    }
+  }, [eventInfo]);
+
   return <table>
     <thead>
       <tr>
@@ -80,10 +92,18 @@ function EventInfoViewer(eventInfo: ALGraph.EventInfos) {
       {
         Object.entries(eventInfo.eventData).map(prop => {
           const [key, value] = prop;
-          return <tr><th>{key}</th><td>{String(value)}</td></tr>
+          return <tr key={key}><th>{key}</th><td>{String(value)}</td></tr>
         })
       }
     </tbody>
+    <tfoot >
+      <tr>
+        <th>Snapshot</th>
+        <td>
+          <div ref={ref}></div>
+        </td>
+      </tr>
+    </tfoot>
   </table>
 }
 
@@ -122,8 +142,8 @@ export default function () {
         channel={SyncChannel}
         width="100%"
         height="1000px"
-        renderer={EventInfoViewer}
-        graphFilter='edge, node[label !^= "al_surface"]'
+        renderer={eventInfo => <EventInfoViewer eventInfo={eventInfo} />}
+        // graphFilter='edge, node[label !^= "al_surface"]'
       />
     </div>
   </div>;
