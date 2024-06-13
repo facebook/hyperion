@@ -102,11 +102,8 @@ export function init() {
           eventName: 'mouseover',
           cacheElementReactInfo: true,
           interactableElementsOnly: false,
+          durationThresholdToEmitHoverEvent: 1000,
         },
-        {
-          eventName: 'hover',
-          hoverDurationThresholdMS: 1000,
-        }
       ]
     },
     heartbeat: {

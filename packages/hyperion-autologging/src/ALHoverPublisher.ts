@@ -15,18 +15,26 @@ import { assert } from "@hyperion/hyperion-global";
 
 export type InitOptions = Types.Options<
   Pick<ALUIEventPublisher.InitOptions, 'uiEvents'> &
-  Pick<ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions)['channel']>>, 'channel'> & {
-    hoverDurationThresholdMS: number;
-  }
+  Pick<ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions)['channel']>>, 'channel'>
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel, uiEvents, hoverDurationThresholdMS } = options;
+  const { channel, uiEvents } = options;
 
   const mouseOverConfig = uiEvents.find(e => e.eventName === 'mouseover');
   assert(mouseOverConfig != null, 'mouseover event must be included in uiEvents config to enable hover.');
-  const clickConfig = uiEvents.find(e => e.eventName === 'click');
-  assert(clickConfig != null, 'click event must be included in uiEvents config to enable hover.');
+  // const clickConfig = uiEvents.find(e => e.eventName === 'click');
+  // assert(clickConfig != null, 'click event must be included in uiEvents config to enable hover.');
+
+  // Won't refine below property durationThresholdToEmitHoverEvent as being available without this check...
+  if (mouseOverConfig.eventName !== 'mouseover') {
+    return;
+  }
+
+  const durationThresholdToEmitHoverEvent = mouseOverConfig.durationThresholdToEmitHoverEvent;
+  if (durationThresholdToEmitHoverEvent == null) {
+    return;
+  }
 
   let activeHover: ALUIEventCaptureData | null = null;
   channel.addListener('al_ui_event_capture', eventData => {
@@ -40,7 +48,7 @@ export function publish(options: InitOptions): void {
         activeHover?.targetElement === eventData.domEvent?.relatedTarget
       ) {
         activeHover != null &&
-          maybeEmitEvent(activeHover, eventData, hoverDurationThresholdMS);
+          maybeEmitEvent(activeHover, eventData, durationThresholdToEmitHoverEvent);
       }
       // Set new active hover
       activeHover = eventData;
@@ -55,7 +63,7 @@ export function publish(options: InitOptions): void {
       eventData.element?.contains(activeHover.targetElement)
     ) {
       activeHover != null &&
-        maybeEmitEvent(activeHover, eventData, hoverDurationThresholdMS);
+        maybeEmitEvent(activeHover, eventData, durationThresholdToEmitHoverEvent);
       // Reset the active hover
       activeHover = null;
     }
