@@ -66,8 +66,10 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
   },
   {
     selector: 'edge.flowlet', style: {
-      "line-color": 'LightCyan',
-      'target-arrow-color': 'PaleTurquoise',
+      "line-style": 'solid',
+      "line-color": 'SteelBlue',
+      'target-arrow-color': 'SteelBlue',
+      // 'curve-style': 'taxi',
       "width": '2',
     }
   },
@@ -79,9 +81,18 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
   },
   {
     selector: 'edge.trigger', style: {
+      "line-style": 'dashed',
       "line-color": 'salmon',
       'target-arrow-color': 'salmon',
-      "line-style": 'dashed',
+      "width": '1',
+    }
+  },
+  {
+    selector: 'edge.timestamp', style: {
+      "line-style": 'dotted',
+      "line-color": 'yellow',
+      'target-arrow-color': 'yellow',
+      'target-arrow-shape': 'tee',
       "width": '1',
     }
   },
@@ -226,9 +237,10 @@ export class ALGraph {
     this._elements = this.cy.collection();
     this.cy.startBatch();
   }
-  private add(element: cytoscape.ElementDefinition) {
+  private add(element: cytoscape.ElementDefinition): cytoscape.CollectionReturnValue {
     const elementDef = this.cy.add(element);
     this._elements.merge(elementDef);
+    return elementDef;
   }
   private endBatch() {
     let runLayout = this._elements.nonempty();
@@ -246,12 +258,11 @@ export class ALGraph {
     }
   }
 
-  private addNode(node: cytoscape.NodeDefinition): typeof node {
-    this.add(node);
-    return node;
+  private addNode(node: cytoscape.NodeDefinition): cytoscape.CollectionReturnValue {
+    return this.add(node);
   }
 
-  private addEdge(sourceId: GraphID, targetId: GraphID, classes?: string | string[]): cytoscape.EdgeDefinition | null {
+  private addEdge(sourceId: GraphID, targetId: GraphID, classes?: string | string[]): cytoscape.CollectionReturnValue | null {
     if (!sourceId || !targetId) {
       return null;
     }
@@ -263,8 +274,7 @@ export class ALGraph {
       },
       classes,
     };
-    this.add(edge);
-    return edge;
+    return this.add(edge);
   }
 
   private getPageUriNodeId(pageURI?: string): GraphID {
@@ -335,6 +345,37 @@ export class ALGraph {
     return labelId ?? componentId ?? surfaceId;
   }
 
+  private getTimestampNodeId(timestamp: number): GraphID {
+    return; // For now ignore this until a good layout algo is found.
+    const id = '' + timestamp;
+
+    const timelineId = 'timeline';
+    let timeline = this.cy.$id(timelineId);
+    if (timeline.empty()) {
+      timeline = this.addNode({
+        data: {
+          id: timelineId,
+          label: 'timeline',
+        },
+        scratch: {
+          lastTimeId: id
+        }
+      });
+    }
+
+    this.addNode({
+      classes: 'timestamp',
+      data: {
+        id,
+        label: timestamp + 'ms',
+        parent: timelineId,
+      },
+    });
+    this.addEdge(timeline.scratch().lastTimeId, id);
+    timeline.scratch().lastTimeId = id;
+    return id;
+  }
+
   private getTriggerFlowletNodeId(flowlet: Flowlet | null | undefined): TriggerFlowletRegion | null {
     if (!flowlet) {
       return null;
@@ -355,7 +396,8 @@ export class ALGraph {
       triggerFlowletId: id,
       interaction: null,
     };
-    let parentId;
+    let parentId: GraphID;
+    let prevId: GraphID;
 
     const parentTriggerFloeletRegion = this.getTriggerFlowletNodeId(flowlet.parent);
     if (!parentTriggerFloeletRegion) {
@@ -366,6 +408,7 @@ export class ALGraph {
       // we are some middle trigger of interactin, so reuse parents region
       triggerFloeletRegion.interaction = parentTriggerFloeletRegion.interaction;
       parentId = triggerFloeletRegion.interaction.flowsId;
+      prevId = parentTriggerFloeletRegion.triggerFlowletId;
     } else {
       //We are at the root of interaction, so create a new region
       const regionId = `${id}_region`;
@@ -395,6 +438,7 @@ export class ALGraph {
         }
       });
       parentId = triggerFloeletRegion.interaction.flowsId;
+      // prevId = parentTriggerFloeletRegion.triggerFlowletId; // For now, let's let the first trigger to be free to move
     }
     this.addNode({
       classes: 'flowlet',
@@ -407,10 +451,12 @@ export class ALGraph {
         triggerFloeletRegion,
       }
     });
-    this.addEdge(parentTriggerFloeletRegion?.triggerFlowletId, id);
+    this.addEdge(prevId, id, 'flowlet');
+
     return triggerFloeletRegion;
   }
 
+  private _lastEventId: GraphID;
   private getALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     const id = '' + eventData.eventIndex;
     const region = this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
@@ -436,6 +482,9 @@ export class ALGraph {
         console.warn(`Related Event Index not yet added for ${relatedId} for ${eventName}`);
       }
     }
+    this.addEdge(this._lastEventId, id, 'timestamp');
+    this._lastEventId = id;
+    this.addEdge(this.getTimestampNodeId(eventData.eventTimestamp), id, 'timestamp');
     return id;
   }
 
