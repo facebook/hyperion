@@ -140,7 +140,7 @@ export default function () {
       <ALSessionGraph />
       <ALGraphInfo
         channel={SyncChannel}
-        width="100%"
+        width="99%"
         height="1000px"
         renderer={eventInfo => <EventInfoViewer eventInfo={eventInfo} />}
         // graphFilter='edge, node[label !^= "al_surface"]'
