@@ -11,7 +11,8 @@ export function ALGraphInfo(props: {
   channel: Channel<AutoLogging.ALChannelEvent>,
   height: string,
   width: string,
-  renderer: (eventInfo: ALGraph.EventInfos) => React.JSX.Element,
+  renderer?: (eventInfo: ALGraph.EventInfos) => React.JSX.Element,
+  graphFilter?: string,
 }): React.JSX.Element {
   /**
    * NOTE: Using the CytoscapeComponent did not work for this approach that
@@ -42,7 +43,8 @@ export function ALGraphInfo(props: {
         const graph = new ALGraph.ALGraph(
           cy,
           {
-            onEventNodeClick: setEventInfo
+            onEventNodeClick: setEventInfo,
+            filter: props.graphFilter
           }
         );
         const channel = new PausableChannel<AutoLogging.ALChannelEvent>();

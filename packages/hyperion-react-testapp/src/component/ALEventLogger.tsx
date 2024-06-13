@@ -71,11 +71,11 @@ function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEna
 
 function EventInfoViewer(eventInfo: ALGraph.EventInfos) {
   return <table>
-    <header>
+    <thead>
       <tr>
         <th colSpan={2}>{eventInfo.eventName}</th>
       </tr>
-    </header>
+    </thead>
     <tbody>
       {
         Object.entries(eventInfo.eventData).map(prop => {
@@ -123,6 +123,7 @@ export default function () {
         width="100%"
         height="1000px"
         renderer={EventInfoViewer}
+        graphFilter='edge, node[label !^= "al_surface"]'
       />
     </div>
   </div>;
