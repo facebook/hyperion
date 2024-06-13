@@ -37,7 +37,7 @@ const StyleCss = `
 .al-graph-info { grid-area: info; }
 `;
 
-const ALGraphOptions = new LocalStoragePersistentData<{
+type ALGraphOptionsType = {
   events: {
     al_ui_event: {
       click: boolean;
@@ -65,7 +65,9 @@ const ALGraphOptions = new LocalStoragePersistentData<{
     related_event_index: boolean;
     tuple: boolean;
   };
-}>(
+};
+
+const ALGraphOptions = new LocalStoragePersistentData<ALGraphOptionsType>(
   'alGraphOptions',
   () => ({
     events: {
@@ -129,14 +131,20 @@ function MultiCheckboxInputs<T extends Record<string, boolean | Record<string, b
       return <dd key={key}>{
         (typeof value === "boolean")
           ? <CheckboxInput label={key} checked={value} onChange={checked => {
-            (values as Record<string, boolean>)[key] = checked;
-            props.onChange(values);
+            const newValues: T = {
+              ...values,
+              [key]: checked
+            };
+            props.onChange(newValues);
           }} />
           : <span>{key}({
             Object.entries(value).map(([subkey, subvalue]) => <>
               <CheckboxInput key={key + "_" + subkey} label={subkey} checked={subvalue} onChange={checked => {
-                (values as Record<string, Record<string, boolean>>)[key][subkey] = checked;
-                props.onChange(values);
+                const newValues: T = {
+                  ...values,
+                };
+                (newValues as Record<string, Record<string, boolean>>)[key][subkey] = checked;
+                props.onChange(newValues);
               }} />
               ,
             </>)
@@ -165,6 +173,7 @@ export function ALGraphInfo(props: {
   const graphRef = React.useRef<{
     graph: ALGraph.ALGraph,
     channel: PausableChannel<AutoLogging.ALChannelEvent>,
+    options: ALGraphOptionsType, // Make a copy so we can always read the latest in the listeners
   } | null>(null);
 
   const [elements, _setElements] = useState<cytoscape.ElementDefinition[]>([
@@ -192,34 +201,36 @@ export function ALGraphInfo(props: {
           }
         );
         const channel = new PausableChannel<AutoLogging.ALChannelEvent>();
-        graphRef.current = { graph, channel };
+        const graphInfo = graphRef.current = { graph, channel, options };
 
         props.channel.pipe(channel);
 
         const alEvents = ALGraph.SupportedALEvents;
 
+        // In the following it is important to only close on graphNode from outside of this function.
         alEvents.forEach(eventName => {
           switch (eventName) {
             case 'al_ui_event':
               channel.on(eventName).add(eventData => {
-                if (options.events[eventName][eventData.event]) {
+                if (graphInfo.options.events[eventName][eventData.event]) {
                   graph.addALUIEventNodeId(eventName, eventData);
                 }
               });
               break;
             case 'al_surface_mutation_event':
               channel.on(eventName).add(eventData => {
-                if (options.events[eventName][eventData.event]) {
+                if (graphInfo.options.events[eventName][eventData.event]) {
                   graph.addSurfaceEvent(eventName, eventData);
                 }
               });
               break;
             default:
-              if (options.events[eventName]) {
-                channel.on(eventName).add(eventData => {
+              channel.on(eventName).add(eventData => {
+                // The option value may change over time, so check it inside of the handler
+                if (graphInfo.options.events[eventName]) {
                   graph.addALEventNodeId(eventName, eventData);
-                });
-              }
+                }
+              });
               break;
           }
         });
@@ -231,6 +242,13 @@ export function ALGraphInfo(props: {
     [graphRef]
   );
 
+  React.useEffect(() => {
+    if (graphRef.current) {
+      // The following ensures that later the event handlers will see the latest value. 
+      graphRef.current.options = options;
+    }
+  }, [options]);
+
   return (
     <div ref={gridContainer} style={{
       width: props.width || "100%",
@@ -241,23 +259,32 @@ export function ALGraphInfo(props: {
         <div className="al-graph-header"><center>Auto Logging Event Graph</center></div>
         <div className="al-graph-events">
           <MultiCheckboxInputs header="Events:" values={options.events} onChange={values => {
-            options.events = values;
-            ALGraphOptions.setValue(options);
-            setOptions(options);
+            const newOptions = {
+              ...options,
+              events: values,
+            };
+            ALGraphOptions.setValue(newOptions);
+            setOptions(newOptions);
           }} />
         </div>
         <div className="al-graph-nodes">
           <MultiCheckboxInputs header="Nodes:" values={options.nodes} onChange={values => {
-            options.nodes = values;
-            ALGraphOptions.setValue(options);
-            setOptions(options);
+            const newOptions = {
+              ...options,
+              nodes: values,
+            };
+            ALGraphOptions.setValue(newOptions);
+            setOptions(newOptions);
           }} />
         </div>
         <div className="al-graph-edges">
           <MultiCheckboxInputs header="Edges:" values={options.edges} onChange={values => {
-            options.edges = values;
-            ALGraphOptions.setValue(options);
-            setOptions(options);
+            const newOptions = {
+              ...options,
+              edges: values,
+            };
+            ALGraphOptions.setValue(newOptions);
+            setOptions(newOptions);
           }} />
         </div>
         <div className="al-graph-filter">Filter</div>
