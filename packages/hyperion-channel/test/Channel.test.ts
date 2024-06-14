@@ -214,5 +214,33 @@ describe("test Channel", () => {
     expect(fn1).toHaveBeenCalledTimes(4);
   });
 
+  test("unpipe channels", () => {
+    const channel1 = new Channel<ChannelEvents>();
+    const channel2 = new Channel<ChannelEvents>();
+    const channel3 = new Channel<ChannelEvents>();
+
+    const fn1 = jest.fn<void, ChannelEvents['ev1']>();
+    const fn2 = jest.fn<void, ChannelEvents['ev1']>();
+
+    channel2.addListener('ev1', fn1);
+    channel3.addListener('ev1', fn2);
+
+    channel1.pipe(channel2);
+    channel1.pipe(channel3, task => task());
+    channel1.emit('ev1');
+    expect(fn1).toHaveBeenCalledTimes(1);
+    expect(fn2).toHaveBeenCalledTimes(1);
+
+    channel1.unpipe(channel2);
+    channel1.emit('ev1');
+    expect(fn1).toHaveBeenCalledTimes(1);
+    expect(fn2).toHaveBeenCalledTimes(2);
+
+    channel1.unpipe(channel2);
+    channel1.unpipe(channel3);
+    channel1.emit('ev1');
+    expect(fn1).toHaveBeenCalledTimes(1);
+    expect(fn2).toHaveBeenCalledTimes(2);
+  });
 
 });
