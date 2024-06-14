@@ -16,6 +16,7 @@ const StyleCss = `
     'events events nodes nodes nodes'
     'events events edges edges edges'
     'filter filter filter filter filter'
+    'control control control control control'
     'main main main main info';
   grid-template-columns: 20% 20% 20% 20% 20%;
   gap: 10px;
@@ -33,6 +34,7 @@ const StyleCss = `
 .al-graph-nodes { grid-area: nodes; }
 .al-graph-edges { grid-area: edges; }
 .al-graph-filter { grid-area: filter; }
+.al-graph-control { grid-area: control; display: flex; justify-content: space-around; }
 .al-graph-main { grid-area: main; }
 .al-graph-info { grid-area: info; }
 `;
@@ -139,8 +141,8 @@ export function ALGraphInfo(props: {
    * keep changing the instance of the graph behind the scene
    */
 
-  const container = React.useRef<HTMLDivElement>(null);
   const gridContainer = React.useRef<HTMLDivElement>(null);
+  const graphContainer = React.useRef<HTMLDivElement>(null);
   const graphRef = React.useRef<{
     graph: ALGraph.ALGraph,
     channel: PausableChannel<AutoLogging.ALChannelEvent>,
@@ -152,6 +154,7 @@ export function ALGraphInfo(props: {
 
   const [eventInfo, setEventInfo] = useState<ALGraph.EventInfos>();
   const [options, setOptions] = useState(ALGraphOptions.getValue());
+  // const [instanceCounter, setInstanceCounter] = useState(0);
 
   options.filter ??= props.graphFilter;
 
@@ -159,18 +162,13 @@ export function ALGraphInfo(props: {
 
   React.useEffect(
     () => {
-      if (graphRef.current == null && container.current != null) {
-        const cy = cytoscape({
-          container: container.current,
+      if (graphRef.current == null && graphContainer.current != null) {
+        const graph = new ALGraph.ALGraph({
+          onEventNodeClick: setEventInfo,
+          topContainer: gridContainer.current,
+          graphContainer: graphContainer.current,
           elements,
         });
-        const graph = new ALGraph.ALGraph(
-          cy,
-          {
-            onEventNodeClick: setEventInfo,
-            topContainer: gridContainer.current,
-          }
-        );
         const channel = new PausableChannel<AutoLogging.ALChannelEvent>();
         graphRef.current = { graph, channel };
 
@@ -183,17 +181,17 @@ export function ALGraphInfo(props: {
           switch (eventName) {
             case 'al_ui_event':
               channel.on(eventName).add(eventData => {
-                graph.addALUIEventNodeId(eventName, eventData);
+                graphRef.current?.graph.addALUIEventNodeId(eventName, eventData);
               });
               break;
             case 'al_surface_mutation_event':
               channel.on(eventName).add(eventData => {
-                graph.addSurfaceEvent(eventName, eventData);
+                graphRef.current?.graph.addSurfaceEvent(eventName, eventData);
               });
               break;
             default:
               channel.on(eventName).add(eventData => {
-                graph.addALEventNodeId(eventName, eventData);
+                graphRef.current?.graph.addALEventNodeId(eventName, eventData);
               });
               break;
           }
@@ -203,7 +201,7 @@ export function ALGraphInfo(props: {
       graphRef.current?.channel.unpause();
       return () => graphRef.current?.channel.pause();
     },
-    [graphRef]
+    [graphRef, /* instanceCounter */]
   );
 
   React.useEffect(() => {
@@ -263,7 +261,7 @@ export function ALGraphInfo(props: {
             "textAlign": "center",
             "textDecoration": "none",
             "boxShadow": "inset -1px -1px 1px 0px rgba(0,0,0,0.25)",
-            
+
           }}>?</a>
           <input type='text' defaultValue={options.filter} onChange={value => {
             const newOptions = {
@@ -273,7 +271,47 @@ export function ALGraphInfo(props: {
             ALGraphOptions.setValue(newOptions);
             setOptions(newOptions);
           }} /></div>
-        <div className="al-graph-main" ref={container}></div>
+        <div className="al-graph-control">
+
+          <button
+            onClick={() => {
+              if (graphRef.current && graphContainer.current) {
+                graphRef.current.graph = new ALGraph.ALGraph({
+                  onEventNodeClick: setEventInfo,
+                  topContainer: gridContainer.current,
+                  graphContainer: graphContainer.current,
+                  elements,
+                });
+                graphRef.current.graph.setDynamicOptions(options);
+              }
+              // setInstanceCounter(instanceCounter + 1);
+            }}
+          >
+            Clear Graph
+          </button>
+
+          <button
+            onClick={() => {
+              graphRef.current?.graph.cy.fit();
+            }}
+          >
+            Recenter & Fit Graph
+          </button>
+
+          <button
+            onClick={() => {
+              const cy = graphRef.current?.graph.cy;
+              if (cy) {
+                const blob = cy.png({ output: 'blob' });
+                const blobURL = window.URL.createObjectURL(blob);
+                window.open(blobURL);
+              }
+            }}
+          >
+            Take Graph Snapshot
+          </button>
+        </div>
+        <div className="al-graph-main" ref={graphContainer}></div>
         <div className="al-graph-info">{eventInfo != null ? renderer(eventInfo) : null}</div>
       </div>
     </div>
