@@ -60,7 +60,7 @@ export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventTyp
    */
   pipe<T extends IPipedEmitter<TEventToListenerArgsMap>, P = Check<T, TEventToListenerArgsMap>>(nextChannel: T, scheduler?: (task: () => void) => void): T & P;
   pipe<T extends IEmitter<TEventToListenerArgsMap>>(nextChannel: T, scheduler?: (task: () => void) => void): T {
-    this._next.add(scheduler
+    const handler = this._next.add(scheduler
       ? (eventType, ...args) => {
         scheduler(() => {
           nextChannel.emit(eventType, ...args);
@@ -70,7 +70,14 @@ export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventTyp
         nextChannel.emit(eventType, ...args);
       }
     );
+    //@ts-ignore
+    handler._channel = nextChannel;
     return nextChannel;
+  }
+  unpipe<T extends IEmitter<TEventToListenerArgsMap>>(nextChannel: T): boolean {
+    return this._next.removeIf(hook =>
+      //@ts-ignore
+      hook._channel === nextChannel);
   }
 
   emit<
@@ -146,7 +153,7 @@ export class PausableChannel<TEventToListenerArgsMap extends BaseChannelEventTyp
     if (this._paused) {
       return;
     }
-    
+
     super.emit(eventType, ...rawArgs);
   }
 
