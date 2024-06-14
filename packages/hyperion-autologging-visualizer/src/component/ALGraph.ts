@@ -6,7 +6,7 @@ import { ALExtensibleEvent, ALFlowletEvent } from '@hyperion/hyperion-autologgin
 import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
-import type cytoscape from 'cytoscape';
+import cytoscape from 'cytoscape';
 import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigFcose';
 import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 import { assert } from '@hyperion/hyperion-global';
@@ -170,7 +170,7 @@ export type ALGraphDynamicOptionsType = {
   filter?: string;
 };
 
-type SupportedALEventNames = (keyof  ALGraphDynamicOptionsType['events']) & (keyof ALChannelEvent); // & to filter out typos in the list
+type SupportedALEventNames = (keyof ALGraphDynamicOptionsType['events']) & (keyof ALChannelEvent); // & to filter out typos in the list
 type SupportedALEventData<T extends SupportedALEventNames> = ALChannelEvent[T][0] & Partial<Nullable<ALFlowletEvent>> & ALExtensibleEvent;
 export type EventInfo<T extends SupportedALEventNames> = {
   eventName: T,
@@ -208,19 +208,24 @@ export class ALGraph {
   // private readonly filter: string | null = null;
   private readonly topContainer: Element | null;
   private dynamicOptions?: ALGraphDynamicOptionsType;
+  public readonly cy: cytoscape.Core;
 
   constructor(
-    public readonly cy: cytoscape.Core,
-    options?: {
+    options: {
       onEventNodeClick?: (eventInfo: EventInfos) => void;
-      // filter?: string;
       topContainer?: Element | null;
+      graphContainer: HTMLElement;
+      elements?: cytoscape.ElementDefinition[];
     }
   ) {
-    this.topContainer = options?.topContainer ?? cy.container();
+    this.cy = cytoscape({
+      container: options.graphContainer,
+      elements: options.elements,
+    });
+    this.topContainer = options.topContainer ?? options.graphContainer;
 
-    cy.style(defaultStylesheet);
-    this.layout = cy.layout(getCytoscapeLayoutConfig());
+    this.cy.style(defaultStylesheet);
+    this.layout = this.cy.layout(getCytoscapeLayoutConfig());
 
 
     if (options) {
