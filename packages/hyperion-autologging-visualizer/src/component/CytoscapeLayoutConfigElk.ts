@@ -6,7 +6,7 @@ import type cytoscape from 'cytoscape';
 import Cytoscape from 'cytoscape';
 import elk from 'cytoscape-elk';
 
-const ELK_CONFIG = {
+const CONFIG = {
   name: 'elk',
   randomize: false, // use random node positions at beginning of layout
   nodeDimensionsIncludeLabels: true, // Boolean which changes whether label dimensions are included when calculating node dimensions
@@ -40,9 +40,7 @@ const ELK_CONFIG = {
 } as const;
 
 export function getCytoscapeLayoutConfig(): cytoscape.LayoutOptions {
-  const config = ELK_CONFIG;
-  console.log(`using ${config.name} layout config`);
   Cytoscape.use(elk);
-  return config;
+  return CONFIG;
 }
 

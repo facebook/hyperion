@@ -6,7 +6,7 @@ import type cytoscape from 'cytoscape';
 import Cytoscape from 'cytoscape';
 import cola from 'cytoscape-cola';
 
-const COLA_CONFIG = {
+const CONFIG = {
   name: 'cola',
   animate: true, // whether to show the layout as it's running
   refresh: 1, // number of ticks per frame; higher is faster but more jerky
@@ -45,9 +45,7 @@ const COLA_CONFIG = {
 } as const;
 
 export function getCytoscapeLayoutConfig(): cytoscape.LayoutOptions {
-  const config = COLA_CONFIG;
-  console.log(`using ${config.name} layout config`);
   Cytoscape.use(cola);
-  return config;
+  return CONFIG;
 }
 

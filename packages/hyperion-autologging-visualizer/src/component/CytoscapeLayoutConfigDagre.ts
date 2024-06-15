@@ -6,7 +6,7 @@ import type cytoscape from 'cytoscape';
 import Cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 
-const DAGRE_CONFIG: dagre.DagreLayoutOptions = {
+const CONFIG: dagre.DagreLayoutOptions = {
   name: 'dagre',
   // dagre algo options, uses default value on undefined
   nodeSep: undefined, // the separation between adjacent nodes in the same rank
@@ -40,9 +40,7 @@ const DAGRE_CONFIG: dagre.DagreLayoutOptions = {
 } as const;
 
 export function getCytoscapeLayoutConfig(): cytoscape.LayoutOptions {
-  const config = DAGRE_CONFIG;
-  console.log(`using ${config.name} layout config`);
   Cytoscape.use(dagre);
-  return config;
+  return CONFIG;
 }
 

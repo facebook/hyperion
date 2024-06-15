@@ -97,6 +97,11 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
     }
   },
   {
+    selector: ".filtered", style: {
+      display: "none"
+    }
+  },
+  {
     selector: '.al_ui_event', style: {
       "background-color": 'green'
     }
@@ -227,30 +232,28 @@ export class ALGraph {
     this.cy.style(defaultStylesheet);
     this.layout = this.cy.layout(getCytoscapeLayoutConfig());
 
-
-    if (options) {
-      if (options.onEventNodeClick) {
-        const onEventNodeClick = options.onEventNodeClick;
-        this.cy.on('click', 'node', event => {
-          const { target } = event;
-          const eventInfo = target.scratch() as EventInfos;
-          console.log('[PS]', event.type, target.data(), eventInfo);
-
-          if (typeof eventInfo.eventName === "string") { // Just to be sure the right kind of data
-            onEventNodeClick(eventInfo);
-          }
-        });
-
-        // cy.on('mouseover', 'node', (event) => {
-        //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
-        // });
-        // cy.on('click', 'edge', (event) => {
-        //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
-        // });
-      }
-    }
     // An optimization to avoid unnecessary relayout
     this._elements = this.cy.collection();
+
+    if (options.onEventNodeClick) {
+      const onEventNodeClick = options.onEventNodeClick;
+      this.cy.on('click', 'node', event => {
+        const { target } = event;
+        const eventInfo = target.scratch() as EventInfos;
+        console.log('[PS]', event.type, target.data(), eventInfo);
+
+        if (typeof eventInfo.eventName === "string") { // Just to be sure the right kind of data
+          onEventNodeClick(eventInfo);
+        }
+      });
+
+      // cy.on('mouseover', 'node', (event) => {
+      //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+      // });
+      // cy.on('click', 'edge', (event) => {
+      //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+      // });
+    }
 
     this.addNode({
       data: {
@@ -280,16 +283,32 @@ export class ALGraph {
     this.cy.startBatch();
   }
   private add(element: cytoscape.ElementDefinition): cytoscape.CollectionReturnValue {
-    const elementDef = this.cy.add(element);
-    this._elements.merge(elementDef);
-    return elementDef;
+    try {
+      const elementDef = this.cy.add(element);
+      this._elements.merge(elementDef);
+      return elementDef;
+    } catch (e) {
+      return this.cy.add({
+        data: {
+          label: String(e),
+        }
+      });
+    }
   }
   private endBatch() {
     let runLayout = this._elements.nonempty();
     if (runLayout && this.dynamicOptions?.filter) {
       // Remove all undesired elements from the graph. Note desired elements showup in '.both' as well
       const { left: undesired, /* right: desired, both: _ */ } = this._elements.diff(this.dynamicOptions.filter);
-      this.cy.remove(undesired);
+      /**
+       * Note: A bad filter can potentially cause problem later if we just remove the nodes.
+       * For example, if we add multiple nodes (e.g. trigger flowlet nodes) based on absence of one them, we may 
+       * get errors for duplicate node addition.
+       * So, instead of removing nodes, we just add a class to them that hides them.
+       * This way, we can also chose to change the filter later and bring those nodes back (not yet implemented)
+       * // this.cy.remove(undesired); // See above for why this should not be used.
+       */
+      undesired.addClass("filtered");
       runLayout = this._elements.size() > undesired.size();
     }
 
@@ -324,24 +343,25 @@ export class ALGraph {
       return;
     }
 
-    if (this.cy.$id(pageURI).empty()) {
+    const id = 'p:' + pageURI;
+    if (this.cy.$id(id).empty()) {
       this.addNode({
         classes: 'page',
         data: {
-          id: pageURI,
+          id,
           label: pageURI,
           parent: this.appId,
         }
       })
     }
-    return pageURI;
+    return id;
   }
 
   private getSurfaceNodeId(surface: string | null, pageURI: string): GraphID {
     if (!surface || !this.dynamicOptions?.nodes.tuple.surface) {
       return;
     }
-    const id = surface;
+    const id = "s:" + surface;
     if (this.cy.$id(id).empty()) {
       const prefixIndex = surface.lastIndexOf(SURFACE_SEPARATOR);
       let surfaceName: string;
@@ -397,7 +417,7 @@ export class ALGraph {
 
   private getTimestampNodeId(timestamp: number): GraphID {
     return; // For now ignore this until a good layout algo is found.
-    const id = '' + timestamp;
+    const id = 'ts:' + timestamp;
 
     const timelineId = 'timeline';
     let timeline = this.cy.$id(timelineId);
@@ -431,7 +451,7 @@ export class ALGraph {
       return null;
     }
 
-    const id = '' + flowlet.id;
+    const id = 'f:' + flowlet.id;
     const nodes = this.cy.$id(id);
     if (nodes.nonempty()) {
       const node = nodes[0];
@@ -490,6 +510,7 @@ export class ALGraph {
       parentId = triggerFloeletRegion.interaction.flowsId;
       // prevId = parentTriggerFloeletRegion.triggerFlowletId; // For now, let's let the first trigger to be free to move
     }
+
     this.addNode({
       classes: 'flowlet',
       data: {
@@ -508,7 +529,7 @@ export class ALGraph {
 
   private _lastEventId: GraphID;
   private getALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
-    const id = '' + eventData.eventIndex;
+    const id = 'e:' + eventData.eventIndex;
 
     const region = this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
 

@@ -37,6 +37,8 @@ const StyleCss = `
 .al-graph-control { grid-area: control; display: flex; justify-content: space-around; }
 .al-graph-main { grid-area: main; }
 .al-graph-info { grid-area: info; }
+
+.al-graph-filter > input {width: 80%;}
 `;
 
 

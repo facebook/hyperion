@@ -6,7 +6,7 @@ import type cytoscape from 'cytoscape';
 import Cytoscape from 'cytoscape';
 import klay from 'cytoscape-klay';
 
-const KLAY_CONFIG: klay.KlayLayoutOptions = {
+const CONFIG: klay.KlayLayoutOptions = {
   name: 'klay',
   // randomize: false, // use random node positions at beginning of layout
   nodeDimensionsIncludeLabels: true, // Boolean which changes whether label dimensions are included when calculating node dimensions
@@ -67,8 +67,6 @@ const KLAY_CONFIG: klay.KlayLayoutOptions = {
 } as const;
 
 export function getCytoscapeLayoutConfig(): cytoscape.LayoutOptions {
-  const config = KLAY_CONFIG;
-  console.log(`using ${config.name} layout config`);
   Cytoscape.use(klay);
-  return config;
+  return CONFIG;
 }
