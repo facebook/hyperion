@@ -427,7 +427,7 @@ export class ALGraph {
   }
 
   private getTriggerFlowletNodeId(flowlet: Flowlet | null | undefined): TriggerFlowletRegion | null {
-    if (!flowlet) {
+    if (!flowlet || !this.dynamicOptions?.nodes.trigger_flowlet) {
       return null;
     }
 
@@ -510,7 +510,7 @@ export class ALGraph {
   private getALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     const id = '' + eventData.eventIndex;
 
-    const region = this.dynamicOptions?.nodes.trigger_flowlet ? this.getTriggerFlowletNodeId(eventData.triggerFlowlet) : null;
+    const region = this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
 
     this.addNode({
       classes: [eventName, eventData.event],
@@ -549,44 +549,44 @@ export class ALGraph {
   }
 
   addALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): void {
-    if (!this.dynamicOptions?.events[eventName]) {
-      return;
-    }
-
     this.startBatch();
-    this.getALEventNodeId(eventName, eventData);
+    if (!this.dynamicOptions?.events[eventName]) {
+      this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
+    } else {
+      this.getALEventNodeId(eventName, eventData);
+    }
     this.endBatch();
   }
 
   addALUIEventNodeId<T extends 'al_ui_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
-    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
-      return;
-    }
-
     if (this.topContainer?.contains(eventData.targetElement)) {
       // Don't want to capture clicks on the graph itself.
       return;
     }
 
     this.startBatch();
-    const id = this.getALEventNodeId(eventName, eventData);
     const tupleId = this.getTupleNodeId(eventData);
-    if (this.dynamicOptions?.edges.tuple) {
-      this.addEdge(id, tupleId);
+    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
+      this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
+    } else {
+      const id = this.getALEventNodeId(eventName, eventData);
+      if (this.dynamicOptions?.edges.tuple) {
+        this.addEdge(id, tupleId);
+      }
     }
     this.endBatch();
   }
 
   addSurfaceEvent<T extends 'al_surface_mutation_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
-    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
-      return;
-    }
-
     this.startBatch();
-    const id = this.getALEventNodeId(eventName, eventData);
     const tupleId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI);
-    if (this.dynamicOptions?.edges.tuple) {
-      this.addEdge(tupleId, id);
+    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
+      this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
+    } else {
+      const id = this.getALEventNodeId(eventName, eventData);
+      if (this.dynamicOptions?.edges.tuple) {
+        this.addEdge(tupleId, id);
+      }
     }
     this.endBatch();
   }
