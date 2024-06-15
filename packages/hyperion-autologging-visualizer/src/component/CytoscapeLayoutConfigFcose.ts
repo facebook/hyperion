@@ -29,9 +29,7 @@ const CONFIG: fcose.FcoseLayoutOptions = {
 } as const;
 
 export function getCytoscapeLayoutConfig(): cytoscape.LayoutOptions {
-  const config = CONFIG;
-  console.log(`using ${config.name} layout config`);
   Cytoscape.use(fcose);
-  return config;
+  return CONFIG;
 }
 
