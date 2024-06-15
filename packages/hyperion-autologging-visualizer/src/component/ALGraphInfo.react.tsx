@@ -111,16 +111,15 @@ function MultiCheckboxInputs<T extends Record<string, boolean | Record<string, b
             props.onChange(newValues);
           }} />
           : <span>{key}({
-            Object.entries(value).map(([subkey, subvalue]) => <>
-              <CheckboxInput key={key + "_" + subkey} label={subkey} checked={subvalue} onChange={checked => {
+            Object.entries(value).map(([subkey, subvalue]) =>
+              <CheckboxInput key={key + "_" + subkey} label={subkey + ' , '} checked={subvalue} onChange={checked => {
                 const newValues: T = {
                   ...values,
                 };
                 (newValues as Record<string, Record<string, boolean>>)[key][subkey] = checked;
                 props.onChange(newValues);
               }} />
-              ,
-            </>)
+            )
           })</span>
       }
       </dd>
