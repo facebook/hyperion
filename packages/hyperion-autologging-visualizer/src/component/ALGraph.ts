@@ -570,12 +570,11 @@ export class ALGraph {
   }
 
   addALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): void {
-    this.startBatch();
     if (!this.dynamicOptions?.events[eventName]) {
-      this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
-    } else {
-      this.getALEventNodeId(eventName, eventData);
+      return;
     }
+    this.startBatch();
+    this.getALEventNodeId(eventName, eventData);
     this.endBatch();
   }
 
@@ -584,30 +583,28 @@ export class ALGraph {
       // Don't want to capture clicks on the graph itself.
       return;
     }
+    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
+      return;
+    }
 
     this.startBatch();
+    const id = this.getALEventNodeId(eventName, eventData);
     const tupleId = this.getTupleNodeId(eventData);
-    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
-      this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
-    } else {
-      const id = this.getALEventNodeId(eventName, eventData);
-      if (this.dynamicOptions?.edges.tuple) {
-        this.addEdge(id, tupleId);
-      }
+    if (this.dynamicOptions?.edges.tuple) {
+      this.addEdge(id, tupleId);
     }
     this.endBatch();
   }
 
   addSurfaceEvent<T extends 'al_surface_mutation_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
-    this.startBatch();
-    const tupleId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI);
     if (!this.dynamicOptions?.events[eventName][eventData.event]) {
-      this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
-    } else {
-      const id = this.getALEventNodeId(eventName, eventData);
-      if (this.dynamicOptions?.edges.tuple) {
-        this.addEdge(tupleId, id);
-      }
+      return;
+    }
+    this.startBatch();
+    const id = this.getALEventNodeId(eventName, eventData);
+    if (this.dynamicOptions?.edges.tuple) {
+      const tupleId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI);
+      this.addEdge(tupleId, id);
     }
     this.endBatch();
   }
