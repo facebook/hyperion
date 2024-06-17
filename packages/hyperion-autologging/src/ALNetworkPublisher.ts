@@ -14,7 +14,6 @@ import * as ALEventIndex from "./ALEventIndex";
 import { ALLoggableEvent, ALOptionalFlowletEvent, ALSharedInitOptions } from "./ALType";
 
 type ALNetworkEvent = ALLoggableEvent & ALOptionalFlowletEvent & Readonly<{
-  event: "network";
   initiatorType: "fetch" | "xmlhttprequest"; // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/initiatorType
 }>;
 
@@ -30,10 +29,13 @@ type RequestInfo = {
   uri: URL;
   body?: RequestInit['body'],
 }
-export type ALNetworkRequestEvent = ALNetworkEvent & Readonly<RequestInfo>;
+export type ALNetworkRequestEvent = ALNetworkEvent & Readonly<RequestInfo> & {
+  event: 'network_request';
+};
 
 export type ALNetworkResponseEvent = ALNetworkEvent & Readonly<
   {
+    event: 'network_response',
     requestEvent: ALNetworkRequestEvent;
   }
   &
@@ -165,7 +167,7 @@ function captureFetch(options: InitOptions): void {
       const callFlowlet = flowletManager.top();
       channel.emit("al_network_request", ephemeralRequestEvent = {
         initiatorType: "fetch",
-        event: "network",
+        event: "network_request",
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
         callFlowlet,
@@ -203,7 +205,7 @@ function captureFetch(options: InitOptions): void {
 
           channel.emit('al_network_response', {
             initiatorType: "fetch",
-            event: "network",
+            event: "network_response",
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
             relatedEventIndex: requestEvent.eventIndex,
@@ -328,7 +330,7 @@ function captureXHR(options: InitOptions): void {
 
       channel.emit("al_network_request", requestEvent = {
         initiatorType: "xmlhttprequest",
-        event: "network",
+        event: "network_request",
         eventTimestamp: performanceAbsoluteNow(),
         eventIndex: ALEventIndex.getNextEventIndex(),
         callFlowlet,
@@ -344,7 +346,7 @@ function captureXHR(options: InitOptions): void {
           assert(triggerFlowlet === flowletManager.top()?.data.triggerFlowlet, "top trigger flowlet on the stack not set correctly!");
           channel.emit('al_network_response', {
             initiatorType: "xmlhttprequest",
-            event: "network",
+            event: "network_response",
             eventTimestamp: performanceAbsoluteNow(),
             eventIndex: ALEventIndex.getNextEventIndex(),
             relatedEventIndex: requestEvent.eventIndex,
