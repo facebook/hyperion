@@ -529,7 +529,8 @@ export class ALGraph {
 
   private _lastEventId: GraphID;
   private getALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
-    const id = 'e:' + eventData.eventIndex;
+    const EVENT_PREFIX = 'e:';
+    const id = EVENT_PREFIX + eventData.eventIndex;
 
     const region = this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
 
@@ -551,7 +552,7 @@ export class ALGraph {
     }
 
     if (eventData.relatedEventIndex && this.dynamicOptions?.edges.related_event_index) {
-      const relatedId = '' + eventData.relatedEventIndex
+      const relatedId = EVENT_PREFIX + eventData.relatedEventIndex
       if (this.cy.$id(relatedId).nonempty()) {
         this.addEdge('' + relatedId, id, 'related');
       } else {
