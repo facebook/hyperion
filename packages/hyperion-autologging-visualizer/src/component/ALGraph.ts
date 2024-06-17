@@ -7,7 +7,7 @@ import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
 import cytoscape from 'cytoscape';
-import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigFcose';
+import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigDagre';
 import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 import { assert } from '@hyperion/hyperion-global';
 
