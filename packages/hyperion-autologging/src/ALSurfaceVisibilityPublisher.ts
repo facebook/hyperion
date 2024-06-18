@@ -8,7 +8,7 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import { ALChannelSurfaceMutationEvent, ALSurfaceMutationEventData } from "./ALSurfaceMutationPublisher";
 import * as ALSurfaceUtils from './ALSurfaceUtils';
-import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALSharedInitOptions } from "./ALType";
 
 import * as ALEventIndex from './ALEventIndex';
 import { assert } from "@hyperion/hyperion-global";
@@ -20,14 +20,24 @@ export type ALSurfaceVisibilityEventData =
   ALMetadataEvent &
   ALExtensibleEvent &
   ALElementEvent &
+  ALPageEvent &
   ALLoggableEvent &
   Readonly<
     {
       surface: string;
-      event: 'component_visibility';
-      isIntersecting: boolean;
       intersectionEntry: IntersectionObserverEntry;
-    }
+    } &
+    (
+      {
+        event: 'component_visible';
+        isIntersecting: true;
+      }
+      |
+      {
+        event: 'component_hidden';
+        isIntersecting: false;
+      }
+    )
   >;
 
 export type ALChannelSurfaceVisibilityEvent = Readonly<{
@@ -155,19 +165,24 @@ export function publish(options: InitOptions): void {
                 console.warn("Don't know yet how to merge entries!");
               }
 
+              const isIntersecting = entry.isIntersecting;
               channel.emit('al_surface_visibility_event', {
-                event: 'component_visibility',
-                eventTimestamp: performanceAbsoluteNow(),
+                ...isIntersecting
+                  ? { event: 'component_visible', isIntersecting }
+                  : { event: 'component_hidden', isIntersecting },
+                eventTimestamp: performanceAbsoluteNow.fromRelativeTime(entry.time),
                 eventIndex: ALEventIndex.getNextEventIndex(),
                 relatedEventIndex: surfaceEvent.eventIndex,
                 surface: surfaceEvent.surface,
                 element: surfaceEvent.element,
                 autoLoggingID: surfaceEvent.autoLoggingID, // same element, same ID
-                metadata: {},
+                metadata: {
+                  emit_time: '' + performanceAbsoluteNow(), // just to keep track of the difference
+                },
                 callFlowlet: surfaceEvent.callFlowlet,
                 triggerFlowlet: surfaceEvent.triggerFlowlet,
-                isIntersecting: entry.isIntersecting,
                 intersectionEntry: entry,
+                pageURI: surfaceEvent.pageURI,
               })
             }
           },
