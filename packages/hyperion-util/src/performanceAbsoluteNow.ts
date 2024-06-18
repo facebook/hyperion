@@ -4,6 +4,8 @@
 
 'use strict';
 
+import { assert } from "@hyperion/hyperion-global";
+
 /**
  * Sometimes we want absolute time and we
  * also want high resolution timestamp. This function provides high resolution
@@ -16,11 +18,13 @@
  *
  */
 
-
-let performanceAbsoluteNow: {
-  (): number,
-  setFallback?: (fallback: () => number) => void,
+type GetTimeFunc = () => number;
+type GetTimeFuncExtensions = {
+  setFallback: (fallback: () => number) => void;
+  fromRelativeTime(timestamp: number): number;
 };
+
+let performanceAbsoluteNow: GetTimeFunc & GetTimeFuncExtensions;
 
 let fallback = () => Date.now();
 
@@ -34,19 +38,44 @@ function setFallback(fn: () => number) {
 
 let navigationStart = -1;
 const performanceIsDefined = typeof performance === "object";
+const performanceNowIsDefined = performanceIsDefined && typeof performance.now === "function";
 if (performanceIsDefined) {
   if (performance.timing && performance.timing.navigationStart) {
     navigationStart = performance.timing.navigationStart;
   } else if (performance.timeOrigin) {
-    navigationStart = performance.timeOrigin
+    navigationStart = performance.timeOrigin;
   }
 }
 
-if (performanceIsDefined && typeof performance.now === "function" && navigationStart !== -1) {
-  performanceAbsoluteNow = () => performance.now() + navigationStart;
+let coreFunction: GetTimeFunc;
+if (performanceNowIsDefined && navigationStart !== -1) {
+  coreFunction = () => performance.now() + navigationStart;
 } else {
-  performanceAbsoluteNow = () => fallback();
+  coreFunction = () => fallback();
 }
-performanceAbsoluteNow.setFallback = setFallback;
+
+
+
+const extensions: GetTimeFuncExtensions = {
+  setFallback,
+  fromRelativeTime: (() => {
+    assert(navigationStart !== -1, "cannot convert from relative time without a time origin value for navigation start");
+    if (navigationStart === -1) {
+      const navigationStartApproximate = performanceNowIsDefined
+        ? Date.now() - performance.now()
+        : 0;
+      return (timestamp: number) => {
+        return timestamp + navigationStartApproximate;
+      };
+
+    } else {
+      return (timestamp: number) => {
+        return timestamp + navigationStart;
+      };
+    }
+  })(),
+};
+
+performanceAbsoluteNow = Object.assign(coreFunction, extensions);
 
 export default performanceAbsoluteNow;
