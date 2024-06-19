@@ -56,6 +56,10 @@ const ALGraphOptions = new LocalStoragePersistentData<ALGraph.ALGraphDynamicOpti
       },
       al_network_request: false,
       al_network_response: false,
+      al_surface_visibility_event: {
+        component_visible: false,
+        component_hidden: false,
+      },
     },
     nodes: {
       tuple: {
@@ -73,7 +77,21 @@ const ALGraphOptions = new LocalStoragePersistentData<ALGraph.ALGraphDynamicOpti
     }
   }),
   value => JSON.stringify(value),
-  value => JSON.parse(value),
+  value => {
+    const options: ALGraph.ALGraphDynamicOptionsType = JSON.parse(value);
+    // For now just patch the only missing item, but later make this generic
+    try {
+      if (typeof options?.events?.al_surface_visibility_event !== "object") {
+        options.events.al_surface_visibility_event = {
+          component_visible: false,
+          component_hidden: false,
+        };
+      }
+    } catch (e) {
+
+    }
+    return options;
+  }
 )
 
 function CheckboxInput(props: {
@@ -187,7 +205,12 @@ export function ALGraphInfo(props: {
               break;
             case 'al_surface_mutation_event':
               channel.on(eventName).add(eventData => {
-                graphRef.current?.graph.addSurfaceEvent(eventName, eventData);
+                graphRef.current?.graph.addSurfaceMutationEvent(eventName, eventData);
+              });
+              break;
+            case 'al_surface_visibility_event':
+              channel.on(eventName).add(eventData => {
+                graphRef.current?.graph.addSurfaceVisibilityEvent(eventName, eventData);
               });
               break;
             default:
@@ -215,7 +238,7 @@ export function ALGraphInfo(props: {
   return (
     <div ref={gridContainer} style={{
       width: props.width || "99%",
-      height: props.height || "1000px",
+      // height: props.height || "1000px",
     }}>
       <style>{StyleCss}</style>
       <div className="al-graph-grid-container">
@@ -312,7 +335,7 @@ export function ALGraphInfo(props: {
             Take Graph Snapshot
           </button>
         </div>
-        <div className="al-graph-main" ref={graphContainer}></div>
+        <div className="al-graph-main" ref={graphContainer} style={{ height: props.height }}></div>
         <div className="al-graph-info">{eventInfo != null ? renderer(eventInfo) : null}</div>
       </div>
     </div>

@@ -90,8 +90,8 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
   {
     selector: 'edge.timestamp', style: {
       "line-style": 'dotted',
-      "line-color": 'yellow',
-      'target-arrow-color': 'yellow',
+      "line-color": 'gold',
+      'target-arrow-color': 'gold',
       'target-arrow-shape': 'tee',
       "width": '1',
     }
@@ -132,6 +132,16 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
     }
   },
   {
+    selector: '.al_surface_visibility_event.component_visibile', style: {
+      "background-color": 'purple'
+    }
+  },
+  {
+    selector: '.al_surface_visibility_event.component_hidden', style: {
+      "background-color": 'orchid'
+    }
+  },
+  {
     selector: '.flowlet', style: {
       "background-color": 'cyan'
     }
@@ -157,6 +167,10 @@ export type ALGraphDynamicOptionsType = {
     };
     al_network_request: boolean;
     al_network_response: boolean;
+    al_surface_visibility_event: {
+      component_visible: boolean;
+      component_hidden: boolean;
+    };
   };
   nodes: {
     tuple: {
@@ -189,6 +203,7 @@ export const SupportedALEvents: SupportedALEventNames[] = [
   // 'al_heartbeat_event', // causes un-necessary re-layout
   'al_network_request',
   'al_network_response',
+  'al_surface_visibility_event',
 ] as const;
 
 type GraphID = string | undefined;
@@ -562,7 +577,10 @@ export class ALGraph {
 
     this.addEdge(this._lastEventId, id, 'timestamp');
     this._lastEventId = id;
-    this.addEdge(this.getTimestampNodeId(eventData.eventTimestamp), id, 'timestamp');
+    const edge = this.addEdge(this.getTimestampNodeId(eventData.eventTimestamp), id, 'timestamp');
+    if (edge) {
+      edge.data().weight = 10;
+    }
     return id;
   }
 
@@ -597,10 +615,7 @@ export class ALGraph {
     this.endBatch();
   }
 
-  addSurfaceEvent<T extends 'al_surface_mutation_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
-    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
-      return;
-    }
+  private addSurfaceEvent<T extends 'al_surface_mutation_event' | 'al_surface_visibility_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
     this.startBatch();
     const id = this.getALEventNodeId(eventName, eventData);
     if (this.dynamicOptions?.edges.tuple) {
@@ -608,6 +623,20 @@ export class ALGraph {
       this.addEdge(tupleId, id);
     }
     this.endBatch();
+  }
+
+  addSurfaceMutationEvent<T extends 'al_surface_mutation_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
+    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
+      return;
+    }
+    this.addSurfaceEvent(eventName, eventData);
+  }
+
+  addSurfaceVisibilityEvent<T extends 'al_surface_visibility_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
+    if (!this.dynamicOptions?.events[eventName][eventData.event]) {
+      return;
+    }
+    this.addSurfaceEvent(eventName, eventData);
   }
 }
 

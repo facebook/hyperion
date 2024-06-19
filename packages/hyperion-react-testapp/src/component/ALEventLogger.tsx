@@ -85,7 +85,7 @@ function EventInfoViewer(props: { eventInfo: ALGraph.EventInfos }): React.ReactN
   return <table>
     <thead>
       <tr>
-        <th colSpan={2}>{eventInfo.eventName}</th>
+        <th colSpan={2}>{eventInfo.eventName}[{eventInfo.eventData.event}]</th>
       </tr>
     </thead>
     <tbody>
@@ -143,7 +143,7 @@ export default function () {
         width="99%"
         height="1000px"
         renderer={eventInfo => <EventInfoViewer eventInfo={eventInfo} />}
-        // graphFilter='edge, node[label !^= "al_surface"]'
+      // graphFilter='edge, node[label !^= "al_surface"]'
       />
     </div>
   </div>;
