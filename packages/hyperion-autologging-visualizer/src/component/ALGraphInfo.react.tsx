@@ -121,28 +121,31 @@ function MultiCheckboxInputs<T extends Record<string, boolean | Record<string, b
   const values = props.values;
   return <dl><dt>{props.header}</dt>{
     Object.entries(values).map(([key, value]) => {
-      return <dd key={key}>{
-        (typeof value === "boolean")
-          ? <CheckboxInput label={key} checked={value} onChange={checked => {
+      let optionImplementation;
+      switch (typeof value) {
+        case "boolean":
+          optionImplementation = <CheckboxInput label={key} checked={value} onChange={checked => {
             const newValues: T = {
               ...values,
               [key]: checked
             };
             props.onChange(newValues);
-          }} />
-          : <span>{key}({
-            Object.entries(value).map(([subkey, subvalue]) =>
-              <CheckboxInput key={key + "_" + subkey} label={subkey + ' , '} checked={subvalue} onChange={checked => {
-                const newValues: T = {
-                  ...values,
-                };
-                (newValues as Record<string, Record<string, boolean>>)[key][subkey] = checked;
-                props.onChange(newValues);
-              }} />
-            )
-          })</span>
+          }} />;
+          break;
+        case "object":
+          optionImplementation = <MultiCheckboxInputs header={key} values={value} onChange={subValues => {
+            const newValues: T = {
+              ...values,
+              [key]: subValues
+            };
+            props.onChange(newValues);
+          }} />;
+          break;
+        default:
+          optionImplementation = <span>Invalid Option Value type {typeof value}</span>;
+          break;
       }
-      </dd>
+      return <dd key={key}>{optionImplementation}</dd>
     })
   }</dl>;
 }
