@@ -132,7 +132,7 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
     }
   },
   {
-    selector: '.al_surface_visibility_event.component_visibile', style: {
+    selector: '.al_surface_visibility_event.component_visible', style: {
       "background-color": 'purple'
     }
   },
@@ -155,6 +155,7 @@ export const defaultStylesheet: cytoscape.Stylesheet[] = [
 ];
 
 export type ALGraphDynamicOptionsType = {
+  version: number,
   events: {
     al_ui_event: {
       click: boolean;

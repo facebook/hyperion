@@ -41,56 +41,57 @@ const StyleCss = `
 .al-graph-filter > input {width: 80%;}
 `;
 
+const DefaultOptions: ALGraph.ALGraphDynamicOptionsType = {
+  version: 1,
+  events: {
+    al_ui_event: {
+      click: true,
+      change: false,
+    },
+    al_surface_mutation_event: {
+      mount_component: false,
+      unmount_component: false,
+    },
+    al_network_request: false,
+    al_network_response: false,
+    al_surface_visibility_event: {
+      component_visible: false,
+      component_hidden: false,
+    },
+  },
+  nodes: {
+    tuple: {
+      page_uri: false,
+      surface: false,
+      component: false,
+      text: false,
+    },
+    trigger_flowlet: false,
+  },
+  edges: {
+    trigger: false,
+    related_event_index: false,
+    tuple: false,
+  }
+};
 
 const ALGraphOptions = new LocalStoragePersistentData<ALGraph.ALGraphDynamicOptionsType>(
   'alGraphOptions',
-  () => ({
-    events: {
-      al_ui_event: {
-        click: true,
-        change: false,
-      },
-      al_surface_mutation_event: {
-        mount_component: false,
-        unmount_component: false,
-      },
-      al_network_request: false,
-      al_network_response: false,
-      al_surface_visibility_event: {
-        component_visible: false,
-        component_hidden: false,
-      },
-    },
-    nodes: {
-      tuple: {
-        page_uri: false,
-        surface: false,
-        component: false,
-        text: false,
-      },
-      trigger_flowlet: false,
-    },
-    edges: {
-      trigger: false,
-      related_event_index: false,
-      tuple: false,
-    }
-  }),
+  () => DefaultOptions,
   value => JSON.stringify(value),
   value => {
+    /**
+     * If we change the structure of the options, we want to make sure all clients are updated
+     * to the latest setup, so, we need to reet their values. We can do that when we parse the
+     * stored value.
+     */
     const options: ALGraph.ALGraphDynamicOptionsType = JSON.parse(value);
-    // For now just patch the only missing item, but later make this generic
-    try {
-      if (typeof options?.events?.al_surface_visibility_event !== "object") {
-        options.events.al_surface_visibility_event = {
-          component_visible: false,
-          component_hidden: false,
-        };
-      }
-    } catch (e) {
-
+    const currentVersion = typeof options?.version === 'number' ? options.version : 0;
+    if (currentVersion < DefaultOptions.version) {
+      return DefaultOptions;
+    } else {
+      return options;
     }
-    return options;
   }
 )
 
