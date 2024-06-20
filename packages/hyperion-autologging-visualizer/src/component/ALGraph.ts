@@ -223,9 +223,6 @@ type TriggerFlowletRegion = {
 
 export class ALGraph {
   layout: cytoscape.Layouts;
-  private readonly appId: GraphID = '_app';
-  private readonly flowsId: GraphID = '_flows';
-  // private readonly filter: string | null = null;
   private readonly topContainer: Element | null;
   private dynamicOptions?: ALGraphDynamicOptionsType;
   public readonly cy: cytoscape.Core;
@@ -269,19 +266,6 @@ export class ALGraph {
       //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
       // });
     }
-
-    this.addNode({
-      data: {
-        id: this.appId,
-        label: "App"
-      }
-    });
-    this.addNode({
-      data: {
-        id: this.flowsId,
-        label: 'Flows',
-      }
-    });
 
     this.reLayout();
   }
@@ -353,6 +337,33 @@ export class ALGraph {
     return this.add(edge);
   }
 
+  private getAppContainerNodeId(): GraphID {
+    const appId: GraphID = '_app';
+    if (this.cy.$id(appId).empty()) {
+      this.addNode({
+        data: {
+          id: appId,
+          label: "App"
+        }
+      });
+    }
+    return appId;
+  }
+
+  private getFlowsContainerNodeId(): GraphID {
+    const flowsId: GraphID = '_flows';
+    if (this.cy.$id(flowsId).empty()) {
+      this.addNode({
+        data: {
+          id: flowsId,
+          label: 'Flows',
+        }
+      });
+
+    }
+    return flowsId;
+  }
+
   private getPageUriNodeId(pageURI?: string): GraphID {
     if (!pageURI || !this.dynamicOptions?.nodes.tuple.page_uri) {
       return;
@@ -365,7 +376,7 @@ export class ALGraph {
         data: {
           id,
           label: pageURI,
-          parent: this.appId,
+          parent: this.getAppContainerNodeId(),
         }
       })
     }
@@ -396,7 +407,7 @@ export class ALGraph {
         data: {
           id,
           label: surfaceName,
-          parent: this.appId, // or? parentSurfaceId,
+          parent: this.getAppContainerNodeId(), // or? parentSurfaceId,
         }
       });
       this.addEdge(parentSurfaceId, id, 'surface');
@@ -488,7 +499,7 @@ export class ALGraph {
     if (!parentTriggerFloeletRegion) {
       // We are at the root, which we want to leave alone
       triggerFloeletRegion.interaction = null;// No interaction defined for root.
-      parentId = this.flowsId;
+      parentId = this.getFlowsContainerNodeId();
     } else if (parentTriggerFloeletRegion.interaction) {
       // we are some middle trigger of interactin, so reuse parents region
       triggerFloeletRegion.interaction = parentTriggerFloeletRegion.interaction;
@@ -505,7 +516,7 @@ export class ALGraph {
         data: {
           id: regionId,
           label: 'interaction',
-          parent: this.flowsId,
+          parent: this.getFlowsContainerNodeId(),
         }
       });
       this.addNode({
