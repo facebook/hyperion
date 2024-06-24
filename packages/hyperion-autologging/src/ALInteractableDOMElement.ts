@@ -319,7 +319,7 @@ export type ALElementText = {
   text: string,
 
   /// The source attribute where we got the elementName from
-  readonly source: 'innerText' | 'aria-label' | 'aria-labelledby' | 'aria-description' | 'aria-describedby';
+  readonly source: 'innerText' | 'aria-label' | 'aria-labelledby' | 'aria-description' | 'aria-describedby' | 'label';
 };
 
 export type ALElementTextEvent = Readonly<{
@@ -445,6 +445,22 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
 
   if (!selfText) {
     /**
+     * In some case, there might be just a label with a 'for' attribute that describes the label of an input element.
+     * In these cases, only label points to the input, and not vice versa.
+     * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label#for
+     * If we find such a label, we won't need to check the inner text anymore.
+     */
+    if (element.id) {
+      const labels = document.querySelectorAll<HTMLLabelElement>(`label[for='${element.id}']`);
+      if (labels.length > 0) {
+        for (let i = 0, len = labels.length; i < len; ++i) {
+          const label = labels[i];
+          getTextFromInnerText({ element: label, surface }, 'label', results);
+        }
+        return;
+      }
+    }
+    /**
      * Now we recurse into the children to find other text candidates.
      */
     for (
@@ -456,6 +472,7 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
       }
     }
   }
+
 }
 
 export function getElementTextEvent(

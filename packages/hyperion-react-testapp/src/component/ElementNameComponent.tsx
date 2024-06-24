@@ -65,6 +65,8 @@ export default function (/* props: Props */) {
           <SurfaceComp surface="inputs3">
             <input type='radio' aria-label="Radio 3" name='radios2'></input>
             <input type="radio" aria-label="Radio 4" name='radios2'></input>
+            <input type="radio" name='radios2' id="radio5"></input>
+            <label htmlFor="radio5">Radio 5</label>
           </SurfaceComp>
         </SurfaceComp>
         <select defaultValue="_v2">

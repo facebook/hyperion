@@ -22,6 +22,7 @@ function createTestDom(): DomFragment.DomFragment {
   <span id='8'>test8</span>
   <span id='9' aria-label="test9">ignored</span>
   <span id='10'><span aria-label="te"></span>s<span>t10</span></span>
+  <input id='11'></input><label for='11'>test11</lablel>
   `);
 }
 function createInteractableTestDom(): DomFragment.DomFragment {
@@ -192,6 +193,7 @@ describe("Test various element text options", () => {
     expect(getText(`8`)).toBe("test8");
     expect(getText(`9`)).toBe("test9");
     expect(getText(`10`)).toBe("test10");
+    expect(getText(`11`)).toBe("test11");
 
     dom.cleanup();
   });
@@ -250,7 +252,7 @@ describe("Test various element text options", () => {
       }
     });
     const text = ALInteractableDOMElement.getElementTextEvent(dom.root, null);
-    expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3test*  test7  test*  test*  test10  ");
+    expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3test*  test7  test*  test*  test10  test11  test11  ");
     console.log(text);
     dom.cleanup();
   });
