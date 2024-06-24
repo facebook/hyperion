@@ -37,7 +37,7 @@ export default function (props: {
 
     // Handle the mousedown event
     // that's triggered when user drags the resizer
-    const mouseDownHandler = function (e) {
+    const mouseDownHandler = function (e: MouseEvent) {
       // Get the current mouse position
       x = e.clientX;
       y = e.clientY;
@@ -51,7 +51,7 @@ export default function (props: {
       container.addEventListener('mouseup', mouseUpHandler);
     };
 
-    const mouseMoveHandler = function (e) {
+    const mouseMoveHandler = function (e: MouseEvent) {
       // How far the mouse has been moved
       const dx = e.clientX - x;
       const dy = e.clientY - y;
