@@ -2,18 +2,21 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { LocalStoragePersistentData } from '@hyperion/hyperion-util/src/PersistentData';
 import React, { ChangeEventHandler, useCallback, useState } from 'react';
 import './App.css';
-import ALGraphView from './component/ALGraphView';
 import DynamicSvgComponent from './component/DynamicSvgComponent';
 import ElementNameComponent from './component/ElementNameComponent';
 import LargeComp from './component/LargeComponent';
 import NestedComponent from './component/NestedComponent';
 import NonInteractiveSurfaceComponent from './component/NonInteractiveSurfaceComponent';
+import ALEventLogger from './component/ALEventLogger';
+import { LocalStoragePersistentData } from '@hyperion/hyperion-util/src/PersistentData';
+import TestDivGrid from './component/TestDivGrid';
+import ALGraphView from './component/ALGraphView';
+import ResizableSplitView from "@hyperion/hyperion-autologging-visualizer/src/component/ResizableSplitView.react";
 import { PortalBodyContainerComponent } from './component/PortalComponent';
-import RecursiveRuncComponent from "./component/RecursiveFuncComponent";
 import TextComponent from './component/TextComponent';
+import RecursiveFuncComponent from './component/RecursiveFuncComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -52,7 +55,7 @@ const Modes = {
       <ElementNameComponent />
     </div>
     <TextComponent />
-    <RecursiveRuncComponent i={3}></RecursiveRuncComponent>
+    <RecursiveFuncComponent i={3}></RecursiveFuncComponent>
   </>,
 };
 type ModeNames = keyof typeof Modes;
@@ -75,16 +78,26 @@ function App() {
     }
   }, []);
 
-  return (
-    <div className="App">
+  return (<ResizableSplitView direction='horizontal'
+    content1={
+      <div className='AppContent'>
+        <label htmlFor='testSelector'>Select a mode:</label>
+        <select onChange={onChange} value={mode} id='testSelector' aria-label='Mode Selector'>
+          {Object.keys(Modes).map(key => <option key={key} value={key}>{key}</option>)}
+        </select>
+        {Modes[mode]()}
+      </div>
+    }
+
+    content2={
+      // <ResizableSplitView direction='vertical' content1="T2" content2="T3" style={{ backgroundColor: 'red' }}></ResizableSplitView>
       <ALGraphView />
-      <label htmlFor='testSelector'>Select a mode:</label>
-      <select onChange={onChange} value={mode} id='testSelector' aria-label='Mode Selector'>
-        {Object.keys(Modes).map(key => <option key={key} value={key}>{key}</option>)}
-      </select>
-      {Modes[mode]()}
-    </div>
-  );
+      // <TestDivGrid />s
+      // <ALEventLogger />
+    }
+  />);
+
+
 }
 
 export default App;
