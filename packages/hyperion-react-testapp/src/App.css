@@ -4,6 +4,29 @@
 
 .App {
   text-align: center;
+  height: 100%;
+  
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  /* background-color: DodgerBlue; */
+  height: 100%;
+}
+
+
+.AppContent {
+  flex: 0 1 80%;
+  /* The above is shorthand for:
+  flex-grow: 0,
+  flex-shrink: 1,
+  flex-basis: auto
+  */
+}
+
+.AppInfo {
+  flex: 1 1 auto;
+  resize: horizontal;
+  overflow: auto;
 }
 
 .App-logo {
