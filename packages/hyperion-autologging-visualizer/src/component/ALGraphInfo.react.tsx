@@ -307,6 +307,7 @@ export function ALGraphInfo(props: {
 
           <button
             onClick={() => {
+              setEventInfo(void 0);
               if (graphRef.current && graphContainer.current) {
                 graphRef.current.graph = new ALGraph.ALGraph({
                   onEventNodeClick: setEventInfo,
