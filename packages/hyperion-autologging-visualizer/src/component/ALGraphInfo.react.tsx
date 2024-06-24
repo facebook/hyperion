@@ -7,6 +7,7 @@ import cytoscape from 'cytoscape';
 import React, { useState } from "react";
 import * as ALGraph from "./ALGraph";
 import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
+import ResizableSplitViewReact from "./ResizableSplitView.react";
 
 const StyleCss = `
 .al-graph-grid-container {
@@ -17,8 +18,9 @@ const StyleCss = `
     'events events edges edges edges'
     'filter filter filter filter filter'
     'control control control control control'
-    'main main main main info';
+    'main main main main main';
   grid-template-columns: 20% 20% 20% 20% 20%;
+  grid-template-rows: repeat(5, fit-content(40%)) auto;
   gap: 10px;
   padding: 10px;
   height: 100%;
@@ -37,6 +39,8 @@ const StyleCss = `
 .al-graph-control { grid-area: control; display: flex; justify-content: space-around; }
 .al-graph-main { grid-area: main; }
 .al-graph-info { grid-area: info; }
+.al-graph-main-content { width: 100%; height: 100%}
+.al-graph-main-info { height: 100%}
 
 .al-graph-filter > input {width: 80%;}
 `;
@@ -242,7 +246,7 @@ export function ALGraphInfo(props: {
   return (
     <div ref={gridContainer} style={{
       width: props.width || "99%",
-      // height: props.height || "1000px",
+      height: props.height || "1000px",
     }}>
       <style>{StyleCss}</style>
       <div className="al-graph-grid-container">
@@ -339,8 +343,10 @@ export function ALGraphInfo(props: {
             Take Graph Snapshot
           </button>
         </div>
-        <div className="al-graph-main" ref={graphContainer} style={{ height: props.height }}></div>
-        <div className="al-graph-info">{eventInfo != null ? renderer(eventInfo) : null}</div>
+        <ResizableSplitViewReact direction="horizontal" className="al-graph-main" style={{ height: "95%" }}
+          content1={<div className="al-graph-main-content" ref={graphContainer}></div>}
+          content2={<div className="al-graph-main-info">{eventInfo != null ? renderer(eventInfo) : null}</div>}
+        />
       </div>
     </div>
   );

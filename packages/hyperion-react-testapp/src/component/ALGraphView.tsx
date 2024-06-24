@@ -55,7 +55,7 @@ export default function () {
   return <ALGraphInfo
     channel={SyncChannel}
     width="99%"
-    height="1000px"
+    height="100%"
     renderer={eventInfo => <EventInfoViewer eventInfo={eventInfo} />}
   // graphFilter='edge, node[label !^= "al_surface"]'
   />
