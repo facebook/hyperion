@@ -70,81 +70,32 @@ function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEna
   </tr>;
 }
 
-function EventInfoViewer(props: { eventInfo: ALGraph.EventInfos }): React.ReactNode {
-  const { eventInfo } = props;
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  React.useEffect(() => {
-    if (ref.current) {
-      const snapshot = getEventExtension<{ snapshot: string }>(eventInfo.eventData, 'autologging')?.snapshot;
-      if (snapshot) {
-        ref.current.innerHTML = snapshot;
-      }
-    }
-  }, [eventInfo]);
-
-  return <table>
-    <thead>
-      <tr>
-        <th colSpan={2}>{eventInfo.eventName}[{eventInfo.eventData.event}]</th>
-      </tr>
-    </thead>
-    <tbody>
-      {
-        Object.entries(eventInfo.eventData).map(prop => {
-          const [key, value] = prop;
-          return <tr key={key}><th>{key}</th><td>{String(value)}</td></tr>
-        })
-      }
-    </tbody>
-    <tfoot >
-      <tr>
-        <th>Snapshot</th>
-        <td>
-          <div ref={ref}></div>
-        </td>
-      </tr>
-    </tfoot>
-  </table>
-}
-
 export default function () {
   // Better to first setup listeners before initializing AutoLogging so we don't miss any events (e.g. Heartbeat(START))
 
-  return <div>
-    <div style={{ display: "flex", justifyContent: "space-around" }}>
-      <table>
-        <tbody>
-          {
-            EventsWithFlowlet.map(eventName =>
+  return <div style={{ display: "flex", justifyContent: "space-around" }}>
+    <table>
+      <tbody>
+        {
+          EventsWithFlowlet.map(eventName =>
+            <EventField key={eventName} eventName={eventName} onEnable={() => {
+              const handler = SyncChannel.on(eventName).add(ev => {
+                console.log(eventName, ev, performance.now(), ev.triggerFlowlet?.getFullName());
+              });
+              return () => SyncChannel.on(eventName).remove(handler);
+            }} />
+          ).concat(
+            EventsWithoutFlowlet.map(eventName =>
               <EventField key={eventName} eventName={eventName} onEnable={() => {
                 const handler = SyncChannel.on(eventName).add(ev => {
-                  console.log(eventName, ev, performance.now(), ev.triggerFlowlet?.getFullName());
+                  console.log(eventName, ev, performance.now());
                 });
                 return () => SyncChannel.on(eventName).remove(handler);
               }} />
-            ).concat(
-              EventsWithoutFlowlet.map(eventName =>
-                <EventField key={eventName} eventName={eventName} onEnable={() => {
-                  const handler = SyncChannel.on(eventName).add(ev => {
-                    console.log(eventName, ev, performance.now());
-                  });
-                  return () => SyncChannel.on(eventName).remove(handler);
-                }} />
-              )
             )
-          }
-        </tbody>
-      </table>
-    </div>
-    <div>
-      <ALSessionGraph />
-      <ALGraphInfo
-        channel={SyncChannel}
-        width="99%"
-        height="1000px"
-        renderer={eventInfo => <EventInfoViewer eventInfo={eventInfo} />}
-      // graphFilter='edge, node[label !^= "al_surface"]'
-      />
-    </div>
+          )
+        }
+      </tbody>
+    </table>
   </div>;
 }
