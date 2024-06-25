@@ -451,14 +451,16 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
      * If we find such a label, we won't need to check the inner text anymore.
      */
     if (element.id) {
-      const labels = document.querySelectorAll<HTMLLabelElement>(`label[for='${element.id}']`);
-      if (labels.length > 0) {
-        for (let i = 0, len = labels.length; i < len; ++i) {
-          const label = labels[i];
-          getTextFromInnerText({ element: label, surface }, 'label', results);
+      try {
+        const labels = document.querySelectorAll<HTMLLabelElement>(`label[for='${element.id}']`);
+        if (labels.length > 0) {
+          for (let i = 0, len = labels.length; i < len; ++i) {
+            const label = labels[i];
+            getTextFromInnerText({ element: label, surface }, 'label', results);
+          }
+          return;
         }
-        return;
-      }
+      } catch { }
     }
     /**
      * Now we recurse into the children to find other text candidates.
