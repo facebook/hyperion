@@ -452,7 +452,14 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
      */
     if (element.id) {
       try {
-        const labels = document.querySelectorAll<HTMLLabelElement>(`label[for='${element.id}']`);
+        // escape characters that may break the syntax of CSS selector
+        const sanitizedId = element.id.replace(/['"\[\]\(\)]/g, m => {
+          return "\\" + m;
+        });
+        // We could assert that our sanitization is always working using the following line
+        //__DEV__  && assert(element === document.querySelector(`*[id='${sanitizedId}']`), "Invalid id sanitization!");
+
+        const labels = document.querySelectorAll<HTMLLabelElement>(`label[for='${sanitizedId}']`);
         if (labels.length > 0) {
           for (let i = 0, len = labels.length; i < len; ++i) {
             const label = labels[i];
