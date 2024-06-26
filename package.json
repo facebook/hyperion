@@ -62,6 +62,7 @@
     "./packages/hyperion-autologging",
     "./packages/hyperion-autologging-visualizer",
     "./packages/hyperion-util",
+    "./packages/hyperion-docs",
     "./packages/hyperion-react-testapp"
   ],
   "dependencies": {
@@ -80,6 +81,7 @@
     "@hyperion/hyperion-util": "*"
   },
   "devDependencies": {
+    "@hyperion/hyperion-docs": "*",
     "@hyperion/hyperion-react-testapp": "*",
     "@babel/cli": "^7.22.9",
     "@babel/core": "^7.22.9",
