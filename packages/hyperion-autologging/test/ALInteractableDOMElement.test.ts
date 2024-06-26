@@ -217,6 +217,21 @@ describe("Test various element text options", () => {
     dom.cleanup();
   });
 
+  test('IDs with problematic charachers', () => {
+    const badId = "ain't(good)";
+    const dom = DomFragment.html(`
+      <input id="${badId}"></input>
+      <label for="${badId}">correct!</label>
+    `);
+
+    const sanitizedId = badId.replace(/['"\[\]\(\)]/g, m => {
+      return "\\" + m;
+    });
+    expect(document.getElementById(badId)).toStrictEqual(document.querySelector(`*[id='${sanitizedId}']`));
+    expect(getText(badId)).toBe('correct!');
+    dom.cleanup();
+  });
+
 
   test("element text callbacks", () => {
     const dom = createTestDom();
