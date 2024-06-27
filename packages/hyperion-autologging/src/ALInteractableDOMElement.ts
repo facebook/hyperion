@@ -424,6 +424,63 @@ function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText[
   return null;
 }
 
+// Some environments (like JEST) may not have CSS
+export const cssEscape = typeof window.CSS?.escape === 'function'
+  ? (str: string) => window.CSS.escape(str)
+  : (str: string) => str.replace(/['"\[\]\(\)]/g, m => {
+    return "\\" + m;
+  });
+
+//https://developer.mozilla.org/en-US/docs/Web/HTML/Content_categories#labelable
+const LabelableElememts = /BUTTON|INPUT|METER|OUTPUT|PROGRESS|SELECT|TEXTAREA/;
+function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', results: ALElementText[]): ALElementText[] | null {
+  const { element, surface } = domSource;
+
+  // Many labelable elements could have a label assigned to them a few possible ways
+  const labels = (element as { readonly labels?: NodeListOf<HTMLLabelElement>; }).labels;
+  if (labels && labels.length) {
+    for (let i = 0, len = labels.length; i < len; ++i) {
+      const label = labels[i];
+      getTextFromInnerText({ element: label, surface }, source, results);
+    }
+    return results;
+  }
+
+  if (!LabelableElememts.test(element.nodeName)) {
+    return null; // The rest of the logic is not applicable
+  }
+
+  //https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label#:~:text=Alternatively%2C%20you%20can%20nest%20the%20%3Cinput%3E%20directly%20inside%20the%20%3Clabel%3E
+  if (element.parentElement instanceof HTMLLabelElement) {
+    getTextFromInnerText({ element: element.parentElement, surface }, source, results);
+    return results;
+  }
+
+  /**
+    * If the element.labels is not assigned we can do a last best effort.
+    * In some case, there might be just a label with a 'for' attribute that describes the label of an input element.
+    * In these cases, only label points to the input, and not vice versa.
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label#for
+    * If we find such a label, we won't need to check the inner text anymore.
+    */
+  if (element.id) {
+    try {
+      // escape characters that may break the syntax of CSS selector
+      const sanitizedId = cssEscape(element.id)
+      const labels = document.querySelectorAll<HTMLLabelElement>(`label[for='${sanitizedId}']`);
+      if (labels.length > 0) {
+        for (let i = 0, len = labels.length; i < len; ++i) {
+          const label = labels[i];
+          getTextFromInnerText({ element: label, surface }, source, results);
+        }
+        return results;
+      }
+    } catch { }
+  }
+
+  return null;
+}
+
 function getElementName(element: HTMLElement, surface: string | null, results: ALElementText[], depth = 0): void {
   if (depth > MaxDepth) {
     return;
@@ -434,41 +491,19 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
     surface
   };
 
+
   /**
    * First we check if the element itself has some definitive text we can use
    */
-  const selfText = getTextFromElementsByIds(domSource, 'aria-labelledby', results)
+  const selfText =
+    getTextFromElementLabel(domSource, 'label', results)
+    ?? getTextFromElementsByIds(domSource, 'aria-labelledby', results)
     ?? getTextFromElementAttribute(domSource, 'aria-label', results)
     ?? getTextFromElementAttribute(domSource, 'aria-description', results)
     ?? getTextFromElementsByIds(domSource, 'aria-describedby', results)
     ;
 
   if (!selfText) {
-    /**
-     * In some case, there might be just a label with a 'for' attribute that describes the label of an input element.
-     * In these cases, only label points to the input, and not vice versa.
-     * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label#for
-     * If we find such a label, we won't need to check the inner text anymore.
-     */
-    if (element.id) {
-      try {
-        // escape characters that may break the syntax of CSS selector
-        const sanitizedId = element.id.replace(/['"\[\]\(\)]/g, m => {
-          return "\\" + m;
-        });
-        // We could assert that our sanitization is always working using the following line
-        //__DEV__  && assert(element === document.querySelector(`*[id='${sanitizedId}']`), "Invalid id sanitization!");
-
-        const labels = document.querySelectorAll<HTMLLabelElement>(`label[for='${sanitizedId}']`);
-        if (labels.length > 0) {
-          for (let i = 0, len = labels.length; i < len; ++i) {
-            const label = labels[i];
-            getTextFromInnerText({ element: label, surface }, 'label', results);
-          }
-          return;
-        }
-      } catch { }
-    }
     /**
      * Now we recurse into the children to find other text candidates.
      */

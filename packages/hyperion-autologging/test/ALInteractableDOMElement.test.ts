@@ -22,7 +22,6 @@ function createTestDom(): DomFragment.DomFragment {
   <span id='8'>test8</span>
   <span id='9' aria-label="test9">ignored</span>
   <span id='10'><span aria-label="te"></span>s<span>t10</span></span>
-  <input id='11'></input><label for='11'>test11</lablel>
   `);
 }
 function createInteractableTestDom(): DomFragment.DomFragment {
@@ -193,7 +192,6 @@ describe("Test various element text options", () => {
     expect(getText(`8`)).toBe("test8");
     expect(getText(`9`)).toBe("test9");
     expect(getText(`10`)).toBe("test10");
-    expect(getText(`11`)).toBe("test11");
 
     dom.cleanup();
   });
@@ -217,16 +215,18 @@ describe("Test various element text options", () => {
     dom.cleanup();
   });
 
-  test('IDs with problematic charachers', () => {
+  test('labelable element label', () => {
     const badId = "ain't(good)";
     const dom = DomFragment.html(`
+      <input id='1'></input><label for='1'>test1</lablel>
+      <label><input id='2'></input>test2</lablel>
       <input id="${badId}"></input>
       <label for="${badId}">correct!</label>
     `);
 
-    const sanitizedId = badId.replace(/['"\[\]\(\)]/g, m => {
-      return "\\" + m;
-    });
+    expect(getText('1')).toBe('test1');
+    expect(getText('2')).toBe('test2');
+    const sanitizedId = ALInteractableDOMElement.cssEscape(badId);
     expect(document.getElementById(badId)).toStrictEqual(document.querySelector(`*[id='${sanitizedId}']`));
     expect(getText(badId)).toBe('correct!');
     dom.cleanup();
@@ -267,7 +267,7 @@ describe("Test various element text options", () => {
       }
     });
     const text = ALInteractableDOMElement.getElementTextEvent(dom.root, null);
-    expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3test*  test7  test*  test*  test10  test11  test11  ");
+    expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3test*  test7  test*  test*  test10  ");
     console.log(text);
     dom.cleanup();
   });
