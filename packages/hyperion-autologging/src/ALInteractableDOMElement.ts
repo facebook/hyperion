@@ -338,14 +338,24 @@ export type ALElementTextOptions = Types.Options<
     maxDepth?: number;
     updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
     getText?: <T extends ALElementText>(elementTexts: T[]) => ALElementText;
+    cacheText?: boolean;
   }
 >;
 
+type CachedALElementResults = {
+  surface: string | null;
+  result: ALElementTextEvent;
+}
+
 let _options: ALElementTextOptions | null = null;
 let MaxDepth = 20;
+let ElementTextCache: WeakMap<HTMLElement, CachedALElementResults> | null = null;
 export function init(options: ALElementTextOptions) {
   _options = options;
   MaxDepth = _options.maxDepth ?? MaxDepth;
+  if (options.cacheText){
+    ElementTextCache = new WeakMap<HTMLElement, CachedALElementResults>();
+  }
 }
 
 function callExternalTextProcessor(
@@ -532,6 +542,12 @@ export function getElementTextEvent(
       elementText: null,
     }
   }
+
+  const cached = ElementTextCache?.get(element);
+  if (cached && cached.surface === surface){
+    return cached.result;
+  }
+
   const results: ALElementText[] = [];
   getElementName(element, surface, results);
 
@@ -573,8 +589,15 @@ export function getElementTextEvent(
       source: 'innerText'
     }
   );
-  return {
+  const finalResult: ALElementTextEvent = {
     elementName: elementText?.text ?? null,
     elementText,
   };
+
+  ElementTextCache?.set(element, {
+    surface,
+    result: finalResult,
+  })
+
+  return finalResult;
 }
