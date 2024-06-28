@@ -232,6 +232,13 @@ export function publish(options: InitOptions): void {
       return;
     }
 
+    /**
+    * Some events may trigger a change in the UI, which means using cached text is no longer safe
+    * We use this to both skip the text cache, and also recompute the value.
+    * Also, we compute the value per event type, so we can do it once outside of the event handlers
+    */
+    const skipTextCache = /click|change|input|key/.test(eventName);
+
     // Track event in the capturing phase
     const captureHandler = (event: Event): void => {
       const uiEventData = getCommonEventData(eventConfig, eventName, event);
@@ -268,7 +275,7 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(targetElement);
         reactComponentData = elementInfo.getReactComponentData();
       }
-      let elementText = getElementTextEvent(element, surface, eventName);
+      let elementText = getElementTextEvent(element, surface, eventName, skipTextCache);
 
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,

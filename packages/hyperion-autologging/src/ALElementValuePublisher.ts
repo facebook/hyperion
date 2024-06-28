@@ -64,7 +64,7 @@ export function publish(options: InitOptions): void {
       reactComponentData = elementInfo.getReactComponentData();
     }
 
-    const elementText = getElementTextEvent(element, surface, tryInteractiveParentTextEventName);
+    const elementText = getElementTextEvent(element, surface, tryInteractiveParentTextEventName, true);
     const callFlowlet = options.flowletManager.top();
 
     channel.emit('al_ui_event', {
