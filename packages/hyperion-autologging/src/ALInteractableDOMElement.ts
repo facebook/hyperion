@@ -353,7 +353,7 @@ let ElementTextCache: WeakMap<HTMLElement, CachedALElementResults> | null = null
 export function init(options: ALElementTextOptions) {
   _options = options;
   MaxDepth = _options.maxDepth ?? MaxDepth;
-  if (options.cacheText){
+  if (options.cacheText) {
     ElementTextCache = new WeakMap<HTMLElement, CachedALElementResults>();
   }
 }
@@ -534,7 +534,8 @@ export function getElementTextEvent(
   surface: string | null,
   // Event name to utilize when attempting to resolve text from a parent interactable
   // Some interactable elements may have no text to extract, in those cases we want to move up the tree to attempt from parent interactable.
-  tryInteractableParentEventName?: UIEventConfig['eventName'] | null
+  tryInteractableParentEventName?: UIEventConfig['eventName'] | null,
+  skipCache?: boolean
 ): ALElementTextEvent {
   if (!element) {
     return {
@@ -543,9 +544,11 @@ export function getElementTextEvent(
     }
   }
 
-  const cached = ElementTextCache?.get(element);
-  if (cached && cached.surface === surface){
-    return cached.result;
+  if (!skipCache) {
+    const cached = ElementTextCache?.get(element);
+    if (cached && cached.surface === surface) {
+      return cached.result;
+    }
   }
 
   const results: ALElementText[] = [];
@@ -594,6 +597,7 @@ export function getElementTextEvent(
     elementText,
   };
 
+  // even if skipCache is set, we update the cache, this way, certain events can be used to keep the cache uptodate
   ElementTextCache?.set(element, {
     surface,
     result: finalResult,
