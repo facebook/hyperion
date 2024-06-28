@@ -338,14 +338,24 @@ export type ALElementTextOptions = Types.Options<
     maxDepth?: number;
     updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
     getText?: <T extends ALElementText>(elementTexts: T[]) => ALElementText;
+    cacheText?: boolean;
   }
 >;
 
+type CachedALElementResults = {
+  surface: string | null;
+  result: ALElementTextEvent;
+}
+
 let _options: ALElementTextOptions | null = null;
 let MaxDepth = 20;
+let ElementTextCache: WeakMap<HTMLElement, CachedALElementResults> | null = null;
 export function init(options: ALElementTextOptions) {
   _options = options;
   MaxDepth = _options.maxDepth ?? MaxDepth;
+  if (options.cacheText) {
+    ElementTextCache = new WeakMap<HTMLElement, CachedALElementResults>();
+  }
 }
 
 function callExternalTextProcessor(
@@ -524,7 +534,8 @@ export function getElementTextEvent(
   surface: string | null,
   // Event name to utilize when attempting to resolve text from a parent interactable
   // Some interactable elements may have no text to extract, in those cases we want to move up the tree to attempt from parent interactable.
-  tryInteractableParentEventName?: UIEventConfig['eventName'] | null
+  tryInteractableParentEventName?: UIEventConfig['eventName'] | null,
+  skipCache?: boolean
 ): ALElementTextEvent {
   if (!element) {
     return {
@@ -532,6 +543,14 @@ export function getElementTextEvent(
       elementText: null,
     }
   }
+
+  if (!skipCache) {
+    const cached = ElementTextCache?.get(element);
+    if (cached && cached.surface === surface) {
+      return cached.result;
+    }
+  }
+
   const results: ALElementText[] = [];
   getElementName(element, surface, results);
 
@@ -573,8 +592,16 @@ export function getElementTextEvent(
       source: 'innerText'
     }
   );
-  return {
+  const finalResult: ALElementTextEvent = {
     elementName: elementText?.text ?? null,
     elementText,
   };
+
+  // even if skipCache is set, we update the cache, this way, certain events can be used to keep the cache uptodate
+  ElementTextCache?.set(element, {
+    surface,
+    result: finalResult,
+  })
+
+  return finalResult;
 }
