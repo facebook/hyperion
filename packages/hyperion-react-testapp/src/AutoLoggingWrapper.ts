@@ -97,7 +97,13 @@ export function init() {
           eventName: 'change',
           cacheElementReactInfo: true,
           interactableElementsOnly: false,
-        }
+        },
+        {
+          eventName: 'mouseover',
+          cacheElementReactInfo: true,
+          interactableElementsOnly: false,
+          durationThresholdToEmitHoverEvent: 1000,
+        },
       ]
     },
     heartbeat: {

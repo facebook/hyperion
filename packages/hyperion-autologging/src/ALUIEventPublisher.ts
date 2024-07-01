@@ -19,13 +19,25 @@ import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
+import * as ALHoverPublisher from "./ALHoverPublisher";
 
 
 /**
  * Generates a union type of all handler event and domEvent permutations.
  * e.g. {domEvent: KeyboardEvent, event: 'keydown', ...}
  */
-type ALUIEvent<T = EventHandlerMap> =
+type ALUIEventMap = {
+  [K in keyof EventHandlerMap]: Readonly<{
+    // The typed domEvent associated with the event we are capturing
+    domEvent: EventHandlerMap[K],
+    // Event we are capturing
+    event: K,
+    // Whether the event is generated from a user action or dispatched via script
+    isTrusted: boolean,
+  }>
+};
+
+type ALUIEvent =
   ALTimedEvent &
   ALMetadataEvent &
   ALExtensibleEvent &
@@ -37,16 +49,14 @@ type ALUIEvent<T = EventHandlerMap> =
      */
     targetElement: HTMLElement | null,
   } &
-  {
-    [K in keyof T]: Readonly<{
-      // The typed domEvent associated with the event we are capturing
-      domEvent: T[K],
-      // Event we are capturing
-      event: K,
-      // Whether the event is generated from a user action or dispatched via script
-      isTrusted: boolean,
-    }>
-  }[keyof T];
+  // Extend ALUIEvents with `hover` and other derived events
+  (
+    ALUIEventMap[keyof ALUIEventMap] |
+    Omit<ALUIEventMap['mouseover'], 'event'> & { event: 'hover' }
+  );
+;
+
+
 
 export type ALUIEventCaptureData = Readonly<
   ALUIEvent &
@@ -54,6 +64,7 @@ export type ALUIEventCaptureData = Readonly<
   ALReactElementEvent &
   ALElementTextEvent &
   ALPageEvent &
+  CommonEventData &
   {
     surface: string | null;
     value?: string;
@@ -102,13 +113,19 @@ type UIEventConfigMap = {
 };
 
 // Extend UIEventConfig with additional event-specific configuration
-export type UIEventConfig = UIEventConfigMap[keyof Omit<EventHandlerMap, 'change'>]
+export type UIEventConfig = UIEventConfigMap[keyof Omit<EventHandlerMap, 'change' | 'mouseover'>]
   | (
     UIEventConfigMap['change'] & {
       // (Default: true) Whether to include default state of radio/input/select elements when surfaces are mounted.
       includeInitialDefaultState?: boolean,
       // (Default: false) When includeInitialDefaultState is enabled, whether to also emit disabled state for input[checked] = false.  Otherwise only enabled state will be emitted.
       includeInitialDefaultDisabledState?: boolean
+    }
+  )
+  | (
+    UIEventConfigMap['mouseover'] & {
+      // The duration in ms required for hovering over an element to emit a standalone `hover` event
+      durationThresholdToEmitHoverEvent?: number;
     }
   );
 
@@ -224,7 +241,12 @@ export function publish(options: InitOptions): void {
 
 
   uiEvents.forEach((eventConfig => {
-    const { eventName, cacheElementReactInfo = false } = eventConfig;
+    const { eventName } = eventConfig;
+    if (eventName === 'mouseover' && eventConfig.durationThresholdToEmitHoverEvent != null) {
+      // Publish hover events as well,  if configured
+      ALHoverPublisher.publish({ channel, uiEvents });
+    }
+    const { cacheElementReactInfo = false } = eventConfig;
 
     // the following will ensure that repeated items in the list won't have double handlers
     if (isTrackedEvent(eventName)) {
