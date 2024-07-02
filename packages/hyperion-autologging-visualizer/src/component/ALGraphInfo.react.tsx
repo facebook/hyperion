@@ -59,8 +59,8 @@ const DefaultOptions: ALGraph.ALGraphDynamicOptionsType = {
     al_network_request: false,
     al_network_response: false,
     al_surface_visibility_event: {
-      component_visible: false,
-      component_hidden: false,
+      surface_visible: false,
+      surface_hidden: false,
     },
   },
   nodes: {
