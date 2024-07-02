@@ -169,8 +169,8 @@ export type ALGraphDynamicOptionsType = {
     al_network_request: boolean;
     al_network_response: boolean;
     al_surface_visibility_event: {
-      component_visible: boolean;
-      component_hidden: boolean;
+      surface_visible: boolean;
+      surface_hidden: boolean;
     };
   };
   nodes: {

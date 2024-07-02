@@ -29,12 +29,12 @@ export type ALSurfaceVisibilityEventData =
     } &
     (
       {
-        event: 'component_visible';
+        event: 'surface_visible';
         isIntersecting: true;
       }
       |
       {
-        event: 'component_hidden';
+        event: 'surface_hidden';
         isIntersecting: false;
       }
     )
@@ -168,8 +168,8 @@ export function publish(options: InitOptions): void {
               const isIntersecting = entry.isIntersecting;
               channel.emit('al_surface_visibility_event', {
                 ...isIntersecting
-                  ? { event: 'component_visible', isIntersecting }
-                  : { event: 'component_hidden', isIntersecting },
+                  ? { event: 'surface_visible', isIntersecting }
+                  : { event: 'surface_hidden', isIntersecting },
                 eventTimestamp: performanceAbsoluteNow.fromRelativeTime(entry.time),
                 eventIndex: ALEventIndex.getNextEventIndex(),
                 relatedEventIndex: surfaceEvent.eventIndex,
