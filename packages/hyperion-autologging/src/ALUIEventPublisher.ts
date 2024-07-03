@@ -98,6 +98,14 @@ type UIEventConfigMap = {
     interactableElementsOnly?: boolean;
     // Whether to cache element's react information on capture, defaults to false.
     cacheElementReactInfo?: boolean;
+
+    /**
+    * Some events may trigger a change in the UI, which means using cached text is not safe.
+    * We always update the cache after text extraction (if cache is enabled), it is only safe
+    * to use the cached value (and skip recomputation) for certain events (e.g. mouseover).
+    * This field allows controlling this behavior. It is on by default for all events except /click|change|input|key/
+    */
+    useCachedElementText?: boolean;
   }>
 };
 
@@ -224,20 +232,18 @@ export function publish(options: InitOptions): void {
 
 
   uiEvents.forEach((eventConfig => {
-    const { eventName, cacheElementReactInfo = false } = eventConfig;
+    const {
+      eventName,
+      cacheElementReactInfo = false,
+      useCachedElementText = !/click|change|input|key/.test(eventName) // by default we skipt cache for these value
+    } = eventConfig;
+
 
     // the following will ensure that repeated items in the list won't have double handlers
     if (isTrackedEvent(eventName)) {
       // Already handled
       return;
     }
-
-    /**
-    * Some events may trigger a change in the UI, which means using cached text is no longer safe
-    * We use this to both skip the text cache, and also recompute the value.
-    * Also, we compute the value per event type, so we can do it once outside of the event handlers
-    */
-    const skipTextCache = /click|change|input|key/.test(eventName);
 
     // Track event in the capturing phase
     const captureHandler = (event: Event): void => {
@@ -275,7 +281,7 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(targetElement);
         reactComponentData = elementInfo.getReactComponentData();
       }
-      let elementText = getElementTextEvent(element, surface, eventName, skipTextCache);
+      let elementText = getElementTextEvent(element, surface, eventName, useCachedElementText);
 
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
