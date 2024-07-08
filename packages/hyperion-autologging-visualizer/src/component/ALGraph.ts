@@ -160,6 +160,7 @@ export type ALGraphDynamicOptionsType = {
     al_ui_event: {
       click: boolean;
       change: boolean;
+      hover: boolean;
       [key: string]: boolean;
     };
     al_surface_mutation_event: {
@@ -302,7 +303,7 @@ export class ALGraph {
       const { left: undesired, /* right: desired, both: _ */ } = this._elements.diff(this.dynamicOptions.filter);
       /**
        * Note: A bad filter can potentially cause problem later if we just remove the nodes.
-       * For example, if we add multiple nodes (e.g. trigger flowlet nodes) based on absence of one them, we may 
+       * For example, if we add multiple nodes (e.g. trigger flowlet nodes) based on absence of one them, we may
        * get errors for duplicate node addition.
        * So, instead of removing nodes, we just add a class to them that hides them.
        * This way, we can also chose to change the filter later and bring those nodes back (not yet implemented)
@@ -651,6 +652,3 @@ export class ALGraph {
     this.addSurfaceEvent(eventName, eventData);
   }
 }
-
-
-

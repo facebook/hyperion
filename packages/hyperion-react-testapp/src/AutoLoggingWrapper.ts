@@ -44,6 +44,8 @@ export function init() {
 
   // Better to first setup listeners before initializing AutoLogging so we don't miss any events (e.g. Heartbeat(START))
 
+
+
   interface ExtendedElementText extends ALElementText {
     isExtended?: boolean;
   }
@@ -129,4 +131,6 @@ export function init() {
       ]
     }
   });
+
+  console.log('AutoLogging.init options:', AutoLogging.getInitOptions());
 }

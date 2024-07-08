@@ -91,9 +91,11 @@ function App() {
 
     content2={
       // <ResizableSplitView direction='vertical' content1="T2" content2="T3" style={{ backgroundColor: 'red' }}></ResizableSplitView>
+      <>
       <ALGraphView />
-      // <TestDivGrid />s
-      // <ALEventLogger />
+      {/* <TestDivGrid /> */}
+      {/* <ALEventLogger /> */}
+      </>
     }
   />);
 
