@@ -51,6 +51,7 @@ const DefaultOptions: ALGraph.ALGraphDynamicOptionsType = {
     al_ui_event: {
       click: true,
       change: false,
+      hover: false,
     },
     al_surface_mutation_event: {
       mount_component: false,
@@ -238,7 +239,7 @@ export function ALGraphInfo(props: {
 
   React.useEffect(() => {
     if (graphRef.current) {
-      // The following ensures that later the event handlers will see the latest value. 
+      // The following ensures that later the event handlers will see the latest value.
       graphRef.current.graph.setDynamicOptions(options);
     }
   }, [options]);

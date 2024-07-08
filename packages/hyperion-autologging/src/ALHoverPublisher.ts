@@ -10,7 +10,6 @@ import * as ALEventIndex from "./ALEventIndex";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
 import { ALUIEventCaptureData } from "./ALUIEventPublisher";
-import { assert } from "@hyperion/hyperion-global";
 
 
 export type InitOptions = Types.Options<
@@ -22,12 +21,8 @@ export function publish(options: InitOptions): void {
   const { channel, uiEvents } = options;
 
   const mouseOverConfig = uiEvents.find(e => e.eventName === 'mouseover');
-  assert(mouseOverConfig != null, 'mouseover event must be included in uiEvents config to enable hover.');
-  // const clickConfig = uiEvents.find(e => e.eventName === 'click');
-  // assert(clickConfig != null, 'click event must be included in uiEvents config to enable hover.');
-
-  // Won't refine below property durationThresholdToEmitHoverEvent as being available without this check...
-  if (mouseOverConfig.eventName !== 'mouseover') {
+  // Won't refine below property durationThresholdToEmitHoverEvent as being available without eventName check
+  if (mouseOverConfig == null || mouseOverConfig.eventName !== 'mouseover') {
     return;
   }
 
@@ -58,8 +53,8 @@ export function publish(options: InitOptions): void {
     // the hover event, utilizing the click event timestamp
     else if (
       activeHover != null &&
-      eventData.event === 'click' &&
-      // Clicked element (could be exact target or interactable parent) contains the active hover element
+      (eventData.event === 'click' || eventData.event === 'mousedown') &&
+      // Clicked/Mousedown element (could be exact target or interactable parent) contains the active hover element
       eventData.element?.contains(activeHover.targetElement)
     ) {
       activeHover != null &&

@@ -19,7 +19,6 @@ import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
-import * as ALHoverPublisher from "./ALHoverPublisher";
 
 
 /**

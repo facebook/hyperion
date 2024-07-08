@@ -25,6 +25,7 @@ import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
 import * as ALDOMSnapshotPublisher from "./ALDOMSnaptshotPublisher";
+import * as ALHoverPublisher from "./ALHoverPublisher";
 
 /**
  * This type extracts the union of all events types so that external modules
@@ -157,6 +158,11 @@ export function init(options: InitOptions): boolean {
     ALUIEventPublisher.publish({
       ...sharedOptions,
       ...options.uiEventPublisher
+    });
+
+    ALHoverPublisher.publish({
+      ...sharedOptions,
+      ...options.uiEventPublisher,
     });
 
     /**
