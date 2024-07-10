@@ -138,3 +138,30 @@ export class LocalStoragePersistentData<T> extends PersistentData<T> {
   }
 }
 
+export class CookieStorage implements IStorage {
+  constructor(private readonly cookieAttributes: string = "") { }
+
+  getItem(key: string): string | null {
+    const cookie = document.cookie.match(new RegExp(`${key}==([^;]*)(?:;|$)`));
+    if (cookie && cookie.length > 1) {
+      return cookie[1];
+    }
+    return null;
+  }
+
+  setItem(key: string, value: string): void {
+    document.cookie = `${key}=${value}${this.cookieAttributes}`;
+  }
+}
+
+export class CookiePersistentData<T> extends PersistentData<T> {
+  constructor(
+    fieldName: string,
+    missingValueInitializer: () => T,
+    stringify: (value: T) => string,
+    parser: (persistedValue: string) => T,
+    cookieAttributes?: string,
+  ) {
+    super(fieldName, missingValueInitializer, stringify, parser, true, new CookieStorage(cookieAttributes));
+  }
+}

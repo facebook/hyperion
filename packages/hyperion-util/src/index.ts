@@ -3,5 +3,5 @@
  */
 
 'use strict';
-export { ClientSessionID } from "./ClientSessionID";
-export { SessionPersistentData, LocalStoragePersistentData } from "./PersistentData";
+export { ClientSessionID, getDomainSessionID } from "./ClientSessionID";
+export { SessionPersistentData, LocalStoragePersistentData, CookiePersistentData, CookieStorage } from "./PersistentData";
