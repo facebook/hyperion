@@ -46,7 +46,7 @@ const StyleCss = `
 `;
 
 const DefaultOptions: ALGraph.ALGraphDynamicOptionsType = {
-  version: 1,
+  version: 2,
   events: {
     al_ui_event: {
       click: true,
