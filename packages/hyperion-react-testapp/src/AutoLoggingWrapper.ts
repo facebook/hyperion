@@ -81,29 +81,40 @@ export function init() {
         {
           eventName: 'click',
           cacheElementReactInfo: true,
+          enableElementTextExtraction: true,
+          eventFilter: (domEvent) => domEvent.isTrusted
+        },
+        {
+          eventName: 'mousedown',
+          cacheElementReactInfo: true,
+          enableElementTextExtraction: false,
           eventFilter: (domEvent) => domEvent.isTrusted
         },
         {
           eventName: 'keydown',
           cacheElementReactInfo: true,
           interactableElementsOnly: false,
+          enableElementTextExtraction: false,
           eventFilter: (domEvent) => domEvent.code === 'Enter',
         },
         {
           eventName: 'keyup',
           cacheElementReactInfo: true,
           interactableElementsOnly: false,
+          enableElementTextExtraction: false,
           eventFilter: (domEvent) => domEvent.code === 'Enter',
         },
         {
           eventName: 'change',
           cacheElementReactInfo: true,
+          enableElementTextExtraction: true,
           interactableElementsOnly: false,
         },
         {
           eventName: 'mouseover',
           cacheElementReactInfo: true,
           interactableElementsOnly: false,
+          enableElementTextExtraction: true,
           durationThresholdToEmitHoverEvent: 1000,
         },
       ]
@@ -113,6 +124,7 @@ export function init() {
     },
     surfaceMutationPublisher: {
       cacheElementReactInfo: true,
+      enableElementTextExtraction: false,
     },
     surfaceVisibilityPublisher: {},
     network: {

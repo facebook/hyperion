@@ -36,7 +36,7 @@ export type ALMetadataEvent = Readonly<{
 export type ALExtensibleEventData = { [key: string]: any };
 export type ALExtensibleEvent = {
   /**
-   * Temporary data that application might want to attach to 
+   * Temporary data that application might want to attach to
    * event payload but will be dropped when logging or serializing.
    * The data must be organized with namespaces to avoid collision
    */

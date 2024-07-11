@@ -108,7 +108,6 @@ type UIEventConfigMap = {
     interactableElementsOnly?: boolean;
     // Whether to cache element's react information on capture, defaults to false.
     cacheElementReactInfo?: boolean;
-
     /**
     * Some events may trigger a change in the UI, which means using cached text is not safe.
     * We always update the cache after text extraction (if cache is enabled), it is only safe
@@ -116,6 +115,12 @@ type UIEventConfigMap = {
     * This field allows controlling this behavior. It is on by default for all events except /click|change|input|key/
     */
     useCachedElementText?: boolean;
+    /**
+     * Whether to include elementName, and elementText extraction and fields in the published events.
+     * Element text extraction can be expensive depending on the event,  and may not be needed in some cases.
+     * Defaults to false behavior.
+     */
+    enableElementTextExtraction?: boolean;
   }>
 };
 
@@ -247,7 +252,8 @@ export function publish(options: InitOptions): void {
     const {
       eventName,
       cacheElementReactInfo = false,
-      useCachedElementText = !/click|change|input|key/.test(eventName) // by default we skipt cache for these value
+      useCachedElementText = !/click|change|input|key/.test(eventName), // by default we skipt cache for these value
+      enableElementTextExtraction = false,
     } = eventConfig;
 
 
@@ -291,7 +297,7 @@ export function publish(options: InitOptions): void {
         const elementInfo = ALElementInfo.getOrCreate(targetElement);
         reactComponentData = elementInfo.getReactComponentData();
       }
-      let elementText = getElementTextEvent(element, surface, eventName, useCachedElementText);
+      let elementText = enableElementTextExtraction ? getElementTextEvent(element, surface, eventName, useCachedElementText) : getElementTextEvent(null, null);
 
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
