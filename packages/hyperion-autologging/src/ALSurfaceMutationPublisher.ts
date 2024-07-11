@@ -65,11 +65,16 @@ export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent & ALCustomEvent.ALChannelCustomEvent> &
   {
     cacheElementReactInfo: boolean;
+    /**
+     * Whether to include elementName, and elementText extraction and fields in the published events.
+     * Element text extraction can be expensive depending on the event,  and for mutations may not be relevant.
+     */
+    enableElementTextExtraction?: boolean;
   }
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel, flowletManager, cacheElementReactInfo } = options;
+  const { channel, flowletManager, cacheElementReactInfo, enableElementTextExtraction = false } = options;
 
   function processNode(event: ALSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
@@ -87,14 +92,12 @@ export function publish(options: InitOptions): void {
         let info = activeSurfaces.get(surface);
         if (!info) {
           let reactComponentData: ReactComponentData | null = null;
-          let elementText: ALElementTextEvent;
           if (cacheElementReactInfo) {
             const elementInfo = ALElementInfo.getOrCreate(element);
             reactComponentData = elementInfo.getReactComponentData();
-            elementText = getElementTextEvent(element, surface);
-          } else {
-            elementText = getElementTextEvent(null, surface);
           }
+          const elementText = enableElementTextExtraction ? getElementTextEvent(element, surface) : getElementTextEvent(null, null);
+
           if (callFlowlet) {
             metadata.add_call_flowlet = callFlowlet?.getFullName();
           }

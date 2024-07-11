@@ -42,7 +42,7 @@ export function publish(options: InitOptions): void {
     return;
   }
 
-  const { cacheElementReactInfo, includeInitialDefaultState = true, includeInitialDefaultDisabledState = false } = changeEvent;
+  const { cacheElementReactInfo, includeInitialDefaultState = true, includeInitialDefaultDisabledState = false, enableElementTextExtraction = false } = changeEvent;
 
   /**
    * In most cases, the application may not have 'change' listener. We mainly want to track
@@ -64,7 +64,7 @@ export function publish(options: InitOptions): void {
       reactComponentData = elementInfo.getReactComponentData();
     }
 
-    const elementText = getElementTextEvent(element, surface, tryInteractiveParentTextEventName, true);
+    const elementText = enableElementTextExtraction ? getElementTextEvent(element, surface, tryInteractiveParentTextEventName, true) : getElementTextEvent(null, null);
     const callFlowlet = options.flowletManager.top();
 
     channel.emit('al_ui_event', {

@@ -11,7 +11,6 @@ import NestedComponent from './component/NestedComponent';
 import NonInteractiveSurfaceComponent from './component/NonInteractiveSurfaceComponent';
 import ALEventLogger from './component/ALEventLogger';
 import { LocalStoragePersistentData } from '@hyperion/hyperion-util/src/PersistentData';
-import TestDivGrid from './component/TestDivGrid';
 import ALGraphView from './component/ALGraphView';
 import ResizableSplitView from "@hyperion/hyperion-autologging-visualizer/src/component/ResizableSplitView.react";
 import { PortalBodyContainerComponent } from './component/PortalComponent';
@@ -66,11 +65,24 @@ const PersistedOptionValue = new LocalStoragePersistentData<ModeNames>(
   value => value in Modes ? value as ModeNames : 'mutationOnlySurface'
 );
 
+const Tools = {
+  'alGraph': () => <ALGraphView />,
+  'alConsoleEventLogger': () => <ALEventLogger />
+};
+type ToolNames = keyof typeof Tools;
+const PersistedToolOptionValue = new LocalStoragePersistentData<ToolNames>(
+  'tool_drop_down',
+  () => 'alGraph',
+  value => String(value),
+  value => value in Tools ? value as ToolNames : 'alGraph'
+);
+
 function App() {
 
   const [mode, setMode] = useState<ModeNames>(PersistedOptionValue.getValue());
+  const [tool, setTool] = useState<ToolNames>(PersistedToolOptionValue.getValue());
 
-  const onChange = useCallback<ChangeEventHandler<HTMLSelectElement>>((event) => {
+  const onModeChange = useCallback<ChangeEventHandler<HTMLSelectElement>>((event) => {
     const value = event.target.value;
     if (value === 'mutationOnlySurface' || value === 'network' || value === 'nested') {
       PersistedOptionValue.setValue(value);
@@ -78,11 +90,19 @@ function App() {
     }
   }, []);
 
+  const onToolChange = useCallback<ChangeEventHandler<HTMLSelectElement>>((event) => {
+    const value = event.target.value;
+    if (value === 'alGraph' || value === 'alConsoleEventLogger') {
+      PersistedToolOptionValue.setValue(value);
+      setTool(value);
+    }
+  }, []);
+
   return (<ResizableSplitView direction='horizontal'
     content1={
       <div className='AppContent'>
         <label htmlFor='testSelector'>Select a mode:</label>
-        <select onChange={onChange} value={mode} id='testSelector' aria-label='Mode Selector'>
+        <select onChange={onModeChange} value={mode} id='testSelector' aria-label='Mode Selector'>
           {Object.keys(Modes).map(key => <option key={key} value={key}>{key}</option>)}
         </select>
         {Modes[mode]()}
@@ -90,12 +110,13 @@ function App() {
     }
 
     content2={
-      // <ResizableSplitView direction='vertical' content1="T2" content2="T3" style={{ backgroundColor: 'red' }}></ResizableSplitView>
-      <>
-      <ALGraphView />
-      {/* <TestDivGrid /> */}
-      {/* <ALEventLogger /> */}
-      </>
+      <div className='ToolContent'>
+        <label htmlFor='toolSelector'>Select a mode:</label>
+        <select onChange={onToolChange} value={tool} id='toolSelector' aria-label='Tool Selector'>
+          {Object.keys(Tools).map(key => <option key={key} value={key}>{key}</option>)}
+        </select>
+        {Tools[tool]()}
+      </div>
     }
   />);
 
