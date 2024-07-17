@@ -18,6 +18,7 @@ import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
 import * as Flags from "hyperion-globals/src/Flags";
 import "hyperion-autologging/src/reference";
 import * as PluginEventHash from "hyperion-autologging-plugin-eventhash/src/index";
+import { getSessionFlowID } from "hyperion-autologging/src/ALSessionFlowID";
 
 export let interceptionStatus = "disabled";
 
@@ -82,6 +83,10 @@ export function init() {
     },
     surface: {
       enableReactDomPropsExtension: false,
+    },
+    sessionFlowID: {
+      domain: 'localhost',
+      cookieName: 'axaxax',
     },
     elementText: {
       updateText(elementText: ExtendedElementText, domSource) {
@@ -158,4 +163,8 @@ export function init() {
   });
 
   console.log('AutoLogging.init options:', AutoLogging.getInitOptions());
+  // console.log('dsid', getDomainSessionID('localhost'));
+  // console.log('dsid', getDomainSessionID());
+  console.log('sfid', getSessionFlowID());
+
 }
