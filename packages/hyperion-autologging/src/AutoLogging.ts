@@ -11,12 +11,15 @@ import global from "hyperion-globals/src/global";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import * as Types from "hyperion-util/src/Types";
 import * as ALCustomEvent from "./ALCustomEvent";
+import * as ALDOMSnapshotPublisher from "./ALDOMSnaptshotPublisher";
 import * as ALElementValuePublisher from "./ALElementValuePublisher";
 import * as ALFlowletPublisher from "./ALFlowletPublisher";
 import * as ALHeartbeat from "./ALHeartbeat";
+import * as ALHoverPublisher from "./ALHoverPublisher";
 import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
 import * as ALNetworkPublisher from "./ALNetworkPublisher";
 import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
+import * as ALSessionFlowID from "./ALSessionFlowID";
 import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
@@ -24,8 +27,6 @@ import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
-import * as ALDOMSnapshotPublisher from "./ALDOMSnaptshotPublisher";
-import * as ALHoverPublisher from "./ALHoverPublisher";
 
 /**
  * This type extracts the union of all events types so that external modules
@@ -39,6 +40,7 @@ export type ALChannelEvent = ChannelEventType<
   ALSurfaceMutationPublisher.InitOptions['channel'] &
   ALSurfaceVisibilityPublisher.InitOptions['channel'] &
   ALNetworkPublisher.InitOptions['channel'] &
+  ALSessionFlowID.InitOptions['channel'] &
   ALCustomEvent.ALCustomEventChannel
 >;
 
@@ -63,6 +65,7 @@ export type InitOptions = Types.Options<
     triggerFlowlet?: PublicInitOptions<ALTriggerFlowlet.InitOptions> | null;
     domSnapshotPublisher?: PublicInitOptions<ALDOMSnapshotPublisher.InitOptions> | null;
     plugins?: (null | undefined | PluginInit)[];
+    sessionFlowID?: PublicInitOptions<ALSessionFlowID.InitOptions> | null;
   }
 >;
 
@@ -149,6 +152,13 @@ export function init(options: InitOptions): boolean {
     reactOptions.enableInterceptFunctionComponentRender
   ) {
     IReactComponent.init(options.react);
+  }
+
+  if (options.sessionFlowID) {
+    ALSessionFlowID.init({
+      ...sharedOptions,
+      ...options.sessionFlowID
+    });
   }
 
   if (options.elementText) {
