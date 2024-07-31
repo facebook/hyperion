@@ -47,7 +47,8 @@ export function init(options: InitOptions) {
 
   // Even if the cookie did not work, we just check the time difference ouselves
   const now = performanceAbsoluteNow();
-  if ((now - sessionFlowID.getValue().timestamp) > maxAge) {
+  const age =  (now - sessionFlowID.getValue().timestamp) / 1000; // msec to sec
+  if (age > maxAge) {
     // Too much time has elapsed since last session, so start a new one
     sessionFlowID.setValue({
       id: guid(),
@@ -72,9 +73,8 @@ export function init(options: InitOptions) {
 
 }
 
-export function getSessionFlowID(): SessionFlowID {
-  assert(sessionFlowID != null, `Calling getSessionID before initialization`);
-  return sessionFlowID.getValue();
+export function getSessionFlowID(): SessionFlowID | null {
+  return sessionFlowID?.getValue();
 }
 
 let domainSessionId: CookiePersistentData<string> | null = null;
