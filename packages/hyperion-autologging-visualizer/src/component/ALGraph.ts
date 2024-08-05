@@ -312,6 +312,7 @@ export class ALGraph {
 
   clearGraph(): void {
     this.initGraph(this.cy.container());
+    this._lastEventId = void 0;
   }
 
   fitGraph(): void {
