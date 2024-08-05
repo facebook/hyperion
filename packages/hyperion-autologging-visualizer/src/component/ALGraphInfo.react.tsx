@@ -190,50 +190,23 @@ export function ALGraphInfo(props: {
   React.useEffect(
     () => {
       if (graphRef.current == null && graphContainer.current != null) {
+        const channel = new PausableChannel<AutoLogging.ALChannelEvent>();
         const graph = new ALGraph.ALGraph({
           onEventNodeClick: setEventInfo,
           topContainer: gridContainer.current,
           graphContainer: graphContainer.current,
           elements,
+          channel,
         });
-        const channel = new PausableChannel<AutoLogging.ALChannelEvent>();
         graphRef.current = { graph, channel };
 
         props.channel.pipe(channel);
-
-        const alEvents = ALGraph.SupportedALEvents;
-
-        // In the following it is important to only close on graphNode from outside of this function.
-        alEvents.forEach(eventName => {
-          switch (eventName) {
-            case 'al_ui_event':
-              channel.on(eventName).add(eventData => {
-                graphRef.current?.graph.addALUIEventNodeId(eventName, eventData);
-              });
-              break;
-            case 'al_surface_mutation_event':
-              channel.on(eventName).add(eventData => {
-                graphRef.current?.graph.addSurfaceMutationEvent(eventName, eventData);
-              });
-              break;
-            case 'al_surface_visibility_event':
-              channel.on(eventName).add(eventData => {
-                graphRef.current?.graph.addSurfaceVisibilityEvent(eventName, eventData);
-              });
-              break;
-            default:
-              channel.on(eventName).add(eventData => {
-                graphRef.current?.graph.addALEventNodeId(eventName, eventData);
-              });
-              break;
-          }
-        });
       }
 
       graphRef.current?.channel.unpause();
       return () => graphRef.current?.channel.pause();
     },
-    [graphRef, /* instanceCounter */]
+    [graphRef]
   );
 
   React.useEffect(() => {
