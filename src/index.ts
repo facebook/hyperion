@@ -76,5 +76,5 @@ export { getCurrentUIEventData } from "@hyperion/hyperion-autologging/src/ALUIEv
 export * as ALEventExtension from "@hyperion/hyperion-autologging/src/ALEventExtension";
 
 // hyperionAutoLoggingVisualizer
-export * as ALGraph from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph";
+export { ALGraph} from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph";
 export { ALGraphInfo } from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraphInfo.react";
