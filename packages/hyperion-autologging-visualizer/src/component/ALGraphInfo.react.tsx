@@ -10,39 +10,73 @@ import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/Persiste
 import ResizableSplitViewReact from "./ResizableSplitView.react";
 
 const StyleCss = `
-.al-graph-grid-container {
+.al-graph-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+  width: 100%;
+}
+
+// .al-graph-container > div {
+//   margin: 10px;
+//   text-align: center;
+// }
+
+.al-graph-container-header {
+  flex: 0 1 0%;
+  /* The above is shorthand for:
+  flex-grow: 0,
+  flex-shrink: 1,
+  flex-basis: ?%
+  */
+  padding: 5px;
+}
+
+.al-graph-container-content {
+  flex: 1 1 auto;
+  resize: horizontal;
+  overflow: auto;
+}
+
+.al-graph-container-footer {
+  flex: 0 1 0%;
+}
+
+.al-graph-control {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.al-graph-options {
   display: grid;
   grid-template-areas:
-    'header header header header header'
     'events events nodes nodes nodes'
     'events events edges edges edges'
-    'filter filter filter filter filter'
-    'control control control control control'
-    'main main main main main';
+    'filter filter filter filter filter';
   grid-template-columns: 20% 20% 20% 20% 20%;
-  grid-template-rows: repeat(5, fit-content(40%)) auto;
-  gap: 10px;
+  grid-template-rows: repeat(2, fit-content(40%)) auto;
+  gap: 5px;
   padding: 10px;
-  height: 100%;
+  // height: 100%;
 }
-.al-graph-grid-container > div {
+.al-graph-options > div {
   text-align: left;
   display: "inline-block";
-  padding: 10px;
+  padding: 5px;
   border:1px solid black;
 }
-.al-graph-header { grid-area: header; text-align: center;}
-.al-graph-events { grid-area: events; }
-.al-graph-nodes { grid-area: nodes; }
-.al-graph-edges { grid-area: edges; }
-.al-graph-filter { grid-area: filter; }
-.al-graph-control { grid-area: control; display: flex; justify-content: space-around; }
-.al-graph-main { grid-area: main; }
-.al-graph-info { grid-area: info; }
+.al-graph-options-events { grid-area: events; }
+.al-graph-options-nodes { grid-area: nodes; }
+.al-graph-options-edges { grid-area: edges; }
+.al-graph-options-filter { grid-area: filter; }
+.al-graph-options-filter > input {width: 80%;}
+
+// .al-graph-main { grid-area: main; }
+// .al-graph-info { grid-area: info; }
 .al-graph-main-content { width: 100%; height: 100%}
 .al-graph-main-info { height: 100%}
-
-.al-graph-filter > input {width: 80%;}
 `;
 
 const DefaultOptions: ALGraph.ALGraphDynamicOptionsType = {
@@ -157,6 +191,7 @@ function MultiCheckboxInputs<T extends Record<string, boolean | Record<string, b
 }
 
 export function ALGraphInfo(props: {
+  graphTitle?: string,
   channel: Channel<AutoLogging.ALChannelEvent>,
   height: string,
   width: string,
@@ -182,8 +217,11 @@ export function ALGraphInfo(props: {
 
   const [eventInfo, setEventInfo] = useState<ALGraph.EventInfos>();
   const [options, setOptions] = useState(ALGraphOptions.getValue());
+  const [showMenu, setShowMenu] = useState(false);
 
   options.filter ??= props.graphFilter;
+
+  const graphTitle = props.graphTitle ?? "Auto Logging Event Graph";
 
   const renderer = props.renderer || (eventInfo => <pre>{eventInfo.eventName}</pre>);
 
@@ -222,91 +260,103 @@ export function ALGraphInfo(props: {
       height: props.height || "1000px",
     }}>
       <style>{StyleCss}</style>
-      <div className="al-graph-grid-container">
-        <div className="al-graph-header"><center>Auto Logging Event Graph</center></div>
-        <div className="al-graph-events">
-          <MultiCheckboxInputs header="Events:" values={options.events} onChange={values => {
-            const newOptions = {
-              ...options,
-              events: values,
-            };
-            ALGraphOptions.setValue(newOptions);
-            setOptions(newOptions);
-          }} />
-        </div>
-        <div className="al-graph-nodes">
-          <MultiCheckboxInputs header="Nodes:" values={options.nodes} onChange={values => {
-            const newOptions = {
-              ...options,
-              nodes: values,
-            };
-            ALGraphOptions.setValue(newOptions);
-            setOptions(newOptions);
-          }} />
-        </div>
-        <div className="al-graph-edges">
-          <MultiCheckboxInputs header="Edges:" values={options.edges} onChange={values => {
-            const newOptions = {
-              ...options,
-              edges: values,
-            };
-            ALGraphOptions.setValue(newOptions);
-            setOptions(newOptions);
-          }} />
-        </div>
-        <div className="al-graph-filter">Filter:
-          <a href="https://js.cytoscape.org/#selectors" target="_blank" style={{
-            "color": "#fff",
-            "backgroundColor": "#feb22a",
-            "width": "12px",
-            "height": "12px",
-            "display": "inline-block",
-            "borderRadius": "100%",
-            "fontSize": "10px",
-            "textAlign": "center",
-            "textDecoration": "none",
-            "boxShadow": "inset -1px -1px 1px 0px rgba(0,0,0,0.25)",
+      <div className="al-graph-container">
+        <div className="al-graph-container-header">
+          <div className="al-graph-control">
+            <a onClick={() => { setShowMenu(!showMenu); }} style={{ cursor: "pointer" }} title={(showMenu ? "Hide" : "Show") + " Options"}>
+              <svg width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" >
+                <path d="M4 18L20 18" stroke="#000000" strokeWidth="2" strokeLinecap="round" />
+                <path d="M4 12L20 12" stroke="#000000" strokeWidth="2" strokeLinecap="round" />
+                <path d="M4 6L20 6" stroke="#000000" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </a>
+            <center>{graphTitle}</center>
+            <button
+              onClick={() => {
+                setEventInfo(void 0);
+                graphRef.current?.graph.clearGraph();
+              }}
+            >
+              Clear Graph
+            </button>
 
-          }}>?</a>
-          <input type='text' defaultValue={options.filter} onChange={value => {
-            const newOptions = {
-              ...options,
-              filter: value.target.value,
-            };
-            ALGraphOptions.setValue(newOptions);
-            setOptions(newOptions);
-          }} /></div>
-        <div className="al-graph-control">
+            <button
+              onClick={() => {
+                graphRef.current?.graph.fitGraph();
+              }}
+            >
+              Recenter & Fit Graph
+            </button>
 
-          <button
-            onClick={() => {
-              setEventInfo(void 0);
-              graphRef.current?.graph.clearGraph();
-            }}
-          >
-            Clear Graph
-          </button>
+            <button
+              onClick={() => {
+                graphRef.current?.graph.takeSnapshot();
+              }}
+            >
+              Take Graph Snapshot
+            </button>
+          </div>
+          <div className="al-graph-options" style={{ display: showMenu ? 'grid' : 'none' }}>
+            <div className="al-graph-options-events">
+              <MultiCheckboxInputs header="Events:" values={options.events} onChange={values => {
+                const newOptions = {
+                  ...options,
+                  events: values,
+                };
+                ALGraphOptions.setValue(newOptions);
+                setOptions(newOptions);
+              }} />
+            </div>
+            <div className="al-graph-options-nodes">
+              <MultiCheckboxInputs header="Nodes:" values={options.nodes} onChange={values => {
+                const newOptions = {
+                  ...options,
+                  nodes: values,
+                };
+                ALGraphOptions.setValue(newOptions);
+                setOptions(newOptions);
+              }} />
+            </div>
+            <div className="al-graph-options-edges">
+              <MultiCheckboxInputs header="Edges:" values={options.edges} onChange={values => {
+                const newOptions = {
+                  ...options,
+                  edges: values,
+                };
+                ALGraphOptions.setValue(newOptions);
+                setOptions(newOptions);
+              }} />
+            </div>
+            <div className="al-graph-options-filter">Filter:
+              <a href="https://js.cytoscape.org/#selectors" target="_blank" style={{
+                "color": "#fff",
+                "backgroundColor": "#feb22a",
+                "width": "12px",
+                "height": "12px",
+                "display": "inline-block",
+                "borderRadius": "100%",
+                "fontSize": "10px",
+                "textAlign": "center",
+                "textDecoration": "none",
+                "boxShadow": "inset -1px -1px 1px 0px rgba(0,0,0,0.25)",
 
-          <button
-            onClick={() => {
-              graphRef.current?.graph.fitGraph();
-            }}
-          >
-            Recenter & Fit Graph
-          </button>
-
-          <button
-            onClick={() => {
-              graphRef.current?.graph.takeSnapshot();
-            }}
-          >
-            Take Graph Snapshot
-          </button>
+              }}>?</a>
+              <input type='text' defaultValue={options.filter} onChange={value => {
+                const newOptions = {
+                  ...options,
+                  filter: value.target.value,
+                };
+                ALGraphOptions.setValue(newOptions);
+                setOptions(newOptions);
+              }} />
+            </div>
+          </div>
         </div>
-        <ResizableSplitViewReact direction="horizontal" className="al-graph-main" style={{ height: "95%" }}
+        <ResizableSplitViewReact direction="horizontal" className="al-graph-container-content" style={{ height: "95%" }}
           content1={<div className="al-graph-main-content" ref={graphContainer}></div>}
           content2={<div className="al-graph-main-info">{eventInfo != null ? renderer(eventInfo) : null}</div>}
         />
+        {/* <div className="al-graph-container-footer">Footer</div> */}
       </div>
     </div>
   );
