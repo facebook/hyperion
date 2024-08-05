@@ -182,7 +182,6 @@ export function ALGraphInfo(props: {
 
   const [eventInfo, setEventInfo] = useState<ALGraph.EventInfos>();
   const [options, setOptions] = useState(ALGraphOptions.getValue());
-  // const [instanceCounter, setInstanceCounter] = useState(0);
 
   options.filter ??= props.graphFilter;
 
@@ -309,16 +308,7 @@ export function ALGraphInfo(props: {
           <button
             onClick={() => {
               setEventInfo(void 0);
-              if (graphRef.current && graphContainer.current) {
-                graphRef.current.graph = new ALGraph.ALGraph({
-                  onEventNodeClick: setEventInfo,
-                  topContainer: gridContainer.current,
-                  graphContainer: graphContainer.current,
-                  elements,
-                });
-                graphRef.current.graph.setDynamicOptions(options);
-              }
-              // setInstanceCounter(instanceCounter + 1);
+              graphRef.current?.graph.clearGraph();
             }}
           >
             Clear Graph
@@ -326,7 +316,7 @@ export function ALGraphInfo(props: {
 
           <button
             onClick={() => {
-              graphRef.current?.graph.cy.fit();
+              graphRef.current?.graph.fitGraph();
             }}
           >
             Recenter & Fit Graph
@@ -334,12 +324,7 @@ export function ALGraphInfo(props: {
 
           <button
             onClick={() => {
-              const cy = graphRef.current?.graph.cy;
-              if (cy) {
-                const blob = cy.png({ output: 'blob' });
-                const blobURL = window.URL.createObjectURL(blob);
-                window.open(blobURL);
-              }
+              graphRef.current?.graph.takeSnapshot();
             }}
           >
             Take Graph Snapshot
