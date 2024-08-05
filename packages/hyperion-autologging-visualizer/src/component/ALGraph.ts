@@ -2,14 +2,16 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 // import React, {useState, useCallback, useRef, useEffect} from "react";
+import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 import { ALExtensibleEvent, ALFlowletEvent } from '@hyperion/hyperion-autologging/src/ALType';
+import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
+import { PausableChannel } from '@hyperion/hyperion-channel';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
+import { assert } from '@hyperion/hyperion-global';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
 import cytoscape from 'cytoscape';
 import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigDagre';
-import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
-import { assert } from '@hyperion/hyperion-global';
 
 export const defaultStylesheet: cytoscape.Stylesheet[] = [
   {
@@ -227,6 +229,7 @@ export type ALGraphConstructorOptions = {
   topContainer?: Element | null;
   graphContainer: HTMLElement;
   elements?: cytoscape.ElementDefinition[];
+  channel: PausableChannel<AutoLogging.ALChannelEvent>;
 };
 
 export class ALGraph {
@@ -251,7 +254,37 @@ export class ALGraph {
         }
       };
     }
+    this.initChannel(options.channel);
     this.initGraph(options.graphContainer, options.elements);
+  }
+
+  protected initChannel(channel: PausableChannel<AutoLogging.ALChannelEvent>) {
+    // In the following it is important to only close on 'this' object since some properties may change over time.
+    const graph = this;
+    SupportedALEvents.forEach(eventName => {
+      switch (eventName) {
+        case 'al_ui_event':
+          channel.on(eventName).add(eventData => {
+            graph.addALUIEventNodeId(eventName, eventData);
+          });
+          break;
+        case 'al_surface_mutation_event':
+          channel.on(eventName).add(eventData => {
+            graph.addSurfaceMutationEvent(eventName, eventData);
+          });
+          break;
+        case 'al_surface_visibility_event':
+          channel.on(eventName).add(eventData => {
+            graph.addSurfaceVisibilityEvent(eventName, eventData);
+          });
+          break;
+        default:
+          channel.on(eventName).add(eventData => {
+            graph.addALEventNodeId(eventName, eventData);
+          });
+          break;
+      }
+    });
   }
 
   private initGraph(graphContainer: HTMLElement | null, elements?: cytoscape.ElementDefinition[]) {
