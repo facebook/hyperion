@@ -69,13 +69,12 @@ export type InitOptions = Types.Options<
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel, flowletManager, cacheElementReactInfo } = options;
+  const { channel, cacheElementReactInfo } = options;
 
   function processNode(event: ALSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
     const { element, surface, metadata } = event;
 
-    const callFlowlet = flowletManager.top();
     if (!(element instanceof HTMLElement) || /LINK|SCRIPT/.test(element.nodeName)) {
       return;
     }
@@ -94,9 +93,6 @@ export function publish(options: InitOptions): void {
             elementText = getElementTextEvent(element, surface);
           } else {
             elementText = getElementTextEvent(null, surface);
-          }
-          if (callFlowlet) {
-            metadata.add_call_flowlet = callFlowlet?.getFullName();
           }
           info = {
             ...event,
@@ -126,9 +122,6 @@ export function publish(options: InitOptions): void {
           info.element = element;
           info.autoLoggingID = ALID.getOrSetAutoLoggingID(element);
           info.addTime = timestamp;
-          if (callFlowlet) {
-            info.metadata.add_call_flowlet = callFlowlet.getFullName();
-          }
         }
         break;
       }
@@ -145,9 +138,6 @@ export function publish(options: InitOptions): void {
            * but the perf overhead would be un-necessary.
            * // Object.assign(info.metadata, metadata);
            */
-          if (callFlowlet) {
-            info.metadata.remove_call_flowlet = callFlowlet.getFullName();
-          }
           channel.emit('al_surface_mutation_event', {
             ...info,
             event: 'unmount_component',

@@ -271,7 +271,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       }
     } else {
       surfacePath = proxiedContext.surface;
-      nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;      
+      nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;
       domAttributeName = AUTO_LOGGING_SURFACE
       domAttributeValue = surfacePath;
       if (proxiedContext.container instanceof Element) {
@@ -313,7 +313,6 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     // Emit surface mutation events on mount/unmount
     const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
-    metadata.original_call_flowlet = callFlowlet.getFullName();
     metadata.surface_capability = surfaceCapabilityToString(capability);
 
     /**
