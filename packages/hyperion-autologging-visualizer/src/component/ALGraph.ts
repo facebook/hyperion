@@ -4,9 +4,8 @@
 // import React, {useState, useCallback, useRef, useEffect} from "react";
 import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 import { ALExtensibleEvent, ALFlowletEvent } from '@hyperion/hyperion-autologging/src/ALType';
-import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
-import { PausableChannel } from '@hyperion/hyperion-channel';
+import { Channel, PausableChannel } from '@hyperion/hyperion-channel';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
 import { assert } from '@hyperion/hyperion-global';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
@@ -229,7 +228,7 @@ export type ALGraphConstructorOptions = {
   topContainer?: Element | null;
   graphContainer: HTMLElement;
   elements?: cytoscape.ElementDefinition[];
-  channel: PausableChannel<AutoLogging.ALChannelEvent>;
+  channel: Channel<ALChannelEvent>;
 };
 
 export class ALGraph {
@@ -238,6 +237,7 @@ export class ALGraph {
   private cy!: cytoscape.Core;
   private layout!: cytoscape.Layouts;
   private readonly onNodeClick?: (event: cytoscape.EventObject) => void;
+  public readonly channel: PausableChannel<ALChannelEvent>;
 
   constructor(options: ALGraphConstructorOptions) {
     this.topContainer = options.topContainer ?? options.graphContainer;
@@ -254,11 +254,13 @@ export class ALGraph {
         }
       };
     }
-    this.initChannel(options.channel);
+    this.channel = new PausableChannel<ALChannelEvent>();
+    options.channel.pipe(this.channel);
+    this.initChannel(this.channel);
     this.initGraph(options.graphContainer, options.elements);
   }
 
-  protected initChannel(channel: PausableChannel<AutoLogging.ALChannelEvent>) {
+  protected initChannel(channel: Channel<ALChannelEvent>) {
     // In the following it is important to only close on 'this' object since some properties may change over time.
     const graph = this;
     SupportedALEvents.forEach(eventName => {
@@ -286,6 +288,10 @@ export class ALGraph {
       }
     });
   }
+
+  public pause(): void { this.channel.pause(); }
+  public unpause(): void { this.channel.unpause(); }
+  public isPaused(): boolean { return this.channel.isPaused(); }
 
   private initGraph(graphContainer: HTMLElement | null, elements?: cytoscape.ElementDefinition[]) {
     this.cy = cytoscape({

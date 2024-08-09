@@ -2,11 +2,11 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
-import { Channel, PausableChannel } from "@hyperion/hyperion-channel";
+import { Channel } from "@hyperion/hyperion-channel";
+import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
 import cytoscape from 'cytoscape';
 import React, { useState } from "react";
 import * as ALGraph from "./ALGraph";
-import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
 import ResizableSplitViewReact from "./ResizableSplitView.react";
 
 const StyleCss = `
@@ -206,10 +206,7 @@ export function ALGraphInfo(props: {
 
   const gridContainer = React.useRef<HTMLDivElement>(null);
   const graphContainer = React.useRef<HTMLDivElement>(null);
-  const graphRef = React.useRef<{
-    graph: ALGraph.ALGraph,
-    channel: PausableChannel<AutoLogging.ALChannelEvent>,
-  } | null>(null);
+  const graphRef = React.useRef<ALGraph.ALGraph | null>(null);
 
   const [elements, _setElements] = useState<cytoscape.ElementDefinition[]>([
     // Add any initial notes to the graph here
@@ -218,6 +215,7 @@ export function ALGraphInfo(props: {
   const [eventInfo, setEventInfo] = useState<ALGraph.EventInfos>();
   const [options, setOptions] = useState(ALGraphOptions.getValue());
   const [showMenu, setShowMenu] = useState(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
 
   options.filter ??= props.graphFilter;
 
@@ -228,21 +226,18 @@ export function ALGraphInfo(props: {
   React.useEffect(
     () => {
       if (graphRef.current == null && graphContainer.current != null) {
-        const channel = new PausableChannel<AutoLogging.ALChannelEvent>();
         const graph = new ALGraph.ALGraph({
           onEventNodeClick: setEventInfo,
           topContainer: gridContainer.current,
           graphContainer: graphContainer.current,
           elements,
-          channel,
+          channel: props.channel,
         });
-        graphRef.current = { graph, channel };
-
-        props.channel.pipe(channel);
+        graphRef.current = graph;
       }
 
-      graphRef.current?.channel.unpause();
-      return () => graphRef.current?.channel.pause();
+      graphRef.current?.unpause();
+      return () => graphRef.current?.pause();
     },
     [graphRef]
   );
@@ -250,7 +245,7 @@ export function ALGraphInfo(props: {
   React.useEffect(() => {
     if (graphRef.current) {
       // The following ensures that later the event handlers will see the latest value.
-      graphRef.current.graph.setDynamicOptions(options);
+      graphRef.current.setDynamicOptions(options);
     }
   }, [options]);
 
@@ -274,7 +269,7 @@ export function ALGraphInfo(props: {
             <button
               onClick={() => {
                 setEventInfo(void 0);
-                graphRef.current?.graph.clearGraph();
+                graphRef.current?.clearGraph();
               }}
             >
               Clear Graph
@@ -282,7 +277,7 @@ export function ALGraphInfo(props: {
 
             <button
               onClick={() => {
-                graphRef.current?.graph.fitGraph();
+                graphRef.current?.fitGraph();
               }}
             >
               Recenter & Fit Graph
@@ -290,7 +285,18 @@ export function ALGraphInfo(props: {
 
             <button
               onClick={() => {
-                graphRef.current?.graph.takeSnapshot();
+                isPaused
+                  ? graphRef.current?.unpause()
+                  : graphRef.current?.pause();
+                setIsPaused(!isPaused);
+              }}
+            >
+              {isPaused ? "Unpause" : "Pause"} Graph
+            </button>
+
+            <button
+              onClick={() => {
+                graphRef.current?.takeSnapshot();
               }}
             >
               Take Graph Snapshot
