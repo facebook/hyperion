@@ -2,14 +2,15 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 // import React, {useState, useCallback, useRef, useEffect} from "react";
+import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
 import { ALExtensibleEvent, ALFlowletEvent } from '@hyperion/hyperion-autologging/src/ALType';
 import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
+import { Channel, PausableChannel } from '@hyperion/hyperion-channel';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
+import { assert } from '@hyperion/hyperion-global';
 import { Nullable } from '@hyperion/hyperion-util/src/Types';
 import cytoscape from 'cytoscape';
 import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigDagre';
-import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
-import { assert } from '@hyperion/hyperion-global';
 
 export const defaultStylesheet: cytoscape.Stylesheet[] = [
   {
@@ -222,36 +223,28 @@ type TriggerFlowletRegion = {
 }
 
 
+export type ALGraphConstructorOptions = {
+  onEventNodeClick?: (eventInfo: EventInfos) => void;
+  topContainer?: Element | null;
+  graphContainer: HTMLElement;
+  elements?: cytoscape.ElementDefinition[];
+  channel: Channel<ALChannelEvent>;
+};
 
 export class ALGraph {
-  layout: cytoscape.Layouts;
   private readonly topContainer: Element | null;
   private dynamicOptions?: ALGraphDynamicOptionsType;
-  public readonly cy: cytoscape.Core;
+  private cy!: cytoscape.Core;
+  private layout!: cytoscape.Layouts;
+  private readonly onNodeClick?: (event: cytoscape.EventObject) => void;
+  public readonly channel: PausableChannel<ALChannelEvent>;
 
-  constructor(
-    options: {
-      onEventNodeClick?: (eventInfo: EventInfos) => void;
-      topContainer?: Element | null;
-      graphContainer: HTMLElement;
-      elements?: cytoscape.ElementDefinition[];
-    }
-  ) {
-    this.cy = cytoscape({
-      container: options.graphContainer,
-      elements: options.elements,
-    });
+  constructor(options: ALGraphConstructorOptions) {
     this.topContainer = options.topContainer ?? options.graphContainer;
-
-    this.cy.style(defaultStylesheet);
-    this.layout = this.cy.layout(getCytoscapeLayoutConfig());
-
-    // An optimization to avoid unnecessary relayout
-    this._elements = this.cy.collection();
 
     if (options.onEventNodeClick) {
       const onEventNodeClick = options.onEventNodeClick;
-      this.cy.on('click', 'node', event => {
+      this.onNodeClick = event => {
         const { target } = event;
         const eventInfo = target.scratch() as EventInfos;
         console.log('[PS]', event.type, target.data(), eventInfo);
@@ -259,20 +252,87 @@ export class ALGraph {
         if (typeof eventInfo.eventName === "string") { // Just to be sure the right kind of data
           onEventNodeClick(eventInfo);
         }
-      });
-
-      // cy.on('mouseover', 'node', (event) => {
-      //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
-      // });
-      // cy.on('click', 'edge', (event) => {
-      //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
-      // });
+      };
     }
+    this.channel = new PausableChannel<ALChannelEvent>();
+    options.channel.pipe(this.channel);
+    this.initChannel(this.channel);
+    this.initGraph(options.graphContainer, options.elements);
+  }
+
+  protected initChannel(channel: Channel<ALChannelEvent>) {
+    // In the following it is important to only close on 'this' object since some properties may change over time.
+    const graph = this;
+    SupportedALEvents.forEach(eventName => {
+      switch (eventName) {
+        case 'al_ui_event':
+          channel.on(eventName).add(eventData => {
+            graph.addALUIEventNodeId(eventName, eventData);
+          });
+          break;
+        case 'al_surface_mutation_event':
+          channel.on(eventName).add(eventData => {
+            graph.addSurfaceMutationEvent(eventName, eventData);
+          });
+          break;
+        case 'al_surface_visibility_event':
+          channel.on(eventName).add(eventData => {
+            graph.addSurfaceVisibilityEvent(eventName, eventData);
+          });
+          break;
+        default:
+          channel.on(eventName).add(eventData => {
+            graph.addALEventNodeId(eventName, eventData);
+          });
+          break;
+      }
+    });
+  }
+
+  public pause(): void { this.channel.pause(); }
+  public unpause(): void { this.channel.unpause(); }
+  public isPaused(): boolean { return this.channel.isPaused(); }
+
+  private initGraph(graphContainer: HTMLElement | null, elements?: cytoscape.ElementDefinition[]) {
+    this.cy = cytoscape({
+      container: graphContainer,
+      elements: elements,
+    });
+
+    this.cy.style(defaultStylesheet);
+    this.layout = this.cy.layout(getCytoscapeLayoutConfig());
+
+    if (this.onNodeClick) {
+      this.cy.on('click', 'node', this.onNodeClick);
+    }
+
+    // cy.on('mouseover', 'node', (event) => {
+    //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+    // });
+    // cy.on('click', 'edge', (event) => {
+    //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+    // });
 
     this.reLayout();
   }
 
-  private _elements: cytoscape.CollectionReturnValue;
+  clearGraph(): void {
+    this.initGraph(this.cy.container());
+    this._lastEventId = void 0;
+  }
+
+  fitGraph(): void {
+    this.cy.fit();
+  }
+
+  takeSnapshot() {
+    const blob = this.cy.png({ output: 'blob' });
+    const blobURL = window.URL.createObjectURL(blob);
+    window.open(blobURL);
+  }
+
+  // An optimization to avoid unnecessary relayout when no elements are added
+  private _elements: cytoscape.CollectionReturnValue | null = null;
   private reLayout() {
     // this._elements?.layout(getCytoscapeLayoutConfig()).run();
     this.layout.stop();
@@ -280,10 +340,12 @@ export class ALGraph {
     this.layout.run();
   }
   private startBatch() {
+    assert(this._elements == null, "Should not call startBatch before ending previous batch");
     this._elements = this.cy.collection();
     this.cy.startBatch();
   }
   private add(element: cytoscape.ElementDefinition): cytoscape.CollectionReturnValue {
+    assert(this._elements != null, "Should not add nodes before calling startBatch");
     try {
       const elementDef = this.cy.add(element);
       this._elements.merge(elementDef);
@@ -297,10 +359,12 @@ export class ALGraph {
     }
   }
   private endBatch() {
-    let runLayout = this._elements.nonempty();
+    const currElements = this._elements;
+    assert(currElements != null, "Should not call endBatch before calling startBatch");
+    let runLayout = currElements.nonempty();
     if (runLayout && this.dynamicOptions?.filter) {
       // Remove all undesired elements from the graph. Note desired elements showup in '.both' as well
-      const { left: undesired, /* right: desired, both: _ */ } = this._elements.diff(this.dynamicOptions.filter);
+      const { left: undesired, /* right: desired, both: _ */ } = currElements.diff(this.dynamicOptions.filter);
       /**
        * Note: A bad filter can potentially cause problem later if we just remove the nodes.
        * For example, if we add multiple nodes (e.g. trigger flowlet nodes) based on absence of one them, we may
@@ -310,10 +374,11 @@ export class ALGraph {
        * // this.cy.remove(undesired); // See above for why this should not be used.
        */
       undesired.addClass("filtered");
-      runLayout = this._elements.size() > undesired.size();
+      runLayout = currElements.size() > undesired.size();
     }
 
     this.cy.endBatch();
+    this._elements = null;
     if (runLayout) {
       // Try to only layout added ones
       this.reLayout();

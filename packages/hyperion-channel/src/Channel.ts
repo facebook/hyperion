@@ -145,6 +145,9 @@ export class PausableChannel<TEventToListenerArgsMap extends BaseChannelEventTyp
   unpause(): void {
     this._paused = false;
   }
+  isPaused(): boolean {
+    return this._paused;
+  }
 
   emit<
     TEvent extends keyof TEventToListenerArgsMap,
