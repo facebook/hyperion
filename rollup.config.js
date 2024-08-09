@@ -85,6 +85,7 @@ export default defineConfig({
         "@hyperion/hyperion-autologging/src/ALInteractableDOMElement",
         "@hyperion/hyperion-autologging/src/AutoLogging",
         "@hyperion/hyperion-autologging/src/ALUIEventPublisher",
+        "@hyperion/hyperion-autologging/src/ALSessionFlowID",
       ],
       "hyperionAutoLoggingVisualizer": [
         "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph",

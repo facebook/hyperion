@@ -15,6 +15,7 @@ import { SyncChannel } from "./Channel";
 import { FlowletManager } from "./FlowletManager";
 import { ALExtensibleEvent } from "@hyperion/hyperion-autologging/src/ALType";
 import { getEventExtension } from "@hyperion/hyperion-autologging/src/ALEventExtension";
+import { getSessionFlowID } from "@hyperion/hyperion-autologging/src/ALSessionFlowID";
 
 export let interceptionStatus = "disabled";
 
@@ -69,6 +70,10 @@ export function init() {
     },
     surface: {
       enableReactDomPropsExtension: false,
+    },
+    sessionFlowID: {
+      domain: 'localhost',
+      cookieName: 'axaxax',
     },
     elementText: {
       updateText(elementText: ExtendedElementText, domSource) {
@@ -145,4 +150,8 @@ export function init() {
   });
 
   console.log('AutoLogging.init options:', AutoLogging.getInitOptions());
+  // console.log('dsid', getDomainSessionID('localhost'));
+  // console.log('dsid', getDomainSessionID());
+  console.log('sfid', getSessionFlowID());
+
 }

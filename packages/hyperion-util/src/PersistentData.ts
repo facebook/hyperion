@@ -6,6 +6,8 @@
 
 import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
 
+interface IStorage extends Pick<Storage, "setItem" | 'getItem'> { }
+
 function getStorage(storageName: 'sessionStorage' | 'localStorage'): Storage | null {
   let storage: Storage;
   try {
@@ -56,7 +58,7 @@ class PersistentData<T> {
     missingValueInitializer: () => T,
     private readonly stringify: (value: T) => string,
     parser: (persistedValue: string) => T,
-    private readonly storage: Storage | null,
+    private readonly storage: IStorage | null,
   ) {
     let persistedData = this.storage?.getItem(this.fieldName);
     let data;
@@ -64,7 +66,11 @@ class PersistentData<T> {
       data = missingValueInitializer();
       this.setValue(data);
     } else {
-      data = parser(persistedData);
+      try {
+        data = parser(persistedData);
+      } catch {
+        data = missingValueInitializer();
+      }
     }
     this._data = data;
   }
@@ -112,3 +118,30 @@ export class LocalStoragePersistentData<T> extends PersistentData<T> {
   }
 }
 
+export class CookieStorage implements IStorage {
+  constructor(private readonly cookieAttributes: string = "") { }
+
+  getItem(key: string): string | null {
+    const cookie = document.cookie.match(new RegExp(`${key}=([^;]*)(?:;|$)`));
+    if (cookie && cookie.length > 1) {
+      return cookie[1];
+    }
+    return null;
+  }
+
+  setItem(key: string, value: string): void {
+    document.cookie = `${key}=${value}${this.cookieAttributes}`;
+  }
+}
+
+export class CookiePersistentData<T> extends PersistentData<T> {
+  constructor(
+    fieldName: string,
+    missingValueInitializer: () => T,
+    stringify: (value: T) => string,
+    parser: (persistedValue: string) => T,
+    cookieAttributes?: string,
+  ) {
+    super(fieldName, missingValueInitializer, stringify, parser, new CookieStorage(cookieAttributes));
+  }
+}
