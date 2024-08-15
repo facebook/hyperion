@@ -293,7 +293,7 @@ export class ALGraph {
   public unpause(): void { this.channel.unpause(); }
   public isPaused(): boolean { return this.channel.isPaused(); }
 
-  private initGraph(graphContainer: HTMLElement | null, elements?: cytoscape.ElementDefinition[]) {
+  protected initGraph(graphContainer: HTMLElement | null, elements?: cytoscape.ElementDefinition[]) {
     this.cy = cytoscape({
       container: graphContainer,
       elements: elements,
@@ -345,10 +345,13 @@ export class ALGraph {
     this.cy.startBatch();
   }
   private add(element: cytoscape.ElementDefinition): cytoscape.CollectionReturnValue {
-    assert(this._elements != null, "Should not add nodes before calling startBatch");
+    if (this._elements == null){
+      console.info("Adding nodes before outside of batch (calling startBatch) may cause performance regression!");
+    }
+    
     try {
       const elementDef = this.cy.add(element);
-      this._elements.merge(elementDef);
+      this._elements?.merge(elementDef);
       return elementDef;
     } catch (e) {
       return this.cy.add({
@@ -358,7 +361,7 @@ export class ALGraph {
       });
     }
   }
-  private endBatch() {
+  protected endBatch() {
     const currElements = this._elements;
     assert(currElements != null, "Should not call endBatch before calling startBatch");
     let runLayout = currElements.nonempty();
@@ -385,11 +388,11 @@ export class ALGraph {
     }
   }
 
-  private addNode(node: cytoscape.NodeDefinition): cytoscape.CollectionReturnValue {
+  protected addNode(node: cytoscape.NodeDefinition): cytoscape.CollectionReturnValue {
     return this.add(node);
   }
 
-  private addEdge(sourceId: GraphID, targetId: GraphID, classes?: string | string[]): cytoscape.CollectionReturnValue | null {
+  protected addEdge(sourceId: GraphID, targetId: GraphID, classes?: string | string[]): cytoscape.CollectionReturnValue | null {
     if (!sourceId || !targetId) {
       return null;
     }
@@ -431,7 +434,7 @@ export class ALGraph {
     return flowsId;
   }
 
-  private getPageUriNodeId(pageURI?: string): GraphID {
+  protected getPageUriNodeId(pageURI?: string): GraphID {
     if (!pageURI || !this.dynamicOptions?.nodes.tuple.page_uri) {
       return;
     }
@@ -450,7 +453,7 @@ export class ALGraph {
     return id;
   }
 
-  private getSurfaceNodeId(surface: string | null, pageURI: string): GraphID {
+  protected getSurfaceNodeId(surface: string | null, pageURI: string): GraphID {
     if (!surface || !this.dynamicOptions?.nodes.tuple.surface) {
       return;
     }
@@ -483,7 +486,7 @@ export class ALGraph {
     return id;
   }
 
-  private getComponentNodeId(_componentName: string | null | undefined): GraphID {
+  protected getComponentNodeId(_componentName: string | null | undefined): GraphID {
     if (!this.dynamicOptions?.nodes.tuple.component) {
       return;
     }
@@ -491,7 +494,7 @@ export class ALGraph {
     return;
   }
 
-  private getLabelNodeId(_label: string | null): GraphID {
+  protected getLabelNodeId(_label: string | null): GraphID {
     if (!this.dynamicOptions?.nodes.tuple.text) {
       return;
     }
@@ -499,7 +502,7 @@ export class ALGraph {
     return;
   }
 
-  private getTupleNodeId(eventData: SupportedALEventData<'al_ui_event'>): GraphID {
+  protected getTupleNodeId(eventData: SupportedALEventData<'al_ui_event'>): GraphID {
     const surfaceId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI);
     const componentId = this.getComponentNodeId(eventData.reactComponentName);
     const labelId = this.getLabelNodeId(eventData.elementName);
@@ -508,7 +511,7 @@ export class ALGraph {
     return labelId ?? componentId ?? surfaceId;
   }
 
-  private getTimestampNodeId(timestamp: number): GraphID {
+  protected getTimestampNodeId(timestamp: number): GraphID {
     return; // For now ignore this until a good layout algo is found.
     const id = 'ts:' + timestamp;
 
@@ -539,7 +542,7 @@ export class ALGraph {
     return id;
   }
 
-  private getTriggerFlowletNodeId(flowlet: Flowlet | null | undefined): TriggerFlowletRegion | null {
+  protected getTriggerFlowletNodeId(flowlet: Flowlet | null | undefined): TriggerFlowletRegion | null {
     if (!flowlet || !this.dynamicOptions?.nodes.trigger_flowlet) {
       return null;
     }
@@ -621,9 +624,13 @@ export class ALGraph {
   }
 
   private _lastEventId: GraphID;
-  private getALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
+  protected getALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     const EVENT_PREFIX = 'e:';
     const id = EVENT_PREFIX + eventData.eventIndex;
+
+    if (this.cy.$id(id).nonempty()) {
+      return id;
+    }
 
     const region = this.getTriggerFlowletNodeId(eventData.triggerFlowlet);
 
@@ -666,16 +673,17 @@ export class ALGraph {
     this.dynamicOptions = dynamicOptions;
   }
 
-  addALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): void {
+  addALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     if (!this.dynamicOptions?.events[eventName]) {
       return;
     }
     this.startBatch();
-    this.getALEventNodeId(eventName, eventData);
+    const id = this.getALEventNodeId(eventName, eventData);
     this.endBatch();
+    return id;
   }
 
-  addALUIEventNodeId<T extends 'al_ui_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
+  addALUIEventNodeId<T extends 'al_ui_event'>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     if (this.topContainer?.contains(eventData.targetElement)) {
       // Don't want to capture clicks on the graph itself.
       return;
@@ -691,9 +699,10 @@ export class ALGraph {
       this.addEdge(id, tupleId);
     }
     this.endBatch();
+    return id;
   }
 
-  private addSurfaceEvent<T extends 'al_surface_mutation_event' | 'al_surface_visibility_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
+  private addSurfaceEvent<T extends 'al_surface_mutation_event' | 'al_surface_visibility_event'>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     this.startBatch();
     const id = this.getALEventNodeId(eventName, eventData);
     if (this.dynamicOptions?.edges.tuple) {
@@ -701,19 +710,20 @@ export class ALGraph {
       this.addEdge(tupleId, id);
     }
     this.endBatch();
+    return id;
   }
 
-  addSurfaceMutationEvent<T extends 'al_surface_mutation_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
+  addSurfaceMutationEvent<T extends 'al_surface_mutation_event'>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     if (!this.dynamicOptions?.events[eventName][eventData.event]) {
       return;
     }
-    this.addSurfaceEvent(eventName, eventData);
+    return this.addSurfaceEvent(eventName, eventData);
   }
 
-  addSurfaceVisibilityEvent<T extends 'al_surface_visibility_event'>(eventName: T, eventData: SupportedALEventData<T>): void {
+  addSurfaceVisibilityEvent<T extends 'al_surface_visibility_event'>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     if (!this.dynamicOptions?.events[eventName][eventData.event]) {
       return;
     }
-    this.addSurfaceEvent(eventName, eventData);
+    return this.addSurfaceEvent(eventName, eventData);
   }
 }
