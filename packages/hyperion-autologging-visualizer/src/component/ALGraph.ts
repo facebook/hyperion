@@ -222,14 +222,20 @@ type TriggerFlowletRegion = {
   triggerFlowletId: GraphID,
 }
 
+export type ALGraphNodeScratchData = {
+  event?: EventInfos;
+  triggerFlowletRegion?: TriggerFlowletRegion;
+}
 
 export type ALGraphConstructorOptions = {
-  onEventNodeClick?: (eventInfo: EventInfos) => void;
+  onNodeClick?: { [K in keyof ALGraphNodeScratchData]?: (data: ALGraphNodeScratchData[K]) => void; },
   topContainer?: Element | null;
   graphContainer: HTMLElement;
   elements?: cytoscape.ElementDefinition[];
   channel: Channel<ALChannelEvent>;
 };
+
+export const AL_GRAPH_SCRATCH_NAMESPACE = '_algraph';
 
 export class ALGraph {
   private readonly topContainer: Element | null;
@@ -242,15 +248,23 @@ export class ALGraph {
   constructor(options: ALGraphConstructorOptions) {
     this.topContainer = options.topContainer ?? options.graphContainer;
 
-    if (options.onEventNodeClick) {
-      const onEventNodeClick = options.onEventNodeClick;
+    const onNodeClick = options.onNodeClick;
+    if (onNodeClick) {
       this.onNodeClick = event => {
         const { target } = event;
-        const eventInfo = target.scratch() as EventInfos;
-        console.log('[PS]', event.type, target.data(), eventInfo);
+        const scratch = target.scratch(AL_GRAPH_SCRATCH_NAMESPACE) as ALGraphNodeScratchData;
+        if (!scratch) {
+          return;
+        }
 
-        if (typeof eventInfo.eventName === "string") { // Just to be sure the right kind of data
-          onEventNodeClick(eventInfo);
+        for (const key of (Object.keys(scratch) as (keyof ALGraphNodeScratchData)[])) {
+          const info = scratch[key];
+          if (info != null) {
+            const handler = onNodeClick[key] ;
+            if (handler != null) {
+              handler(info as any); // We know the type is correct, but want to allow extensions later. This is not very safe
+            }
+          }
         }
       };
     }
@@ -307,10 +321,10 @@ export class ALGraph {
     }
 
     // cy.on('mouseover', 'node', (event) => {
-    //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+    //   console.log('[PS]', event.type, event.target.data(), event.target.scratch(AL_GRAPH_SCRATCH_NAMESPACE));
     // });
     // cy.on('click', 'edge', (event) => {
-    //   console.log('[PS]', event.type, event.target.data(), event.target.scratch());
+    //   console.log('[PS]', event.type, event.target.data(), event.target.scratch(AL_GRAPH_SCRATCH_NAMESPACE));
     // });
 
     this.reLayout();
@@ -345,10 +359,10 @@ export class ALGraph {
     this.cy.startBatch();
   }
   private add(element: cytoscape.ElementDefinition): cytoscape.CollectionReturnValue {
-    if (this._elements == null){
+    if (this._elements == null) {
       console.info("Adding nodes before outside of batch (calling startBatch) may cause performance regression!");
     }
-    
+
     try {
       const elementDef = this.cy.add(element);
       this._elements?.merge(elementDef);
@@ -524,7 +538,9 @@ export class ALGraph {
           label: 'timeline',
         },
         scratch: {
-          lastTimeId: id
+          [AL_GRAPH_SCRATCH_NAMESPACE]: {
+            lastTimeId: id
+          }
         }
       });
     }
@@ -537,8 +553,8 @@ export class ALGraph {
         parent: timelineId,
       },
     });
-    this.addEdge(timeline.scratch().lastTimeId, id);
-    timeline.scratch().lastTimeId = id;
+    this.addEdge(timeline.scratch(AL_GRAPH_SCRATCH_NAMESPACE).lastTimeId, id);
+    timeline.scratch(AL_GRAPH_SCRATCH_NAMESPACE).lastTimeId = id;
     return id;
   }
 
@@ -551,7 +567,7 @@ export class ALGraph {
     const nodes = this.cy.$id(id);
     if (nodes.nonempty()) {
       const node = nodes[0];
-      const triggerFloeletRegion = node.scratch().triggerFloeletRegion;
+      const triggerFloeletRegion = node.scratch(AL_GRAPH_SCRATCH_NAMESPACE).triggerFloeletRegion;
       assert(triggerFloeletRegion != null, 'Invalid situatoin in the graph! Must have a region when created!');
       return triggerFloeletRegion;
     }
@@ -615,7 +631,9 @@ export class ALGraph {
         parent: parentId,
       },
       scratch: {
-        triggerFloeletRegion,
+        [AL_GRAPH_SCRATCH_NAMESPACE]: {
+          triggerFloeletRegion,
+        } as ALGraphNodeScratchData
       }
     });
     this.addEdge(prevId, id, 'flowlet');
@@ -642,9 +660,13 @@ export class ALGraph {
         parent: region?.interaction?.eventsId,
       },
       scratch: {
-        eventName,
-        eventData,
-      } as EventInfo<T>,
+        [AL_GRAPH_SCRATCH_NAMESPACE]: {
+          event: {
+            eventName,
+            eventData,
+          } as EventInfo<T>
+        } as ALGraphNodeScratchData
+      },
     });
 
     if (this.dynamicOptions?.edges.trigger) {

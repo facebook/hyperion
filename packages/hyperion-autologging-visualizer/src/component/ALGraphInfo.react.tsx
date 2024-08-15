@@ -227,7 +227,7 @@ export function ALGraphInfo(props: {
     () => {
       if (graphRef.current == null && graphContainer.current != null) {
         const graph = new ALGraph.ALGraph({
-          onEventNodeClick: setEventInfo,
+          onNodeClick: { event: setEventInfo },
           topContainer: gridContainer.current,
           graphContainer: graphContainer.current,
           elements,
