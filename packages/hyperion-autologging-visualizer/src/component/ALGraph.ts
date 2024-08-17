@@ -260,7 +260,7 @@ export class ALGraph {
         for (const key of (Object.keys(scratch) as (keyof ALGraphNodeScratchData)[])) {
           const info = scratch[key];
           if (info != null) {
-            const handler = onNodeClick[key] ;
+            const handler = onNodeClick[key];
             if (handler != null) {
               handler(info as any); // We know the type is correct, but want to allow extensions later. This is not very safe
             }
@@ -641,6 +641,20 @@ export class ALGraph {
     return triggerFloeletRegion;
   }
 
+
+  private getDefaultEventsContainerNodeId(): GraphID {
+    const id: GraphID = '_events';
+    if (this.cy.$id(id).empty()) {
+      this.addNode({
+        data: {
+          id,
+          label: "Events"
+        }
+      });
+    }
+    return id;
+  }
+
   private _lastEventId: GraphID;
   protected getALEventNodeId<T extends SupportedALEventNames>(eventName: T, eventData: SupportedALEventData<T>): GraphID {
     const EVENT_PREFIX = 'e:';
@@ -657,7 +671,7 @@ export class ALGraph {
       data: {
         id,
         label: `${eventName}[${eventData.event}]`,
-        parent: region?.interaction?.eventsId,
+        parent: region?.interaction?.eventsId ?? this.getDefaultEventsContainerNodeId(),
       },
       scratch: {
         [AL_GRAPH_SCRATCH_NAMESPACE]: {
