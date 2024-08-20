@@ -79,44 +79,9 @@ const StyleCss = `
 .al-graph-main-info { height: 100%}
 `;
 
-const DefaultOptions: ALGraph.ALGraphDynamicOptionsType = {
-  version: 2,
-  events: {
-    al_ui_event: {
-      click: true,
-      change: false,
-      hover: false,
-    },
-    al_surface_mutation_event: {
-      mount_component: false,
-      unmount_component: false,
-    },
-    al_network_request: false,
-    al_network_response: false,
-    al_surface_visibility_event: {
-      surface_visible: false,
-      surface_hidden: false,
-    },
-  },
-  nodes: {
-    tuple: {
-      page_uri: false,
-      surface: false,
-      component: false,
-      text: false,
-    },
-    trigger_flowlet: false,
-  },
-  edges: {
-    trigger: false,
-    related_event_index: false,
-    tuple: false,
-  }
-};
-
 const ALGraphOptions = new LocalStoragePersistentData<ALGraph.ALGraphDynamicOptionsType>(
   'alGraphOptions',
-  () => DefaultOptions,
+  () => ALGraph.ALGraphDefaultDynamicOptions,
   value => JSON.stringify(value),
   value => {
     /**
@@ -126,8 +91,8 @@ const ALGraphOptions = new LocalStoragePersistentData<ALGraph.ALGraphDynamicOpti
      */
     const options: ALGraph.ALGraphDynamicOptionsType = JSON.parse(value);
     const currentVersion = typeof options?.version === 'number' ? options.version : 0;
-    if (currentVersion < DefaultOptions.version) {
-      return DefaultOptions;
+    if (currentVersion < ALGraph.ALGraphDefaultDynamicOptions.version) {
+      return ALGraph.ALGraphDefaultDynamicOptions;
     } else {
       return options;
     }

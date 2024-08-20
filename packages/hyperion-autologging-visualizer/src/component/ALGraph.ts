@@ -237,9 +237,45 @@ export type ALGraphConstructorOptions = {
 
 export const AL_GRAPH_SCRATCH_NAMESPACE = '_algraph';
 
-export class ALGraph {
+export const ALGraphDefaultDynamicOptions: ALGraphDynamicOptionsType = {
+  version: 2,
+  events: {
+    al_ui_event: {
+      click: true,
+      change: false,
+      hover: false,
+    },
+    al_surface_mutation_event: {
+      mount_component: false,
+      unmount_component: false,
+    },
+    al_network_request: false,
+    al_network_response: false,
+    al_surface_visibility_event: {
+      surface_visible: false,
+      surface_hidden: false,
+    },
+  },
+  nodes: {
+    tuple: {
+      page_uri: false,
+      surface: false,
+      component: false,
+      text: false,
+    },
+    trigger_flowlet: false,
+  },
+  edges: {
+    trigger: false,
+    related_event_index: false,
+    tuple: false,
+  }
+};
+
+
+export class ALGraph<DynamicOptionsType extends ALGraphDynamicOptionsType = ALGraphDynamicOptionsType> {
   private readonly topContainer: Element | null;
-  private dynamicOptions?: ALGraphDynamicOptionsType;
+  private dynamicOptions?: DynamicOptionsType;
   private cy!: cytoscape.Core;
   private layout!: cytoscape.Layouts;
   private readonly onNodeClick?: (event: cytoscape.EventObject) => void;
@@ -705,7 +741,10 @@ export class ALGraph {
     return id;
   }
 
-  setDynamicOptions(dynamicOptions: ALGraphDynamicOptionsType): void {
+  getDynamicOptions(): DynamicOptionsType | undefined {
+    return this.dynamicOptions;
+  }
+  setDynamicOptions(dynamicOptions: DynamicOptionsType): void {
     this.dynamicOptions = dynamicOptions;
   }
 
