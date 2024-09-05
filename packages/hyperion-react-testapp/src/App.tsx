@@ -50,12 +50,12 @@ const Modes = {
     <div>
       <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
     </div>
-    <div>
-      <ElementNameComponent />
-    </div>
-    <TextComponent />
     <RecursiveFuncComponent i={3}></RecursiveFuncComponent>
   </>,
+  'ElementText': () => <div>
+    <ElementNameComponent />
+    <TextComponent />
+  </div>,
 };
 type ModeNames = keyof typeof Modes;
 const PersistedOptionValue = new LocalStoragePersistentData<ModeNames>(
@@ -77,6 +77,10 @@ const PersistedToolOptionValue = new LocalStoragePersistentData<ToolNames>(
   value => value in Tools ? value as ToolNames : 'alGraph'
 );
 
+function isValidMode(mode: string): mode is ModeNames {
+  return mode in Modes;
+}
+
 function App() {
 
   const [mode, setMode] = useState<ModeNames>(PersistedOptionValue.getValue());
@@ -84,7 +88,7 @@ function App() {
 
   const onModeChange = useCallback<ChangeEventHandler<HTMLSelectElement>>((event) => {
     const value = event.target.value;
-    if (value === 'mutationOnlySurface' || value === 'network' || value === 'nested') {
+    if (isValidMode(value)) {
       PersistedOptionValue.setValue(value);
       setMode(value);
     }
