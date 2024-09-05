@@ -368,13 +368,13 @@ function callExternalTextProcessor(
   return results;
 }
 
-function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, results: ALElementText[]): ALElementText[] | null {
+function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
   const text = textNode.nodeValue;
   if (text != null && text !== '') {
     return callExternalTextProcessor(
       {
         text,
-        source: 'innerText'
+        source
       },
       domSource,
       results
@@ -387,9 +387,14 @@ function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, results
 
 // Takes a space-delimited list of DOM element IDs and returns the inner text of those elements joined by spaces
 function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
+  /**
+   * Check the descrtion of https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-labelledby#benefits_and_drawbacks
+   * we need to drop repeated attributes and ensure there is a space between the values
+   */
   const indirectSources = domSource.element
     .getAttribute(source)
     ?.split(' ')
+    .filter((id, index, array) => array.indexOf(id) === index)
     .map(id => document.getElementById(id))
     .filter(function (element): element is HTMLElement { return element instanceof HTMLElement });
   if (!indirectSources?.length) {
@@ -397,6 +402,10 @@ function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementT
   }
 
   for (let i = 0; i < indirectSources.length; i++) {
+    if (i) {
+      results.push({ text: " ", source }); // Insert space between values
+    }
+
     domSource.element = indirectSources[i];
     getTextFromInnerText(domSource, source, results);
   }
@@ -420,17 +429,37 @@ function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALEleme
 }
 
 function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
-  const text = domSource.element.textContent; // Jest does not support innerText, https://github.com/jsdom/jsdom/issues/1245
-  if (text != null && text !== '') {
-    return callExternalTextProcessor(
-      {
-        text,
-        source
-      },
-      domSource,
-      results
-    );
+  /**
+   * We want to allow an external text processor to see each text node separately and also report the full text
+   * as its parts in case applications want to use translation services or compare agains known databases.
+   * So, instead of directly calling .textContent or .innerText, we use the explicit walking of the dom sub-tree
+   */
+  const { element, surface } = domSource;
+  for (
+    let child = element.firstChild; child; child = child.nextSibling) {
+    if (child instanceof HTMLElement && child.nodeType === Node.ELEMENT_NODE) {
+      getTextFromInnerText({ element: child, surface }, source, results);
+    } else if (child instanceof Text && child.nodeType === Node.TEXT_NODE) {
+      getTextFromTextNode({ element, surface }, child, source, results);
+    }
   }
+
+  /**
+   * The following is an alternative implementation and may not be identical to above.
+   * Specially handling of whitespaces may be different.
+   * Keeping the code here for reference and bringing back if needed later.
+   */
+  // const text = domSource.element.textContent; // Jest does not support innerText, https://github.com/jsdom/jsdom/issues/1245
+  // if (text != null && text !== '') {
+  //   return callExternalTextProcessor(
+  //     {
+  //       text,
+  //       source
+  //     },
+  //     domSource,
+  //     results
+  //   );
+  // }
   return null;
 }
 
@@ -504,6 +533,10 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
 
   /**
    * First we check if the element itself has some definitive text we can use
+   * Note that according to standard:
+   * -- the aria-labeledby has precedence over everything, https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-labelledby#:~:text=takes%20precedence%20over%20all%20other%20methods%20of%20providing%20an%20accessible%20name%2C%20including%20aria%2Dlabel%2C%20%3Clabel%3E%2C%20and%20the%20element%27s%20inner%20text
+   * -- the aria-label has precedence over <label> https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label#:~:text=the%20input%27s%20%3Clabel%3E%20text%20as%20the%20accessible%20name%20for%20that%20element
+   * However, since the visible text on the screen is the most likley thing to be search for, we start from <label>
    */
   const selfText =
     getTextFromElementLabel(domSource, 'label', results)
@@ -522,7 +555,7 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
       if (child instanceof HTMLElement && child.nodeType === Node.ELEMENT_NODE) {
         getElementName(child, surface, results, depth + 1);
       } else if (child instanceof Text && child.nodeType === Node.TEXT_NODE) {
-        getTextFromTextNode({ element: element, surface }, child, results);
+        getTextFromTextNode({ element: element, surface }, child, 'innerText', results);
       }
     }
   }

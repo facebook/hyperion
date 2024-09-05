@@ -187,7 +187,7 @@ describe("Test various element text options", () => {
     expect(getText(`3`)).toBe("test3");
     expect(getText(`4`)).toBe("test3");
     expect(getText(`5`)).toBe("test3");
-    expect(getText(`6`)).toBe("test3test8");
+    expect(getText(`6`)).toBe("test3 test8");
     expect(getText(`7`)).toBe("test7");
     expect(getText(`8`)).toBe("test8");
     expect(getText(`9`)).toBe("test9");
@@ -218,8 +218,8 @@ describe("Test various element text options", () => {
   test('labelable element label', () => {
     const badId = "ain't(good)";
     const dom = DomFragment.html(`
-      <input id='1'></input><label for='1'>test1</lablel>
-      <label><input id='2'></input>test2</lablel>
+      <input id='1'></input><label for='1'>test1</label>
+      <label><input id='2'></input>test2</label>
       <input id="${badId}"></input>
       <label for="${badId}">correct!</label>
     `);
@@ -232,6 +232,30 @@ describe("Test various element text options", () => {
     dom.cleanup();
   });
 
+  test('complex element label', () => {
+    const dom = DomFragment.html(`
+      <label data-clickable="1" data-keydownable="1"><div><div><input
+        aria-checked="true" aria-disabled="false"
+        aria-describedby="js_1p" aria-labelledby="js_1q"
+        id="js_1o" type="radio" value="SINGLE" checked="" name="js_1j"
+      ><div><div id="js_1q">Single image or video </div></div>
+ <div>One image or video, or a slideshow with multiple images</div></div></div></label>
+`);
+
+    expect(getText('js_1o')).toBe('Single image or video One image or video, or a slideshow with multiple images');
+    dom.cleanup();
+  });
+
+  test('element with repeated label id', () => {
+    const dom = DomFragment.html(`
+      <span id='3'>test3</span>
+      <span id='4' aria-labelledby="3 3 8 3"></span>
+      <span id='8'>test8</span>
+    `);
+
+    expect(getText('4')).toBe('test3 test8');
+    dom.cleanup();
+  });
 
   test("element text callbacks", () => {
     const dom = createTestDom();
@@ -267,7 +291,7 @@ describe("Test various element text options", () => {
       }
     });
     const text = ALInteractableDOMElement.getElementTextEvent(dom.root, null);
-    expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3test*  test7  test*  test*  test10  ");
+    expect(text.elementName).toBe("  test1  test2  test3  test3  test3  test3 test*  test7  test*  test*  test10  ");
     console.log(text);
     dom.cleanup();
   });
