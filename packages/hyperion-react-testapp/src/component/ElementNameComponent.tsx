@@ -75,6 +75,12 @@ export default function (/* props: Props */) {
           <option value='_v3' >V3</option>
         </select>
       </div>
+      <label data-clickable="1" data-keydownable="1"><div><div><input
+        aria-checked="true" aria-disabled="false"
+        aria-describedby="js_1p" aria-labelledby="js_1q"
+        id="js_1o" type="radio" value="SINGLE" checked={true} name="js_1j"
+      /><div><div id="js_1q">Single image or video </div></div>
+        <div>One image or video, or a slideshow with multiple images</div></div></div></label>
     </div>
   </SurfaceComp>;
 }
