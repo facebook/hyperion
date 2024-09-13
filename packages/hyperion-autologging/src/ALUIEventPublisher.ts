@@ -12,7 +12,6 @@ import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger"
 import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from "./ALEventIndex";
-import { IALFlowlet } from "./ALFlowletManager";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
 import { ALElementTextEvent, TrackEventHandlerConfig, enableUIEventHandlers, getElementTextEvent, getInteractable, isTrackedEvent } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
@@ -159,14 +158,6 @@ export function trackAndEnableUIEventHandlers(eventName: UIEventConfig['eventNam
   enableUIEventHandlers(eventName, eventHandlerConfig);
 }
 
-/**
- *
- * @param event - the event to check whether it's valid and we want to push/pop it on the flowlet stack
- * @returns boolean indicating if flowlet should be added/removed from stack
- * Whether to push/pop this event's flowlet via FlowletManager
- */
-const shouldPushPopFlowlet = (event: Event) => event.bubbles && event.isTrusted;
-
 function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig, eventName: T, event: DocumentEventMap[T]): CommonEventData | null {
   const eventTimestamp = performanceAbsoluteNow();
 
@@ -289,9 +280,6 @@ export function publish(options: InitOptions): void {
       }
       flowletName += ')';
       let callFlowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
-      if (shouldPushPopFlowlet(event)) {
-        callFlowlet = flowletManager.push(callFlowlet);
-      }
       let reactComponentData: ReactComponentData | null = null;
       if (targetElement && cacheElementReactInfo) {
         const elementInfo = ALElementInfo.getOrCreate(targetElement);
@@ -350,11 +338,6 @@ export function publish(options: InitOptions): void {
           Object.assign(data.metadata, uiEventData.metadata);
           timedEmitter.run();
         }
-      }
-
-      let callFlowlet: IALFlowlet | undefined;
-      if (shouldPushPopFlowlet(event)) {
-        flowletManager.pop(callFlowlet);
       }
     };
 
