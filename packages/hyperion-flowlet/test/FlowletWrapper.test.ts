@@ -8,7 +8,7 @@ import "jest";
 import { Flowlet } from "../src/Flowlet";
 import { FlowletManager } from "../src/FlowletManager";
 import { initFlowletTrackers } from "../src/FlowletWrappers";
-import { getTriggerFlowlet } from "../src/TriggerFlowlet";
+import { getTriggerFlowlet, setTriggerFlowlet } from "../src/TriggerFlowlet";
 
 
 
@@ -152,5 +152,37 @@ describe("test flow of flowlets", () => {
     }
     const allSettled = Promise.allSettled([p0, p1, p2]);
     expect(getTriggerFlowlet(allSettled)?.getFullName()).toMatch(/Promise.allSettled\(\d+&\d+&\d+\)/);
+  });
+
+  test("Trigger flowlet propagation", (done) => {
+    const main = flowletManager.top() ?? flowletManager.push(new Flowlet("main"));
+    const tf1 = new flowletManager.flowletCtor("tf1");
+    main.data.triggerFlowlet = tf1;
+
+    const div1 = document.createElement("div");
+    document.body.appendChild(div1);
+    const div2 = document.createElement("div");
+    div1.appendChild(div2);
+
+    const tf2 = new Flowlet("tf2");
+    tf2.data.triggerFlowlet = tf2;
+    div1.addEventListener('click', event => {
+      setTriggerFlowlet(event, tf2);
+    }, true);
+
+    div2.addEventListener("click", event => {
+      setTimeout(() => {
+        Promise.resolve().then(() => {
+          const top = flowletManager.top();
+          console.log("Top: ", top.getFullName());
+          const tf = top.data.triggerFlowlet;
+          console.log("TF: ", tf?.getFullName());
+          expect(tf).toStrictEqual(tf2);
+          done();
+        });
+      }, 50);
+    });
+
+    div2.dispatchEvent(new MouseEvent("click"));
   });
 });
