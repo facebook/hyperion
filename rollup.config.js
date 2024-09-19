@@ -12,23 +12,31 @@ export default defineConfig({
     // file: './dist/hyperion.js',
     dir: './dist',
     manualChunks: {
+      "hyperionGlobal": [
+        "@hyperion/hyperion-global/src/assert",
+        "@hyperion/hyperion-global/src/index",
+      ],
       "hyperionHook": [
         "@hyperion/hyperion-hook/src/Hook",
+        "@hyperion/hyperion-hook/src/index",
       ],
       "hyperionChannel": [
         "@hyperion/hyperion-channel/src/Channel",
+        "@hyperion/hyperion-channel/src/index",
       ],
       "hyperionAsyncCounter": [
         "@hyperion/hyperion-async-counter/src/AsyncCounter",
+        "@hyperion/hyperion-async-counter/src/index",
       ],
       "hyperionTimedTrigger": [
         "@hyperion/hyperion-timed-trigger/src/TimedTrigger",
+        "@hyperion/hyperion-timed-trigger/src/index",
       ],
       "hyperionTestAndSet": [
         "@hyperion/hyperion-test-and-set/src/TestAndSet",
+        "@hyperion/hyperion-test-and-set/src/index",
       ],
       "hyperionCore": [
-        "@hyperion/hyperion-global/src/assert",
         "@hyperion/hyperion-core/src/FunctionInterceptor",
         "@hyperion/hyperion-core/src/ConstructorInterceptor",
         "@hyperion/hyperion-core/src/AttributeInterceptor",
@@ -36,6 +44,7 @@ export default defineConfig({
         "@hyperion/hyperion-core/src/IRequire",
         "@hyperion/hyperion-core/src/IPromise",
         "@hyperion/hyperion-core/src/IGlobalThis",
+        "@hyperion/hyperion-core/src/index",
       ],
       "hyperionDOM": [
         "@hyperion/hyperion-dom/src/IEvent",
@@ -49,6 +58,7 @@ export default defineConfig({
         "@hyperion/hyperion-dom/src/IXMLHttpRequest",
         "@hyperion/hyperion-dom/src/ICSSStyleDeclaration",
         "@hyperion/hyperion-dom/src/IGlobalEventHandlers",
+        "@hyperion/hyperion-dom/src/index",
       ],
       "hyperionTrackElementsWithAttributes": [
         "@hyperion/hyperion-util/src/trackElementsWithAttributes",
@@ -59,6 +69,7 @@ export default defineConfig({
       "hyperionUtil": [
         "@hyperion/hyperion-util/src/ClientSessionID",
         "@hyperion/hyperion-util/src/PersistentData",
+        "@hyperion/hyperion-util/src/index",
       ],
       "hyperionFlowletCore": [
         "@hyperion/hyperion-flowlet/src/Flowlet",
@@ -67,11 +78,13 @@ export default defineConfig({
       ],
       "hyperionFlowlet": [
         "@hyperion/hyperion-flowlet/src/FlowletWrappers",
+        "@hyperion/hyperion-flowlet/src/index",
       ],
       "hyperionReact": [
         "@hyperion/hyperion-react/src/IReact",
         "@hyperion/hyperion-react/src/IReactDOM",
         "@hyperion/hyperion-react/src/IReactComponent",
+        "@hyperion/hyperion-react/src/index",
       ],
       "hyperionAutoLogging": [
         "@hyperion/hyperion-autologging/src/ALEventExtension",
@@ -85,10 +98,12 @@ export default defineConfig({
         "@hyperion/hyperion-autologging/src/ALInteractableDOMElement",
         "@hyperion/hyperion-autologging/src/AutoLogging",
         "@hyperion/hyperion-autologging/src/ALUIEventPublisher",
+        "@hyperion/hyperion-autologging/src/index",
       ],
       "hyperionAutoLoggingVisualizer": [
         "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph",
         "@hyperion/hyperion-autologging-visualizer/src/component/ALGraphInfo.react",
+        "@hyperion/hyperion-autologging-visualizer/src/index",
       ]
     },
     chunkFileNames: "[name].js",
