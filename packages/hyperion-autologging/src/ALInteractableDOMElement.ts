@@ -76,12 +76,9 @@ function elementHasEventHandler(node: HTMLElementWithHandlers, eventName: HTMLEl
 }
 
 function ignoreInteractiveElement(node: HTMLElement) {
-  const innerHeight: number = window.innerHeight;
-  const innerWidth: number = window.innerWidth;
   return (
     node.tagName === 'BODY' ||
-    node.tagName === 'HTML' ||
-    (node.clientHeight === innerHeight && node.clientWidth === innerWidth)
+    node.tagName === 'HTML'
   );
 }
 
