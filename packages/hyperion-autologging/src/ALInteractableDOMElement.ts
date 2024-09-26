@@ -8,6 +8,9 @@ import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type { UIEventConfig } from "./ALUIEventPublisher";
+import { getFunctionInterceptor } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
+import * as Flags from "@hyperion/hyperion-global/src/Flags";
 
 'use strict';
 
@@ -76,13 +79,24 @@ function elementHasEventHandler(node: HTMLElementWithHandlers, eventName: HTMLEl
 }
 
 function ignoreInteractiveElement(node: HTMLElement) {
-  const innerHeight: number = window.innerHeight;
-  const innerWidth: number = window.innerWidth;
   return (
     node.tagName === 'BODY' ||
     node.tagName === 'HTML' ||
-    (node.clientHeight === innerHeight && node.clientWidth === innerWidth)
+    (!Flags.getFlags().useNewIgnoreInteractableImpl && (node.clientHeight === innerHeight && node.clientWidth === innerWidth))
   );
+}
+
+// Return a bool if the function body is a noop.
+const isFunctionBodyNoop = (body: string): boolean => {
+  return /^[^(]*\([^)]*\)\s*(=>)?\s+\{(\s*)?(return;|void 0;)?(\s*)?\}/gm.test(body);
+}
+
+// Return a bool if the listener function body is a noop.
+function isListenerNoop(listener: EventListenerOrEventListenerObject): boolean {
+  let callable = isEventListenerObject(listener) ? listener.handleEvent : listener;
+  // The listener function may have been previously intercepted and its body replaced by the dispatcher func.
+  const func = getFunctionInterceptor(callable)?.getOriginal() ?? callable;
+  return isFunctionBodyNoop(func.toString());
 }
 
 // Keep track of event handlers
@@ -133,9 +147,16 @@ let installHandlers = () => {
   IEventTarget.addEventListener.onBeforeCallObserverAdd(function (
     this: EventTarget,
     event,
-    _listener,
+    listener,
   ) {
-    if (UIEventNames.has(event) && this instanceof HTMLElement) {
+    if (UIEventNames.has(event) && this instanceof HTMLElement &&
+      // If react detects invalid handlers it assigns a noop$1 handler, which does nothing.  We want to ignore these cases.
+      (
+        !Flags.getFlags().useNewIgnoreInteractableImpl // old behavior
+        || (
+          listener != null
+          && !isListenerNoop(listener))
+      )) {
       if (!ignoreInteractiveElement(this)) {
         const attribute = eventHandlerTrackerAttribute(event);
         this.setAttribute(attribute, '1');
@@ -157,7 +178,10 @@ let installHandlers = () => {
   IReactComponent.onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
     if (props != null) {
       UIEventNames.forEach(event => {
-        if (props[SYNTHETIC_EVENT_HANDLER_MAP[event]] != null) {
+        const handler = props[SYNTHETIC_EVENT_HANDLER_MAP[event]];
+        if (handler != null && (
+          !Flags.getFlags().useNewIgnoreInteractableImpl // old behavior
+          || !isListenerNoop(handler))) {
           props[eventHandlerTrackerAttribute(event)] = '1';
         }
       });

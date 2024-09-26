@@ -9,6 +9,7 @@ import "jest";
 import * as ALInteractableDOMElement from "../src/ALInteractableDOMElement";
 import * as DomFragment from "./DomFragment";
 import { UIEventConfig, trackAndEnableUIEventHandlers } from "../src/ALUIEventPublisher";
+import { setFlags } from "@hyperion/hyperion-global";
 
 function createTestDom(): DomFragment.DomFragment {
   return DomFragment.html(`
@@ -58,6 +59,8 @@ function createInteractableTestDom(): DomFragment.DomFragment {
     </div>
   `);
 }
+
+const testEventHandler = (e: Event) => { return e; };
 
 function getText(id: string): string | null {
   const element = document.getElementById(id);
@@ -325,16 +328,17 @@ describe("Test various element text options", () => {
       <div id="addEventListener"></div>
     `);
 
+
     trackAndEnableUIEventHandlers('click', {
-      captureHandler: () => { },
-      bubbleHandler: () => { },
+      captureHandler: testEventHandler,
+      bubbleHandler: testEventHandler,
     });
 
     let node = document.getElementById("attribute");
     expect(node).not.toBeNull();
     // Enable when feature is enabled again
     // if (node) {
-    //   node.onclick = () => { };
+    //   node.onclick = testEventHandler;
     //   expect(node.getAttribute("data-clickable")).toBe("1");
     //   node.onclick = null;
     //   expect(node.getAttribute("data-clickable")).toBe(null);
@@ -343,20 +347,77 @@ describe("Test various element text options", () => {
     node = document.getElementById("addEventListener");
     expect(node).not.toBeNull();
     if (node) {
-      node.addEventListener("click", () => { });
+      node.addEventListener("click", testEventHandler);
       expect(node.getAttribute("data-clickable")).toBe("1");
     }
 
     trackAndEnableUIEventHandlers('mouseover', {
-      captureHandler: () => { },
-      bubbleHandler: () => { },
+      captureHandler: testEventHandler,
+      bubbleHandler: testEventHandler,
     });
 
     node = document.getElementById("addEventListener");
     expect(node).not.toBeNull();
     if (node) {
-      node.addEventListener("mouseover", () => { });
+      node.addEventListener("mouseover", testEventHandler);
       expect(node.getAttribute("data-mouseoverable")).toBe("1");
     }
+
+    dom.cleanup();
+  });
+
+  test("Test data-*able is NOT set on noop listener handlers", () => {
+    setFlags({ useNewIgnoreInteractableImpl: true });
+    // Set up tracking prior to fragment creation
+    trackAndEnableUIEventHandlers('mouseover', {
+      captureHandler: () => { },
+      bubbleHandler: () => { },
+    });
+    trackAndEnableUIEventHandlers('click', {
+      captureHandler: () => { },
+      bubbleHandler: () => { },
+    });
+
+    const dom = DomFragment.html(`
+      <div id="attribute2"></div>
+      <div id="addEventListener2"></div>
+    `);
+
+    const noops = [
+      function f() { },
+      function funcT() { void 0; },
+      function call() { return; },
+      () => { },
+    ]
+
+    let node = document.getElementById("attribute2");
+    expect(node).not.toBeNull();
+    // Enable when feature is enabled again
+    // if (node) {
+    //   node.onclick = testEventHandler;
+    //   expect(node.getAttribute("data-clickable")).toBe("1");
+    //   node.onclick = null;
+    //   expect(node.getAttribute("data-clickable")).toBe(null);
+    // }
+
+    node = document.getElementById("addEventListener2");
+    expect(node).not.toBeNull();
+    if (node) {
+      noops.forEach(noopListener => {
+        node?.addEventListener("click", noopListener);
+        expect(node?.getAttribute("data-clickable")).toBeNull();
+      });
+    }
+
+    node = document.getElementById("addEventListener2");
+    expect(node).not.toBeNull();
+    if (node) {
+      noops.forEach(noopListener => {
+        node.addEventListener("mouseover", noopListener);
+        expect(node.getAttribute("data-mouseoverable")).toBeNull();
+      });
+    }
+
+    dom.cleanup();
   });
 });
