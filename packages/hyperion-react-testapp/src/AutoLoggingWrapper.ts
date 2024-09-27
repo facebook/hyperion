@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as Visualizer from "@hyperion/hyperion-autologging-visualizer/src/index";
+import * as Visualizer from "@hyperion/hyperion-autologging-visualizer/src/Visualizer";
 import { ALElementText } from "@hyperion/hyperion-autologging/src/ALInteractableDOMElement";
 import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
 import * as IReact from "@hyperion/hyperion-react/src/IReact";
@@ -15,10 +15,15 @@ import { SyncChannel } from "./Channel";
 import { FlowletManager } from "./FlowletManager";
 import { ALExtensibleEvent } from "@hyperion/hyperion-autologging/src/ALType";
 import { getEventExtension } from "@hyperion/hyperion-autologging/src/ALEventExtension";
+import * as Flags from "@hyperion/hyperion-global/src/Flags";
+import "@hyperion/hyperion-autologging/src/reference";
+
 
 export let interceptionStatus = "disabled";
 
 export function init() {
+  Flags.setFlags({ preciseTriggerFlowlet: true });
+
   interceptionStatus = "enabled";
   const flowletManager = FlowletManager;
 

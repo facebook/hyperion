@@ -1,7 +1,7 @@
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
-
+import "./reference";
 import { assert } from "@hyperion/hyperion-global";
 import { Hook } from "@hyperion/hyperion-hook";
 

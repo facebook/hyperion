@@ -2,12 +2,13 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Hook } from "@hyperion/hyperion-hook";
 import { InterceptableFunction, getFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
 import { CallbackType, interceptEventListener, isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
-import { Flowlet } from "./Flowlet";
 import { assert, getLogger } from "@hyperion/hyperion-global";
+import * as Flags from "@hyperion/hyperion-global/src/Flags";
+import { Hook } from "@hyperion/hyperion-hook";
 import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
+import { Flowlet } from "./Flowlet";
 
 const IS_FLOWLET_SETUP_PROP_NAME = `__isFlowletSetup`;
 
@@ -166,12 +167,22 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       // Should we use onArgsAndValueMapper instead of setCustom, although this is safer with the finally call.
       funcInterceptor.setCustom(<any>function (this: any) {
         const handler: Function = funcInterceptor.getOriginal();
-        const triggerFlowlet = getTriggerFlowlet?.apply(this, <any>arguments);
-        if (triggerFlowlet) {
-          callFlowlet.data.triggerFlowlet = triggerFlowlet;
-        } else {
-          // Let's delete the existing value to ensure we don't carry it from the previous invocation
-          delete callFlowlet.data.triggerFlowlet;
+
+        /**
+         * We should only change the callFlowlet.data.triggerFlowlet if there is a getTriggerFlowlet
+         * To test the effect of this fix, we only apply the fix if the flag is set
+         */
+        if (
+          !Flags.getFlags().preciseTriggerFlowlet // if not flag, then old behavior
+          || getTriggerFlowlet // otherwise, only touch the value if there is a getTriggerFlowlet
+        ) {
+          const triggerFlowlet = getTriggerFlowlet?.apply(this, <any>arguments);
+          if (triggerFlowlet) {
+            callFlowlet.data.triggerFlowlet = triggerFlowlet;
+          } else {
+            // Let's delete the existing value to ensure we don't carry it from the previous invocation/payload
+            delete callFlowlet.data.triggerFlowlet;
+          }
         }
 
         if (flowletManager.top() === callFlowlet) {

@@ -18,6 +18,7 @@ import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
+import * as Flags from "@hyperion/hyperion-global/src/Flags";
 
 
 /**
@@ -279,7 +280,12 @@ export function publish(options: InitOptions): void {
         flowletName += `${separator}element=${autoLoggingID}`;
       }
       flowletName += ')';
-      let callFlowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
+
+      let triggerFlowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
+      let callFlowlet = Flags.getFlags().preciseTriggerFlowlet
+        ? flowletManager.top()
+        : triggerFlowlet;
+
       let reactComponentData: ReactComponentData | null = null;
       if (targetElement && cacheElementReactInfo) {
         const elementInfo = ALElementInfo.getOrCreate(targetElement);
@@ -290,7 +296,7 @@ export function publish(options: InitOptions): void {
       const eventData: ALUIEventCaptureData = {
         ...uiEventData,
         callFlowlet,
-        triggerFlowlet: callFlowlet,
+        triggerFlowlet,
         surface,
         ...elementText,
         reactComponentName: reactComponentData?.name,
@@ -298,7 +304,7 @@ export function publish(options: InitOptions): void {
       };
       updateLastUIEvent(eventData);
       intercept(event); // making sure we can track changes to the Event object
-      setTriggerFlowlet(event, callFlowlet);
+      setTriggerFlowlet(event, triggerFlowlet);
       channel.emit('al_ui_event_capture', eventData);
     };
 

@@ -3,6 +3,7 @@
  */
 
 'use strict';
+import "./reference";
 
 import type { BaseChannelEventType, Channel } from "@hyperion/hyperion-channel/src/Channel";
 import * as Types from "@hyperion/hyperion-util/src/Types";
