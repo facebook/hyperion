@@ -33,6 +33,24 @@ export function setComponentNameValidator(validator: ComponentNameValidator): vo
 // Store the hash used for react internal attributes once found, and attempt to reuse it
 let reactInternalHash: string | null = null;
 
+
+const reactContainerPrefix = '__reactContainer$';
+
+// Check if this element is a react root element
+export const isReactContainer = (element: Element): boolean => {
+  const el = element as { [k: string]: any };
+  // Check if we have an internal hash, and use it if we can
+  if (reactInternalHash != null) {
+    return el[reactContainerPrefix + reactInternalHash] != null;
+  }
+  for (const key of Object.keys(el)) {
+    if (key.startsWith(reactContainerPrefix)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 type ReactInternalFiber = Readonly<{
   key: string | null,
   // memoizedProps can be any object

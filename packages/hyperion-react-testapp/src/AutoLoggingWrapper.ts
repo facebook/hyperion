@@ -22,7 +22,7 @@ import "@hyperion/hyperion-autologging/src/reference";
 export let interceptionStatus = "disabled";
 
 export function init() {
-  Flags.setFlags({ preciseTriggerFlowlet: true });
+  Flags.setFlags({ preciseTriggerFlowlet: true, useNewIgnoreInteractableImpl: true });
 
   interceptionStatus = "enabled";
   const flowletManager = FlowletManager;

@@ -51,5 +51,6 @@ describe("UI event publisher", () => {
     const event = new MouseEvent('click', { bubbles: true });
     document.getElementById("2")?.dispatchEvent(event);
 
+    dom.cleanup();
   });
 });
