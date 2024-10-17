@@ -29,10 +29,10 @@
       // "cwd": "${workspaceRoot}/packages/hyperion-global",
       // "cwd": "${workspaceRoot}/packages/hyperion-hook",
       // "cwd": "${workspaceRoot}/packages/hyperion-channel",
-      // "cwd": "${workspaceRoot}/packages/hyperion-autologging",
+      "cwd": "${workspaceRoot}/packages/hyperion-autologging",
       // "cwd": "${workspaceRoot}/packages/hyperion-core",
       // "cwd": "${workspaceRoot}/packages/hyperion-dom",
-      "cwd": "${workspaceRoot}/packages/hyperion-flowlet",
+      // "cwd": "${workspaceRoot}/packages/hyperion-flowlet",
       // "cwd": "${workspaceRoot}/packages/hyperion-react",
       // "cwd": "${workspaceRoot}/packages/hyperion-util",
       "runtimeArgs": [

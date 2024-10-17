@@ -28,7 +28,7 @@ function createInteractableTestDom(): DomFragment.DomFragment {
   return DomFragment.html(`
     <div id='no-interactable'>No Interactable</div>
     <div>
-      <div id='atag-parent-clickable' data-clickable="1">
+      <div id='atag-parent-clickable' data-interactable="|click|">
         <a id='atag' href="#">Create metric</a>
         <a id='atag-nohref'>Create metric</a>
       </div>
@@ -39,7 +39,7 @@ function createInteractableTestDom(): DomFragment.DomFragment {
       <details id='details'>details</details>
       <dialog id='dialog'>dialog</dialog>
       <dialog id='summary'>summary</summary>
-      <div id="outer-clickable" aria-busy="false" class="test" role="button" tabindex="0" data-clickable="1" data-keydownable="1">
+      <div id="outer-clickable" aria-busy="false" class="test" role="button" tabindex="0" data-interactable="|click||keydown|">
         <span class="1">
           <div class="2">
             <div id="inner-clickable-assign-handler" class="3">
@@ -77,7 +77,7 @@ describe("Test interactable detection algorithm", () => {
   test("Detect interactable", () => {
     const dom = DomFragment.html(`
       <div id='1' onclick="return 1;"></div>
-      <div id="2" data-clickable="1">
+      <div id="2" data-interactable="|click|">
         <span id="3">Test</span>
       </div>
     `);
@@ -199,7 +199,7 @@ describe("Test various element text options", () => {
   test("text extraction from parent handler element coming from interactable element tag input", () => {
     const dom = DomFragment.html(`
     <div id="outer">
-      <div id="clickable" data-clickable="1">
+      <div id="clickable" data-interactable="|click|">
         <span id="text-label">Grab this text</span>
         <div>
           <input id="radio-nested-no-text" type="radio" name="contact" value="email" checked="true" />
@@ -234,7 +234,7 @@ describe("Test various element text options", () => {
 
   test('complex element label', () => {
     const dom = DomFragment.html(`
-      <label data-clickable="1" data-keydownable="1"><div><div><input
+      <label data-interactable="|click||keydown|"><div><div><input
         aria-checked="true" aria-disabled="false"
         aria-describedby="js_1p" aria-labelledby="js_1q"
         id="js_1o" type="radio" value="SINGLE" checked="" name="js_1j"
@@ -299,7 +299,7 @@ describe("Test various element text options", () => {
   test("Detect interactable", () => {
     const dom = DomFragment.html(`
       <div id='1' onclick="return 1;"></div>
-      <div id="2" data-clickable="1">
+      <div id="2" data-interactable="|click|">
         <span id="3">Test</span>
       </div>
     `);
@@ -344,7 +344,7 @@ describe("Test various element text options", () => {
     expect(node).not.toBeNull();
     if (node) {
       node.addEventListener("click", () => { });
-      expect(node.getAttribute("data-clickable")).toBe("1");
+      expect(node.getAttribute("data-interactable")).toContain("|click|");
     }
 
     trackAndEnableUIEventHandlers('mouseover', {
@@ -356,7 +356,7 @@ describe("Test various element text options", () => {
     expect(node).not.toBeNull();
     if (node) {
       node.addEventListener("mouseover", () => { });
-      expect(node.getAttribute("data-mouseoverable")).toBe("1");
+      expect(node.getAttribute("data-interactable")).toContain("|mouseover|");
     }
   });
 });

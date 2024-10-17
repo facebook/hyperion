@@ -44,9 +44,8 @@ type HTMLElementWithHandlers = HTMLElement & {
   [K in AttributeEventHandlerName]?: any;//  ((this: GlobalEventHandlers, ev: MouseEvent) => any) | null;
 }
 
-function eventHandlerTrackerAttribute(eventName: string): string {
-  return `data-${eventName}able`;
-}
+const EventHandlerTrackerAttribute = `data-interactable`;
+
 
 export function getInteractable(
   node: EventTarget | null,
@@ -56,7 +55,7 @@ export function getInteractable(
   requireHandlerAssigned: boolean = false,
 ): HTMLElement | null {
   // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
-  const selectorString = `[${eventHandlerTrackerAttribute(eventName)}="1"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
+  const selectorString = `[${EventHandlerTrackerAttribute}*="${eventName}"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
   if (node instanceof HTMLElement) {
     for (let element: HTMLElement | null = node; element != null; element = element.parentElement) {
       if (element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames)) {
@@ -130,16 +129,31 @@ export function enableUIEventHandlers(eventName: UIEventConfig['eventName'], eve
 }
 
 let installHandlers = () => {
+
+  const eventNameToken = (eventName: string) => `|${eventName}|`;
+  function addEventNameToList(eventName: string, current: string | null): string {
+    const pattern = eventNameToken(eventName);
+    if (current) {
+      if (current.includes(pattern)) {
+        return current;
+      } else {
+        return current + pattern;
+      }
+    }
+    return pattern;
+  }
+  function removeEventNameFromList(eventName: string, current: string | null): string | null | undefined {
+    const pattern = eventNameToken(eventName);
+    return current?.replace(pattern, "");
+  }
+
   IEventTarget.addEventListener.onBeforeCallObserverAdd(function (
     this: EventTarget,
     event,
     _listener,
   ) {
-    if (UIEventNames.has(event) && this instanceof HTMLElement) {
-      if (!ignoreInteractiveElement(this)) {
-        const attribute = eventHandlerTrackerAttribute(event);
-        this.setAttribute(attribute, '1');
-      }
+    if (UIEventNames.has(event) && this instanceof HTMLElement && !ignoreInteractiveElement(this)) {
+      this.setAttribute(EventHandlerTrackerAttribute, addEventNameToList(event, this.getAttribute(EventHandlerTrackerAttribute)));
     }
   });
 
@@ -149,18 +163,26 @@ let installHandlers = () => {
     _listener,
   ) {
     if (this instanceof HTMLElement) {
-      const attribute = eventHandlerTrackerAttribute(event);
-      this.removeAttribute(attribute);
+      const newValue = removeEventNameFromList(event, this.getAttribute(EventHandlerTrackerAttribute));
+      if (newValue) {
+        this.setAttribute(EventHandlerTrackerAttribute, newValue);
+      } else {
+        this.removeAttribute(EventHandlerTrackerAttribute);
+      }
     }
   });
 
   IReactComponent.onReactDOMElement.add((_component, props: ReactComponentObjectProps) => {
     if (props != null) {
+      let currentValue = props[EventHandlerTrackerAttribute];
       UIEventNames.forEach(event => {
         if (props[SYNTHETIC_EVENT_HANDLER_MAP[event]] != null) {
-          props[eventHandlerTrackerAttribute(event)] = '1';
+          currentValue = addEventNameToList(event, currentValue);
         }
       });
+      if (currentValue) {
+        props[EventHandlerTrackerAttribute] = currentValue;
+      }
     }
   });
 
