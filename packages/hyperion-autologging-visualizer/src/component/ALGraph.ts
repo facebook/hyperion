@@ -3,7 +3,7 @@
  */
 // import React, {useState, useCallback, useRef, useEffect} from "react";
 import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
-import { ALExtensibleEvent, ALFlowletEvent } from '@hyperion/hyperion-autologging/src/ALType';
+import { ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent } from '@hyperion/hyperion-autologging/src/ALType';
 import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
 import { Channel, PausableChannel } from '@hyperion/hyperion-channel';
 import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
@@ -193,7 +193,7 @@ export type ALGraphDynamicOptionsType = {
 };
 
 type SupportedALEventNames = (keyof ALGraphDynamicOptionsType['events']) & (keyof ALChannelEvent); // & to filter out typos in the list
-type SupportedALEventData<T extends SupportedALEventNames> = ALChannelEvent[T][0] & Partial<Nullable<ALFlowletEvent>> & ALExtensibleEvent;
+type SupportedALEventData<T extends SupportedALEventNames> = ALChannelEvent[T][0] & Partial<Nullable<ALFlowletEvent>> & ALExtensibleEvent & ALLoggableEvent;
 export type EventInfo<T extends SupportedALEventNames> = {
   eventName: T,
   eventData: SupportedALEventData<T>,
@@ -383,13 +383,13 @@ export class ALGraph<DynamicOptionsType extends ALGraphDynamicOptionsType = ALGr
 
   // An optimization to avoid unnecessary relayout when no elements are added
   private _elements: cytoscape.CollectionReturnValue | null = null;
-  private reLayout() {
+  protected reLayout() {
     // this._elements?.layout(getCytoscapeLayoutConfig()).run();
     this.layout.stop();
     this.layout = this.cy.layout(getCytoscapeLayoutConfig());
     this.layout.run();
   }
-  private startBatch() {
+  protected startBatch() {
     assert(this._elements == null, "Should not call startBatch before ending previous batch");
     this._elements = this.cy.collection();
     this.cy.startBatch();
