@@ -180,7 +180,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
      * We use that as the base of event to ensure the text, surface, ... for events
      * remain consistent no matter where the user actually clicked, hovered, ...
      */
-    element = getInteractable(event.target, eventName, true);
+    element = getInteractable(event.target, eventName);
     if (element == null) {
       return null;
     }

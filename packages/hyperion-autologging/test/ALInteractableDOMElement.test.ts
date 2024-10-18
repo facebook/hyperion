@@ -70,8 +70,8 @@ function getTextFromParent(id: string, parentEvent: UIEventConfig['eventName'] |
 }
 
 describe("Test interactable detection algorithm", () => {
-  function interactable(node: HTMLElement | null, eventName: UIEventConfig['eventName'], interactableOnly: boolean = true): HTMLElement | null {
-    return ALInteractableDOMElement.getInteractable(node, eventName, interactableOnly);
+  function interactable(node: HTMLElement | null, eventName: UIEventConfig['eventName']): HTMLElement | null {
+    return ALInteractableDOMElement.getInteractable(node, eventName);
   }
 
   test("Detect interactable", () => {
@@ -97,8 +97,7 @@ describe("Test interactable detection algorithm", () => {
     const dom = createInteractableTestDom();
 
     const ni = document.getElementById("no-interactable");
-    expect(interactable(ni, "click", true)).toBeNull();
-    expect(interactable(ni, "click", false)).toBeNull();
+    expect(interactable(ni, "click")).toBeNull();
 
     dom.cleanup();
   })
