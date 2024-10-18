@@ -50,7 +50,6 @@ const EventHandlerTrackerAttribute = `data-interactable`;
 export function getInteractable(
   node: EventTarget | null,
   eventName: UIEventConfig['eventName'],
-  returnInteractableNode: boolean = false,
   // Whether to require an actual handler is assigned to determine interactiveness, rather than including "interactive" element tags
   requireHandlerAssigned: boolean = false,
 ): HTMLElement | null {
@@ -62,7 +61,7 @@ export function getInteractable(
         if (ignoreInteractiveElement(element)) {
           continue;
         }
-        return returnInteractableNode ? element : node;
+        return element;
       }
     }
   }
@@ -618,7 +617,6 @@ export function getElementTextEvent(
     const parentInteractable = getInteractable(
       element.parentElement,
       tryInteractableParentEventName,
-      true,
       // Limit to elements with installed handlers for interactiveness check.
       true
     );
