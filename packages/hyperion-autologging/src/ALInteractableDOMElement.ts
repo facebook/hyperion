@@ -8,6 +8,8 @@ import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
 import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
 import type * as Types from "@hyperion/hyperion-util/src/Types";
 import type { UIEventConfig } from "./ALUIEventPublisher";
+import { getFlags } from "@hyperion/hyperion-global";
+import { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
 
 'use strict';
 
@@ -47,15 +49,47 @@ type HTMLElementWithHandlers = HTMLElement & {
 const EventHandlerTrackerAttribute = `data-interactable`;
 
 
-export function getInteractable(
-  node: EventTarget | null,
-  eventName: UIEventConfig['eventName'],
-  // Whether to require an actual handler is assigned to determine interactiveness, rather than including "interactive" element tags
-  requireHandlerAssigned: boolean = false,
-): HTMLElement | null {
-  // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
-  const selectorString = `[${EventHandlerTrackerAttribute}*="${eventName}"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
-  if (node instanceof HTMLElement) {
+const InteractableAncestor = `interactableAncestor`;
+type InteractableAncestorCache = {
+  [index: string]: (HTMLElement | null)[];
+}
+
+let getInteractableImpl: (node: HTMLElement, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean) => HTMLElement | null = (node, eventName, requireHandlerAssigned) => {
+  function getInteractableOptimized(node: HTMLElement, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean, selectorString?: string): HTMLElement | null {
+    /**
+     * We should be careful to only cache the result based on given arguments. We use a map from eventName to a array based on requiredHandlerAassigned
+     * In this way, each node may point to its closest ancestor that matches the criteria of the interactablity.
+     * The hope is that gradually (specially with mouseover & mousemove) most of this data is calculated and cached, hence reducing the need
+     * for costly computation.
+     */
+    let cached: InteractableAncestorCache | undefined;
+    cached = getVirtualPropertyValue<InteractableAncestorCache>(node, InteractableAncestor);
+    let interactable: HTMLElement | null | undefined = cached?.[eventName]?.[requireHandlerAssigned ? 0 : 1];
+    if (interactable !== void 0) { // Not undefined means we have computed it before
+      return interactable;
+    }
+
+    // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
+    selectorString ??= `[${EventHandlerTrackerAttribute}*="${eventName}"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
+    const element = node;
+    if ((element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames)) && !ignoreInteractiveElement(element)) {
+      interactable = element;
+    } else if (element.parentElement) {
+      interactable = getInteractableOptimized(element.parentElement, eventName, requireHandlerAssigned, selectorString);
+    } else {
+      interactable = null; // We also cache null to indicate we have already tried for this element. May be unsafe!
+    }
+
+    cached ??= {};
+    const tmp = cached[eventName] ??= [];
+    tmp[requireHandlerAssigned ? 0 : 1] = interactable;
+    setVirtualPropertyValue<InteractableAncestorCache>(node, InteractableAncestor, cached);
+    return interactable;
+  };
+
+  function getInteractableUnoptimized(node: HTMLElement, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean): HTMLElement | null {
+    // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
+    const selectorString = `[${EventHandlerTrackerAttribute}*="${eventName}"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
     for (let element: HTMLElement | null = node; element != null; element = element.parentElement) {
       if (element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames)) {
         if (ignoreInteractiveElement(element)) {
@@ -64,8 +98,25 @@ export function getInteractable(
         return element;
       }
     }
+    return null;
+  };
+
+  const shouldOptimizeInteractivityCheck = getFlags()?.optimizeInteractibiltyCheck;
+  getInteractableImpl = (shouldOptimizeInteractivityCheck) ? getInteractableOptimized : getInteractableUnoptimized;
+  return getInteractableImpl(node, eventName, requireHandlerAssigned);
+}
+
+export function getInteractable(
+  node: EventTarget | null,
+  eventName: UIEventConfig['eventName'],
+  // Whether to require an actual handler is assigned to determine interactiveness, rather than including "interactive" element tags
+  requireHandlerAssigned: boolean = false,
+): HTMLElement | null {
+  if (!(node instanceof HTMLElement)) {
+    return null;
   }
-  return null;
+
+  return getInteractableImpl(node, eventName, requireHandlerAssigned);
 }
 
 function elementHasEventHandler(node: HTMLElementWithHandlers, eventName: HTMLElementEventNames): boolean {
@@ -73,14 +124,35 @@ function elementHasEventHandler(node: HTMLElementWithHandlers, eventName: HTMLEl
   return handler != null;
 }
 
-function ignoreInteractiveElement(node: HTMLElement) {
-  const innerHeight: number = window.innerHeight;
-  const innerWidth: number = window.innerWidth;
-  return (
-    node.tagName === 'BODY' ||
-    node.tagName === 'HTML' ||
-    (node.clientHeight === innerHeight && node.clientWidth === innerWidth)
-  );
+let ignoreInteractiveElement: (node: HTMLElement) => boolean = node => {
+  /**
+   * To minimize flag checking in every call twice, the following code decides which version of the code
+   * is needed on the first invocation (by then flags are assigned).
+   * Later, when we wanted to remove the flag, the cleanup is easy.
+   */
+  function ignoreInteractiveElementCore(node: HTMLElement): boolean {
+    return node.tagName === 'BODY' || node.tagName === 'HTML' ||
+      (node.clientHeight === window.innerHeight && node.clientWidth === window.innerWidth);
+  }
+
+  const IgnoreInteractivity = `ignoreInteractivity`;
+  function ignoreInteractiveElementOptimized(node: HTMLElement): boolean {
+    let shouldIgnore: boolean | undefined;
+    shouldIgnore = getVirtualPropertyValue<boolean>(node, IgnoreInteractivity);
+    if (shouldIgnore === false || shouldIgnore === true) {
+      return shouldIgnore;
+    }
+    shouldIgnore = ignoreInteractiveElementCore(node);
+    if (shouldIgnore) {
+      // In some cases, the size of the component changes slightly and can change the answer from false to true.
+      // So only caching the true values to be safe.
+      setVirtualPropertyValue(node, IgnoreInteractivity, shouldIgnore);
+    }
+    return shouldIgnore;
+  }
+
+  ignoreInteractiveElement = getFlags()?.optimizeInteractibiltyCheck ? ignoreInteractiveElementOptimized : ignoreInteractiveElementCore;
+  return ignoreInteractiveElement(node);
 }
 
 // Keep track of event handlers
