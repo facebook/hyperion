@@ -6,4 +6,5 @@
 
 interface GlobalFlags {
   preciseTriggerFlowlet?: boolean;
+  optimizeInteractibiltyCheck?: boolean;
 }
