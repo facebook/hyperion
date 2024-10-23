@@ -46,6 +46,22 @@ type HTMLElementWithHandlers = HTMLElement & {
   [K in AttributeEventHandlerName]?: any;//  ((this: GlobalEventHandlers, ev: MouseEvent) => any) | null;
 }
 
+/**
+ * Event Listener Options: https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+ *
+ * capture: A boolean value indicating that events of this type will be dispatched to the registered listener before being dispatched to any EventTarget beneath it in the DOM tree
+ * passive: A boolean value that, if true, indicates that the function specified by listener will never call preventDefault(). If a passive listener does call preventDefault(), the user agent will do nothing other than generate a console warning.
+ */
+
+export const SafeCaptureEventListenerOptions = {
+  capture: true, // events of this type will be dispatched to the registered listener before being dispatched to any EventTarget beneath it in the DOM tree
+  passive: true, // better performance: https://developer.chrome.com/docs/lighthouse/best-practices/uses-passive-event-listeners
+} as const;
+export const SafeBubbleEventListenerOptions = {
+  capture: false,
+  passive: true,
+} as const;
+
 const EventHandlerTrackerAttribute = `data-interactable`;
 
 
@@ -167,8 +183,8 @@ export const UIEventNames = new Set<UIEventConfig['eventName'] | string>;
 export function disableUIEventHandlers(eventName: UIEventConfig['eventName']): void {
   const handlerConfig = UIEventHandlers.get(eventName);
   if (handlerConfig?.active === true) {
-    window.document.removeEventListener(eventName, handlerConfig.captureHandler, true);
-    window.document.removeEventListener(eventName, handlerConfig.bubbleHandler, false);
+    window.document.removeEventListener(eventName, handlerConfig.captureHandler, SafeCaptureEventListenerOptions);
+    window.document.removeEventListener(eventName, handlerConfig.bubbleHandler, SafeBubbleEventListenerOptions);
     UIEventNames.delete(eventName);
     UIEventHandlers.set(eventName, {
       ...handlerConfig,
@@ -189,8 +205,8 @@ export function enableUIEventHandlers(eventName: UIEventConfig['eventName'], eve
     // Install interactable attribute handlers
     installHandlers();
     // Install event handlers
-    window.document.addEventListener(eventName, handlerConfig.captureHandler, true);
-    window.document.addEventListener(eventName, handlerConfig.bubbleHandler, false);
+    window.document.addEventListener(eventName, handlerConfig.captureHandler, SafeCaptureEventListenerOptions);
+    window.document.addEventListener(eventName, handlerConfig.bubbleHandler, SafeBubbleEventListenerOptions);
     UIEventNames.add(eventName);
     UIEventHandlers.set(eventName, {
       ...handlerConfig,
