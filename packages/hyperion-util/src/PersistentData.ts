@@ -4,9 +4,11 @@
 
 'use strict';
 
+import { assert } from "@hyperion/hyperion-global/src/assert";
 import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
 
-function getStorage(storageName: 'sessionStorage' | 'localStorage'): Storage | null {
+type IStorage = Pick<Storage, 'getItem' | 'setItem'>;
+function getStorage(storageName: 'sessionStorage' | 'localStorage'): IStorage {
   let storage: Storage;
   try {
     storage = window[storageName];
@@ -15,40 +17,62 @@ function getStorage(storageName: 'sessionStorage' | 'localStorage'): Storage | n
     storage.removeItem(x);
     return storage;
   } catch (e) {
-    return null;
+    return {
+      getItem(_key) {
+        return null;
+      },
+      setItem(_key, _value) {
+      }
+    };
   }
 }
 
 const SessionStorage = getStorage('sessionStorage');
 const LocalStorage = getStorage('localStorage');
 
-export const SESSION_DATA_SAVE_INTERVAL = 100; //ms
+export const SESSION_DATA_SAVE_INTERVAL = 20; //ms
 
-class PersistentData<T> {
-  private static runner: TimedTrigger | null = null;
-  private static pending = new Set<PersistentData<any>>();
-  private schedule() {
-    if (!this.isPersisted()) {
-      return; // Not much to do!
-    }
+class Scheduler {
+  private runner: TimedTrigger | null = null;
+  private pending = new Set<PersistentData<any>>();
+  public schedule: (data: PersistentData<any>) => void = data => {
+    // First call we decide what state to go in, then move to new states
 
-    if (!PersistentData.runner) {
-      PersistentData.runner = new TimedTrigger(
+    const firstRun = (data: PersistentData<any>) => {
+      assert(!this.runner, "Invalid state! First call should not have runner");
+      const runner = this.runner = new TimedTrigger(
         () => {
-          for (const i of PersistentData.pending) {
+          for (const i of this.pending) {
             i.save();
           }
-          PersistentData.pending.clear();
-          PersistentData.runner = null;
+          this.pending.clear();
+          this.runner = null;
+          this.schedule = firstRun;
         },
         SESSION_DATA_SAVE_INTERVAL
       );
-    } else {
-      PersistentData.runner.delay(); // If not saved yet, postpone
-    }
-    PersistentData.pending.add(this);
+      if (typeof window === "object" && typeof window.addEventListener === 'function') {
+        window.addEventListener('beforeUnload', () => {
+          runner.run();
+          // disable scheduing permanently
+          this.schedule = (data: PersistentData<any>) => {
+            data.save();
+          }
+        });
+      }
+      const nextRun = (data: PersistentData<any>) => {
+        runner.delay();
+        this.pending.add(data);
+      }
+      this.pending.add(data);
+      this.schedule = nextRun;
+    };
+    firstRun(data);
   }
+}
 
+class PersistentData<T> {
+  private static scheduler = new Scheduler();
   private _data: T;
 
   constructor(
@@ -56,9 +80,10 @@ class PersistentData<T> {
     missingValueInitializer: () => T,
     private readonly stringify: (value: T) => string,
     parser: (persistedValue: string) => T,
-    private readonly storage: Storage | null,
+    private readonly saveImmediately: boolean,
+    private readonly storage: IStorage,
   ) {
-    let persistedData = this.storage?.getItem(this.fieldName);
+    let persistedData = this.storage.getItem(this.fieldName);
     let data;
     if (!persistedData) {
       data = missingValueInitializer();
@@ -69,13 +94,8 @@ class PersistentData<T> {
     this._data = data;
   }
 
-  private save() {
-    this.storage?.setItem(this.fieldName, this.stringify(this._data));
-  }
-
-
-  isPersisted(): boolean {
-    return this.storage !== null;
+  save() {
+    this.storage.setItem(this.fieldName, this.stringify(this._data));
   }
 
   getValue(): T {
@@ -84,7 +104,11 @@ class PersistentData<T> {
 
   setValue(data: T): T {
     this._data = data;
-    this.schedule();
+    if (this.saveImmediately) {
+      this.save();
+    } else {
+      PersistentData.scheduler.schedule(this);
+    }
     return data;
   }
 
@@ -96,8 +120,9 @@ export class SessionPersistentData<T> extends PersistentData<T> {
     missingValueInitializer: () => T,
     stringify: (value: T) => string,
     parser: (persistedValue: string) => T,
+    saveImmediately: boolean = false,
   ) {
-    super(fieldName, missingValueInitializer, stringify, parser, SessionStorage);
+    super(fieldName, missingValueInitializer, stringify, parser, saveImmediately, SessionStorage);
   }
 }
 
@@ -107,8 +132,9 @@ export class LocalStoragePersistentData<T> extends PersistentData<T> {
     missingValueInitializer: () => T,
     stringify: (value: T) => string,
     parser: (persistedValue: string) => T,
+    saveImmediately: boolean = false,
   ) {
-    super(fieldName, missingValueInitializer, stringify, parser, LocalStorage);
+    super(fieldName, missingValueInitializer, stringify, parser, saveImmediately, LocalStorage);
   }
 }
 
