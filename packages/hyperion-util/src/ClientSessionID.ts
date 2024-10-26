@@ -12,15 +12,5 @@ export const ClientSessionID: string = new SessionPersistentData<string>(
   guid,
   v => v,
   v => v,
+  true, //In case page is immediately reloaded, we don't want to wait for the scheduler to save
 ).getValue();
-
-
-// (() => {
-//   const storage = getStorage();
-//   let id = storage?.getItem(CLIENT_SESSION_ID_FIELD);
-//   if (!id) {
-//     id = guid();
-//     storage?.setItem(CLIENT_SESSION_ID_FIELD, id);
-//   }
-//   return id;
-// })();
