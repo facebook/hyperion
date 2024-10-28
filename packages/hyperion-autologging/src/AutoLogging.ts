@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { ChannelEventType } from "@hyperion/hyperion-channel/src/Channel";
+import { Channel, ChannelEventType } from "@hyperion/hyperion-channel/src/Channel";
 import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
 import { assert } from "@hyperion/hyperion-global";
 import global from "@hyperion/hyperion-global/src/global";
@@ -44,6 +44,8 @@ export type ALChannelEvent = ChannelEventType<
 
 type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions<never> | 'react'>;
 
+type PluginInit = (channel: Channel<ALChannelEvent>) => void;
+
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelEvent> &
   {
@@ -60,6 +62,7 @@ export type InitOptions = Types.Options<
     network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
     triggerFlowlet?: PublicInitOptions<ALTriggerFlowlet.InitOptions> | null;
     domSnapshotPublisher?: PublicInitOptions<ALDOMSnapshotPublisher.InitOptions> | null;
+    plugins?: PluginInit[];
   }
 >;
 
@@ -80,13 +83,32 @@ export function init(options: InitOptions): boolean {
     return false;
   }
 
+  /**
+   * To support plugins, we have an internal channel that
+   * all internal features of AutoLogging send their events
+   * to this internal channel.
+   * Plugins will use this channel which gives them the first
+   * chance to make any changes to the events.
+   * The output of this channel is piped to the channel that was
+   * passed as options.
+   * This way, we enfore order of execution among plugins vs rest of
+   * application code.
+   */
+  let channel = options.channel;
+  if (options.plugins) {
+    const pluginChannel = new Channel<ALChannelEvent>();
+    pluginChannel.pipe(options.channel);
+    options.plugins.forEach(plugin => plugin(pluginChannel));
+    channel = pluginChannel;
+  }
+
   if (options.componentNameValidator) {
     setComponentNameValidator(options.componentNameValidator);
   }
 
   const sharedOptions: ALSharedInitOptions<ALChannelEvent> = {
     flowletManager: options.flowletManager,
-    channel: options.channel,
+    channel,
   }
 
   if (typeof global !== 'undefined' && (global as Window)?.document?.createElement != null) {
