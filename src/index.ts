@@ -54,3 +54,7 @@ export *  from "@hyperion/hyperion-autologging/src/index";
 
 // hyperionAutoLoggingVisualizer
 export * from "@hyperion/hyperion-autologging-visualizer/src/index";
+
+// hyperionAutoLoggingPluginEventHash
+export * from "@hyperion/hyperion-autologging-plugin-eventhash/src/index";
+

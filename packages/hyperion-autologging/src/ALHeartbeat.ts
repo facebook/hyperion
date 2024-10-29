@@ -11,7 +11,7 @@ import * as Types from "@hyperion/hyperion-util/src/Types";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
 import * as ALEventIndex from "./ALEventIndex";
 import { ALLoggableEvent } from "./ALType";
-import { ALInteractableDOMElement } from ".";
+import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
 
 export enum ALHeartbeatType {
   REGAIN_PAGE_VISIBILITY = "REGAIN_PAGE_VISIBILITY",

@@ -62,7 +62,7 @@ export type InitOptions = Types.Options<
     network?: PublicInitOptions<ALNetworkPublisher.InitOptions> | null;
     triggerFlowlet?: PublicInitOptions<ALTriggerFlowlet.InitOptions> | null;
     domSnapshotPublisher?: PublicInitOptions<ALDOMSnapshotPublisher.InitOptions> | null;
-    plugins?: PluginInit[];
+    plugins?: (null | undefined | PluginInit)[];
   }
 >;
 
@@ -98,7 +98,7 @@ export function init(options: InitOptions): boolean {
   if (options.plugins) {
     const pluginChannel = new Channel<ALChannelEvent>();
     pluginChannel.pipe(options.channel);
-    options.plugins.forEach(plugin => plugin(pluginChannel));
+    options.plugins.forEach(plugin => plugin?.(pluginChannel));
     channel = pluginChannel;
   }
 
