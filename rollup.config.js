@@ -1,5 +1,6 @@
 import { defineConfig } from 'rollup';
 import resolve from 'rollup-plugin-node-resolve';
+import commonjs from 'rollup-plugin-commonjs';
 import md5 from 'md5';
 
 export default defineConfig({
@@ -105,6 +106,9 @@ export default defineConfig({
         "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph",
         "@hyperion/hyperion-autologging-visualizer/src/component/ALGraphInfo.react",
         "@hyperion/hyperion-autologging-visualizer/src/index",
+      ],
+      "hyperionAutoLoggingPluginEventHash": [
+        "@hyperion/hyperion-autologging-plugin-eventhash/src/index",
       ]
     },
     chunkFileNames: "[name].js",
@@ -141,6 +145,7 @@ export default defineConfig({
   },
   // preserveSymlinks: true,
   plugins: [
+    commonjs(),
     resolve({
       // // main: false,
       // mainFields: ['name', 'module', 'main'],

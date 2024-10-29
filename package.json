@@ -60,6 +60,7 @@
     "./packages/hyperion-flowlet",
     "./packages/hyperion-react",
     "./packages/hyperion-autologging",
+    "./packages/hyperion-autologging-plugin-eventhash",
     "./packages/hyperion-autologging-visualizer",
     "./packages/hyperion-util",
     "./packages/hyperion-docs",
@@ -68,6 +69,7 @@
   "dependencies": {
     "@hyperion/hyperion-async-counter": "*",
     "@hyperion/hyperion-autologging": "*",
+    "@hyperion/hyperion-autologging-plugin-eventhash": "*",
     "@hyperion/hyperion-autologging-visualizer": "*",
     "@hyperion/hyperion-channel": "*",
     "@hyperion/hyperion-core": "*",
@@ -96,6 +98,7 @@
     "md5": "^2.3.0",
     "rollup": "^4.18.0",
     "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-commonjs": "^10.1.0",
     "tslib": "^2.6.3",
     "typescript": "^5.5.2"
   }

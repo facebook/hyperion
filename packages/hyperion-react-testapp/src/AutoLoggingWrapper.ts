@@ -17,7 +17,7 @@ import { ALExtensibleEvent } from "@hyperion/hyperion-autologging/src/ALType";
 import { getEventExtension } from "@hyperion/hyperion-autologging/src/ALEventExtension";
 import * as Flags from "@hyperion/hyperion-global/src/Flags";
 import "@hyperion/hyperion-autologging/src/reference";
-
+import * as PluginEventHash from "@hyperion/hyperion-autologging-plugin-eventhash/src/index";
 
 export let interceptionStatus = "disabled";
 
@@ -61,6 +61,9 @@ export function init() {
   AutoLogging.init({
     flowletManager,
     channel,
+    plugins: [
+      PluginEventHash.init
+    ],
     componentNameValidator: testCompValidator,
     flowletPublisher: {
       channel
