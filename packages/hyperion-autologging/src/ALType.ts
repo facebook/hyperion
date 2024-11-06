@@ -63,7 +63,7 @@ export type ALLoggableEvent = ALTimedEvent & ALMetadataEvent & Readonly<{
 
 export type ALPageEvent = {
   // window.location.href when the event was captured
-  pageURI: string;
+  pageURI: URL;
 };
 
 export type ALReactElementEvent = Readonly<{

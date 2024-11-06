@@ -20,6 +20,7 @@ import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import { getAncestralSurfaceNode, getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
+import { getCurrMainPageUrl } from "./MainPageUrl";
 
 
 export type InitOptions = Types.Options<
@@ -81,7 +82,7 @@ export function publish(options: InitOptions): void {
       ...elementText,
       reactComponentName: reactComponentData?.name,
       reactComponentStack: reactComponentData?.stack,
-      pageURI: window.location.href,
+      pageURI: getCurrMainPageUrl(),
     });
   }
 

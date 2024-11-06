@@ -14,6 +14,7 @@ import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElem
 import { ReactComponentData } from './ALReactUtils';
 import type { ALChannelSurfaceEvent, ALSurfaceEventData, ALSurfaceCapability } from './ALSurface';
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
+import { getCurrMainPageUrl } from "./MainPageUrl";
 
 type ALMutationEvent =
   ALReactElementEvent &
@@ -114,7 +115,7 @@ export function publish(options: InitOptions): void {
             ...elementText,
             metadata, // already in the evet, need to add again?
             addTime: timestamp,
-            pageURI: window.location.href,
+            pageURI: getCurrMainPageUrl(),
           };
           activeSurfaces.set(surface, info);
 
