@@ -553,7 +553,7 @@ export class ALGraph<DynamicOptionsType extends ALGraphDynamicOptionsType = ALGr
   }
 
   protected getTupleNodeId(eventData: SupportedALEventData<'al_ui_event'>): GraphID {
-    const surfaceId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI);
+    const surfaceId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI.href);
     const componentId = this.getComponentNodeId(eventData.reactComponentName);
     const labelId = this.getLabelNodeId(eventData.elementName);
     this.addEdge(surfaceId, componentId);
@@ -781,7 +781,7 @@ export class ALGraph<DynamicOptionsType extends ALGraphDynamicOptionsType = ALGr
     this.startBatch();
     const id = this.getALEventNodeId(eventName, eventData);
     if (this.dynamicOptions?.edges.tuple) {
-      const tupleId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI);
+      const tupleId = this.getSurfaceNodeId(eventData.surface, eventData.pageURI.href);
       this.addEdge(tupleId, id);
     }
     this.endBatch();

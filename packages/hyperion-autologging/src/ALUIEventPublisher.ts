@@ -19,6 +19,7 @@ import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import * as Flags from "@hyperion/hyperion-global/src/Flags";
+import { getCurrMainPageUrl } from "./MainPageUrl";
 
 
 /**
@@ -220,7 +221,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     autoLoggingID,
     metadata,
     value,
-    pageURI: window.location.href,
+    pageURI: getCurrMainPageUrl(),
   };
 }
 
