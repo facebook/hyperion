@@ -2,46 +2,48 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Hyperion Introduction
 
-Let's discover **Docusaurus in less than 5 minutes**.
+Hyperion is thin and high performance layer that enables
+adding [aspects](https://en.wikipedia.org/wiki/Aspect-oriented_programming) to JavaScript.
+
+With aspects, we can avoid littering the main application code
+with auxilary logic and you can keep all of the related logic
+of a particular aspect in one place.
+
+Hyperion enables **intercepting function, class methods, and attribute accesses on object**. This interception enables unparallel level of "observability" and "control" for aspects.
+
+Hyperion's interception is designed carefully to be JIT friendly with very little performance overhead. The module setup is "tree-shaking" friendly so that you only endup with code that your application really need. Hyperion works well with deep-prototype chains on classes and can eaisly handle inconsistent prototype chains of DOM Classes among various browser implementations. 
+
+Hyperion source code is devided into separate packages to make code dependencies explicit and corresponding modules very composable. Please refer to the packages section to see the purpose of each subcomponents of Hyperion.
 
 ## Getting Started
 
-Get started by **creating a new site**.
-
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
-
-### What you'll need
-
-- [Node.js](https://nodejs.org/en/download/) version 16.14 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
+First install hyperion from npm
 
 ```bash
-npm init docusaurus@latest my-website classic
+npm install hyperionj
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+Now you should decide which feature of Hyperion you want to use. Refer to packages for various features.
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+## Buidling code
 
-## Start your site
-
-Run the development server:
+Once you clone the code, install packages and build the code
 
 ```bash
-cd my-website
-npm run start
+git clone https://github.com/facebook/hyperion.git
+cd hyperion
+npm install
+npm run install-packages
+npm run build
+npm test
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+You can try a test application via the following
+```bash
+npm run start -w @hyperion/hyperion-react-testapp
+```
+Once the application opens a new browser tab, make sure to open
+dev console to see various types of events events firing.
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
