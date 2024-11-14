@@ -1,7 +1,7 @@
 {
   "name": "hyperionjs",
   "description": "Hyperion library to extend objects with 'aspects' automatically",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "main": "dist/index.js",
   "type": "module",
