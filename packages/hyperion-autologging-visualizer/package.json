@@ -1,7 +1,7 @@
 {
   "name": "hyperion-autologging-visualizer",
   "description": "visualizer tool for autologging",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc",

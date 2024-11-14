@@ -42,7 +42,7 @@ npm test
 
 You can try a test application via the following
 ```bash
-npm run start -w @hyperion/hyperion-react-testapp
+npm run start -w hyperion-react-testapp
 ```
 Once the application opens a new browser tab, make sure to open
 dev console to see various types of events events firing.

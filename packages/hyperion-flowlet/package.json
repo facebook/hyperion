@@ -1,7 +1,7 @@
 {
   "name": "hyperion-flowlet",
   "description": "Tracking the async execution flow of the application",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc",

@@ -1,7 +1,7 @@
 {
   "name": "hyperion-timed-trigger",
   "description": "Timed Trigger function to run one directly or based on a timer",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
