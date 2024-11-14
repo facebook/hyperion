@@ -4,13 +4,13 @@
 
 import * as React from "react";
 import { SyncChannel } from "../Channel";
-import { ALChannelEvent } from "@hyperion/hyperion-autologging/src/AutoLogging";
-import { ALSessionGraph } from "@hyperion/hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
-import { ALGraphInfo } from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraphInfo.react";
-import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
-import { ALFlowletEvent } from "@hyperion/hyperion-autologging/src/ALType";
-import * as  ALGraph from "@hyperion/hyperion-autologging-visualizer/src/component/ALGraph";
-import { getEventExtension } from "@hyperion/hyperion-autologging/src/ALEventExtension";
+import { ALChannelEvent } from "hyperion-autologging/src/AutoLogging";
+import { ALSessionGraph } from "hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
+import { ALGraphInfo } from "hyperion-autologging-visualizer/src/component/ALGraphInfo.react";
+import { LocalStoragePersistentData } from "hyperion-util/src/PersistentData";
+import { ALFlowletEvent } from "hyperion-autologging/src/ALType";
+import * as  ALGraph from "hyperion-autologging-visualizer/src/component/ALGraph";
+import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
 
 const EventsWithFlowlet = [
   'al_ui_event',

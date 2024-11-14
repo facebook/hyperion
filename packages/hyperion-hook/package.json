@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-hook",
+  "name": "hyperion-hook",
   "description": "Hook utility to support 'aspects' in the framework",
   "version": "0.1.0",
   "license": "MIT",
@@ -21,7 +20,7 @@
     "../hyperion-devtools"
   ],
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "^0.1.0",
+    "hyperion-devtools": "^0.1.0",
     "@types/jest": "^29.5.3"
   }
 }

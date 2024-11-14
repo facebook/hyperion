@@ -5,12 +5,12 @@
  */
 
 import "jest";
-import { intercept } from "@hyperion/hyperion-core/src/intercept";
+import { intercept } from "hyperion-core/src/intercept";
 
-import { Channel } from "@hyperion/hyperion-channel/src/Channel";
+import { Channel } from "hyperion-channel/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
 import * as ALNetworkPublisher from "../src/ALNetworkPublisher";
-import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
+import { initFlowletTrackers } from "hyperion-flowlet/src/FlowletWrappers";
 
 describe("Network event publisher", () => {
   beforeEach(() => {

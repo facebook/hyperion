@@ -6,7 +6,7 @@
 
 import "jest";
 import * as IEvent from "../src/IEvent";
-import * as intercept from "@hyperion/hyperion-core/src/intercept";
+import * as intercept from "hyperion-core/src/intercept";
 
 describe('test Event interception', () => {
   test('test base Event', () => {

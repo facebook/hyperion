@@ -2,14 +2,14 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as IPromise from "@hyperion/hyperion-core/src/IPromise";
-import * as intercept from "@hyperion/hyperion-core/src/intercept";
-import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
-import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
-import { getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
-import { assert } from "@hyperion/hyperion-global";
-import * as Types from "@hyperion/hyperion-util/src/Types";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import * as IPromise from "hyperion-core/src/IPromise";
+import * as intercept from "hyperion-core/src/intercept";
+import * as IWindow from "hyperion-dom/src/IWindow";
+import * as IXMLHttpRequest from "hyperion-dom/src/IXMLHttpRequest";
+import { getTriggerFlowlet, setTriggerFlowlet } from "hyperion-flowlet/src/TriggerFlowlet";
+import { assert } from "hyperion-global";
+import * as Types from "hyperion-util/src/Types";
+import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import * as ALEventIndex from "./ALEventIndex";
 import { ALLoggableEvent, ALOptionalFlowletEvent, ALSharedInitOptions } from "./ALType";
 

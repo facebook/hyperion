@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import globalScope from "@hyperion/hyperion-global/src/global";
+import globalScope from "hyperion-global/src/global";
 import { interceptMethod } from "./MethodInterceptor";
 import { ShadowPrototype } from "./ShadowPrototype";
 import { getOwnShadowPrototypeOf } from "./intercept";

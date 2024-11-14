@@ -2,14 +2,14 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as IGlobalThis from "@hyperion/hyperion-core/src/IGlobalThis";
-import * as IPromise from "@hyperion/hyperion-core/src/IPromise";
-import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
-// import * as IGlobalEventHandlers from "@hyperion/hyperion-dom/src/IGlobalEventHandlers";
-import * as IWindow from "@hyperion/hyperion-dom/src/IWindow";
-// import * as IWorker from "@hyperion/hyperion-dom/src/IWorker";
-import * as IXMLHttpRequest from "@hyperion/hyperion-dom/src/IXMLHttpRequest";
-import TestAndSet from "@hyperion/hyperion-test-and-set/src/TestAndSet";
+import * as IGlobalThis from "hyperion-core/src/IGlobalThis";
+import * as IPromise from "hyperion-core/src/IPromise";
+import * as IEventTarget from "hyperion-dom/src/IEventTarget";
+// import * as IGlobalEventHandlers from "hyperion-dom/src/IGlobalEventHandlers";
+import * as IWindow from "hyperion-dom/src/IWindow";
+// import * as IWorker from "hyperion-dom/src/IWorker";
+import * as IXMLHttpRequest from "hyperion-dom/src/IXMLHttpRequest";
+import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
 import { FlowletManager } from "./FlowletManager";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "./TriggerFlowlet";
 

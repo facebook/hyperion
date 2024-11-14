@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { AttributeInterceptorBase } from "@hyperion/hyperion-core/src/AttributeInterceptor";
+import { AttributeInterceptorBase } from "hyperion-core/src/AttributeInterceptor";
 
 export class VirtualAttribute<
   BaseType extends { [key: string]: any } = Element,

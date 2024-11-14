@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-autologging",
+  "name": "hyperion-autologging",
   "description": "Automatically track features and their usage in a web or react application",
   "version": "0.1.0",
   "license": "MIT",
@@ -22,20 +21,19 @@
     "../hyperion-react"
   ],
   "dependencies": {
-    "@hyperion/hyperion-global": "*",
-    "@hyperion/hyperion-hook": "*",
-    "@hyperion/hyperion-channel": "*",
-    "@hyperion/hyperion-timed-trigger": "*",
-    "@hyperion/hyperion-test-and-set": "*",
-    "@hyperion/hyperion-dom": "*",
-    "@hyperion/hyperion-react": "*"
+    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-channel": "*",
+    "hyperion-timed-trigger": "*",
+    "hyperion-test-and-set": "*",
+    "hyperion-dom": "*",
+    "hyperion-react": "*"
   },
   "peerDependencies": {
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.7"
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "*",
+    "hyperion-devtools": "*",
     "@types/jest": "^29.5.3"
   },
   "eslintConfig": {

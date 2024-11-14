@@ -4,12 +4,12 @@
 
 'use strict';
 
-import { Channel, ChannelEventType } from "@hyperion/hyperion-channel/src/Channel";
-import { initFlowletTrackers } from "@hyperion/hyperion-flowlet/src/FlowletWrappers";
-import { assert } from "@hyperion/hyperion-global";
-import global from "@hyperion/hyperion-global/src/global";
-import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import * as Types from "@hyperion/hyperion-util/src/Types";
+import { Channel, ChannelEventType } from "hyperion-channel/src/Channel";
+import { initFlowletTrackers } from "hyperion-flowlet/src/FlowletWrappers";
+import { assert } from "hyperion-global";
+import global from "hyperion-global/src/global";
+import * as IReactComponent from "hyperion-react/src/IReactComponent";
+import * as Types from "hyperion-util/src/Types";
 import * as ALCustomEvent from "./ALCustomEvent";
 import * as ALElementValuePublisher from "./ALElementValuePublisher";
 import * as ALFlowletPublisher from "./ALFlowletPublisher";

@@ -2,9 +2,9 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Hook } from "@hyperion/hyperion-hook";
-import * as INode from "@hyperion/hyperion-dom/src/INode";
-import * as IElement from "@hyperion/hyperion-dom/src/IElement";
+import { Hook } from "hyperion-hook";
+import * as INode from "hyperion-dom/src/INode";
+import * as IElement from "hyperion-dom/src/IElement";
 
 interface MutationAction<Action extends "added" | "removed"> {
   action: Action

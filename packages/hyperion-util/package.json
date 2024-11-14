@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-util",
+  "name": "hyperion-util",
   "description": "Capabilities built using DOM interception",
   "version": "0.1.0",
   "license": "MIT",
@@ -18,13 +17,12 @@
     "../hyperion-dom"
   ],
   "dependencies": {
-    "@hyperion/hyperion-global": "*",
-    "@hyperion/hyperion-hook": "*",
-    "@hyperion/hyperion-timed-trigger": "*",
-    "@hyperion/hyperion-dom": "*"
+    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-timed-trigger": "*",
+    "hyperion-dom": "*"
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "*",
+    "hyperion-devtools": "*",
     "@types/jest": "^29.5.3"
   }
 }

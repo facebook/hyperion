@@ -2,13 +2,13 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 // import React, {useState, useCallback, useRef, useEffect} from "react";
-import { IALFlowlet } from "@hyperion/hyperion-autologging/src/ALFlowletManager";
-import { ALFlowletEventData } from "@hyperion/hyperion-autologging/src/ALFlowletPublisher";
-import { AdsALHeartbeatEventData } from "@hyperion/hyperion-autologging/src/ALHeartbeat";
-import { ALNetworkRequestEvent, ALNetworkResponseEvent } from "@hyperion/hyperion-autologging/src/ALNetworkPublisher";
-import { ALSurfaceMutationEventData } from "@hyperion/hyperion-autologging/src/ALSurfaceMutationPublisher";
-import { ALUIEventBubbleData, ALUIEventCaptureData, ALUIEventData } from "@hyperion/hyperion-autologging/src/ALUIEventPublisher";
-import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
+import { IALFlowlet } from "hyperion-autologging/src/ALFlowletManager";
+import { ALFlowletEventData } from "hyperion-autologging/src/ALFlowletPublisher";
+import { AdsALHeartbeatEventData } from "hyperion-autologging/src/ALHeartbeat";
+import { ALNetworkRequestEvent, ALNetworkResponseEvent } from "hyperion-autologging/src/ALNetworkPublisher";
+import { ALSurfaceMutationEventData } from "hyperion-autologging/src/ALSurfaceMutationPublisher";
+import { ALUIEventBubbleData, ALUIEventCaptureData, ALUIEventData } from "hyperion-autologging/src/ALUIEventPublisher";
+import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
 import type cytoscape from 'cytoscape';
 import React from "react";
 import CytoscapeComponent from 'react-cytoscapejs';

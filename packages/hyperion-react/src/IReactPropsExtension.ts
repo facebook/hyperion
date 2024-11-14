@@ -2,9 +2,9 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import type * as Types from "@hyperion/hyperion-util/src/Types";
+import type * as Types from "hyperion-util/src/Types";
 
-import TestAndSet from "@hyperion/hyperion-test-and-set/src/TestAndSet";
+import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
 import * as IReactComponent from "./IReactComponent";
 
 export interface ExtendedProps<T> extends React.PropsWithChildren {

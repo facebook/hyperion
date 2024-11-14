@@ -4,8 +4,8 @@
 
 'use strict';
 
-import { ChannelEventType } from "@hyperion/hyperion-channel/src/Channel";
-import * as Types from "@hyperion/hyperion-util/src/Types";
+import { ChannelEventType } from "hyperion-channel/src/Channel";
+import * as Types from "hyperion-util/src/Types";
 import * as ALEventIndex from "./ALEventIndex";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";

@@ -2,9 +2,9 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Hook } from "@hyperion/hyperion-hook";
-import { interceptElementAttribute } from "@hyperion/hyperion-dom/src/ElementAttributeInterceptor";
-import { IElementtPrototype } from "@hyperion/hyperion-dom/src/IElement";
+import { Hook } from "hyperion-hook";
+import { interceptElementAttribute } from "hyperion-dom/src/ElementAttributeInterceptor";
+import { IElementtPrototype } from "hyperion-dom/src/IElement";
 
 type ResultHook = Hook<(elem: Element, attrbuteName: string, attrbuteValue: string) => void>
 

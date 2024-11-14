@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-autologging-visualizer",
+  "name": "hyperion-autologging-visualizer",
   "description": "visualizer tool for autologging",
   "version": "0.1.0",
   "license": "MIT",
@@ -20,10 +19,9 @@
     "../hyperion-autologging"
   ],
   "dependencies": {
-    "@hyperion/hyperion-dom": "*",
-    "@hyperion/hyperion-global": "*",
-    "@hyperion/hyperion-hook": "*",
-    "@hyperion/hyperion-react": "*",
+    "hyperion-dom": "*",
+    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-react": "*",
     "@types/cytoscape": "^3.21.2",
     "@types/cytoscape-fcose": "^2.2.4",
     "cytoscape": "^3.26.0",
@@ -40,7 +38,7 @@
     "@types/react-dom": "^18.2.7"
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "*",
+    "hyperion-devtools": "*",
     "@types/cytoscape-dagre": "^2.3.3",
     "@types/cytoscape-klay": "^3.1.2",
     "@types/jest": "^29.5.4",

@@ -2,9 +2,9 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Channel } from "@hyperion/hyperion-channel/src/Channel";
-import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
-import * as Types from "@hyperion/hyperion-util/src/Types";
+import { Channel } from "hyperion-channel/src/Channel";
+import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
+import * as Types from "hyperion-util/src/Types";
 import React, {useEffect, useState} from "react";
 
 export type InitOptions = Types.Options<

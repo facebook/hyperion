@@ -3,8 +3,8 @@
  */
 
 'use strict';
-import type { ALChannelEvent } from "@hyperion/hyperion-autologging/src/AutoLogging";
-import { Channel } from "@hyperion/hyperion-channel";
+import type { ALChannelEvent } from "hyperion-autologging/src/AutoLogging";
+import { Channel } from "hyperion-channel";
 import * as XXH from "xxhashjs"
 
 export function init(channel: Channel<ALChannelEvent>): void {

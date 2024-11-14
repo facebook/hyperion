@@ -4,8 +4,8 @@
 
 'use strict';
 
-import type { GUID } from "@hyperion/hyperion-util/src/guid";
-import { guid } from "@hyperion/hyperion-util/src/guid";
+import type { GUID } from "hyperion-util/src/guid";
+import { guid } from "hyperion-util/src/guid";
 
 export type ALID = GUID;
 

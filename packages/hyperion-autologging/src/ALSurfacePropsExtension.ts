@@ -3,8 +3,8 @@
  */
 'use strict';
 
-import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
-import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
+import { Flowlet } from "hyperion-flowlet/src/Flowlet";
+import * as IReactFlowlet from "hyperion-react/src/IReactFlowlet";
 import { ALFlowletDataType } from "./ALFlowletManager";
 
 

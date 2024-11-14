@@ -3,26 +3,26 @@
  */
 
 'use strict';
-import type * as Types from "@hyperion/hyperion-util/src/Types";
+import type * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 
-import { assert } from "@hyperion/hyperion-global";
-import { Channel } from "@hyperion/hyperion-channel/src/Channel";
-import { getFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
-import { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
-import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
-import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
-import * as IReact from "@hyperion/hyperion-react/src/IReact";
-import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import TestAndSet from "@hyperion/hyperion-test-and-set/src/TestAndSet";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import { assert } from "hyperion-global";
+import { Channel } from "hyperion-channel/src/Channel";
+import { getFunctionInterceptor, interceptFunction } from "hyperion-core/src/FunctionInterceptor";
+import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
+import * as IEventTarget from "hyperion-dom/src/IEventTarget";
+import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "hyperion-flowlet/src/TriggerFlowlet";
+import * as IReact from "hyperion-react/src/IReact";
+import * as IReactComponent from "hyperion-react/src/IReactComponent";
+import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
+import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
-import * as  Flowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
+import * as  Flowlet from "hyperion-flowlet/src/Flowlet";
 
 export type InitOptions<> = Types.Options<
   {

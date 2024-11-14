@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-test-and-set",
+  "name": "hyperion-test-and-set",
   "description": "A simple utility to test and set values.",
   "version": "0.1.0",
   "license": "MIT",
@@ -16,7 +15,7 @@
   "dependencies": {
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "*",
+    "hyperion-devtools": "*",
     "@types/jest": "^29.5.3"
   }
 }

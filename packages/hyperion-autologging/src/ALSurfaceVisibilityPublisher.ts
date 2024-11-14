@@ -4,14 +4,14 @@
 
 'use strict';
 
-import * as Types from "@hyperion/hyperion-util/src/Types";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import * as Types from "hyperion-util/src/Types";
+import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import { ALChannelSurfaceMutationEvent, ALSurfaceMutationEventData } from "./ALSurfaceMutationPublisher";
 import * as ALSurfaceUtils from './ALSurfaceUtils';
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALSharedInitOptions } from "./ALType";
 
 import * as ALEventIndex from './ALEventIndex';
-import { assert } from "@hyperion/hyperion-global";
+import { assert } from "hyperion-global";
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 

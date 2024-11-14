@@ -2,8 +2,8 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { FlowletManager as BaseFlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
-import { Flowlet, FlowletDataType } from "@hyperion/hyperion-flowlet/src/Flowlet";
+import { FlowletManager as BaseFlowletManager } from "hyperion-flowlet/src/FlowletManager";
+import { Flowlet, FlowletDataType } from "hyperion-flowlet/src/Flowlet";
 
 
 

@@ -2,9 +2,9 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { AttributeInterceptor, AttributeInterceptorBase, interceptAttributeBase } from "@hyperion/hyperion-core/src/AttributeInterceptor";
-import { ExtendedPropertyDescriptor } from "@hyperion/hyperion-core/src/PropertyInterceptor";
-import { ShadowPrototype } from "@hyperion/hyperion-core/src/ShadowPrototype";
+import { AttributeInterceptor, AttributeInterceptorBase, interceptAttributeBase } from "hyperion-core/src/AttributeInterceptor";
+import { ExtendedPropertyDescriptor } from "hyperion-core/src/PropertyInterceptor";
+import { ShadowPrototype } from "hyperion-core/src/ShadowPrototype";
 import * as IAttrCustom from "./IAttrCustom";
 import * as IElementCustom from "./IElementCustom";
 import * as IElement from "./IElement_";

@@ -4,11 +4,11 @@
 
 'use strict';
 
-import { ChannelEventType } from "@hyperion/hyperion-channel/src/Channel";
-import * as IElement from "@hyperion/hyperion-dom/src/IElement";
-import * as IHTMLInputElement from "@hyperion/hyperion-dom/src/IHTMLInputElement";
-import * as Types from "@hyperion/hyperion-util/src/Types";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import { ChannelEventType } from "hyperion-channel/src/Channel";
+import * as IElement from "hyperion-dom/src/IElement";
+import * as IHTMLInputElement from "hyperion-dom/src/IHTMLInputElement";
+import * as Types from "hyperion-util/src/Types";
+import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from "./ALElementInfo";
 import * as ALEventIndex from "./ALEventIndex";
 import * as ALID from './ALID';

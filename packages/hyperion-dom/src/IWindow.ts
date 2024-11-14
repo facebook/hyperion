@@ -2,8 +2,8 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
-import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
+import { interceptConstructorMethod } from "hyperion-core/src/ConstructorInterceptor";
+import { interceptMethod } from "hyperion-core/src/MethodInterceptor";
 import { DOMShadowPrototype } from "./DOMShadowPrototype";
 import { interceptEventHandlerAttribute } from "./EventHandlerAttributeInterceptor";
 import { IEventTargetPrototype } from "./IEventTarget";

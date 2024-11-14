@@ -3,7 +3,7 @@
  */
 
 import "jest";
-import { AsyncCounter } from "@hyperion/hyperion-async-counter/src/AsyncCounter";
+import { AsyncCounter } from "hyperion-async-counter/src/AsyncCounter";
 import * as IGlobalThis from "../src/IGlobalThis";
 import { interceptFunction } from "../src/FunctionInterceptor";
 

@@ -5,8 +5,8 @@
 'use strict';
 
 
-import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
-import * as Types from "@hyperion/hyperion-util/src/Types";
+import * as IReactDOM from "hyperion-react/src/IReactDOM";
+import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletManager } from './ALFlowletManager';
 import { SurfaceComponent } from './ALSurface';

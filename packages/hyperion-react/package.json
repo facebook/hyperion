@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-react",
+  "name": "hyperion-react",
   "description": "Utility to intercept React api and add 'aspects' to them",
   "version": "0.1.0",
   "license": "MIT",
@@ -18,17 +17,16 @@
     "../hyperion-dom"
   ],
   "dependencies": {
-    "@hyperion/hyperion-global": "*",
-    "@hyperion/hyperion-hook": "*",
-    "@hyperion/hyperion-test-and-set": "*",
-    "@hyperion/hyperion-dom": "*",
+    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-test-and-set": "*",
+    "hyperion-dom": "*",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.7",
     "@types/react-is": "^18.3.0",
     "react-is": "^18.3.1"
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "*",
+    "hyperion-devtools": "*",
     "@types/jest": "^29.5.3"
   }
 }

@@ -1,9 +1,9 @@
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
-import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
-import { Channel } from "@hyperion/hyperion-channel";
-import { LocalStoragePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
+import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
+import { Channel } from "hyperion-channel";
+import { LocalStoragePersistentData } from "hyperion-util/src/PersistentData";
 import cytoscape from 'cytoscape';
 import React, { useState } from "react";
 import * as ALGraph from "./ALGraph";

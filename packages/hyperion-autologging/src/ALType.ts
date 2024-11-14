@@ -5,8 +5,8 @@
 'use strict';
 import "./reference";
 
-import type { BaseChannelEventType, Channel } from "@hyperion/hyperion-channel/src/Channel";
-import * as Types from "@hyperion/hyperion-util/src/Types";
+import type { BaseChannelEventType, Channel } from "hyperion-channel/src/Channel";
+import * as Types from "hyperion-util/src/Types";
 import { ALFlowletManager, IALFlowlet } from './ALFlowletManager';
 import { ALID } from "./ALID";
 

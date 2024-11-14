@@ -4,10 +4,10 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hyperion-channel/src/Channel";
+import type { Channel } from "hyperion-channel/src/Channel";
 
 import { ALLoggableEvent, ALMetadataEvent, ALOptionalFlowletEvent, ALTimedEvent } from "./ALType";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import * as ALEventIndex from "./ALEventIndex";
 import { ALFlowletDataType, ALFlowletManager } from "./ALFlowletManager";
 
