@@ -18,7 +18,7 @@ import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
-import * as Flags from "hyperion-global/src/Flags";
+import * as Flags from "hyperion-globals/src/Flags";
 import { getCurrMainPageUrl } from "./MainPageUrl";
 
 

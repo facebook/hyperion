@@ -11,7 +11,7 @@ import * as ALSurfaceUtils from './ALSurfaceUtils';
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALSharedInitOptions } from "./ALType";
 
 import * as ALEventIndex from './ALEventIndex';
-import { assert } from "hyperion-global";
+import { assert } from "hyperion-globals";
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 

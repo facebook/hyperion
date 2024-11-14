@@ -1,7 +1,7 @@
 {
   "name": "hyperion-autologging-visualizer",
   "description": "visualizer tool for autologging",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -12,7 +12,7 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../hyperion-global",
+    "../hyperion-globals",
     "../hyperion-hook",
     "../hyperion-dom",
     "../hyperion-react",
@@ -20,7 +20,8 @@
   ],
   "dependencies": {
     "hyperion-dom": "*",
-    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-globals": "*",
+    "hyperion-hook": "*",
     "hyperion-react": "*",
     "@types/cytoscape": "^3.21.2",
     "@types/cytoscape-fcose": "^2.2.4",

@@ -10,7 +10,7 @@ import LargeComp from './component/LargeComponent';
 import NestedComponent from './component/NestedComponent';
 import NonInteractiveSurfaceComponent from './component/NonInteractiveSurfaceComponent';
 import ALEventLogger from './component/ALEventLogger';
-import { LocalStoragePersistentData } from '@hyperion/hyperion-util/src/PersistentData';
+import { LocalStoragePersistentData } from 'hyperion-util/src/PersistentData';
 import ALGraphView from './component/ALGraphView';
 import ResizableSplitView from "hyperion-autologging-visualizer/src/component/ResizableSplitView.react";
 import { PortalBodyContainerComponent } from './component/PortalComponent';

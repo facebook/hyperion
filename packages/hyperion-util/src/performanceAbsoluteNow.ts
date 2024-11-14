@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { assert } from "hyperion-global";
+import { assert } from "hyperion-globals";
 
 /**
  * Sometimes we want absolute time and we

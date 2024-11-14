@@ -13,9 +13,9 @@ export default defineConfig({
     // file: './dist/hyperion.js',
     dir: './dist',
     manualChunks: {
-      "hyperionGlobal": [
-        "hyperion-global/src/assert",
-        "hyperion-global/src/index",
+      "hyperionGlobals": [
+        "hyperion-globals/src/assert",
+        "hyperion-globals/src/index",
       ],
       "hyperionHook": [
         "hyperion-hook/src/Hook",

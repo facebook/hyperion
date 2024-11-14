@@ -1,7 +1,7 @@
 {
   "name": "hyperion-autologging",
   "description": "Automatically track features and their usage in a web or react application",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -12,7 +12,7 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../hyperion-global",
+    "../hyperion-globals",
     "../hyperion-hook",
     "../hyperion-channel",
     "../hyperion-timed-trigger",
@@ -21,7 +21,8 @@
     "../hyperion-react"
   ],
   "dependencies": {
-    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-globals": "*",
+    "hyperion-hook": "*",
     "hyperion-channel": "*",
     "hyperion-timed-trigger": "*",
     "hyperion-test-and-set": "*",

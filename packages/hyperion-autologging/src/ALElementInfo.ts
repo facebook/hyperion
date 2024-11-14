@@ -22,6 +22,7 @@ export default class ALElementInfo {
     element: Element
   ) {
     this.element = element;
+    // @ts-ignore
     intercept(element, IElement.IElementtPrototype); // This also ensures that proper interception is setup.
     setVirtualPropertyValue(
       element,

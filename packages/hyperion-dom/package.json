@@ -1,7 +1,7 @@
 {
   "name": "hyperion-dom",
   "description": "DOM utility to intercept DOM api and 'aspects' to them",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -11,17 +11,17 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../hyperion-global",
+    "../hyperion-globals",
     "../hyperion-hook",
     "../hyperion-core"
   ],
   "dependencies": {
-    "hyperion-global": "^0.1.0",
-    "hyperion-hook": "^0.1.0",
-    "hyperion-core": "^0.1.0"
+    "hyperion-globals": "*",
+    "hyperion-hook": "*",
+    "hyperion-core": "*"
   },
   "devDependencies": {
-    "hyperion-devtools": "^0.1.0",
+    "hyperion-devtools": "*",
     "@types/jest": "^29.5.3",
     "cross-fetch": "^4.0.0",
     "xhr-mock": "^2.5.1"

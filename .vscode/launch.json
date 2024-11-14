@@ -26,7 +26,7 @@
       // "preLaunchTask": "npm: build",
       // "cwd": "${workspaceFolder}",
       // "cwd": "${workspaceRoot}/packages/hyperion-devtools",
-      // "cwd": "${workspaceRoot}/packages/hyperion-global",
+      // "cwd": "${workspaceRoot}/packages/hyperion-globals",
       // "cwd": "${workspaceRoot}/packages/hyperion-hook",
       // "cwd": "${workspaceRoot}/packages/hyperion-channel",
       "cwd": "${workspaceRoot}/packages/hyperion-autologging",

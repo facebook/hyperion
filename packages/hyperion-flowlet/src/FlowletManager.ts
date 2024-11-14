@@ -4,8 +4,8 @@
 
 import { InterceptableFunction, getFunctionInterceptor, interceptFunction } from "hyperion-core/src/FunctionInterceptor";
 import { CallbackType, interceptEventListener, isEventListenerObject } from "hyperion-dom/src/IEventListener";
-import { assert, getLogger } from "hyperion-global";
-import * as Flags from "hyperion-global/src/Flags";
+import { assert, getLogger } from "hyperion-globals";
+import * as Flags from "hyperion-globals/src/Flags";
 import { Hook } from "hyperion-hook";
 import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
 import { Flowlet } from "./Flowlet";

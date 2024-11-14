@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { assert } from "hyperion-global/src/assert";
+import { assert } from "hyperion-globals/src/assert";
 import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
 
 type IStorage = Pick<Storage, 'getItem' | 'setItem'>;

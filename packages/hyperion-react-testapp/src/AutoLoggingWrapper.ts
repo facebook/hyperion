@@ -15,7 +15,7 @@ import { SyncChannel } from "./Channel";
 import { FlowletManager } from "./FlowletManager";
 import { ALExtensibleEvent } from "hyperion-autologging/src/ALType";
 import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
-import * as Flags from "hyperion-global/src/Flags";
+import * as Flags from "hyperion-globals/src/Flags";
 import "hyperion-autologging/src/reference";
 import * as PluginEventHash from "hyperion-autologging-plugin-eventhash/src/index";
 

@@ -1,7 +1,7 @@
 {
   "name": "hyperion-async-counter",
   "description": "async counter utility",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "author": "Mehrdad Reshadi",
   "main": "./src/AsyncCounter.js",

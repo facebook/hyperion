@@ -1,7 +1,7 @@
 {
   "name": "hyperion-devtools",
   "description": "set of configs and tools for development",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "license": "MIT",
   "author": "Mehrdad Reshadi",
   "scripts": {

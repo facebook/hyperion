@@ -6,7 +6,7 @@
 
 import * as IElement from "hyperion-dom/src/IElement";
 import { Flowlet } from "hyperion-flowlet/src/Flowlet";
-import { assert } from "hyperion-global";
+import { assert } from "hyperion-globals";
 import * as IReact from "hyperion-react/src/IReact";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import * as IReactElementVisitor from 'hyperion-react/src/IReactElementVisitor';

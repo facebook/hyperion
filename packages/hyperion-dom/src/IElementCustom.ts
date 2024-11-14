@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { assert } from "hyperion-global";
+import { assert } from "hyperion-globals";
 import { getVirtualAttribute } from "./DOMShadowPrototype";
 import * as IElement from "./IElement_";
 

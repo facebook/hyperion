@@ -5,7 +5,7 @@
 'use strict';
 
 // hyperionGlobal
-export * from "hyperion-global/src/index";
+export * from "hyperion-globals/src/index";
 
 // hyperionAsyncCounter
 export * from "hyperion-async-counter/src/index";

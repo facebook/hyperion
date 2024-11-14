@@ -7,7 +7,7 @@ import * as intercept from "hyperion-core/src/intercept";
 import * as IWindow from "hyperion-dom/src/IWindow";
 import * as IXMLHttpRequest from "hyperion-dom/src/IXMLHttpRequest";
 import { getTriggerFlowlet, setTriggerFlowlet } from "hyperion-flowlet/src/TriggerFlowlet";
-import { assert } from "hyperion-global";
+import { assert } from "hyperion-globals";
 import * as Types from "hyperion-util/src/Types";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import * as ALEventIndex from "./ALEventIndex";

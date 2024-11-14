@@ -7,7 +7,7 @@ import { ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent } from 'hyperion-aut
 import { ALChannelEvent } from 'hyperion-autologging/src/AutoLogging';
 import { Channel, PausableChannel } from 'hyperion-channel';
 import { Flowlet } from 'hyperion-flowlet/src/Flowlet';
-import { assert } from 'hyperion-global';
+import { assert } from 'hyperion-globals';
 import { Nullable } from 'hyperion-util/src/Types';
 import cytoscape from 'cytoscape';
 import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigDagre';
