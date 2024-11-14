@@ -1,7 +1,7 @@
 {
   "name": "hyperion-react",
   "description": "Utility to intercept React api and add 'aspects' to them",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc",

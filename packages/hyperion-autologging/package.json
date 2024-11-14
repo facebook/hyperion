@@ -1,7 +1,7 @@
 {
   "name": "hyperion-autologging",
   "description": "Automatically track features and their usage in a web or react application",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc",

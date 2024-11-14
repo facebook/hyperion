@@ -1,7 +1,7 @@
 {
   "name": "hyperion-autologging-plugin-eventhash",
   "description": "plugin for autologging to add a hash to each event",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc",

@@ -1,7 +1,7 @@
 {
   "name": "hyperion-util",
   "description": "Capabilities built using DOM interception",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
