@@ -1,7 +1,7 @@
 {
   "name": "hyperion-core",
   "description": "Core utility to intercept objects and add 'aspects' to them",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -11,12 +11,13 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../hyperion-global",
+    "../hyperion-globals",
     "../hyperion-async-counter",
     "../hyperion-hook"
   ],
   "dependencies": {
-    "hyperion-globals": "*",    "hyperion-hook": "*"
+    "hyperion-globals": "*",
+    "hyperion-hook": "*"
   },
   "devDependencies": {
     "hyperion-devtools": "*",

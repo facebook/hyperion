@@ -8,7 +8,7 @@ import { ReactComponentObjectProps } from "hyperion-react/src/IReact";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import type * as Types from "hyperion-util/src/Types";
 import type { UIEventConfig } from "./ALUIEventPublisher";
-import { getFlags } from "hyperion-global";
+import { getFlags } from "hyperion-globals";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
 
 'use strict';

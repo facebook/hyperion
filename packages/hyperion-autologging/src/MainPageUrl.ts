@@ -5,7 +5,7 @@
 'use strict';
 
 import * as IHistory from "hyperion-dom/src/IHistory";
-import { assert, getLogger } from "hyperion-global";
+import { assert, getLogger } from "hyperion-globals";
 import { Hook } from "hyperion-hook";
 
 let mainPageUrl: URL = new URL('http://undefined');

@@ -6,8 +6,8 @@
 
 import { Channel, ChannelEventType } from "hyperion-channel/src/Channel";
 import { initFlowletTrackers } from "hyperion-flowlet/src/FlowletWrappers";
-import { assert } from "hyperion-global";
-import global from "hyperion-global/src/global";
+import { assert } from "hyperion-globals";
+import global from "hyperion-globals/src/global";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import * as Types from "hyperion-util/src/Types";
 import * as ALCustomEvent from "./ALCustomEvent";

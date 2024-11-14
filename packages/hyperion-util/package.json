@@ -1,7 +1,7 @@
 {
   "name": "hyperion-util",
   "description": "Capabilities built using DOM interception",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -11,13 +11,14 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../hyperion-global",
+    "../hyperion-globals",
     "../hyperion-hook",
     "../hyperion-timed-trigger",
     "../hyperion-dom"
   ],
   "dependencies": {
-    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-globals": "*",
+    "hyperion-hook": "*",
     "hyperion-timed-trigger": "*",
     "hyperion-dom": "*"
   },

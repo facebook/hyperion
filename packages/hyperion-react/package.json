@@ -1,7 +1,7 @@
 {
   "name": "hyperion-react",
   "description": "Utility to intercept React api and add 'aspects' to them",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -11,13 +11,14 @@
   },
   "workspaces": [
     "../hyperion-devtools",
-    "../hyperion-global",
+    "../hyperion-globals",
     "../hyperion-hook",
     "../hyperion-test-and-set",
     "../hyperion-dom"
   ],
   "dependencies": {
-    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-globals": "*",
+    "hyperion-hook": "*",
     "hyperion-test-and-set": "*",
     "hyperion-dom": "*",
     "@types/react": "^18.2.14",

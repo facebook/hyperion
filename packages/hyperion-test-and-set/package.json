@@ -1,7 +1,7 @@
 {
   "name": "hyperion-test-and-set",
   "description": "A simple utility to test and set values.",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -12,8 +12,7 @@
   "workspaces": [
     "../hyperion-devtools"
   ],
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "hyperion-devtools": "*",
     "@types/jest": "^29.5.3"
