@@ -2,8 +2,8 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 import "./reference";
-import { assert } from "@hyperion/hyperion-global";
-import { Hook } from "@hyperion/hyperion-hook";
+import { assert } from "hyperion-global";
+import { Hook } from "hyperion-hook";
 
 export const onFlowletInit = new Hook<<T extends {} = {}>(flowlet: Flowlet<T>) => void>();
 

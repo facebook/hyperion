@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-autologging-plugin-eventhash",
+  "name": "hyperion-autologging-plugin-eventhash",
   "description": "plugin for autologging to add a hash to each event",
   "version": "0.1.0",
   "license": "MIT",
@@ -17,12 +16,11 @@
     "../hyperion-channel"
   ],
   "dependencies": {
-    "@hyperion/hyperion-channel": "*",
-    "@hyperion/hyperion-global": "*",
-    "xxhashjs": "^0.2.2"
+    "hyperion-channel": "*",
+    "hyperion-globals": "*",    "xxhashjs": "^0.2.2"
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "*",
+    "hyperion-devtools": "*",
     "@types/jest": "^29.5.3",
     "@types/xxhashjs": "^0.2.4"
   },

@@ -1,6 +1,6 @@
 {
   // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
-  "extends": "@hyperion/hyperion-devtools",
+  "extends": "hyperion-devtools",
   "compilerOptions": {
     // "jsx": "react-jsx",
     // "jsx": "preserve",

@@ -5,7 +5,7 @@
  * needs. They are here to avoid circular depndency between modules.
  */
 
-import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
+import { interceptMethod } from "hyperion-core/src/MethodInterceptor";
 import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
 import { INodePrototype } from "./INode";
 

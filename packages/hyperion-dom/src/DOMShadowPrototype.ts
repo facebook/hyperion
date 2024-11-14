@@ -2,11 +2,11 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { assert } from "@hyperion/hyperion-global";
-import { ShadowPrototype } from "@hyperion/hyperion-core/src/ShadowPrototype";
+import { assert } from "hyperion-global";
+import { ShadowPrototype } from "hyperion-core/src/ShadowPrototype";
 import { VirtualAttribute } from "./VirtualAttribute";
-import { getObjectExtension } from "@hyperion/hyperion-core/src/intercept";
-import * as intercept from "@hyperion/hyperion-core/src/intercept";
+import { getObjectExtension } from "hyperion-core/src/intercept";
+import * as intercept from "hyperion-core/src/intercept";
 
 const NodeType2ShadoPrototype = new Map<number, ShadowPrototype>();
 const NodeName2ShadoPrototype = new Map<string, ShadowPrototype>();

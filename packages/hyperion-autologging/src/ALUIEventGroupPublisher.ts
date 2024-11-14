@@ -3,10 +3,10 @@
  */
 
 'use strict';
-import * as Types from "@hyperion/hyperion-util/src/Types";
+import * as Types from "hyperion-util/src/Types";
 import { IALFlowlet } from "./ALFlowletManager";
 import { ALSharedInitOptions } from "./ALType";
-import TestAndSet from "@hyperion/hyperion-test-and-set/src/TestAndSet";
+import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
 
 
 enum UIEventGroup {

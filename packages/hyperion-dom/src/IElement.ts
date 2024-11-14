@@ -2,8 +2,8 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { interceptAttribute } from "@hyperion/hyperion-core/src/AttributeInterceptor";
-import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
+import { interceptAttribute } from "hyperion-core/src/AttributeInterceptor";
+import { interceptMethod } from "hyperion-core/src/MethodInterceptor";
 // import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
 import { interceptElementAttribute } from "./ElementAttributeInterceptor";
 // import { INodePrototype } from "./INode";

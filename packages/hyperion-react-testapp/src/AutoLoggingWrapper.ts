@@ -2,22 +2,22 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as Visualizer from "@hyperion/hyperion-autologging-visualizer/src/Visualizer";
-import { ALElementText } from "@hyperion/hyperion-autologging/src/ALInteractableDOMElement";
-import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
-import * as IReact from "@hyperion/hyperion-react/src/IReact";
-import * as IReactDOM from "@hyperion/hyperion-react/src/IReactDOM";
-import { ClientSessionID } from "@hyperion/hyperion-util/src/ClientSessionID";
+import * as Visualizer from "hyperion-autologging-visualizer/src/Visualizer";
+import { ALElementText } from "hyperion-autologging/src/ALInteractableDOMElement";
+import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
+import * as IReact from "hyperion-react/src/IReact";
+import * as IReactDOM from "hyperion-react/src/IReactDOM";
+import { ClientSessionID } from "hyperion-util/src/ClientSessionID";
 import React from 'react';
 import * as ReactDOM from "react-dom";
 import ReactDev from "react/jsx-dev-runtime";
 import { SyncChannel } from "./Channel";
 import { FlowletManager } from "./FlowletManager";
-import { ALExtensibleEvent } from "@hyperion/hyperion-autologging/src/ALType";
-import { getEventExtension } from "@hyperion/hyperion-autologging/src/ALEventExtension";
-import * as Flags from "@hyperion/hyperion-global/src/Flags";
-import "@hyperion/hyperion-autologging/src/reference";
-import * as PluginEventHash from "@hyperion/hyperion-autologging-plugin-eventhash/src/index";
+import { ALExtensibleEvent } from "hyperion-autologging/src/ALType";
+import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
+import * as Flags from "hyperion-global/src/Flags";
+import "hyperion-autologging/src/reference";
+import * as PluginEventHash from "hyperion-autologging-plugin-eventhash/src/index";
 
 export let interceptionStatus = "disabled";
 

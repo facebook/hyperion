@@ -5,7 +5,7 @@
 import React from "react";
 import FuncComponent from "./FuncComponent";
 import { Props, Surface } from "./Surface";
-import { ALSurfaceContext } from "@hyperion/hyperion-autologging/src/ALSurfaceContext";
+import { ALSurfaceContext } from "hyperion-autologging/src/ALSurfaceContext";
 import { FlowletManager } from "../FlowletManager";
 
 class ClassCompWithSurface extends React.Component<{}>{

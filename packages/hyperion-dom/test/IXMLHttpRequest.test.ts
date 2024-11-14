@@ -8,7 +8,7 @@ import "jest";
 import xhrmock from 'xhr-mock';
 import * as IXMLHttpRequest from "../src/IXMLHttpRequest";
 import * as IWindow from "../src/IWindow";
-import { intercept } from "@hyperion/hyperion-core/src/intercept";
+import { intercept } from "hyperion-core/src/intercept";
 
 async function asyncxhr(request: {
   method: string,

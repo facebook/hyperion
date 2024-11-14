@@ -2,12 +2,12 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { interceptAttribute } from "@hyperion/hyperion-core/src/AttributeInterceptor";
-import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
+import { interceptAttribute } from "hyperion-core/src/AttributeInterceptor";
+import { interceptMethod } from "hyperion-core/src/MethodInterceptor";
 import { DOMShadowPrototype } from "./DOMShadowPrototype";
 import { interceptEventHandlerAttribute } from "./EventHandlerAttributeInterceptor";
 import { IEventTargetPrototype } from "./IEventTarget";
-import { interceptConstructorMethod } from "@hyperion/hyperion-core/src/ConstructorInterceptor";
+import { interceptConstructorMethod } from "hyperion-core/src/ConstructorInterceptor";
 import { IWindowPrototype } from "./IWindow";
 
 export const IXMLHttpRequestPrototype = new DOMShadowPrototype(XMLHttpRequest, IEventTargetPrototype, { sampleObject: new XMLHttpRequest(), registerOnPrototype: true });

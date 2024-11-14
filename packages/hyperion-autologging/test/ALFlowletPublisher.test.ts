@@ -5,10 +5,10 @@
  */
 'use strict';
 
-import { Channel } from "@hyperion/hyperion-channel/src/Channel";
+import { Channel } from "hyperion-channel/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
 import * as ALFlowletPublisher from "../src/ALFlowletPublisher";
-import { getFullNamePattern } from "@hyperion/hyperion-flowlet/test/FlowletTestUtil";
+import { getFullNamePattern } from "hyperion-flowlet/test/FlowletTestUtil";
 
 describe('ALFlowletPublisher', () => {
 

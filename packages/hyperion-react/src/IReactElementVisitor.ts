@@ -4,7 +4,7 @@
 
 'use strict';
 
-import type * as Types from "@hyperion/hyperion-util/src/Types";
+import type * as Types from "hyperion-util/src/Types";
 import type React from "react";
 import type {
   ReactComponentObjectProps, ReactElementComponentType, ReactForwardRefType,

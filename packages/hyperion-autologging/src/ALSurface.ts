@@ -4,15 +4,15 @@
 
 'use strict';
 
-import * as IElement from "@hyperion/hyperion-dom/src/IElement";
-import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
-import { assert } from "@hyperion/hyperion-global";
-import * as IReact from "@hyperion/hyperion-react/src/IReact";
-import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import * as IReactElementVisitor from '@hyperion/hyperion-react/src/IReactElementVisitor';
-import * as IReactFlowlet from "@hyperion/hyperion-react/src/IReactFlowlet";
-import * as IReactPropsExtension from "@hyperion/hyperion-react/src/IReactPropsExtension";
-import * as Types from "@hyperion/hyperion-util/src/Types";
+import * as IElement from "hyperion-dom/src/IElement";
+import { Flowlet } from "hyperion-flowlet/src/Flowlet";
+import { assert } from "hyperion-global";
+import * as IReact from "hyperion-react/src/IReact";
+import * as IReactComponent from "hyperion-react/src/IReactComponent";
+import * as IReactElementVisitor from 'hyperion-react/src/IReactElementVisitor';
+import * as IReactFlowlet from "hyperion-react/src/IReactFlowlet";
+import * as IReactPropsExtension from "hyperion-react/src/IReactPropsExtension";
+import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';

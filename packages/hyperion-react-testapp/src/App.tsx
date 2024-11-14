@@ -12,7 +12,7 @@ import NonInteractiveSurfaceComponent from './component/NonInteractiveSurfaceCom
 import ALEventLogger from './component/ALEventLogger';
 import { LocalStoragePersistentData } from '@hyperion/hyperion-util/src/PersistentData';
 import ALGraphView from './component/ALGraphView';
-import ResizableSplitView from "@hyperion/hyperion-autologging-visualizer/src/component/ResizableSplitView.react";
+import ResizableSplitView from "hyperion-autologging-visualizer/src/component/ResizableSplitView.react";
 import { PortalBodyContainerComponent } from './component/PortalComponent';
 import TextComponent from './component/TextComponent';
 import RecursiveFuncComponent from './component/RecursiveFuncComponent';

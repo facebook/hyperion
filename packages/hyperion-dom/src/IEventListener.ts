@@ -2,8 +2,8 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { InterceptableFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
-import { GenericFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
+import { InterceptableFunction } from "hyperion-core/src/FunctionInterceptor";
+import { GenericFunctionInterceptor, interceptFunction } from "hyperion-core/src/FunctionInterceptor";
 // import { DOMShadowPrototype } from "./DOMShadowPrototype";
 
 // export const IEventListenertPrototype = new DOMShadowPrototype<EventListenerObject, Object>(null, null);

@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-react-testapp",
+  "name": "hyperion-react-testapp",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -12,11 +11,10 @@
     "../hyperion-autologging-visualizer"
   ],
   "dependencies": {
-    "@hyperion/hyperion-autologging": "*",
-    "@hyperion/hyperion-autologging-visualizer": "*",
-    "@hyperion/hyperion-global": "*",
-    "@hyperion/hyperion-hook": "*",
-    "@hyperion/hyperion-react": "*",
+    "hyperion-autologging": "*",
+    "hyperion-autologging-visualizer": "*",
+    "hyperion-globals": "*",    "hyperion-hook": "*",
+    "hyperion-react": "*",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.2",

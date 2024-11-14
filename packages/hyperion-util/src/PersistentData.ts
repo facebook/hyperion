@@ -4,8 +4,8 @@
 
 'use strict';
 
-import { assert } from "@hyperion/hyperion-global/src/assert";
-import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
+import { assert } from "hyperion-global/src/assert";
+import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
 
 type IStorage = Pick<Storage, 'getItem' | 'setItem'>;
 function getStorage(storageName: 'sessionStorage' | 'localStorage'): IStorage {

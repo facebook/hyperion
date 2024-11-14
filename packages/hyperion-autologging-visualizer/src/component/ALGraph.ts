@@ -2,13 +2,13 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 // import React, {useState, useCallback, useRef, useEffect} from "react";
-import { SURFACE_SEPARATOR } from '@hyperion/hyperion-autologging/src/ALSurfaceConsts';
-import { ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent } from '@hyperion/hyperion-autologging/src/ALType';
-import { ALChannelEvent } from '@hyperion/hyperion-autologging/src/AutoLogging';
-import { Channel, PausableChannel } from '@hyperion/hyperion-channel';
-import { Flowlet } from '@hyperion/hyperion-flowlet/src/Flowlet';
-import { assert } from '@hyperion/hyperion-global';
-import { Nullable } from '@hyperion/hyperion-util/src/Types';
+import { SURFACE_SEPARATOR } from 'hyperion-autologging/src/ALSurfaceConsts';
+import { ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent } from 'hyperion-autologging/src/ALType';
+import { ALChannelEvent } from 'hyperion-autologging/src/AutoLogging';
+import { Channel, PausableChannel } from 'hyperion-channel';
+import { Flowlet } from 'hyperion-flowlet/src/Flowlet';
+import { assert } from 'hyperion-global';
+import { Nullable } from 'hyperion-util/src/Types';
 import cytoscape from 'cytoscape';
 import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigDagre';
 

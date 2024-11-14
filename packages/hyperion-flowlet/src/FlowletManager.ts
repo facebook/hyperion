@@ -2,12 +2,12 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { InterceptableFunction, getFunctionInterceptor, interceptFunction } from "@hyperion/hyperion-core/src/FunctionInterceptor";
-import { CallbackType, interceptEventListener, isEventListenerObject } from "@hyperion/hyperion-dom/src/IEventListener";
-import { assert, getLogger } from "@hyperion/hyperion-global";
-import * as Flags from "@hyperion/hyperion-global/src/Flags";
-import { Hook } from "@hyperion/hyperion-hook";
-import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
+import { InterceptableFunction, getFunctionInterceptor, interceptFunction } from "hyperion-core/src/FunctionInterceptor";
+import { CallbackType, interceptEventListener, isEventListenerObject } from "hyperion-dom/src/IEventListener";
+import { assert, getLogger } from "hyperion-global";
+import * as Flags from "hyperion-global/src/Flags";
+import { Hook } from "hyperion-hook";
+import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
 import { Flowlet } from "./Flowlet";
 
 const IS_FLOWLET_SETUP_PROP_NAME = `__isFlowletSetup`;

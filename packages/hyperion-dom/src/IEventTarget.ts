@@ -3,7 +3,7 @@
  */
 
 import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
-import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
+import { interceptMethod } from "hyperion-core/src/MethodInterceptor";
 
 export const IEventTargetPrototype = new DOMShadowPrototype(EventTarget, null, { sampleObject: sampleHTMLElement });
 

@@ -4,8 +4,8 @@
 
 'use strict';
 
-import * as Types from "@hyperion/hyperion-util/src/Types";
-import performanceAbsoluteNow from '@hyperion/hyperion-util/src/performanceAbsoluteNow';
+import * as Types from "hyperion-util/src/Types";
+import performanceAbsoluteNow from 'hyperion-util/src/performanceAbsoluteNow';
 import * as ALCustomEvent from "./ALCustomEvent";
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from './ALEventIndex';

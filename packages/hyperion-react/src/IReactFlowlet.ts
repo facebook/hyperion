@@ -2,13 +2,13 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import type * as Types from "@hyperion/hyperion-util/src/Types";
+import type * as Types from "hyperion-util/src/Types";
 
-import { assert } from "@hyperion/hyperion-global";
-import { Flowlet } from "@hyperion/hyperion-flowlet/src/Flowlet";
-import { FlowletManager } from "@hyperion/hyperion-flowlet/src/FlowletManager";
-import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import TestAndSet from "@hyperion/hyperion-test-and-set/src/TestAndSet";
+import { assert } from "hyperion-global";
+import { Flowlet } from "hyperion-flowlet/src/Flowlet";
+import { FlowletManager } from "hyperion-flowlet/src/FlowletManager";
+import * as IReactComponent from "hyperion-react/src/IReactComponent";
+import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
 import * as IReact from "./IReact";
 import * as IReactPropsExtension from "./IReactPropsExtension";
 

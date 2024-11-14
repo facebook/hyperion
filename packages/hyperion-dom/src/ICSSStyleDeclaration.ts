@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { interceptMethod } from "@hyperion/hyperion-core/src/MethodInterceptor";
+import { interceptMethod } from "hyperion-core/src/MethodInterceptor";
 import { DOMShadowPrototype, sampleHTMLElement } from "./DOMShadowPrototype";
 
 export const ICSSStyleDeclarationPrototype = new DOMShadowPrototype(CSSStyleDeclaration, null, { sampleObject: sampleHTMLElement.style, });

@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { SessionPersistentData } from "@hyperion/hyperion-util/src/PersistentData";
+import { SessionPersistentData } from "hyperion-util/src/PersistentData";
 
 const _eventIndex = new SessionPersistentData<number>(
   "alcei",

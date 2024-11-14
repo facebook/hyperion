@@ -1,6 +1,5 @@
 {
-  "scope": "@hyperion",
-  "name": "@hyperion/hyperion-timed-trigger",
+  "name": "hyperion-timed-trigger",
   "description": "Timed Trigger function to run one directly or based on a timer",
   "version": "0.1.0",
   "license": "MIT",
@@ -16,7 +15,7 @@
   "dependencies": {
   },
   "devDependencies": {
-    "@hyperion/hyperion-devtools": "*",
+    "hyperion-devtools": "*",
     "@types/jest": "^29.5.3"
   }
 }

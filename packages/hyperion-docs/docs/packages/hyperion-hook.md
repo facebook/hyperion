@@ -13,7 +13,7 @@ All interceptors in [hyperion-core](./hyperion-core/intro.md) rely on the `Hook`
 The `Hook` class has a type parameter that determines the type of
 the function it represents.
 ```TypeScript
-import { Hook } from "@hyperion/hyperion-hook";
+import { Hook } from "hyperion-hook";
 
 const h1 = new Hook<(i: number)=>void>();
 h1.add(()=> console.log('Called'));
@@ -30,7 +30,7 @@ The `Hook` as a `protected createMultiCallbackCall` method that
 you can overload and add your own special behavior.
 
 ```TypeScript
-import { Hook } from "@hyperion/hyperion-hook";
+import { Hook } from "hyperion-hook";
 
 type CallbackType = (i: number)=> number;
 class MyHook extends Hook<CallbackType>{

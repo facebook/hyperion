@@ -3,9 +3,9 @@
  */
 
 'use strict';
-import * as Types from "@hyperion/hyperion-util/src/Types";
-import * as AutoLogging from "@hyperion/hyperion-autologging/src/AutoLogging";
-import { Channel } from "@hyperion/hyperion-channel/src/Channel";
+import * as Types from "hyperion-util/src/Types";
+import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
+import { Channel } from "hyperion-channel/src/Channel";
 import * as ElementTextTooltip from "./component/ElementTextTooltip.react";
 
 export type InitOptions = Types.Options<

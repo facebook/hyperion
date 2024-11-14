@@ -3,13 +3,13 @@
  */
 
 'use strict';
-import type * as Types from "@hyperion/hyperion-util/src/Types";
+import type * as Types from "hyperion-util/src/Types";
 
-import { intercept } from "@hyperion/hyperion-core/src/intercept";
-import * as IEvent from "@hyperion/hyperion-dom/src/IEvent";
-import { setTriggerFlowlet } from "@hyperion/hyperion-flowlet/src/TriggerFlowlet";
-import { TimedTrigger } from "@hyperion/hyperion-timed-trigger/src/TimedTrigger";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
+import { intercept } from "hyperion-core/src/intercept";
+import * as IEvent from "hyperion-dom/src/IEvent";
+import { setTriggerFlowlet } from "hyperion-flowlet/src/TriggerFlowlet";
+import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
+import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from "./ALEventIndex";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
@@ -18,7 +18,7 @@ import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
-import * as Flags from "@hyperion/hyperion-global/src/Flags";
+import * as Flags from "hyperion-global/src/Flags";
 import { getCurrMainPageUrl } from "./MainPageUrl";
 
 

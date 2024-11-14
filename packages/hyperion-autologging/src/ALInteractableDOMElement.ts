@@ -2,14 +2,14 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as IEventTarget from "@hyperion/hyperion-dom/src/IEventTarget";
-// import * as IGlobalEventHandlers from "@hyperion/hyperion-dom/src/IGlobalEventHandlers";
-import { ReactComponentObjectProps } from "@hyperion/hyperion-react/src/IReact";
-import * as IReactComponent from "@hyperion/hyperion-react/src/IReactComponent";
-import type * as Types from "@hyperion/hyperion-util/src/Types";
+import * as IEventTarget from "hyperion-dom/src/IEventTarget";
+// import * as IGlobalEventHandlers from "hyperion-dom/src/IGlobalEventHandlers";
+import { ReactComponentObjectProps } from "hyperion-react/src/IReact";
+import * as IReactComponent from "hyperion-react/src/IReactComponent";
+import type * as Types from "hyperion-util/src/Types";
 import type { UIEventConfig } from "./ALUIEventPublisher";
-import { getFlags } from "@hyperion/hyperion-global";
-import { getVirtualPropertyValue, setVirtualPropertyValue } from "@hyperion/hyperion-core/src/intercept";
+import { getFlags } from "hyperion-global";
+import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
 
 'use strict';
 

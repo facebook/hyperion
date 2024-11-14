@@ -4,10 +4,10 @@
 
 'use strict';
 
-import type { Channel } from "@hyperion/hyperion-channel/src/Channel";
-import * as Types from "@hyperion/hyperion-util/src/Types";
+import type { Channel } from "hyperion-channel/src/Channel";
+import * as Types from "hyperion-util/src/Types";
 
-import * as Flowlet from "@hyperion/hyperion-flowlet/src/Flowlet";
+import * as Flowlet from "hyperion-flowlet/src/Flowlet";
 import { IALFlowlet } from "./ALFlowletManager";
 import { ALMetadataEvent } from "./ALType";
 

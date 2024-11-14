@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys, validateModuleInterceptor } from '@hyperion/hyperion-core/src/IRequire';
+import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys, validateModuleInterceptor } from 'hyperion-core/src/IRequire';
 
 import type React from "react";
 
