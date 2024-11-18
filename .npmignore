@@ -1,0 +1,6 @@
+*.log
+.DS_Store
+coverage
+test/**/*.*
+jest.config.js
+babel.config.js
