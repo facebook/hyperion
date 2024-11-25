@@ -448,6 +448,7 @@ export type ALElementTextOptions = Types.Options<
     updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
     getText?: <T extends ALElementText>(elementTexts: T[]) => ALElementText;
     enableElementTextCache?: boolean;
+    elementCacheTextLengthLimit?: number;
   }
 >;
 
@@ -459,11 +460,13 @@ type CachedALElementResults = {
 let _options: ALElementTextOptions | null = null;
 let MaxDepth = 20;
 let ElementTextCache: WeakMap<HTMLElement, CachedALElementResults> | null = null;
+let elementCacheTextLengthLimit: number = Number.MAX_SAFE_INTEGER;
 export function init(options: ALElementTextOptions) {
   _options = options;
   MaxDepth = _options.maxDepth ?? MaxDepth;
   if (options.enableElementTextCache) {
     ElementTextCache = new WeakMap<HTMLElement, CachedALElementResults>();
+    elementCacheTextLengthLimit = options.elementCacheTextLengthLimit ?? elementCacheTextLengthLimit;
   }
 }
 
@@ -677,7 +680,7 @@ export function getElementTextEvent(
   // Event name to utilize when attempting to resolve text from a parent interactable
   // Some interactable elements may have no text to extract, in those cases we want to move up the tree to attempt from parent interactable.
   tryInteractableParentEventName?: UIEventConfig['eventName'] | null,
-  useCachedElementText?: boolean
+  useCachedElementText?: boolean,
 ): ALElementTextEvent {
   if (!element) {
     return {
@@ -739,10 +742,13 @@ export function getElementTextEvent(
   };
 
   // even if skipCache is set, we update the cache, this way, certain events can be used to keep the cache uptodate
-  ElementTextCache?.set(element, {
-    surface,
-    result: finalResult,
-  })
+  if (useCachedElementText &&
+    // we do impose a text size limit here, if provided, to avoid excessive memory usage
+    (finalResult.elementText?.text?.length ?? 0) < elementCacheTextLengthLimit)
+    ElementTextCache?.set(element, {
+      surface,
+      result: finalResult,
+    })
 
   return finalResult;
 }
