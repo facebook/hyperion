@@ -216,6 +216,8 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
     });
   }
 
+  const MAX_TRIGGER_FLOWLET_CHAIN = 5;
+
   for (const fi of [
     IPromise.all,
     IPromise.allSettled,
@@ -224,21 +226,39 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
   ]) {
     fi.onBeforeAndAfterCallMapperAdd(args => {
       const iterable = args[0];
+      if (iterable.length === 1) {
+        // This is special case, we can optimize for right away
+        const arg = iterable[0];
+        const triggerFlowlet = (arg instanceof Promise) && getTriggerFlowlet(arg);
+        if (triggerFlowlet) {
+          return value => {
+            setTriggerFlowlet(value, triggerFlowlet);
+            return value;
+          }
+        }
+      }
+
       return value => {
         const topTriggerFlowlet = getTriggerFlowlet(value) ?? flowletManager.top()?.data.triggerFlowlet;
-        const triggerFlowlets: TriggerFlowlet[] = [];
+        const triggerFlowlets = new Set<TriggerFlowlet>();
         // Args can be iterable, so we use the modern for-loop https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all#parameters
+        let suffix = '';
         for (const arg of iterable) {
           if (arg instanceof Promise) {
             const triggerFlowlet = getTriggerFlowlet(arg);
             if (triggerFlowlet) {
-              triggerFlowlets.push(triggerFlowlet);
+              triggerFlowlets.add(triggerFlowlet);
+              if (triggerFlowlets.size >= MAX_TRIGGER_FLOWLET_CHAIN) {
+                suffix = '...';
+                break;
+              }
             }
           }
         }
 
-        if (triggerFlowlets.length > 0) {
-          const flowletName = `Promise.${fi.name}(${triggerFlowlets.map(f => f.id).join("&")})`;
+        if (triggerFlowlets.size > 0) {
+          const triggerFlowletsArray = Array.from(triggerFlowlets);
+          const flowletName = `Promise.${fi.name}(${triggerFlowletsArray.map(f => f.id).join("&")}${suffix})`;
           const triggerFlowlet = new flowletManager.flowletCtor(flowletName, topTriggerFlowlet);
           setTriggerFlowlet(value, triggerFlowlet);
         } else if (topTriggerFlowlet) {

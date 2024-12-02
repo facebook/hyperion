@@ -137,11 +137,11 @@ describe("test flow of flowlets", () => {
     const p1 = Promise.resolve(1);
     expect(getTriggerFlowlet(p1)).toBe(tf);
 
-    const all = Promise.all([p0, p1]);
-    expect(getTriggerFlowlet(all)?.getFullName()).toMatch(/Promise.all\(\d+&\d+\)/);
+    const all1 = Promise.all([p0]);
+    expect(getTriggerFlowlet(all1)).toStrictEqual(getTriggerFlowlet(p0)); // special case, pass TF of input argument
 
-    const race = Promise.race([p0, p1]);
-    expect(getTriggerFlowlet(race)?.getFullName()).toMatch(/Promise.race\(\d+&\d+\)/);
+    const allSame = Promise.all([p0, p1]);
+    expect(getTriggerFlowlet(allSame)?.getFullName()).toMatch(/Promise.all\(\d+\)/); // all TF collapse to one
 
     let p2;
     try { // Need try/catch to handle reject
@@ -150,8 +150,27 @@ describe("test flow of flowlets", () => {
     } finally {
       expect(getTriggerFlowlet(p2)).toBe(tf);
     }
-    const allSettled = Promise.allSettled([p0, p1, p2]);
-    expect(getTriggerFlowlet(allSettled)?.getFullName()).toMatch(/Promise.allSettled\(\d+&\d+&\d+\)/);
+
+    main.data.triggerFlowlet = new flowletManager.flowletCtor("tf2");
+    const p3 = Promise.resolve(2);
+
+    const all = Promise.all([p0, p1, p3]);
+    expect(getTriggerFlowlet(all)?.getFullName()).toMatch(/Promise.all\(\d+&\d+\)/); // p0 and p1 have the same TF, P3 has a new one
+
+    const race = Promise.race([p0, p1, p3]);
+    expect(getTriggerFlowlet(race)?.getFullName()).toMatch(/Promise.race\(\d+&\d+\)/);
+
+    const allSettled = Promise.allSettled([p0, p1, p2, p3]);
+    expect(getTriggerFlowlet(allSettled)?.getFullName()).toMatch(/Promise.allSettled\(\d+&\d+\)/);
+
+    const allTooMany = Promise.all(
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => {
+        const p = Promise.resolve(n);
+        setTriggerFlowlet(p, new flowletManager.flowletCtor("tf" + n));
+        return p;
+      })
+    );
+    expect(getTriggerFlowlet(allTooMany)?.getFullName()).toMatch(/Promise.all\((\d+&){4}\d+...\)/); // beyond 5th one skipped
   });
 
   test("Trigger flowlet propagation", (done) => {
