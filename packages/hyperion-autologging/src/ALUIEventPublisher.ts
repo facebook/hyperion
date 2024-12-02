@@ -41,6 +41,7 @@ type ALUIEvent =
   ALTimedEvent &
   ALMetadataEvent &
   ALExtensibleEvent &
+  ALPageEvent &
   Types.Nullable<ALElementEvent> &
   {
     /**
@@ -63,7 +64,6 @@ export type ALUIEventCaptureData = Readonly<
   ALFlowletEvent &
   ALReactElementEvent &
   ALElementTextEvent &
-  ALPageEvent &
   CommonEventData &
   {
     surface: string | null;
@@ -81,7 +81,6 @@ export type ALLoggableUIEvent = Readonly<
 >;
 
 export type ALUIEventData = Readonly<
-  ALPageEvent &
   ALLoggableUIEvent
 >;
 
