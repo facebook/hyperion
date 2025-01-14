@@ -14,3 +14,4 @@ export * as ALSurfaceUtils from "./ALSurfaceUtils";
 export * as ALCustomEvent from './ALCustomEvent';
 export { getCurrentUIEventData } from "./ALUIEventPublisher";
 export * as ALEventExtension from "./ALEventExtension";
+export { getSessionFlowID } from "./ALSessionFlowID";
