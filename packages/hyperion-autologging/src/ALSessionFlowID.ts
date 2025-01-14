@@ -4,12 +4,12 @@
 
 'use strict';
 
-import { assert } from "@hyperion/hyperion-global";
-import { guid } from "@hyperion/hyperion-util/src/guid";
-import performanceAbsoluteNow from "@hyperion/hyperion-util/src/performanceAbsoluteNow";
-import { CookiePersistentData } from "@hyperion/hyperion-util/src/PersistentData";
+import { assert } from "hyperion-globals";
+import { guid } from "hyperion-util/src/guid";
+import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
+import { CookiePersistentData } from "hyperion-util/src/PersistentData";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
-import { Channel } from "@hyperion/hyperion-channel";
+import { Channel } from "hyperion-channel";
 import { ALChannelHeartbeatEvent, ALHeartbeatType } from "./ALHeartbeat";
 import { ALTimedEvent } from "./ALType";
 
@@ -75,26 +75,4 @@ export function init(options: InitOptions) {
 
 export function getSessionFlowID(): SessionFlowID | null {
   return sessionFlowID?.getValue();
-}
-
-let domainSessionId: CookiePersistentData<string> | null = null;
-export function getDomainSessionID(topLevelDomain?: string, cookieName?: string): string {
-
-  if (!domainSessionId) {
-    const currentHostname = window.location.hostname;
-    if (topLevelDomain) {
-      assert(currentHostname.endsWith(topLevelDomain), "invalid top level domain for this page");
-    } else {
-      topLevelDomain = currentHostname;
-    }
-
-    domainSessionId = new CookiePersistentData<string>(
-      cookieName ?? 'aldsid',
-      guid,
-      v => v,
-      v => v,
-      `;domain=${topLevelDomain}; path=/`
-    );
-  }
-  return domainSessionId.getValue();
 }
