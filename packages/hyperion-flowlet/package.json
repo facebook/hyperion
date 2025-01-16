@@ -28,6 +28,6 @@
   "devDependencies": {
     "hyperion-devtools": "*",
     "hyperion-async-counter": "*",
-    "@types/jest": "^29.5.3"
+    "@types/jest": "^29.5.14"
   }
 }

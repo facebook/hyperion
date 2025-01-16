@@ -12,7 +12,7 @@ import { Nullable } from 'hyperion-util/src/Types';
 import cytoscape from 'cytoscape';
 import { getCytoscapeLayoutConfig } from './CytoscapeLayoutConfigDagre';
 
-export const defaultStylesheet: cytoscape.Stylesheet[] = [
+export const defaultStylesheet: cytoscape.StylesheetJsonBlock[] = [
   {
     selector: 'node', css: {
       'shape': 'rectangle',
