@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "hyperion-devtools": "*",
-    "@types/jest": "^29.5.3",
+    "@types/jest": "^29.5.14",
     "@types/xxhashjs": "^0.2.4"
   },
   "eslintConfig": {},
