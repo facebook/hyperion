@@ -100,6 +100,7 @@ export default defineConfig({
         "hyperion-autologging/src/ALInteractableDOMElement",
         "hyperion-autologging/src/AutoLogging",
         "hyperion-autologging/src/ALUIEventPublisher",
+        "hyperion-autologging/src/ALSessionFlowID",
         "hyperion-autologging/src/index",
       ],
       "hyperionAutoLoggingVisualizer": [
