@@ -13,7 +13,7 @@ import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALM
 import * as ALEventIndex from './ALEventIndex';
 import { assert } from "hyperion-globals";
 import { ALChannelSurfaceEvent } from "./ALSurface";
-import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
+import { ALSurfaceData } from "./ALSurfaceData";
 
 export type ALSurfaceVisibilityEventData =
   ALFlowletEvent &
@@ -144,8 +144,8 @@ export function publish(options: InitOptions): void {
                 continue;
               }
               const surfaceEvent = activeSurfaces.get(surface);
-              const otherSurfaceInfo = ALSurfaceMutationPublisher.getSurfaceMountInfo(surface);
-              assert(surfaceEvent === otherSurfaceInfo, "Unexpcted mismatch between the two surface event caches! ");
+              const otherSurfaceInfo = ALSurfaceData.get(surface);
+              assert(surfaceEvent === otherSurfaceInfo.mutationEvent, "Unexpcted mismatch between the two surface event caches! ");
 
               if (surfaceEvent) {
                 let entries = visibleSet.get(surfaceEvent);

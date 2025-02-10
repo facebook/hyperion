@@ -21,6 +21,7 @@ import { getAncestralSurfaceNode, getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
 import { getCurrMainPageUrl } from "./MainPageUrl";
+import { ALSurfaceData } from "./ALSurfaceData";
 
 
 export type InitOptions = Types.Options<
@@ -130,7 +131,7 @@ export function publish(options: InitOptions): void {
       return;
     }
 
-    const relatedEventIndex = ALSurfaceMutationPublisher.getSurfaceMountInfo(surface)?.eventIndex;
+    const relatedEventIndex = ALSurfaceData.get(surface)?.mutationEvent?.eventIndex;
 
     for (let i = 0; i < elements.length; ++i) {
       const element = elements[i];

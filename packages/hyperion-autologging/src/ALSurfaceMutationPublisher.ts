@@ -15,6 +15,7 @@ import { ReactComponentData } from './ALReactUtils';
 import type { ALChannelSurfaceEvent, ALSurfaceEventData, ALSurfaceCapability } from './ALSurface';
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 import { getCurrMainPageUrl } from "./MainPageUrl";
+import { ALSurfaceData } from "./ALSurfaceData";
 
 type ALMutationEvent =
   ALReactElementEvent &
@@ -52,16 +53,6 @@ export type ALChannelSurfaceMutationEvent = Readonly<{
 }
 >;
 
-type SurfaceInfo = ALSurfaceMutationEventData & Types.Writeable<ALElementEvent> & {
-  addTime: number,
-};
-
-const activeSurfaces = new Map<string, SurfaceInfo>();
-
-export function getSurfaceMountInfo(surface: string): ALSurfaceMutationEventData | undefined {
-  return activeSurfaces.get(surface);
-}
-
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent & ALCustomEvent.ALChannelCustomEvent> &
   {
@@ -88,10 +79,11 @@ export function publish(options: InitOptions): void {
     if (surface == null) {
       return;
     }
+    const surfaceData = ALSurfaceData.get(surface);
+    let mutationEvent = surfaceData.mutationEvent;
     switch (action) {
       case 'added': {
-        let info = activeSurfaces.get(surface);
-        if (!info) {
+        if (!mutationEvent) {
           let reactComponentData: ReactComponentData | null = null;
           if (cacheElementReactInfo) {
             const elementInfo = ALElementInfo.getOrCreate(element);
@@ -102,7 +94,7 @@ export function publish(options: InitOptions): void {
           if (callFlowlet) {
             metadata.add_call_flowlet = callFlowlet?.getFullName();
           }
-          info = {
+          mutationEvent = {
             ...event,
             event: 'mount_component',
             eventTimestamp: timestamp,
@@ -114,33 +106,32 @@ export function publish(options: InitOptions): void {
             reactComponentStack: reactComponentData?.stack,
             ...elementText,
             metadata, // already in the evet, need to add again?
-            addTime: timestamp,
             pageURI: getCurrMainPageUrl(),
           };
-          activeSurfaces.set(surface, info);
+          surfaceData.mutationEvent = mutationEvent;
+          surfaceData.setExtension('surface_mutation', { addTime: timestamp });
 
-          channel.emit('al_surface_mutation_event', info);
+          channel.emit('al_surface_mutation_event', mutationEvent);
 
-        } else if (element != info.element && element.contains(info.element)) {
+        } else if (element != mutationEvent.element && element.contains(mutationEvent.element)) {
           /**
           * This means we are seeing a element that is higher in the DOM
           * and belongs to a surface that we have seen before.
           * So, we can just update the surface=>element info.
           *  */
-          info.element = element;
-          info.autoLoggingID = ALID.getOrSetAutoLoggingID(element);
-          info.addTime = timestamp;
-          if (callFlowlet) {
-            info.metadata.add_call_flowlet = callFlowlet.getFullName();
-          }
+          // info.element = element;
+          // info.autoLoggingID = ALID.getOrSetAutoLoggingID(element);
+          // surfaceData.setExtension('surface_mutation', { addTime: timestamp });
+          // info.addTime = timestamp;
+          // if (callFlowlet) {
+          //   info.metadata.add_call_flowlet = callFlowlet.getFullName();
+          // }
         }
         break;
       }
       case 'removed': {
-        const info = activeSurfaces.get(surface);
-        if (info && info.element === element) {
+        if (mutationEvent && mutationEvent.element === element && mutationEvent.event === 'mount_component') { // should we do assert instead?
           const removeTime = timestamp;
-          activeSurfaces.delete(surface);
           /**
            * We share the same object between the mount and unmount events
            * therefore, any change by the subscribers of these events will
@@ -150,19 +141,21 @@ export function publish(options: InitOptions): void {
            * // Object.assign(info.metadata, metadata);
            */
           if (callFlowlet) {
-            info.metadata.remove_call_flowlet = callFlowlet.getFullName();
+            mutationEvent.metadata.remove_call_flowlet = callFlowlet.getFullName();
           }
-          channel.emit('al_surface_mutation_event', {
-            ...info,
+          // Update the surfaceData before emitting event in case event handlers wanted to use this data; then we can delete
+          channel.emit('al_surface_mutation_event', surfaceData.mutationEvent = {
+            ...mutationEvent,
             event: 'unmount_component',
             eventTimestamp: removeTime,
             eventIndex: ALEventIndex.getNextEventIndex(),
-            relatedEventIndex: info.eventIndex,
-            mountedDuration: (removeTime - info.addTime) / 1000,
-            mountEvent: info,
+            relatedEventIndex: mutationEvent.eventIndex,
+            mountedDuration: (removeTime - mutationEvent.eventTimestamp) / 1000,
+            mountEvent: mutationEvent,
             // flowlet: event.flowlet, // We want to keep the info.flowlet here
             triggerFlowlet: event.triggerFlowlet, // the trigger has changed from what was saved in info
           });
+          surfaceData.remove();
         }
         break;
       }
