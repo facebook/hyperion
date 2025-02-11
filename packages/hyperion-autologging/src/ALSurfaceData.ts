@@ -16,21 +16,24 @@ export type ALSurfaceEvent = Readonly<{
 }>;
 
 const surfacesData = new Map<string, ALSurfaceData>();
-
 export class ALSurfaceData {
+  static root = (() => {
+    const root = new ALSurfaceData('', null);
+    root.#locked = true; // We never want this to be removed.
+    return root;
+  })();
 
   static get(surface: string): ALSurfaceData {
     let data = surfacesData.get(surface);
     if (!data) {
       const parentNameLength = surface.lastIndexOf(SURFACE_SEPARATOR);
-      let parentData: ALSurfaceData | null = null;
+      let parentData: ALSurfaceData = ALSurfaceData.root;
       if (parentNameLength > 0) {
         let parentSurfaceName = surface.substring(0, parentNameLength);
         parentData = ALSurfaceData.get(parentSurfaceName);
-
       }
       data = new ALSurfaceData(surface, parentData);
-      parentData?.children.push(data);
+      parentData.children.push(data);
       surfacesData.set(surface, data);
       console.log(`Added surface: ${surface}`);
     }
@@ -45,7 +48,7 @@ export class ALSurfaceData {
 
   constructor(
     public readonly surface: string,
-    readonly parent: ALSurfaceData | null,
+    public readonly parent: ALSurfaceData | null,
   ) {
     this.__ext = Object.create(this.parent?.__ext ?? null);
   }
