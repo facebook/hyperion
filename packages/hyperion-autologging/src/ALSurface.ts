@@ -344,7 +344,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
       const surfaceData = ALSurfaceData.get(domAttributeValue);
       __DEV__ && assert(
-        !surfaceData.mutationEvent && !surfaceData.visibilityEvent,
+        !surfaceData.getMutationEvent() && !surfaceData.getVisibilityEvent(),
         `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
       )
 
