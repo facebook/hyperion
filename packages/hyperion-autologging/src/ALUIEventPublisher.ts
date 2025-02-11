@@ -39,10 +39,10 @@ type ALUIEventMap = {
 };
 
 type ALUIEvent =
-  ALTimedEvent &
-  ALMetadataEvent &
   ALExtensibleEvent &
+  ALMetadataEvent &
   ALPageEvent &
+  ALTimedEvent &
   Types.Nullable<ALElementEvent> &
   {
     /**
@@ -61,10 +61,10 @@ type ALUIEvent =
 
 
 export type ALUIEventCaptureData = Readonly<
-  ALUIEvent &
+  ALElementTextEvent &
   ALFlowletEvent &
   ALReactElementEvent &
-  ALElementTextEvent &
+  ALUIEvent &
   CommonEventData &
   Types.Nullable<ALSurfaceEvent> &
   {

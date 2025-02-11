@@ -35,7 +35,6 @@ export class ALSurfaceData {
       data = new ALSurfaceData(surface, parentData);
       parentData.children.push(data);
       surfacesData.set(surface, data);
-      console.log(`Added surface: ${surface}`);
     }
     return data;
   }
@@ -79,9 +78,6 @@ export class ALSurfaceData {
      * application might have associated surface data, we would want to keep those surfaces
      * around. So, as soon as we reach a leaf node that has data, we should stop. 
      */
-
-    console.log(`Removing surface: ${this.surface}`);
-
     // If this method is called explicitly, we are done with the surface and can remove it, so first cleanup state
     this.#mutationEvent = null;
     this.#visibilityEvent = null;
