@@ -54,7 +54,7 @@ export function publish(options: InitOptions): void {
   const tryInteractiveParentTextEventName = !changeEvent.interactableElementsOnly ? 'click' /* changeEvent?.eventName */ : null
 
   type PartialALEventValueEventData =
-    Pick<ALUIEventPublisher.ALUIEventData, "surface" | "value" | "metadata" | "relatedEventIndex"> &
+    Pick<ALUIEventPublisher.ALUIEventData, "surface" | "surfaceData" | "value" | "metadata" | "relatedEventIndex"> &
     Pick<ALElementEvent, "element">;
 
   function emitEvent(elementValueEventData: PartialALEventValueEventData) {
@@ -123,7 +123,7 @@ export function publish(options: InitOptions): void {
     }
   })();
 
-  function trackElementValues(surface: string, surfaceElement: Element) {
+  function trackElementValues(surface: string, surfaceElement: Element, surfaceData: ALSurfaceData) {
     // The following is expensive, so try to jam everything we are interested in to the selector
     const elements = surfaceElement.querySelectorAll<HTMLInputElement | HTMLSelectElement>(QueryString);
     if (!elements.length) {
@@ -131,7 +131,7 @@ export function publish(options: InitOptions): void {
       return;
     }
 
-    const relatedEventIndex = ALSurfaceData.get(surface)?.mutationEvent?.eventIndex;
+    const relatedEventIndex = surfaceData.mutationEvent?.eventIndex;
 
     for (let i = 0; i < elements.length; ++i) {
       const element = elements[i];
@@ -154,6 +154,7 @@ export function publish(options: InitOptions): void {
             if (includeInitialDefaultDisabledState || input.checked) {
               emitEvent({
                 surface,
+                surfaceData,
                 element,
                 relatedEventIndex,
                 value: String(input.checked),
@@ -170,6 +171,7 @@ export function publish(options: InitOptions): void {
             if (select.selectedIndex > -1) {
               emitEvent({
                 surface,
+                surfaceData,
                 element,
                 relatedEventIndex,
                 value: select.value,
@@ -192,14 +194,13 @@ export function publish(options: InitOptions): void {
       return; // this is not an interactable surface, so don't even try
     }
 
-    const surfaceElement = surfaceEventData.element;
-    const surface = surfaceEventData.surface;
+    const { surface, element, surfaceData } = surfaceEventData;
 
-    if (!surface == null || !surfaceElement) {
+    if (!surface == null || !element || !surfaceData) {
       return;
     }
 
-    trackElementValues(surface, surfaceElement);
+    trackElementValues(surface, element, surfaceData);
   });
 
   let lastEvent: null | {
@@ -247,6 +248,7 @@ export function publish(options: InitOptions): void {
     emitEvent({
       element: this,
       surface,
+      surfaceData: surface ? ALSurfaceData.get(surface) : null,
       relatedEventIndex,
       value: '' + value, // convert bool to string
       metadata: {
@@ -266,6 +268,6 @@ export function publish(options: InitOptions): void {
       return;
     }
 
-    trackElementValues(attrValue, this);
+    trackElementValues(attrValue, this, ALSurfaceData.get(attrValue));
   });
 }

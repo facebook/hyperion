@@ -20,14 +20,18 @@ import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
 import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
 
 
-export type ALSurfaceEventData = ALMetadataEvent & ALFlowletEvent & Readonly<{
-  surface: string;
-  element: Element;
-  isProxy: boolean;
-  capability: ALSurfaceCapability | null | undefined;
-}>;
+export type ALSurfaceEventData =
+  ALMetadataEvent &
+  ALFlowletEvent &
+  ALSurfaceEvent &
+  Readonly<{
+    element: Element;
+    isProxy: boolean;
+    capability: ALSurfaceCapability | null | undefined;
+  }>;
 
 export interface ALSurfaceCapability {
   /**
@@ -271,7 +275,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       }
     } else {
       surfacePath = proxiedContext.surface;
-      nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;      
+      nonInteractiveSurfacePath = proxiedContext.nonInteractiveSurface;
       domAttributeName = AUTO_LOGGING_SURFACE
       domAttributeValue = surfacePath;
       if (proxiedContext.container instanceof Element) {
@@ -338,8 +342,15 @@ export function init(options: InitOptions): ALSurfaceHOC {
       element.setAttribute(domAttributeName, domAttributeValue);
       __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
 
+      const surfaceData = ALSurfaceData.get(domAttributeValue);
+      __DEV__ && assert(
+        !surfaceData.mutationEvent && !surfaceData.visibilityEvent,
+        `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
+      )
+
       const event: ALSurfaceEventData = {
         surface: domAttributeValue,
+        surfaceData,
         callFlowlet,
         triggerFlowlet,
         metadata,

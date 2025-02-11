@@ -20,6 +20,7 @@ import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALM
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import * as Flags from "hyperion-globals/src/Flags";
 import { getCurrMainPageUrl } from "./MainPageUrl";
+import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
 
 
 /**
@@ -65,8 +66,9 @@ export type ALUIEventCaptureData = Readonly<
   ALReactElementEvent &
   ALElementTextEvent &
   CommonEventData &
+  Types.Nullable<ALSurfaceEvent> &
   {
-    surface: string | null;
+    // surface: string | null;
     value?: string;
   }
 >;
@@ -272,9 +274,11 @@ export function publish(options: InitOptions): void {
        */
       let flowletName = eventName + `(`;
       let separator = '';
+      let surfaceData: ALSurfaceData | null = null;
       if (surface) {
         flowletName += `${separator}surface=${surface}`;
         separator = '&';
+        surfaceData = ALSurfaceData.get(surface);
       }
       if (autoLoggingID) {
         flowletName += `${separator}element=${autoLoggingID}`;
@@ -298,6 +302,7 @@ export function publish(options: InitOptions): void {
         callFlowlet,
         triggerFlowlet,
         surface,
+        surfaceData,
         ...elementText,
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,

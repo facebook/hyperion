@@ -10,6 +10,11 @@ import type { ALSurfaceMutationEventData } from "./ALSurfaceMutationPublisher";
 import type { ALSurfaceVisibilityEventData } from "./ALSurfaceVisibilityPublisher";
 
 
+export type ALSurfaceEvent = Readonly<{
+  surface: string;
+  surfaceData: ALSurfaceData;
+}>;
+
 const surfacesData = new Map<string, ALSurfaceData>();
 
 const PARENT_SURFACE_REMOVEd_PROP = 'parentSurfaceRemoved';
@@ -35,8 +40,8 @@ export class ALSurfaceData {
 
   private __ext: { [namespace: string]: any; };
   readonly children: ALSurfaceData[] = [];
-  mutationEvent?: ALSurfaceMutationEventData;
-  visibilityEvent?: ALSurfaceVisibilityEventData;
+  mutationEvent: ALSurfaceMutationEventData | null = null;
+  visibilityEvent: ALSurfaceVisibilityEventData | null = null;
 
   constructor(
     public readonly surface: string,
