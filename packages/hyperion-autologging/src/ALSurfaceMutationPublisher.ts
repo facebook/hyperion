@@ -12,10 +12,10 @@ import * as ALEventIndex from './ALEventIndex';
 import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
-import type { ALChannelSurfaceEvent, ALSurfaceEventData, ALSurfaceCapability } from './ALSurface';
+import type { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData } from './ALSurface';
+import { ALSurfaceEvent } from "./ALSurfaceData";
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 import { getCurrMainPageUrl } from "./MainPageUrl";
-import { ALSurfaceData } from "./ALSurfaceData";
 
 type ALMutationEvent =
   ALReactElementEvent &
@@ -23,9 +23,9 @@ type ALMutationEvent =
   ALFlowletEvent &
   ALMetadataEvent &
   ALElementEvent &
+  ALSurfaceEvent &
   Readonly<
     {
-      surface: string;
       capability: ALSurfaceCapability | null | undefined
     }
     &
@@ -70,7 +70,7 @@ export function publish(options: InitOptions): void {
 
   function processNode(event: ALSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
-    const { element, surface, metadata } = event;
+    const { element, surface, metadata, surfaceData } = event;
 
     const callFlowlet = flowletManager.top();
     if (!(element instanceof HTMLElement) || /LINK|SCRIPT/.test(element.nodeName)) {
@@ -79,7 +79,6 @@ export function publish(options: InitOptions): void {
     if (surface == null) {
       return;
     }
-    const surfaceData = ALSurfaceData.get(surface);
     let mutationEvent = surfaceData.mutationEvent;
     switch (action) {
       case 'added': {
@@ -100,6 +99,7 @@ export function publish(options: InitOptions): void {
             eventTimestamp: timestamp,
             eventIndex: ALEventIndex.getNextEventIndex(),
             surface, // already in the evet, need to add again?
+            surfaceData, // already in the event. 
             element, // already in the evet, need to add again?
             autoLoggingID: ALID.getOrSetAutoLoggingID(element),
             reactComponentName: reactComponentData?.name,
@@ -144,7 +144,7 @@ export function publish(options: InitOptions): void {
             mutationEvent.metadata.remove_call_flowlet = callFlowlet.getFullName();
           }
           // Update the surfaceData before emitting event in case event handlers wanted to use this data; then we can delete
-          channel.emit('al_surface_mutation_event', surfaceData.mutationEvent = {
+          surfaceData.mutationEvent = {
             ...mutationEvent,
             event: 'unmount_component',
             eventTimestamp: removeTime,
@@ -154,8 +154,16 @@ export function publish(options: InitOptions): void {
             mountEvent: mutationEvent,
             // flowlet: event.flowlet, // We want to keep the info.flowlet here
             triggerFlowlet: event.triggerFlowlet, // the trigger has changed from what was saved in info
-          });
-          surfaceData.remove();
+          };
+          channel.emit('al_surface_mutation_event', surfaceData.mutationEvent);
+          /**
+           * We should not remove the surface from the data in case application has set some
+           * general props on the surface hierarchy.
+           * But, we know if surface is unmounted, we can remove the mutation and visibility events
+           */
+          // surfaceData.remove();
+          surfaceData.mutationEvent = null;
+          surfaceData.visibilityEvent = null;
         }
         break;
       }
