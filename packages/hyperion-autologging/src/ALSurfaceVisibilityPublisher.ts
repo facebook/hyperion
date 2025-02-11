@@ -16,16 +16,15 @@ import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
 
 export type ALSurfaceVisibilityEventData =
-  ALFlowletEvent &
-  ALMetadataEvent &
-  ALExtensibleEvent &
   ALElementEvent &
-  ALPageEvent &
+  ALExtensibleEvent &
+  ALFlowletEvent &
   ALLoggableEvent &
+  ALMetadataEvent &
+  ALPageEvent &
   ALSurfaceEvent &
   Readonly<
     {
-      // surface: string;
       intersectionEntry: IntersectionObserverEntry;
     } &
     (
@@ -157,10 +156,10 @@ export function publish(options: InitOptions): void {
                 console.warn("Don't know yet how to merge entries!");
               }
 
-              const  mutationEvent  = surfaceData.getMutationEvent();
+              const mutationEvent = surfaceData.getMutationEvent();
               assert(mutationEvent != null, "Invalid situation! Surface visibility change without mutation event first");
               const isIntersecting = entry.isIntersecting;
-              
+
               // update surfaceData before emitting the event.
               channel.emit('al_surface_visibility_event', surfaceData.setVisibilityEvent({
                 ...isIntersecting

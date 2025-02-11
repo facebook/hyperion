@@ -17,7 +17,9 @@ import { ALSurfaceEvent } from "./ALSurfaceData";
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 import { getCurrMainPageUrl } from "./MainPageUrl";
 
-type ALMutationEvent =
+export type ALSurfaceMutationEventData =
+  ALLoggableEvent &
+  ALPageEvent &
   ALReactElementEvent &
   ALElementTextEvent &
   ALFlowletEvent &
@@ -41,12 +43,6 @@ type ALMutationEvent =
       }
     )
   >;
-
-export type ALSurfaceMutationEventData = Readonly<
-  ALLoggableEvent &
-  ALPageEvent &
-  ALMutationEvent
->;
 
 export type ALChannelSurfaceMutationEvent = Readonly<{
   al_surface_mutation_event: [ALSurfaceMutationEventData],
