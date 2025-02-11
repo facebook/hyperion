@@ -3,15 +3,16 @@
  */
 
 'use strict';
-export { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
-export { useALSurfaceContext } from "./ALSurfaceContext";
-export * as ALEventIndex from "./ALEventIndex";
-export { default as ALElementInfo } from "./ALElementInfo";
-export * as ALInteractableDOMElement from "./ALInteractableDOMElement";
-export * as AutoLogging from "./AutoLogging";
-export { ALSurfaceCapability } from "./ALSurface";
-export * as ALSurfaceUtils from "./ALSurfaceUtils";
 export * as ALCustomEvent from './ALCustomEvent';
-export { getCurrentUIEventData } from "./ALUIEventPublisher";
+export { default as ALElementInfo } from "./ALElementInfo";
 export * as ALEventExtension from "./ALEventExtension";
+export * as ALEventIndex from "./ALEventIndex";
+export { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
+export * as ALInteractableDOMElement from "./ALInteractableDOMElement";
 export { getSessionFlowID } from "./ALSessionFlowID";
+export { ALSurfaceCapability } from "./ALSurface";
+export { useALSurfaceContext } from "./ALSurfaceContext";
+export { ALSurfaceData } from "./ALSurfaceData";
+export * as ALSurfaceUtils from "./ALSurfaceUtils";
+export { getCurrentUIEventData } from "./ALUIEventPublisher";
+export * as AutoLogging from "./AutoLogging";

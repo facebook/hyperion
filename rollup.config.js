@@ -94,6 +94,7 @@ export default defineConfig({
         "hyperion-autologging/src/ALFlowletManager",
         "hyperion-autologging/src/ALSurface",
         "hyperion-autologging/src/ALSurfaceContext",
+        "hyperion-autologging/src/ALSurfaceData",
         "hyperion-autologging/src/ALSurfaceUtils",
         "hyperion-autologging/src/ALEventIndex",
         "hyperion-autologging/src/ALElementInfo",
