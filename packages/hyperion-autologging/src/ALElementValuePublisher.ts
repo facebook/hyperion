@@ -131,7 +131,7 @@ export function publish(options: InitOptions): void {
       return;
     }
 
-    const relatedEventIndex = surfaceData.mutationEvent?.eventIndex;
+    const relatedEventIndex = surfaceData.getMutationEvent()?.eventIndex;
 
     for (let i = 0; i < elements.length; ++i) {
       const element = elements[i];

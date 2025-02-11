@@ -61,7 +61,7 @@ export function publish(options: InitOptions): void {
   const observers = new Map<number, IntersectionObserver>();
 
   channel.addListener('al_surface_mutation_event', event => {
-    __DEV__ && assert(event.surfaceData.mutationEvent === event, 'Invalid situation for surface mutation event');
+    __DEV__ && assert(event.surfaceData.getMutationEvent() === event, 'Invalid situation for surface mutation event');
     switch (event.event) {
       case 'mount_component': {
         if (event.capability?.trackVisibilityThreshold) {
@@ -157,12 +157,12 @@ export function publish(options: InitOptions): void {
                 console.warn("Don't know yet how to merge entries!");
               }
 
-              const { mutationEvent } = surfaceData;
+              const  mutationEvent  = surfaceData.getMutationEvent();
               assert(mutationEvent != null, "Invalid situation! Surface visibility change without mutation event first");
               const isIntersecting = entry.isIntersecting;
               
               // update surfaceData before emitting the event.
-              surfaceData.visibilityEvent = {
+              channel.emit('al_surface_visibility_event', surfaceData.setVisibilityEvent({
                 ...isIntersecting
                   ? { event: 'surface_visible', isIntersecting }
                   : { event: 'surface_hidden', isIntersecting },
@@ -180,8 +180,7 @@ export function publish(options: InitOptions): void {
                 triggerFlowlet: mutationEvent.triggerFlowlet,
                 intersectionEntry: entry,
                 pageURI: mutationEvent.pageURI,
-              };
-              channel.emit('al_surface_visibility_event', surfaceData.visibilityEvent);
+              }));
             }
           },
           { threshold }

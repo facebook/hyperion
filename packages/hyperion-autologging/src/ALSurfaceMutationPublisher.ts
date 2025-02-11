@@ -79,7 +79,7 @@ export function publish(options: InitOptions): void {
     if (surface == null) {
       return;
     }
-    let mutationEvent = surfaceData.mutationEvent;
+    let mutationEvent = surfaceData.getMutationEvent();
     switch (action) {
       case 'added': {
         if (!mutationEvent) {
@@ -93,7 +93,8 @@ export function publish(options: InitOptions): void {
           if (callFlowlet) {
             metadata.add_call_flowlet = callFlowlet?.getFullName();
           }
-          mutationEvent = {
+          // surfaceData.setInheritedPropery('surface_mutation_add_time', timestamp);
+          channel.emit('al_surface_mutation_event', surfaceData.setMutationEvent({
             ...event,
             event: 'mount_component',
             eventTimestamp: timestamp,
@@ -107,13 +108,10 @@ export function publish(options: InitOptions): void {
             ...elementText,
             metadata, // already in the evet, need to add again?
             pageURI: getCurrMainPageUrl(),
-          };
-          surfaceData.mutationEvent = mutationEvent;
-          surfaceData.setInheritedPropery('surface_mutation_add_time', timestamp);
-
-          channel.emit('al_surface_mutation_event', mutationEvent);
-
-        } else if (element != mutationEvent.element && element.contains(mutationEvent.element)) {
+          }));
+        } else if (element === mutationEvent.element) {
+          console.warn(`Multiple mutation events for the same surface ${surface} `);
+          // } else if (element.contains(mutationEvent.element)) {
           /**
           * This means we are seeing a element that is higher in the DOM
           * and belongs to a surface that we have seen before.
@@ -126,6 +124,8 @@ export function publish(options: InitOptions): void {
           // if (callFlowlet) {
           //   info.metadata.add_call_flowlet = callFlowlet.getFullName();
           // }
+        } else {
+          console.error(`Same surface '${surface} name used for different surface instances at `, element, mutationEvent.element);
         }
         break;
       }
@@ -144,7 +144,7 @@ export function publish(options: InitOptions): void {
             mutationEvent.metadata.remove_call_flowlet = callFlowlet.getFullName();
           }
           // Update the surfaceData before emitting event in case event handlers wanted to use this data; then we can delete
-          surfaceData.mutationEvent = {
+          channel.emit('al_surface_mutation_event', surfaceData.setMutationEvent({
             ...mutationEvent,
             event: 'unmount_component',
             eventTimestamp: removeTime,
@@ -154,16 +154,9 @@ export function publish(options: InitOptions): void {
             mountEvent: mutationEvent,
             // flowlet: event.flowlet, // We want to keep the info.flowlet here
             triggerFlowlet: event.triggerFlowlet, // the trigger has changed from what was saved in info
-          };
-          channel.emit('al_surface_mutation_event', surfaceData.mutationEvent);
-          /**
-           * We should not remove the surface from the data in case application has set some
-           * general props on the surface hierarchy.
-           * But, we know if surface is unmounted, we can remove the mutation and visibility events
-           */
-          // surfaceData.remove();
-          surfaceData.mutationEvent = null;
-          surfaceData.visibilityEvent = null;
+          }));
+          // Now that we are done with this surface, we can try removing it
+          surfaceData.remove();
         }
         break;
       }
