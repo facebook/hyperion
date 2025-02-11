@@ -22,6 +22,8 @@ import { getSessionFlowID } from "hyperion-autologging/src/ALSessionFlowID";
 
 export let interceptionStatus = "disabled";
 
+globalThis.__DEV__ = true;
+
 export function init() {
   Flags.setFlags({
     preciseTriggerFlowlet: true,
