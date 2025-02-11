@@ -6,9 +6,9 @@
 
 import * as Types from "hyperion-util/src/Types";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
-import { ALChannelSurfaceMutationEvent, ALSurfaceMutationEventData } from "./ALSurfaceMutationPublisher";
+import type { ALChannelSurfaceMutationEvent } from "./ALSurfaceMutationPublisher";
 import * as ALSurfaceUtils from './ALSurfaceUtils';
-import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALSharedInitOptions } from "./ALType";
+import type { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALSharedInitOptions } from "./ALType";
 
 import * as ALEventIndex from './ALEventIndex';
 import { assert } from "hyperion-globals";
@@ -55,13 +55,13 @@ export function publish(options: InitOptions): void {
 
   // lookup surfaces that are mounted by their root element 
   type SurfaceName = string;
-  const activeSurfaces = new Map<SurfaceName, ALSurfaceMutationEventData>();
   const observedRoots = new Map<Element | null, SurfaceName>();
 
   // We need one observer per threshold
   const observers = new Map<number, IntersectionObserver>();
 
   channel.addListener('al_surface_mutation_event', event => {
+    assert(ALSurfaceData.get(event.surface)?.mutationEvent === event, 'Invalid situation for surface mutation event');
     switch (event.event) {
       case 'mount_component': {
         if (event.capability?.trackVisibilityThreshold) {
@@ -81,8 +81,7 @@ export function publish(options: InitOptions): void {
             observer.observe(element);
             observedRoots.set(element, event.surface);
           }
-          activeSurfaces.set(event.surface, event);
-
+          assert(ALSurfaceData.get(event.surface)?.mutationEvent === event, 'Invalid situation for surface mutation event');
         }
 
         break;
@@ -100,7 +99,6 @@ export function publish(options: InitOptions): void {
             observer.unobserve(element);
             observedRoots.delete(element);
           }
-          activeSurfaces.delete(event.surface);
         }
         break;
       }
@@ -134,7 +132,7 @@ export function publish(options: InitOptions): void {
              * Since surface may have many children that we added above, we need to merge
              * all the entries, however, in most cases we may have only one entry
              */
-            const visibleSet = new Map<ALSurfaceMutationEventData, IntersectionObserverEntry[]>();
+            const visibleSet = new Map<ALSurfaceData, IntersectionObserverEntry[]>();
             for (const entry of entries) {
               const element = entry.target;
               const surface = observedRoots.get(element);
@@ -143,20 +141,16 @@ export function publish(options: InitOptions): void {
                 assert(false, `Unexpected situation! tracking visibility of unmounted surface`);
                 continue;
               }
-              const surfaceEvent = activeSurfaces.get(surface);
-              const otherSurfaceInfo = ALSurfaceData.get(surface);
-              assert(surfaceEvent === otherSurfaceInfo.mutationEvent, "Unexpcted mismatch between the two surface event caches! ");
+              const surfaceData = ALSurfaceData.get(surface);
 
-              if (surfaceEvent) {
-                let entries = visibleSet.get(surfaceEvent);
-                if (!entries) {
-                  entries = [];
-                  visibleSet.set(surfaceEvent, entries);
-                }
-                entries.push(entry);
+              let entries = visibleSet.get(surfaceData);
+              if (!entries) {
+                entries = [];
+                visibleSet.set(surfaceData, entries);
               }
+              entries.push(entry);
             }
-            for (const [surfaceEvent, entries] of visibleSet) {
+            for (const [surfaceData, entries] of visibleSet) {
               let entry = entries[0];
               __DEV__ && assert(entry != null, 'Unexpected situation');
               if (entries.length > 1) {
@@ -165,25 +159,27 @@ export function publish(options: InitOptions): void {
                 console.warn("Don't know yet how to merge entries!");
               }
 
+              const { mutationEvent } = surfaceData;
+              assert(mutationEvent != null, "Invalid situation! Surface visibility change without mutation event first");
               const isIntersecting = entry.isIntersecting;
-              channel.emit('al_surface_visibility_event', {
+              channel.emit('al_surface_visibility_event', surfaceData.visibilityEvent = {
                 ...isIntersecting
                   ? { event: 'surface_visible', isIntersecting }
                   : { event: 'surface_hidden', isIntersecting },
                 eventTimestamp: performanceAbsoluteNow.fromRelativeTime(entry.time),
                 eventIndex: ALEventIndex.getNextEventIndex(),
-                relatedEventIndex: surfaceEvent.eventIndex,
-                surface: surfaceEvent.surface,
-                element: surfaceEvent.element,
-                autoLoggingID: surfaceEvent.autoLoggingID, // same element, same ID
+                relatedEventIndex: mutationEvent.eventIndex,
+                surface: surfaceData.surface,
+                element: mutationEvent.element,
+                autoLoggingID: mutationEvent.autoLoggingID, // same element, same ID
                 metadata: {
                   emit_time: '' + performanceAbsoluteNow(), // just to keep track of the difference
                 },
-                callFlowlet: surfaceEvent.callFlowlet,
-                triggerFlowlet: surfaceEvent.triggerFlowlet,
+                callFlowlet: mutationEvent.callFlowlet,
+                triggerFlowlet: mutationEvent.triggerFlowlet,
                 intersectionEntry: entry,
-                pageURI: surfaceEvent.pageURI,
-              })
+                pageURI: mutationEvent.pageURI,
+              });
             }
           },
           { threshold }

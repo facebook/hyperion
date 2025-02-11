@@ -109,7 +109,7 @@ export function publish(options: InitOptions): void {
             pageURI: getCurrMainPageUrl(),
           };
           surfaceData.mutationEvent = mutationEvent;
-          surfaceData.setExtension('surface_mutation', { addTime: timestamp });
+          surfaceData.setInheritedPropery('surface_mutation_add_time', timestamp);
 
           channel.emit('al_surface_mutation_event', mutationEvent);
 
