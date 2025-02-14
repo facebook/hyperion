@@ -16,6 +16,7 @@ import type { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData } f
 import { ALSurfaceEvent } from "./ALSurfaceData";
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 import { getCurrMainPageUrl } from "./MainPageUrl";
+import { assert } from "hyperion-globals";
 
 export type ALSurfaceMutationEventData =
   ALLoggableEvent &
@@ -76,6 +77,11 @@ export function publish(options: InitOptions): void {
       return;
     }
     let mutationEvent = surfaceData.getMutationEvent();
+    __DEV__ && assert(
+      !mutationEvent || mutationEvent.element === element || mutationEvent.surface === surface,
+      `Invalid situation! Wrong Mutation Event is associated to surface ${surface}`
+    );
+
     switch (action) {
       case 'added': {
         if (!mutationEvent) {
@@ -121,7 +127,11 @@ export function publish(options: InitOptions): void {
           //   info.metadata.add_call_flowlet = callFlowlet.getFullName();
           // }
         } else {
-          console.error(`Same surface '${surface} name used for different surface instances at `, element, mutationEvent.element);
+          if (!surfaceData.getInheritedPropery<boolean>('hasDuplicates')) {
+            // Report it once
+            console.error(`Same surface '${surface} name used for different surface instances at `, element, mutationEvent.element);
+            surfaceData.setInheritedPropery('hasDuplicates', true);
+          }
         }
         break;
       }
@@ -153,6 +163,10 @@ export function publish(options: InitOptions): void {
           }));
           // Now that we are done with this surface, we can try removing it
           surfaceData.remove();
+        } else {
+          if (!surfaceData.getInheritedPropery<boolean>('hasDuplicates')) {
+            console.error(`Surface ${surface} is unmounted without proper previous mount event`);
+          }
         }
         break;
       }

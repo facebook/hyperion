@@ -343,10 +343,17 @@ export function init(options: InitOptions): ALSurfaceHOC {
       __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
 
       const surfaceData = ALSurfaceData.get(domAttributeValue);
-      __DEV__ && assert(
-        !surfaceData.getMutationEvent() && !surfaceData.getVisibilityEvent(),
-        `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
-      )
+
+      /**
+       * Although the following check may seem logical, but it seems that react may first run the component body code
+       * then run unmount of the previous components. So, at this point, we may indeed have a previous instance of the
+       * surface still not unmounted (specially in DEV mode that react runs everything twice)
+       * So, commenting code and keeping it for future references.
+       */
+      // __DEV__ && assert(
+      //   !surfaceData.getMutationEvent() && !surfaceData.getVisibilityEvent(),
+      //   `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
+      // )
 
       const event: ALSurfaceEventData = {
         surface: domAttributeValue,

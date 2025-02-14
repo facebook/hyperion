@@ -68,7 +68,8 @@ export class ALSurfaceData {
     return this.#visibilityEvent;
   }
   setVisibilityEvent(event: ALSurfaceVisibilityEventData): ALSurfaceVisibilityEventData {
-    return this.#visibilityEvent = event;
+    // return this.#visibilityEvent = event; // For now not keeping the event to see the impact on memory
+    return event;
   }
 
   remove(): boolean {
