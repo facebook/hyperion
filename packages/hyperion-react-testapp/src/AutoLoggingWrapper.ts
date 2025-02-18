@@ -28,6 +28,7 @@ export function init() {
   Flags.setFlags({
     preciseTriggerFlowlet: true,
     optimizeInteractibiltyCheck: true,
+    optimizeSurfaceMaps: true,
   });
 
   interceptionStatus = "enabled";
