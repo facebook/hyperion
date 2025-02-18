@@ -162,7 +162,7 @@ export function publish(options: InitOptions): void {
             triggerFlowlet: event.triggerFlowlet, // the trigger has changed from what was saved in info
           }));
           // Now that we are done with this surface, we can try removing it
-          surfaceData.remove();
+          surfaceData.setMutationEvent(null);
         } else {
           if (!surfaceData.getInheritedPropery<boolean>('hasDuplicates')) {
             console.error(`Surface ${surface} is unmounted without proper previous mount event`);

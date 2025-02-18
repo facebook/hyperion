@@ -180,6 +180,10 @@ export function publish(options: InitOptions): void {
                 intersectionEntry: entry,
                 pageURI: mutationEvent.pageURI,
               }));
+              if (!isIntersecting) {
+                // hiding
+                surfaceData.setVisibilityEvent(null);
+              }
             }
           },
           { threshold }

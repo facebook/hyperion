@@ -46,7 +46,7 @@ function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions & { contai
       surfaceComponent,
       {
         surface,
-        proxiedContext: { ...surfaceContext, container },
+        proxiedContext: { mainContext: surfaceContext, container },
       },
       children
     );

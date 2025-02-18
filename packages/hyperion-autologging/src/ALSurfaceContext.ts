@@ -6,9 +6,8 @@
 
 import { assert } from 'hyperion-globals';
 import type * as React from 'react';
-import { IALFlowlet } from './ALFlowletManager';
 import * as Types from "hyperion-util/src/Types";
-import { ALSurfaceCapability } from './ALSurface';
+import { ALSurfaceData } from './ALSurfaceData';
 
 
 export type InitOptions = Types.Options<{
@@ -20,28 +19,11 @@ export type InitOptions = Types.Options<{
   }
 }>;
 
-export type ALSurfaceContextFilledValue = {
-  nonInteractiveSurface: string;
-  surface: string;
-  callFlowlet: IALFlowlet;
-  capability: ALSurfaceCapability | null | undefined;
-};
+export type ALSurfaceContextFilledValue = ALSurfaceData;
 
-type ALSurfaceContextValue =
-  ALSurfaceContextFilledValue
-  | {
-    nonInteractiveSurface: null;
-    surface: null;
-    callFlowlet: null;
-    capability: null;
-  };
+type ALSurfaceContextValue = ALSurfaceData | typeof ALSurfaceData.root;
 
-const DefaultSurfaceContext: ALSurfaceContextValue = {
-  nonInteractiveSurface: null,
-  surface: null,
-  callFlowlet: null,
-  capability: null,
-};
+const DefaultSurfaceContext: ALSurfaceContextValue = ALSurfaceData.root;
 
 export let ALSurfaceContext: React.Context<ALSurfaceContextValue> | null = null;
 
