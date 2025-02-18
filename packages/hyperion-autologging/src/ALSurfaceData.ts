@@ -122,11 +122,13 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     this.parent.children.push(this);
 
     /**
-     * this.surface is the name of public (interactive) surface
-     * for nonInteractive surfaces, that value will be the same
-     * as this.parent's surface.
-     * Actual surface name is captured by nonInteractiveSurface
-     * in the surface tree.
+     * Every surface gets a unique nonInteractiveSurface name that
+     * is full path from all surfaces from the root.
+     * However, the nonInteractive surfaces, get the parent interactive
+     * surface name as their `this.surface`.
+     * To make sure all of these are searchable, we always add surface
+     * to the map with the unique nonInteractiveSurface key, and for
+     * interactive ones, also add based on surface key
      */
     if (__DEV__) {
       assert(
@@ -138,7 +140,11 @@ export class ALSurfaceData extends ALSurfaceDataCore {
         `Parent of surface ${surface} does not exist in the list`
       );
     }
+    if (!capability?.nonInteractive) {
+      surfacesData.set(surface, this);
+    }
     surfacesData.set(nonInteractiveSurface, this);
+
   }
 
   getMutationEvent(): ALSurfaceMutationEventData | null {
