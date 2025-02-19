@@ -160,18 +160,27 @@ export function publish(options: InitOptions): void {
               continue;
             }
             if (!optimizeSurfaceMaps) {
-              const {surface} = surfaceData;
+              const { surface } = surfaceData;
               const surfaceEvent = activeSurfaces.get(surface);
               const otherSurfaceInfo = getSurfaceMountInfo(surface);
               assert(surfaceEvent === otherSurfaceInfo, "Unexpcted mismatch between the two surface event caches! ");
             }
 
-            let entries = visibleSet.get(surfaceData);
-            if (!entries) {
-              entries = [];
-              visibleSet.set(surfaceData, entries);
+            if (surfaceData.getMutationEvent()) {
+              let entries = visibleSet.get(surfaceData);
+              if (!entries) {
+                entries = [];
+                visibleSet.set(surfaceData, entries);
+              }
+              entries.push(entry);
+            } else {
+              /**
+               * Not clear why this situation is happening sometimes. It might be because of proxy surfaces, or the fact
+               * that mutation events fire synchronously with react changes, while visibility events fire async.
+               * We might want to track mutation event directly in this module.
+               */
+              console.warn(`Surface ${surfaceData.surface} has visibility event but is already unmounted!`)
             }
-            entries.push(entry);
           }
           for (const [surfaceData, entries] of visibleSet) {
             let entry = entries[0];
