@@ -8,6 +8,7 @@ import { ReactComponentObjectProps } from "hyperion-react/src/IReact";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import type * as Types from "hyperion-util/src/Types";
 import type { UIEventConfig } from "./ALUIEventPublisher";
+import { getElementSurface } from "./ALSurfaceUtils";
 import { getFlags } from "hyperion-globals";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
 
@@ -629,7 +630,7 @@ function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', re
   return null;
 }
 
-function getElementName(element: HTMLElement, surface: string | null, results: ALElementText[], depth = 0): void {
+function getElementName(element: HTMLElement, surface: string | null, results: ALElementText[], depth = 0, skipChildSurface = false): void {
   if (depth > MaxDepth) {
     return;
   }
@@ -661,8 +662,11 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
      */
     for (
       let child = element.firstChild; child; child = child.nextSibling) {
+      if (skipChildSurface && child instanceof Element && getElementSurface(child) != null) {
+        continue;
+      }
       if (child instanceof HTMLElement && child.nodeType === Node.ELEMENT_NODE) {
-        getElementName(child, surface, results, depth + 1);
+        getElementName(child, surface, results, depth + 1, skipChildSurface);
       } else if (child instanceof Text && child.nodeType === Node.TEXT_NODE) {
         getTextFromTextNode({ element: element, surface }, child, 'innerText', results);
       }
@@ -677,7 +681,8 @@ export function getElementTextEvent(
   // Event name to utilize when attempting to resolve text from a parent interactable
   // Some interactable elements may have no text to extract, in those cases we want to move up the tree to attempt from parent interactable.
   tryInteractableParentEventName?: UIEventConfig['eventName'] | null,
-  useCachedElementText?: boolean
+  useCachedElementText?: boolean,
+  skipChildSurface: boolean = false,
 ): ALElementTextEvent {
   if (!element) {
     return {
@@ -694,7 +699,7 @@ export function getElementTextEvent(
   }
 
   const results: ALElementText[] = [];
-  getElementName(element, surface, results);
+  getElementName(element, surface, results, 0, skipChildSurface);
 
   /**
  * If we didn't look for interactable element and text is empty, we might have landed on some
@@ -709,7 +714,7 @@ export function getElementTextEvent(
       true
     );
     if (parentInteractable) {
-      getElementName(parentInteractable, surface, results);
+      getElementName(parentInteractable, surface, results, 0, skipChildSurface);
     }
   }
 
