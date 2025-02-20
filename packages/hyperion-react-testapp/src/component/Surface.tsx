@@ -21,6 +21,7 @@ export const Surface = (props: ALSurface.ALSurfaceProps) => {
       ...props,
       capability: {
         trackVisibilityThreshold: .5,
+        trackMutation: false,
       }
     }
   }
