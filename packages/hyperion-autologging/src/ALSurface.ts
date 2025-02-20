@@ -42,6 +42,13 @@ export interface ALSurfaceCapability {
   nonInteractive?: boolean;
 
   /**
+   * In many cases, we only need to have a surface to mark various events UI
+   * eith it. We may not need the mutation or visibility events for it.
+   * if this options is explicitly set to false, we won't generate the mutation events.
+   */
+  trackMutation?: boolean;
+
+  /**
    * When set, will track when the provided ratio [0,1] of the surface becomes visible
    */
   trackVisibilityThreshold?: number;
@@ -346,6 +353,10 @@ export function init(options: InitOptions): ALSurfaceHOC {
       //   !surfaceData.getMutationEvent() && !surfaceData.getVisibilityEvent(),
       //   `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
       // )
+
+      if (capability?.trackMutation === false){
+        return;
+      }
 
       const event: ALSurfaceEventData = {
         surface: domAttributeValue,
