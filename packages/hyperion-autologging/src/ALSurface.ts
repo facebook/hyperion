@@ -354,8 +354,12 @@ export function init(options: InitOptions): ALSurfaceHOC {
       //   `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
       // )
 
-      if (capability?.trackMutation === false){
-        return;
+      surfaceData.elements.add(element);
+
+      if (capability?.trackMutation === false) {
+        return () => {
+          surfaceData.elements.delete(element);
+        };
       }
 
       const event: ALSurfaceEventData = {
@@ -379,6 +383,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
           ...event,
           triggerFlowlet: callFlowlet.data.triggerFlowlet
         });
+        surfaceData.elements.delete(element);
       }
     }, [domAttributeName, domAttributeValue, nodeRef]);
 
