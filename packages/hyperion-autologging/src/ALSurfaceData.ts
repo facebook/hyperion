@@ -28,6 +28,7 @@ abstract class ALSurfaceDataCore {
   #locked: boolean = false; // allow removal by default
 
   readonly children: ALSurfaceData[] = [];
+  readonly elements: Set<Element> = new Set<Element>();
 
   constructor(
     public readonly surface: string | null,
