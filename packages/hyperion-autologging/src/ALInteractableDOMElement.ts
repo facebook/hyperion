@@ -468,17 +468,22 @@ export function init(options: ALElementTextOptions) {
   }
 }
 
+interface LocalOptions extends Pick<ALElementTextOptions, "updateText" | "getText"> {
+  skipChildSurface?: boolean;
+}
+
 function callExternalTextProcessor(
   elementText: ALElementText,
   domSource: ALDOMTextSource,
-  results: ALElementText[]
+  results: ALElementText[],
+  options?: LocalOptions,
 ): ALElementText[] {
-  _options?.updateText?.(elementText, domSource);
+  (options?.updateText ?? _options?.updateText)?.(elementText, domSource);
   results.push(elementText);
   return results;
 }
 
-function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
+function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, source: ALElementText['source'], results: ALElementText[], options?: LocalOptions): ALElementText[] | null {
   const text = textNode.nodeValue;
   if (text != null && text !== '') {
     return callExternalTextProcessor(
@@ -487,7 +492,8 @@ function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, source:
         source
       },
       domSource,
-      results
+      results,
+      options
     );
 
   }
@@ -538,7 +544,7 @@ function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALEleme
   return null;
 }
 
-function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
+function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[], options?: LocalOptions): ALElementText[] | null {
   /**
    * We want to allow an external text processor to see each text node separately and also report the full text
    * as its parts in case applications want to use translation services or compare agains known databases.
@@ -548,9 +554,9 @@ function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText[
   for (
     let child = element.firstChild; child; child = child.nextSibling) {
     if (child instanceof HTMLElement && child.nodeType === Node.ELEMENT_NODE) {
-      getTextFromInnerText({ element: child, surface }, source, results);
+      getTextFromInnerText({ element: child, surface }, source, results, options);
     } else if (child instanceof Text && child.nodeType === Node.TEXT_NODE) {
-      getTextFromTextNode({ element, surface }, child, source, results);
+      getTextFromTextNode({ element, surface }, child, source, results, options);
     }
   }
 
@@ -630,7 +636,7 @@ function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', re
   return null;
 }
 
-function getElementName(element: HTMLElement, surface: string | null, results: ALElementText[], depth = 0, skipChildSurface = false): void {
+function getElementName(element: HTMLElement, surface: string | null, results: ALElementText[], depth = 0, options?: LocalOptions): void {
   if (depth > MaxDepth) {
     return;
   }
@@ -662,13 +668,13 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
      */
     for (
       let child = element.firstChild; child; child = child.nextSibling) {
-      if (skipChildSurface && child instanceof Element && getElementSurface(child) != null) {
+      if (options?.skipChildSurface && child instanceof Element && getElementSurface(child) != null) {
         continue;
       }
       if (child instanceof HTMLElement && child.nodeType === Node.ELEMENT_NODE) {
-        getElementName(child, surface, results, depth + 1, skipChildSurface);
+        getElementName(child, surface, results, depth + 1, options);
       } else if (child instanceof Text && child.nodeType === Node.TEXT_NODE) {
-        getTextFromTextNode({ element: element, surface }, child, 'innerText', results);
+        getTextFromTextNode({ element: element, surface }, child, 'innerText', results, options);
       }
     }
   }
@@ -676,15 +682,15 @@ function getElementName(element: HTMLElement, surface: string | null, results: A
 }
 
 export function getElementTextEvent(
-  element: HTMLElement | null,
+  element: Element | null,
   surface: string | null,
   // Event name to utilize when attempting to resolve text from a parent interactable
   // Some interactable elements may have no text to extract, in those cases we want to move up the tree to attempt from parent interactable.
   tryInteractableParentEventName?: UIEventConfig['eventName'] | null,
   useCachedElementText?: boolean,
-  skipChildSurface: boolean = false,
+  options?: LocalOptions
 ): ALElementTextEvent {
-  if (!element) {
+  if (!element || !(element instanceof HTMLElement)) {
     return {
       elementName: null,
       elementText: null,
@@ -699,7 +705,7 @@ export function getElementTextEvent(
   }
 
   const results: ALElementText[] = [];
-  getElementName(element, surface, results, 0, skipChildSurface);
+  getElementName(element, surface, results, 0, options);
 
   /**
  * If we didn't look for interactable element and text is empty, we might have landed on some
@@ -714,11 +720,11 @@ export function getElementTextEvent(
       true
     );
     if (parentInteractable) {
-      getElementName(parentInteractable, surface, results, 0, skipChildSurface);
+      getElementName(parentInteractable, surface, results, 0, options);
     }
   }
 
-  const elementText = _options?.getText?.(results) ?? results.reduce(
+  const elementText = (options?.getText ?? _options?.getText)?.(results) ?? results.reduce(
     (prev, current) => {
       /**
        * We want to ensure that if _options.updateText has changed individual objects
