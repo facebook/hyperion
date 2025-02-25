@@ -9,6 +9,7 @@ import type { ALSurfaceMutationEventData } from "./ALSurfaceMutationPublisher";
 import type { ALSurfaceVisibilityEventData } from "./ALSurfaceVisibilityPublisher";
 import { type IALFlowlet } from "./ALFlowletManager";
 import type { ALSurfaceCapability } from "./ALSurface";
+import { type Metadata } from "./ALType";
 
 
 export type ALSurfaceEvent = Readonly<{
@@ -116,6 +117,7 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     public readonly nonInteractiveSurface: string,
     public readonly callFlowlet: IALFlowlet,
     public readonly capability: ALSurfaceCapability | null | undefined,
+    public metadata: Metadata,
     public readonly domAttributeName: string,
     public readonly domAttributeValue: string,
   ) {
