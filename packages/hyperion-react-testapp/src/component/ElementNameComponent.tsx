@@ -59,7 +59,7 @@ export default function (/* props: Props */) {
         <label id='ch1'>Check box 1</label>
         <input type='checkbox' aria-labelledby="ch1" defaultChecked></input>
         <input type='checkbox' aria-label="Check box 2" ></input>
-        <SurfaceComp surface="inputs2">
+        <SurfaceComp surface="inputs2" eventMetadata={{click: {test: "mt"}}}>
           <input type='radio' aria-label="Radio 1" name='radios1'></input>
           <input type="radio" aria-label="Radio 2" name='radios1' defaultChecked></input>
           <SurfaceComp surface="inputs3">

@@ -11,10 +11,13 @@ import { type IALFlowlet } from "./ALFlowletManager";
 import type { ALSurfaceCapability } from "./ALSurface";
 import { type Metadata } from "./ALType";
 
-
 export type ALSurfaceEvent = Readonly<{
   surface: string;
   surfaceData: ALSurfaceData;
+}>;
+
+export type EventMetadata = Readonly<{
+  [eventName in keyof DocumentEventMap]?: Metadata
 }>;
 
 /**
@@ -118,6 +121,7 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     public readonly callFlowlet: IALFlowlet,
     public readonly capability: ALSurfaceCapability | null | undefined,
     public metadata: Metadata,
+    public eventMetadata: EventMetadata | null | undefined,
     public readonly domAttributeName: string,
     public readonly domAttributeValue: string,
   ) {
