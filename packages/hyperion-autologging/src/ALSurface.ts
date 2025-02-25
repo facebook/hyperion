@@ -289,6 +289,9 @@ export function init(options: InitOptions): ALSurfaceHOC {
       }
     }
 
+    // Emit surface mutation events on mount/unmount
+    const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
+
     let surfaceData = ALSurfaceData.tryGet(nonInteractiveSurfacePath);
     let callFlowlet: FlowletType;
     if (!surfaceData) {
@@ -307,6 +310,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         nonInteractiveSurfacePath,
         callFlowlet,
         capability,
+        metadata,
         domAttributeName,
         domAttributeValue,
       );
@@ -316,10 +320,9 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     const isProxy = proxiedContext != null;
 
-    // Emit surface mutation events on mount/unmount
-    const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
     metadata.original_call_flowlet = callFlowlet.getFullName();
     metadata.surface_capability = surfaceCapabilityToString(capability);
+    surfaceData.metadata = metadata; // Want to make sure the tree always has the latest fresh version of metadata
 
     /**
      * We don't know when react decides to call effect callback, so to be safe make a copy
