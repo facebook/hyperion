@@ -20,7 +20,7 @@ import * as ALSurfaceContext from "./ALSurfaceContext";
 import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
 import * as SurfaceProxy from "./ALSurfaceProxy";
 import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
-import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
+import { ALSurfaceData, ALSurfaceEvent, EventMetadata } from "./ALSurfaceData";
 
 
 export type ALSurfaceEventData =
@@ -64,6 +64,7 @@ function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): str
 export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
+  eventMetadata?: EventMetadata,
   capability?: ALSurfaceCapability,
   nodeRef?: React.RefObject<Element | null | undefined>,
 }>;
@@ -291,7 +292,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     // Emit surface mutation events on mount/unmount
     const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
-
+    const eventMetadata = props.eventMetadata;
     let surfaceData = ALSurfaceData.tryGet(nonInteractiveSurfacePath);
     let callFlowlet: FlowletType;
     if (!surfaceData) {
@@ -311,6 +312,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
         callFlowlet,
         capability,
         metadata,
+        eventMetadata,
         domAttributeName,
         domAttributeValue,
       );
