@@ -64,7 +64,7 @@ function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): str
 export type ALSurfaceProps = Readonly<{
   surface: string;
   metadata?: ALMetadataEvent['metadata'];
-  eventMetadata?: EventMetadata,
+  uiEventMetadata?: EventMetadata,
   capability?: ALSurfaceCapability,
   nodeRef?: React.RefObject<Element | null | undefined>,
 }>;
@@ -292,7 +292,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     // Emit surface mutation events on mount/unmount
     const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
-    const eventMetadata = props.eventMetadata;
+    const eventMetadata = props.uiEventMetadata;
     let surfaceData = ALSurfaceData.tryGet(nonInteractiveSurfacePath);
     let callFlowlet: FlowletType;
     if (!surfaceData) {

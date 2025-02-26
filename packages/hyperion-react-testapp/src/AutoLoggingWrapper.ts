@@ -131,13 +131,13 @@ export function init() {
           enableElementTextExtraction: true,
           interactableElementsOnly: false,
         },
-        {
-          eventName: 'mouseover',
-          cacheElementReactInfo: true,
-          interactableElementsOnly: false,
-          enableElementTextExtraction: true,
-          durationThresholdToEmitHoverEvent: 1000,
-        },
+        // {
+        //   eventName: 'mouseover',
+        //   cacheElementReactInfo: true,
+        //   interactableElementsOnly: false,
+        //   enableElementTextExtraction: true,
+        //   durationThresholdToEmitHoverEvent: 1000,
+        // },
       ]
     },
     heartbeat: {
