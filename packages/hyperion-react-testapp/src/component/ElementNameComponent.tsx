@@ -59,10 +59,10 @@ export default function (/* props: Props */) {
         <label id='ch1'>Check box 1</label>
         <input type='checkbox' aria-labelledby="ch1" defaultChecked></input>
         <input type='checkbox' aria-label="Check box 2" ></input>
-        <SurfaceComp surface="inputs2" eventMetadata={{click: {test: "mt"}}}>
+        <SurfaceComp surface="inputs2" uiEventMetadata={{ click: { test1: "c2.1", test2: "c2.2" }, mousedown: { test1: "md2.1" } }}>
           <input type='radio' aria-label="Radio 1" name='radios1'></input>
           <input type="radio" aria-label="Radio 2" name='radios1' defaultChecked></input>
-          <SurfaceComp surface="inputs3">
+          <SurfaceComp surface="inputs3" uiEventMetadata={{ click: { test1: "c3.1" } }} >
             <input type='radio' aria-label="Radio 3" name='radios2'></input>
             <input type="radio" aria-label="Radio 4" name='radios2'></input>
             <input type="radio" name='radios2' id="radio5"></input>
@@ -82,5 +82,5 @@ export default function (/* props: Props */) {
       /><div><div id="js_1q">Single image or video </div></div>
         <div>One image or video, or a slideshow with multiple images</div></div></div></label>
     </div>
-  </SurfaceComp>;
+  </SurfaceComp >;
 }

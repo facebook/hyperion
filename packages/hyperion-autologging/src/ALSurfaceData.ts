@@ -16,9 +16,10 @@ export type ALSurfaceEvent = Readonly<{
   surfaceData: ALSurfaceData;
 }>;
 
-export type EventMetadata = Readonly<{
+type WritableEventMetadata = {
   [eventName in keyof DocumentEventMap]?: Metadata
-}>;
+};
+export type EventMetadata = Readonly<WritableEventMetadata>;
 
 /**
  * This core class captures the general structure of the tree.
@@ -87,6 +88,8 @@ class ALSurfaceDataRoot extends ALSurfaceDataCore {
   }
 }
 
+const InheritedEventMetadataProperyName = "__uiEventMetadata";
+
 const surfacesData = new Map<string, ALSurfaceData>();
 export class ALSurfaceData extends ALSurfaceDataCore {
   static root = ALSurfaceDataRoot.singlton;
@@ -121,7 +124,7 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     public readonly callFlowlet: IALFlowlet,
     public readonly capability: ALSurfaceCapability | null | undefined,
     public metadata: Metadata,
-    public eventMetadata: EventMetadata | null | undefined,
+    uiEventMetadata: EventMetadata | null | undefined,
     public readonly domAttributeName: string,
     public readonly domAttributeValue: string,
   ) {
@@ -152,6 +155,28 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     }
     surfacesData.set(nonInteractiveSurface, this);
 
+    /**
+     * We need to setup eventMetadata in a way that values from parent surfaces merge down with lower surfaces.
+     * To minimize the object creation, we use the getInheritedPropery mechanism to directly get the values
+     * from the surface node that does have eventMetadata
+     */
+    if (uiEventMetadata) {
+      const parentEventMetadata = this.getInheritedPropery<EventMetadata>(InheritedEventMetadataProperyName);
+      let fullEventMetadata: WritableEventMetadata;
+      if (parentEventMetadata) {
+        fullEventMetadata = Object.create(parentEventMetadata); // We automatically inherit values from parent object
+        (Object.keys(uiEventMetadata) as Array<keyof DocumentEventMap>).forEach(eventName => {
+          fullEventMetadata[eventName] = { ...parentEventMetadata[eventName], ...uiEventMetadata[eventName] };
+        });
+      } else {
+        fullEventMetadata = uiEventMetadata;
+      }
+      this.setInheritedPropery(InheritedEventMetadataProperyName, fullEventMetadata);
+    }
+  }
+
+  getInheriteUIEventMetadata(uiEventName: keyof DocumentEventMap): Metadata | undefined {
+    return this.getInheritedPropery<EventMetadata>(InheritedEventMetadataProperyName)?.[uiEventName];
   }
 
   getMutationEvent(): ALSurfaceMutationEventData | null {

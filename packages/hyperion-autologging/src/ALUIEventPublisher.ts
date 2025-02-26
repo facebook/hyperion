@@ -279,8 +279,8 @@ export function publish(options: InitOptions): void {
         flowletName += `${separator}surface=${surface}`;
         separator = '&';
         surfaceData = ALSurfaceData.get(surface);
-        const eventMetadata = surfaceData?.eventMetadata?.[eventName]; 
-        if (eventMetadata){
+        const eventMetadata = surfaceData?.getInheriteUIEventMetadata(eventName);
+        if (eventMetadata) {
           Object.assign(uiEventData.metadata, eventMetadata);
         }
       }
