@@ -286,6 +286,12 @@ export function publish(options: InitOptions): void {
       flowletName += ')';
 
       let triggerFlowlet = new flowletManager.flowletCtor(flowletName, ALUIEventGroupPublisher.getGroupRootFlowlet(event));
+
+      if (surface) {
+        triggerFlowlet.data.surface = surface;
+        triggerFlowlet.data.triggerUIEventName = eventName;
+      }
+
       let callFlowlet = Flags.getFlags().preciseTriggerFlowlet
         ? flowletManager.top()
         : triggerFlowlet;
