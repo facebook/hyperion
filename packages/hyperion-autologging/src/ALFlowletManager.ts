@@ -15,6 +15,7 @@ import { Flowlet, FlowletDataType } from "hyperion-flowlet/src/Flowlet";
 export interface ALFlowletDataType extends FlowletDataType {
   surface?: string;
   triggerFlowlet?: IALFlowlet;
+  triggerUIEventName?: string;
 };
 
 export interface IALFlowlet<DataType extends ALFlowletDataType = ALFlowletDataType> extends Flowlet<DataType> { }
