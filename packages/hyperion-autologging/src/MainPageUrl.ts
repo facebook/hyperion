@@ -13,7 +13,7 @@ let mainPageUrl: URL = new URL('http://undefined');
 export function getCurrMainPageUrl(): URL {
   __DEV__ && assert(
     mainPageUrl.href === window.location.href,
-    `Tha main page url is not matching the page url`
+    `The main page url is not matching the page url`
   );
 
   return mainPageUrl;
