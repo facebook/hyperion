@@ -16,7 +16,7 @@ import type { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData } f
 import { ALSurfaceEvent } from "./ALSurfaceData";
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 import { getCurrMainPageUrl } from "./MainPageUrl";
-import { assert, getFlags } from "hyperion-globals";
+import { assert } from "hyperion-globals";
 
 export type ALSurfaceMutationEventData =
   ALLoggableEvent &
@@ -50,16 +50,6 @@ export type ALChannelSurfaceMutationEvent = Readonly<{
 }
 >;
 
-type SurfaceInfo = ALSurfaceMutationEventData & Types.Writeable<ALElementEvent> & {
-  addTime?: number,
-};
-
-const activeSurfaces = new Map<string, SurfaceInfo>();
-
-export function getSurfaceMountInfo(surface: string): ALSurfaceMutationEventData | undefined {
-  return activeSurfaces.get(surface);
-}
-
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent & ALCustomEvent.ALChannelCustomEvent> &
   {
@@ -75,8 +65,6 @@ export type InitOptions = Types.Options<
 export function publish(options: InitOptions): void {
   const { channel, flowletManager, cacheElementReactInfo, enableElementTextExtraction = false } = options;
 
-  const optimizeSurfaceMaps = getFlags().optimizeSurfaceMaps ?? false;
-
   function processNode(event: ALSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
     const { element, surface, metadata, surfaceData } = event;
@@ -88,7 +76,7 @@ export function publish(options: InitOptions): void {
     if (surface == null) {
       return;
     }
-    let mutationEvent = optimizeSurfaceMaps ? surfaceData.getMutationEvent() : activeSurfaces.get(surface);
+    let mutationEvent = surfaceData.getMutationEvent();
 
     __DEV__ && assert(
       !mutationEvent || mutationEvent.element === element || mutationEvent.surface === surface,
@@ -124,10 +112,6 @@ export function publish(options: InitOptions): void {
             metadata, // already in the evet, need to add again?
             pageURI: getCurrMainPageUrl(),
           }));
-
-          if (!optimizeSurfaceMaps) {
-            activeSurfaces.set(surface, mutationEvent)
-          }
         } else if (element === mutationEvent.element) {
           console.warn(`Multiple mutation events for the same surface ${surface} `);
           // } else if (element.contains(mutationEvent.element)) {
@@ -180,9 +164,6 @@ export function publish(options: InitOptions): void {
           }));
           // Now that we are done with this surface, we can try removing it
           surfaceData.setMutationEvent(null);
-          if (!optimizeSurfaceMaps) {
-            activeSurfaces.delete(surface);
-          }
         } else {
           if (!surfaceData.getInheritedPropery<boolean>('hasDuplicates')) {
             console.error(`Surface ${surface} is unmounted without proper previous mount event`);
