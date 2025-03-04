@@ -6,5 +6,4 @@
 
 interface GlobalFlags {
   preciseTriggerFlowlet?: boolean;
-  optimizeSurfaceMaps?: boolean;
 }

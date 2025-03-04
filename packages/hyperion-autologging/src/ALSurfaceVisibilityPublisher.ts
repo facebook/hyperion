@@ -6,11 +6,11 @@
 
 import * as Types from "hyperion-util/src/Types";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
-import { ALChannelSurfaceMutationEvent, ALSurfaceMutationEventData, getSurfaceMountInfo } from "./ALSurfaceMutationPublisher";
+import { ALChannelSurfaceMutationEvent } from "./ALSurfaceMutationPublisher";
 import * as ALSurfaceUtils from './ALSurfaceUtils';
 import type { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALSharedInitOptions } from "./ALType";
 
-import { assert, getFlags } from "hyperion-globals";
+import { assert } from "hyperion-globals";
 import * as ALEventIndex from './ALEventIndex';
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
@@ -58,8 +58,6 @@ export function publish(options: InitOptions): void {
 
   // We need one observer per threshold
   const observers = new Map<number, IntersectionObserver>();
-  const activeSurfaces = new Map<string, ALSurfaceMutationEventData>();
-  const optimizeSurfaceMaps = getFlags().optimizeSurfaceMaps ?? false;
 
   channel.addListener('al_surface_mutation_event', event => {
     __DEV__ && assert(event.surfaceData.getMutationEvent() === event, 'Invalid situation for surface mutation event');
@@ -82,9 +80,6 @@ export function publish(options: InitOptions): void {
             observer.observe(element);
             observedRoots.set(element, event.surfaceData);
           }
-          if (!optimizeSurfaceMaps) {
-            activeSurfaces.set(event.surface, event);
-          }
         }
 
         break;
@@ -102,44 +97,30 @@ export function publish(options: InitOptions): void {
             observer.unobserve(element);
             observedRoots.delete(element);
           }
-          if (!optimizeSurfaceMaps) {
-            activeSurfaces.delete(event.surface);
-          }
         }
         break;
       }
     }
-
-    if (!optimizeSurfaceMaps) {
-      // We know this is horrible! But keeping here to compare the performance of it for now
-      tmpInit();
-    }
   });
 
-  const tmpInit = () => {
-    // We need to also handle surface proxies
-    channel.addListener('al_surface_mount', event => {
-      if (!event.isProxy || !event.capability?.trackVisibilityThreshold || !event.element) {
-        return;
-      }
+  // We need to also handle surface proxies
+  channel.addListener('al_surface_mount', event => {
+    if (!event.isProxy || !event.capability?.trackVisibilityThreshold || !event.element) {
+      return;
+    }
+    const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
+    observer.observe(event.element);
+    observedRoots.set(event.element, event.surfaceData);
+  });
+  channel.addListener('al_surface_unmount', event => {
+    if (!event.isProxy || !event.capability?.trackVisibilityThreshold) {
+      return;
+    }
+    if (observedRoots.delete(event.element)) {
       const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
-      observer.observe(event.element);
-      observedRoots.set(event.element, event.surfaceData);
-    });
-    channel.addListener('al_surface_unmount', event => {
-      if (!event.isProxy || !event.capability?.trackVisibilityThreshold) {
-        return;
-      }
-      if (observedRoots.delete(event.element)) {
-        const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
-        observer.unobserve(event.element);
-      }
-    });
-  }
-
-  if (optimizeSurfaceMaps) {
-    tmpInit();
-  }
+      observer.unobserve(event.element);
+    }
+  });
 
   function getOrCreateObserver(threshold: number): IntersectionObserver {
     let observer = observers.get(threshold);
@@ -158,12 +139,6 @@ export function publish(options: InitOptions): void {
               // could this happen when surface is unmounted first, and then becomes not visible?
               assert(false, `Unexpected situation! tracking visibility of unmounted surface`);
               continue;
-            }
-            if (!optimizeSurfaceMaps) {
-              const { surface } = surfaceData;
-              const surfaceEvent = activeSurfaces.get(surface);
-              const otherSurfaceInfo = getSurfaceMountInfo(surface);
-              assert(surfaceEvent === otherSurfaceInfo, "Unexpcted mismatch between the two surface event caches! ");
             }
 
             if (surfaceData.getMutationEvent()) {
