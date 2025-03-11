@@ -43,7 +43,7 @@ const SYNTHETIC_EVENT_HANDLER_MAP: {
 
 type HTMLElementEventNames = keyof HTMLElementEventMap
 type AttributeEventHandlerName = `on${HTMLElementEventNames}`;
-type HTMLElementWithHandlers = HTMLElement & {
+type HTMLElementWithHandlers = Element & {
   [K in AttributeEventHandlerName]?: any;//  ((this: GlobalEventHandlers, ev: MouseEvent) => any) | null;
 }
 
@@ -68,11 +68,11 @@ const EventHandlerTrackerAttribute = `data-interactable`;
 
 const InteractableAncestor = `interactableAncestor`;
 type InteractableAncestorCache = {
-  [index: string]: (HTMLElement | null)[];
+  [index: string]: (Element | null)[];
 }
 
-let getInteractableImpl: (node: HTMLElement, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean) => HTMLElement | null = (node, eventName, requireHandlerAssigned) => {
-  function getInteractableOptimized(node: HTMLElement, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean, selectorString?: string): HTMLElement | null {
+let getInteractableImpl: (node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean) => Element | null = (node, eventName, requireHandlerAssigned) => {
+  function getInteractableOptimized(node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean, selectorString?: string): Element | null {
     /**
      * We should be careful to only cache the result based on given arguments. We use a map from eventName to a array based on requiredHandlerAassigned
      * In this way, each node may point to its closest ancestor that matches the criteria of the interactablity.
@@ -81,7 +81,7 @@ let getInteractableImpl: (node: HTMLElement, eventName: UIEventConfig['eventName
      */
     let cached: InteractableAncestorCache | undefined;
     cached = getVirtualPropertyValue<InteractableAncestorCache>(node, InteractableAncestor);
-    let interactable: HTMLElement | null | undefined = cached?.[eventName]?.[requireHandlerAssigned ? 0 : 1];
+    let interactable: Element | null | undefined = cached?.[eventName]?.[requireHandlerAssigned ? 0 : 1];
     if (interactable !== void 0) { // Not undefined means we have computed it before
       return interactable;
     }
@@ -104,10 +104,10 @@ let getInteractableImpl: (node: HTMLElement, eventName: UIEventConfig['eventName
     return interactable;
   };
 
-  function getInteractableUnoptimized(node: HTMLElement, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean): HTMLElement | null {
+  function getInteractableUnoptimized(node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean): Element | null {
     // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
     const selectorString = `[${EventHandlerTrackerAttribute}*="${eventName}"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
-    for (let element: HTMLElement | null = node; element != null; element = element.parentElement) {
+    for (let element: Element | null = node; element != null; element = element.parentElement) {
       if (element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames)) {
         if (ignoreInteractiveElement(element)) {
           continue;
@@ -128,8 +128,8 @@ export function getInteractable(
   eventName: UIEventConfig['eventName'],
   // Whether to require an actual handler is assigned to determine interactiveness, rather than including "interactive" element tags
   requireHandlerAssigned: boolean = false,
-): HTMLElement | null {
-  if (!(node instanceof HTMLElement)) {
+): Element | null {
+  if (!(node instanceof Element)) {
     return null;
   }
 
@@ -141,19 +141,19 @@ function elementHasEventHandler(node: HTMLElementWithHandlers, eventName: HTMLEl
   return handler != null;
 }
 
-let ignoreInteractiveElement: (node: HTMLElement) => boolean = node => {
+let ignoreInteractiveElement: (node: Element) => boolean = node => {
   /**
    * To minimize flag checking in every call twice, the following code decides which version of the code
    * is needed on the first invocation (by then flags are assigned).
    * Later, when we wanted to remove the flag, the cleanup is easy.
    */
-  function ignoreInteractiveElementCore(node: HTMLElement): boolean {
+  function ignoreInteractiveElementCore(node: Element): boolean {
     return node.tagName === 'BODY' || node.tagName === 'HTML' ||
       (node.clientHeight === window.innerHeight && node.clientWidth === window.innerWidth);
   }
 
   const IgnoreInteractivity = `ignoreInteractivity`;
-  function ignoreInteractiveElementOptimized(node: HTMLElement): boolean {
+  function ignoreInteractiveElementOptimized(node: Element): boolean {
     let shouldIgnore: boolean | undefined;
     shouldIgnore = getVirtualPropertyValue<boolean>(node, IgnoreInteractivity);
     if (shouldIgnore === false || shouldIgnore === true) {
@@ -240,7 +240,7 @@ let installHandlers = () => {
     event,
     _listener,
   ) {
-    if (UIEventNames.has(event) && this instanceof HTMLElement && !ignoreInteractiveElement(this)) {
+    if (UIEventNames.has(event) && (this instanceof Element) && !ignoreInteractiveElement(this)) {
       this.setAttribute(EventHandlerTrackerAttribute, addEventNameToList(event, this.getAttribute(EventHandlerTrackerAttribute)));
     }
   });
@@ -250,7 +250,7 @@ let installHandlers = () => {
     event,
     _listener,
   ) {
-    if (this instanceof HTMLElement) {
+    if (this instanceof Element) {
       const newValue = removeEventNameFromList(event, this.getAttribute(EventHandlerTrackerAttribute));
       if (newValue) {
         this.setAttribute(EventHandlerTrackerAttribute, newValue);
@@ -440,7 +440,7 @@ export type ALElementTextEvent = Readonly<{
 
 export type ALDOMTextSource = {
   surface: string | null;
-  element: HTMLElement;
+  element: Element;
 }
 
 export type ALElementTextOptions = Types.Options<
@@ -459,12 +459,12 @@ type CachedALElementResults = {
 
 let _options: ALElementTextOptions | null = null;
 let MaxDepth = 20;
-let ElementTextCache: WeakMap<HTMLElement, CachedALElementResults> | null = null;
+let ElementTextCache: WeakMap<Element, CachedALElementResults> | null = null;
 export function init(options: ALElementTextOptions) {
   _options = options;
   MaxDepth = _options.maxDepth ?? MaxDepth;
   if (options.enableElementTextCache) {
-    ElementTextCache = new WeakMap<HTMLElement, CachedALElementResults>();
+    ElementTextCache = new WeakMap<Element, CachedALElementResults>();
   }
 }
 
@@ -500,6 +500,10 @@ function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, source:
   return null;
 }
 
+function isValidElement(element: Element | null): element is Element {
+  return element instanceof Element;
+}
+
 
 // Takes a space-delimited list of DOM element IDs and returns the inner text of those elements joined by spaces
 function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
@@ -512,7 +516,7 @@ function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementT
     ?.split(' ')
     .filter((id, index, array) => array.indexOf(id) === index)
     .map(id => document.getElementById(id))
-    .filter(function (element): element is HTMLElement { return element instanceof HTMLElement });
+    .filter(e => isValidElement(e));
   if (!indirectSources?.length) {
     return null;
   }
@@ -553,7 +557,7 @@ function getTextFromInnerText(domSource: ALDOMTextSource, source: ALElementText[
   const { element, surface } = domSource;
   for (
     let child = element.firstChild; child; child = child.nextSibling) {
-    if (child instanceof HTMLElement && child.nodeType === Node.ELEMENT_NODE) {
+    if (child instanceof Element && child.nodeType === Node.ELEMENT_NODE) {
       getTextFromInnerText({ element: child, surface }, source, results, options);
     } else if (child instanceof Text && child.nodeType === Node.TEXT_NODE) {
       getTextFromTextNode({ element, surface }, child, source, results, options);
@@ -636,7 +640,7 @@ function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', re
   return null;
 }
 
-function getElementName(element: HTMLElement, surface: string | null, results: ALElementText[], depth = 0, options?: LocalOptions): void {
+function getElementName(element: Element, surface: string | null, results: ALElementText[], depth = 0, options?: LocalOptions): void {
   if (depth > MaxDepth) {
     return;
   }

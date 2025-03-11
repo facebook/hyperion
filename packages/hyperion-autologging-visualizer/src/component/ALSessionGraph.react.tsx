@@ -35,7 +35,7 @@ type EventBody = {
   channelEventName?: string,
   callFlowlet?: IALFlowlet | null,
   copiedFlowlet?: CopiedFlowlet,
-  targetElement?: HTMLElement | null,
+  targetElement?: Element | null,
 } & (
     ALFlowletEventData |
     ALUIEventData |

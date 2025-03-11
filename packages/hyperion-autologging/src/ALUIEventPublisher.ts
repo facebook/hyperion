@@ -49,7 +49,7 @@ type ALUIEvent =
      * .element field could be either target associated with the domEvent; With interactableElementsOnly, the interactable element target.
      * .targetElement is the event.target element, as opposed to .element which could represent the interactableElement
      */
-    targetElement: HTMLElement | null,
+    targetElement: Element | null,
   } &
   // Extend ALUIEvents with `hover` and other derived events
   (
@@ -152,7 +152,7 @@ export type InitOptions = Types.Options<
 
 type CommonEventData = (ALUIEvent & ALTimedEvent & ALPageEvent) & {
   // The event.target element,  as opposed to element which represents the interactableElement
-  targetElement: HTMLElement | null;
+  targetElement: Element | null;
   value?: string;
 };
 
@@ -170,7 +170,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     return null;
   }
 
-  let element: HTMLElement | null = null;
+  let element: Element | null = null;
   let autoLoggingID: ALID | null = null;
   if (interactableElementsOnly) {
     /**
@@ -189,7 +189,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     autoLoggingID = getOrSetAutoLoggingID(element);
   }
   else {
-    element = event.target instanceof HTMLElement ? event.target : null;
+    element = event.target instanceof Element ? event.target : null;
   }
 
   let value: string | undefined;
@@ -216,7 +216,7 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
     domEvent: event,
     event: (eventName as any),
     element,
-    targetElement: event.target instanceof HTMLElement ? event.target : null,
+    targetElement: event.target instanceof Element ? event.target : null,
     eventTimestamp,
     isTrusted: event.isTrusted,
     autoLoggingID,
