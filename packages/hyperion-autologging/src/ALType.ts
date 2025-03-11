@@ -78,7 +78,7 @@ export type ALSharedInitOptions<ChannelEventType extends BaseChannelEventType = 
 
 export type ALElementEvent = Readonly<{
   // Element associated with the event, usually the root of a sub-tree, an interactable target element, or domEvent.target
-  element: HTMLElement;
+  element: Element;
 
   // The underlying identifier assigned to this element
   autoLoggingID: ALID;

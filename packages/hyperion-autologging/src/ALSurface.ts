@@ -66,7 +66,7 @@ export type ALSurfaceProps = Readonly<{
   metadata?: ALMetadataEvent['metadata'];
   uiEventMetadata?: EventMetadata,
   capability?: ALSurfaceCapability,
-  nodeRef?: React.RefObject<Element | null | undefined>,
+  nodeRef?: React.RefObject<HTMLElement | null | undefined>,
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;

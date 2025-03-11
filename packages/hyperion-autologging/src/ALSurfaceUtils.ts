@@ -7,7 +7,7 @@
 import { AUTO_LOGGING_SURFACE, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
 
 
-export function getSurfacePath(node: HTMLElement | null): string | null {
+export function getSurfacePath(node: Element | null): string | null {
   return getAncestralSurfaceNode(node)?.getAttribute(AUTO_LOGGING_SURFACE) ?? null;
 }
 
@@ -23,6 +23,6 @@ export function getElementsWithSurfaces(): NodeListOf<Element> {
   return document.querySelectorAll(`[${AUTO_LOGGING_SURFACE}]`);
 }
 
-export function isSurfaceWrapper(node: HTMLElement): boolean {
+export function isSurfaceWrapper(node: Element): boolean {
   return node.getAttribute(SURFACE_WRAPPER_ATTRIBUTE_NAME) === '1';
 }

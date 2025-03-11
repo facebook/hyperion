@@ -16,6 +16,7 @@ import ResizableSplitView from "hyperion-autologging-visualizer/src/component/Re
 import { PortalBodyContainerComponent } from './component/PortalComponent';
 import TextComponent from './component/TextComponent';
 import RecursiveFuncComponent from './component/RecursiveFuncComponent';
+import SVGClickComponent from './component/SVGClickComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -51,6 +52,7 @@ const Modes = {
       <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
     </div>
     <RecursiveFuncComponent i={3}></RecursiveFuncComponent>
+    <SVGClickComponent></SVGClickComponent>
   </>,
   'ElementText': () => <div>
     <ElementNameComponent />
