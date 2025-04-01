@@ -2,33 +2,10 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
+import { ALChannelEvent } from "hyperion-autologging/src/AutoLogging";
+import { LocalStoragePersistentData } from "hyperion-util/src/PersistentData";
 import * as React from "react";
 import { SyncChannel } from "../Channel";
-import { ALChannelEvent } from "hyperion-autologging/src/AutoLogging";
-import { ALSessionGraph } from "hyperion-autologging-visualizer/src/component/ALSessionGraph.react";
-import { ALGraphInfo } from "hyperion-autologging-visualizer/src/component/ALGraphInfo.react";
-import { LocalStoragePersistentData } from "hyperion-util/src/PersistentData";
-import { ALFlowletEvent } from "hyperion-autologging/src/ALType";
-import * as  ALGraph from "hyperion-autologging-visualizer/src/component/ALGraph";
-import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
-
-const EventsWithFlowlet = [
-  'al_ui_event',
-  'al_surface_mutation_event',
-  'al_surface_visibility_event',
-  'al_network_request',
-  'al_network_response',
-  'al_flowlet_event',
-  'al_custom_event',
-] as const;
-
-const EventsWithoutFlowlet = [
-  'al_surface_mount',
-  'al_surface_unmount',
-  'al_heartbeat_event',
-  'al_ui_event_capture',
-  'al_ui_event_bubble',
-] as const;
 
 const PersistedValues: { [name: string]: LocalStoragePersistentData<boolean> } = {};
 function persistedValue(name: string): LocalStoragePersistentData<boolean> {
@@ -44,7 +21,10 @@ function persistedValue(name: string): LocalStoragePersistentData<boolean> {
   return value;
 }
 
-function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEnable: () => (() => void) }) {
+function EventField<T extends keyof ALChannelEvent>(props: {
+  eventName: T,
+  logger: (ev: ALChannelEvent[T][0]) => (string | null | undefined)[]
+}) {
   const { eventName } = props;
   const value = persistedValue(eventName);
   const [checked, setChecked] = React.useState<boolean>(value.getValue());
@@ -58,7 +38,9 @@ function EventField<T extends keyof ALChannelEvent>(props: { eventName: T, onEna
     const handler = SyncChannel.on(eventName).add(ev => {
       // console.log(eventName, ev, performance.now(), ev.flowlet?.getFullName());
       if (checked) {
-        console.log(eventName, ev, performance.now());
+        const logger = props.logger;
+        const extra = logger(ev);
+        console.log(eventName, ev, performance.now(), ...extra);
       }
     });
     return () => { SyncChannel.on(eventName).remove(handler); };
@@ -76,25 +58,18 @@ export default function () {
   return <div style={{ display: "flex", justifyContent: "space-around" }}>
     <table>
       <tbody>
-        {
-          EventsWithFlowlet.map(eventName =>
-            <EventField key={eventName} eventName={eventName} onEnable={() => {
-              const handler = SyncChannel.on(eventName).add(ev => {
-                console.log(eventName, ev, performance.now(), ev.triggerFlowlet?.getFullName());
-              });
-              return () => SyncChannel.on(eventName).remove(handler);
-            }} />
-          ).concat(
-            EventsWithoutFlowlet.map(eventName =>
-              <EventField key={eventName} eventName={eventName} onEnable={() => {
-                const handler = SyncChannel.on(eventName).add(ev => {
-                  console.log(eventName, ev, performance.now());
-                });
-                return () => SyncChannel.on(eventName).remove(handler);
-              }} />
-            )
-          )
-        }
+        <EventField eventName='al_ui_event' logger={ev => [ev.surface, ev.triggerFlowlet?.getFullName()]}></EventField>
+        <EventField eventName='al_surface_mutation_event' logger={ev => [ev.surface, ev.triggerFlowlet?.getFullName()]}></EventField>
+        <EventField eventName='al_surface_visibility_event' logger={ev => [ev.surface, ev.triggerFlowlet?.getFullName()]}></EventField>
+        <EventField eventName='al_network_request' logger={ev => [ev.triggerFlowlet?.getFullName()]}></EventField>
+        <EventField eventName='al_network_response' logger={ev => [ev.triggerFlowlet?.getFullName()]}></EventField>
+        <EventField eventName='al_flowlet_event' logger={ev => [ev.flowlet?.getFullName()]}></EventField>
+        <EventField eventName='al_custom_event' logger={ev => [ev.triggerFlowlet?.getFullName()]}></EventField>
+        <EventField eventName='al_surface_mount' logger={ev => [ev.surface,]}></EventField>
+        <EventField eventName='al_surface_unmount' logger={ev => [ev.surface,]}></EventField>
+        <EventField eventName='al_heartbeat_event' logger={ev => []}></EventField>
+        <EventField eventName='al_ui_event_capture' logger={ev => [ev.surface,]}></EventField>
+        <EventField eventName='al_ui_event_bubble' logger={ev => []}></EventField>
       </tbody>
     </table>
   </div>;
