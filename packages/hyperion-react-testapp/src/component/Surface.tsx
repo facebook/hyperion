@@ -12,15 +12,16 @@ export type Props = {
 };
 
 let SurfaceRenderer: ALSurface.ALSurfaceHOC = (props, render) => {
-  return children => render ? render(children) : <>children</>;
+  return children => render ? render(children) : <>{children}</>;
 }
 
 export const Surface = (props: ALSurface.ALSurfaceProps) => {
-  if (!props.capability) {
+  if (!props.capability?.trackVisibilityThreshold) {
     props = {
       ...props,
       capability: {
         trackVisibilityThreshold: .5,
+        ...props.capability,
         // trackMutation: false,
       }
     }

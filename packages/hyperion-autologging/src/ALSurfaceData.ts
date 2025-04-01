@@ -143,8 +143,12 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     if (__DEV__) {
       assert(
         !surfacesData.get(nonInteractiveSurface),
-        `Surface ${surface} is already added to list`
+        `Surface ${nonInteractiveSurface} is already added to list`
       );
+      assert(
+        capability?.nonInteractive || !surfacesData.get(surface),
+        `Surface ${surface} is already added to list`
+      )
       assert(
         this.parent.surface === null || surfacesData.has(this.parent.nonInteractiveSurface),
         `Parent of surface ${surface} does not exist in the list`
