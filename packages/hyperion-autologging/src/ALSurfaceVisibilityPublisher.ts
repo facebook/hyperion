@@ -154,7 +154,7 @@ export function publish(options: InitOptions): void {
                * that mutation events fire synchronously with react changes, while visibility events fire async.
                * We might want to track mutation event directly in this module.
                */
-              console.warn(`Surface ${surfaceData.surface} has visibility event but is already unmounted!`)
+              console.warn(`Surface ${surfaceData.nonInteractiveSurface} has visibility event but is already unmounted!`)
             }
           }
           for (const [surfaceData, entries] of visibleSet) {
@@ -178,7 +178,7 @@ export function publish(options: InitOptions): void {
               eventTimestamp: performanceAbsoluteNow.fromRelativeTime(entry.time),
               eventIndex: ALEventIndex.getNextEventIndex(),
               relatedEventIndex: mutationEvent.eventIndex,
-              surface: surfaceData.surface,
+              surface: surfaceData.nonInteractiveSurface,
               surfaceData,
               element: mutationEvent.element,
               autoLoggingID: mutationEvent.autoLoggingID, // same element, same ID
