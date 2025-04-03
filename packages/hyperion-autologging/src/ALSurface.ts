@@ -306,6 +306,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       callFlowlet = new flowletManager.flowletCtor(surface, surfaceCtx.callFlowlet ?? flowletManager.root);
       callFlowlet.data.surface = nonInteractiveSurfacePath;
       surfaceData = new ALSurfaceData(
+        surface,
         surfacePath,
         surfaceCtx,
         nonInteractiveSurfacePath,
