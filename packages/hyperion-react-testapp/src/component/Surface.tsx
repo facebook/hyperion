@@ -37,3 +37,17 @@ export const Surface = (props: ALSurface.ALSurfaceProps) => {
 export function SurfaceComp(props: React.PropsWithChildren<ALSurface.ALSurfaceProps>) {
   return Surface(props)(props.children);
 }
+
+export function SimpleSurface(props: React.PropsWithChildren<ALSurface.ALSurfaceProps>) {
+  if (!props.capability?.trackVisibilityThreshold) {
+    props = {
+      ...props,
+      capability: {
+        trackVisibilityThreshold: .5,
+        ...props.capability,
+        // trackMutation: false,
+      }
+    }
+  }
+  return AutoLogging.getSurfaceRenderer(SurfaceRenderer)(props)(props.children);
+}

@@ -53,52 +53,110 @@ export type InitOptions = Types.Options<
 export function publish(options: InitOptions): void {
   const { channel } = options;
 
+  class MapToArray<Key, Value> {
+    private map = new Map<Key, Value[]>();
+    get(key: Key): undefined | Value[] {
+      return this.map.get(key);
+    }
+    set(key: Key, value: Value) {
+      let values = this.map.get(key);
+      if (!values) {
+        values = [];
+        this.map.set(key, [value]);
+      } else {
+        values.push(value);
+      }
+    }
+    delete(key: Key, value: Value) {
+      let values = this.map.get(key);
+      if (values) {
+        const index = values.indexOf(value);
+        if (index > -1) {
+          values[index] = values[values.length - 1];
+          values.length -= 1;
+          if (values.length === 0) {
+            this.map.delete(key);
+          }
+        }
+      }
+    }
+    [Symbol.iterator]() {
+      return this.map[Symbol.iterator]();
+    }
+  }
+
   // lookup surfaces that are mounted by their root element 
-  const observedRoots = new Map<Element, ALSurfaceData>();
+  const observedRoots = new MapToArray<Element, ALSurfaceData>();
+  const surfaceDataRoots = new MapToArray<ALSurfaceData, Element>();
 
   // We need one observer per threshold
   const observers = new Map<number, IntersectionObserver>();
 
+
+  function getNonSurfaceWrapperRoots(element: Element): Element[] {
+    if (ALSurfaceUtils.isSurfaceWrapper(element)) {
+      const subRoots: Element[] = [];
+      for (let el = element.firstElementChild; el; el = el.nextElementSibling) {
+        if (!ALSurfaceUtils.isSurfaceWrapper(el)) {
+          subRoots.push(el);
+        }
+      }
+      if (subRoots.length > 0) {
+        // we found at least one, good enough for us
+        return subRoots;
+      } else {
+        // Could not find non-surface-wrapper root, so need to go deeper
+        for (let el = element.firstElementChild; el; el = el.nextElementSibling) {
+          const deepSubroot = getNonSurfaceWrapperRoots(el);
+          if (deepSubroot.length > 0) {
+            return deepSubroot;
+          }
+        }
+        return [];
+      }
+    } else {
+      return [element];
+    }
+  }
+
+  function observe(surfaceData: ALSurfaceData, element: Element, trackVisibilityThreshold: number): void {
+    const observer = getOrCreateObserver(trackVisibilityThreshold);
+    /**
+     * IntersectionObserver cannot track display:content styles because
+     * these elements don't have their own "box".
+     * So, instead we have to focus on the children of the parent element
+     */
+    const roots = getNonSurfaceWrapperRoots(element);
+    for (let i = 0; i < roots.length; ++i) {
+      const root = roots[i];
+      observer.observe(root);
+      observedRoots.set(root, surfaceData);
+      surfaceDataRoots.set(surfaceData, root);
+    }
+  }
+  function unobserve(surfaceData: ALSurfaceData, element: Element, trackVisibilityThreshold: number): void {
+    const observer = getOrCreateObserver(trackVisibilityThreshold);
+    const roots = getNonSurfaceWrapperRoots(element);
+    for (let i = 0; i < roots.length; ++i) {
+      const root = roots[i];
+      observer.unobserve(root);
+      observedRoots.delete(root, surfaceData);
+      surfaceDataRoots.delete(surfaceData, root);
+    }
+  }
+
   channel.addListener('al_surface_mutation_event', event => {
     __DEV__ && assert(event.surfaceData.getMutationEvent() === event, 'Invalid situation for surface mutation event');
-    switch (event.event) {
-      case 'mount_component': {
-        if (event.capability?.trackVisibilityThreshold) {
-          const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
-          const { element } = event;
-          /**
-           * IntersectionObserver cannot track display:content styles because
-           * these elements don't have their own "box".
-           * So, instead we have to focus on the children of the parent element
-           */
-          if (ALSurfaceUtils.isSurfaceWrapper(element)) {
-            for (let el = element.firstElementChild; el; el = el.nextElementSibling) {
-              observer.observe(el);
-              observedRoots.set(el, event.surfaceData);
-            }
-          } else {
-            observer.observe(element);
-            observedRoots.set(element, event.surfaceData);
-          }
+    if (event.capability?.trackVisibilityThreshold) {
+      switch (event.event) {
+        case 'mount_component': {
+          observe(event.surfaceData, event.element, event.capability.trackVisibilityThreshold);
+          break;
         }
-
-        break;
-      }
-      case 'unmount_component': {
-        if (event.capability?.trackVisibilityThreshold) {
-          const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
-          const { element } = event;
-          if (ALSurfaceUtils.isSurfaceWrapper(element)) {
-            for (let el = element.firstElementChild; el; el = el.nextElementSibling) {
-              observer.unobserve(el);
-              observedRoots.delete(el);
-            }
-          } else {
-            observer.unobserve(element);
-            observedRoots.delete(element);
-          }
+        case 'unmount_component': {
+          unobserve(event.surfaceData, event.element, event.capability.trackVisibilityThreshold);
+          break;
         }
-        break;
       }
     }
   });
@@ -108,18 +166,13 @@ export function publish(options: InitOptions): void {
     if (!event.isProxy || !event.capability?.trackVisibilityThreshold || !event.element) {
       return;
     }
-    const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
-    observer.observe(event.element);
-    observedRoots.set(event.element, event.surfaceData);
+    observe(event.surfaceData, event.element, event.capability.trackVisibilityThreshold);
   });
   channel.addListener('al_surface_unmount', event => {
     if (!event.isProxy || !event.capability?.trackVisibilityThreshold) {
       return;
     }
-    if (observedRoots.delete(event.element)) {
-      const observer = getOrCreateObserver(event.capability.trackVisibilityThreshold);
-      observer.unobserve(event.element);
-    }
+    unobserve(event.surfaceData, event.element, event.capability.trackVisibilityThreshold);
   });
 
   function getOrCreateObserver(threshold: number): IntersectionObserver {
@@ -131,30 +184,28 @@ export function publish(options: InitOptions): void {
            * Since surface may have many children that we added above, we need to merge
            * all the entries, however, in most cases we may have only one entry
            */
-          const visibleSet = new Map<ALSurfaceData, IntersectionObserverEntry[]>();
+          const visibleSet = new MapToArray<ALSurfaceData, IntersectionObserverEntry>();
           for (const entry of entries) {
             const element = entry.target;
-            const surfaceData = observedRoots.get(element);
-            if (!surfaceData) {
+            const surfaceDataList = observedRoots.get(element);
+            if (!surfaceDataList) {
               // could this happen when surface is unmounted first, and then becomes not visible?
               assert(false, `Unexpected situation! tracking visibility of unmounted surface`);
               continue;
             }
 
-            if (surfaceData.getMutationEvent()) {
-              let entries = visibleSet.get(surfaceData);
-              if (!entries) {
-                entries = [];
-                visibleSet.set(surfaceData, entries);
+            for (let i = 0; i < surfaceDataList.length; ++i) {
+              const surfaceData = surfaceDataList[i];
+              if (surfaceData.getMutationEvent()) {
+                visibleSet.set(surfaceData, entry);
+              } else {
+                /**
+                 * Not clear why this situation is happening sometimes. It might be because of proxy surfaces, or the fact
+                 * that mutation events fire synchronously with react changes, while visibility events fire async.
+                 * We might want to track mutation event directly in this module.
+                 */
+                console.warn(`Surface ${surfaceData.nonInteractiveSurface} has visibility event but is already unmounted!`)
               }
-              entries.push(entry);
-            } else {
-              /**
-               * Not clear why this situation is happening sometimes. It might be because of proxy surfaces, or the fact
-               * that mutation events fire synchronously with react changes, while visibility events fire async.
-               * We might want to track mutation event directly in this module.
-               */
-              console.warn(`Surface ${surfaceData.nonInteractiveSurface} has visibility event but is already unmounted!`)
             }
           }
           for (const [surfaceData, entries] of visibleSet) {
