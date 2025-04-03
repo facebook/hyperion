@@ -118,8 +118,15 @@ export class ALSurfaceData extends ALSurfaceDataCore {
   #visibilityEvent: ALSurfaceVisibilityEventData | null = null;
 
   constructor(
+    /** short name */
+    public readonly surfaceName: string,
+    
+    /** full interactive name */
     public readonly surface: string,
+    
     public readonly parent: ALSurfaceData | ALSurfaceDataRoot,
+    
+    /** full path to be also used key */
     public readonly nonInteractiveSurface: string,
     public readonly callFlowlet: IALFlowlet,
     public readonly capability: ALSurfaceCapability | null | undefined,
