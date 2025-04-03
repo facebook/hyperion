@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { useState, useRef } from 'react';
-import { SurfaceComp } from './Surface';
+import { SimpleSurface, SurfaceComp } from './Surface';
 
 export default function (_props: {}): React.ReactElement {
   console.log('Root render');
@@ -21,13 +21,13 @@ export default function (_props: {}): React.ReactElement {
           <div>/S1/S2</div>
           <SurfaceComp surface='R2' capability={{ nonInteractive: true }} nodeRef={refR2}>
             <div ref={refR2}>/S1/R1/S2/R2</div>
-            <SurfaceComp surface="S3">
-              <SurfaceComp surface="S4">
+            <SimpleSurface surface="S3">
+              <SimpleSurface surface="S4">
                 <SurfaceComp surface="R3" capability={{ nonInteractive: true }}>
                   <div>/S1/R1/S2/R2/S3/S4/R3</div>
                 </SurfaceComp>
-              </SurfaceComp>
-            </SurfaceComp>
+              </SimpleSurface>
+            </SimpleSurface>
           </SurfaceComp>
         </SurfaceComp>
       </SurfaceComp>
