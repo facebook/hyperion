@@ -80,3 +80,87 @@ IElement.insertAdjacentElement.onBeforeCallObserverAdd(function (this, where, el
     });
   }
 });
+
+
+function getNodes(nodes: (string | Node)[]): Node[] {
+  /**
+   * Many of the following methods can take a string or node as an argument.
+   * We only want to pass nodes to the observer, so we filter out strings.
+   * we could also try to convert them to nodes, but since that is less likely usage, we just filter to be sure
+   */
+  return nodes.filter<Node>(node => node instanceof Node);
+}
+
+IElement.after.onBeforeCallObserverAdd(function (this, ...nodes) {
+  const target = this.parentNode;
+  if (target) {
+    onDOMMutation.call({
+      action: "added",
+      target,
+      nodes: getNodes(nodes)
+    });
+  }
+});
+
+IElement.append.onBeforeCallObserverAdd(function (this, ...nodes) {
+  onDOMMutation.call({
+    action: "added",
+    target: this,
+    nodes: getNodes(nodes)
+  });
+});
+IElement.before.onBeforeCallObserverAdd(function (this, ...nodes) {
+  const target = this.parentNode;
+  if (target) {
+    onDOMMutation.call({
+      action: "added",
+      target,
+      nodes: getNodes(nodes)
+    });
+  }
+});
+IElement.prepend.onBeforeCallObserverAdd(function (this, ...nodes) {
+  onDOMMutation.call({
+    action: "added",
+    target: this,
+    nodes: getNodes(nodes)
+  });
+});
+IElement.remove.onBeforeCallObserverAdd(function (this) {
+  const target = this.parentNode;
+  if (target) {
+    onDOMMutation.call({
+      action: "removed",
+      target,
+      nodes: [this]
+    });
+  }
+});
+IElement.replaceChildren.onBeforeCallObserverAdd(function (this, ...nodes) {
+  // should we also call this for removed children?
+  onDOMMutation.call({
+    action: "removed",
+    target: this,
+    nodes: getNodes(Array.from(this.childNodes))
+  });
+  onDOMMutation.call({
+    action: "added",
+    target: this,
+    nodes: getNodes(nodes)
+  });
+});
+IElement.replaceWith.onBeforeCallObserverAdd(function (this, ...nodes) {
+  const target = this.parentNode;
+  if (target) {
+    onDOMMutation.call({
+      action: "removed",
+      target,
+      nodes: [this]
+    });
+    onDOMMutation.call({
+      action: "added",
+      target,
+      nodes: getNodes(nodes)
+    });
+  }
+});

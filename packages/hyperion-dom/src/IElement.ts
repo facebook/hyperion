@@ -10,18 +10,14 @@ import { interceptElementAttribute } from "./ElementAttributeInterceptor";
 import * as IElememt_ from "./IElement_";
 export * from "./IElement_";
 
-// export const IElementtPrototype = new DOMShadowPrototype(
-//   Element,
-//   INodePrototype,
-//   {
-//     sampleObject: sampleHTMLElement,
-//     nodeType: document.ELEMENT_NODE
-//   }
-// );
+/**
+ * See IElement_ for details.
+ */
 export const IElementtPrototype = IElememt_.IElementtPrototype;
 
-// export const getAttribute = interceptMethod('getAttribute', IElementtPrototype);
-// export const getAttributeNS = interceptMethod('getAttributeNS', IElementtPrototype);
+export const after = interceptMethod('after', IElementtPrototype);
+export const append = interceptMethod('append', IElementtPrototype);
+export const before = interceptMethod('before', IElementtPrototype);
 export const getAttributeNames = interceptMethod('getAttributeNames', IElementtPrototype);
 export const getAttributeNode = interceptMethod('getAttributeNode', IElementtPrototype, true);
 export const getAttributeNodeNS = interceptMethod('getAttributeNodeNS', IElementtPrototype, true);
@@ -36,13 +32,13 @@ export const hasAttributes = interceptMethod('hasAttributes', IElementtPrototype
 export const insertAdjacentElement = interceptMethod('insertAdjacentElement', IElementtPrototype);
 export const insertAdjacentHTML = interceptMethod('insertAdjacentHTML', IElementtPrototype);
 export const insertAdjacentText = interceptMethod('insertAdjacentText', IElementtPrototype);
+export const prepend = interceptMethod('prepend', IElementtPrototype);
+export const remove = interceptMethod('remove', IElementtPrototype);
 export const removeAttribute = interceptMethod('removeAttribute', IElementtPrototype);
-export const removeAttributeNS = interceptMethod('removeAttributeNS', IElementtPrototype);
 export const removeAttributeNode = interceptMethod('removeAttributeNode', IElementtPrototype);
-// export const setAttribute = interceptMethod('setAttribute', IElementtPrototype);
-// export const setAttributeNS = interceptMethod('setAttributeNS', IElementtPrototype);
-// export const setAttributeNode = interceptMethod('setAttributeNode', IElementtPrototype);
-// export const setAttributeNodeNS = interceptMethod('setAttributeNodeNS', IElementtPrototype);
+export const removeAttributeNS = interceptMethod('removeAttributeNS', IElementtPrototype);
+export const replaceChildren = interceptMethod('replaceChildren', IElementtPrototype);
+export const replaceWith = interceptMethod('replaceWith', IElementtPrototype);
 export const toggleAttribute = interceptMethod('toggleAttribute', IElementtPrototype);
 
 export const id = interceptElementAttribute("id", IElementtPrototype);

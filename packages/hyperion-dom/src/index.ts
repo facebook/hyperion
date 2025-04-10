@@ -5,7 +5,7 @@
 'use strict';
 export * as IEvent from "./IEvent";
 export * as IEventTarget from "./IEventTarget";
-// export * as INode from "./INode";
+export * as INode from "./INode";
 export * as ICSSStyleDeclaration from "./ICSSStyleDeclaration";
 export * as IElement from "./IElement";
 export * as IHTMLElement from "./IHTMLElement";

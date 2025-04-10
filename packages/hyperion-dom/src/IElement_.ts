@@ -3,6 +3,9 @@
  * 
  * This file only contains set of features that ElementAttributeInterceptor
  * needs. They are here to avoid circular depndency between modules.
+ * We should only include what is needed by IElementCustom which is called
+ * by ElementAttributeInterceptor, which in turn is called by IElement.
+ * Specifically, we should never add any attribute interceptor here.
  */
 
 import { interceptMethod } from "hyperion-core/src/MethodInterceptor";
@@ -21,23 +24,6 @@ IElementtPrototype.extension.useCaseInsensitivePropertyName = true;
 
 export const getAttribute = interceptMethod('getAttribute', IElementtPrototype);
 export const getAttributeNS = interceptMethod('getAttributeNS', IElementtPrototype);
-// export const getAttributeNames = interceptMethod('getAttributeNames', IElementtPrototype);
-// export const getAttributeNode = interceptMethod('getAttributeNode', IElementtPrototype);
-// export const getAttributeNodeNS = interceptMethod('getAttributeNodeNS', IElementtPrototype);
-// export const getBoundingClientRect = interceptMethod('getBoundingClientRect', IElementtPrototype);
-// export const getClientRects = interceptMethod('getClientRects', IElementtPrototype);
-// export const getElementsByClassName = interceptMethod('getElementsByClassName', IElementtPrototype);
-// export const getElementsByTagName = interceptMethod('getElementsByTagName', IElementtPrototype);
-// export const getElementsByTagNameNS = interceptMethod('getElementsByTagNameNS', IElementtPrototype);
-// export const hasAttribute = interceptMethod('hasAttribute', IElementtPrototype);
-// export const hasAttributeNS = interceptMethod('hasAttributeNS', IElementtPrototype);
-// export const hasAttributes = interceptMethod('hasAttributes', IElementtPrototype);
-// export const insertAdjacentElement = interceptMethod('insertAdjacentElement', IElementtPrototype);
-// export const insertAdjacentHTML = interceptMethod('insertAdjacentHTML', IElementtPrototype);
-// export const insertAdjacentText = interceptMethod('insertAdjacentText', IElementtPrototype);
-// export const removeAttribute = interceptMethod('removeAttribute', IElementtPrototype);
-// export const removeAttributeNS = interceptMethod('removeAttributeNS', IElementtPrototype);
-// export const removeAttributeNode = interceptMethod('removeAttributeNode', IElementtPrototype);
 export const setAttribute = interceptMethod('setAttribute', IElementtPrototype);
 export const setAttributeNS = interceptMethod('setAttributeNS', IElementtPrototype);
 export const setAttributeNode = interceptMethod('setAttributeNode', IElementtPrototype);
