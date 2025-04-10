@@ -18,13 +18,18 @@ describe('test sync mutation observer', () => {
       expect(events.slice(-expectedEvents.length)).toStrictEqual(expectedEvents);
     }
 
-    const elem = window.document.createElement("div");
-    const child0 = window.document.createElement("p");
-    child0.id = "0";
-    const child1 = window.document.createElement("a");
-    child1.id = "1";
-    const child2 = window.document.createElement("b");
-    child2.id = "2";
+    function tag(tagName: string, attrs: Record<string, string> = {}) {
+      const element = window.document.createElement(tagName);
+      for (const [key, value] of Object.entries(attrs)) {
+        element.setAttribute(key, value);
+      }
+      return element;
+    }
+
+    const elem = tag("div")
+    const child0 = tag("p", { id: "0" });
+    const child1 = tag("a", { id: "1" });
+    const child2 = tag("b", { id: "2" });
 
     elem.innerHTML = "<p><b>test</b></p>"; // 2 events
     expectLastEventsToBe([
@@ -54,5 +59,36 @@ describe('test sync mutation observer', () => {
     expectLastEventsToBe([{ action: 'added', target: elem, nodes: [child2] }]);
 
     expect(elem.outerHTML).toBe('<div><p><b>test</b></p><a id="1"></a><p id="0"></p><b id="2"></b></div>');
-  })
-})
+
+    const child3 = tag("span", { id: "3" });
+    const child4 = tag("span", { id: "4" });
+
+    child2.after(child3, child4);
+    expectLastEventsToBe([{ action: 'added', target: elem, nodes: [child3, child4] }]);
+
+    child2.append(child3, child4);
+    expectLastEventsToBe([{ action: 'added', target: child2, nodes: [child3, child4] }]);
+
+    child2.before(child3, child4);
+    expectLastEventsToBe([{ action: 'added', target: elem, nodes: [child3, child4] }]);
+
+    child2.prepend(child3, child4);
+    expectLastEventsToBe([{ action: 'added', target: child2, nodes: [child3, child4] }]);
+
+    child3.remove();
+    expectLastEventsToBe([{ action: 'removed', target: child2, nodes: [child3] }]);
+
+    child2.replaceChildren(child3)
+    expectLastEventsToBe([
+      { action: 'removed', target: child2, nodes: [child4] },
+      { action: 'added', target: child2, nodes: [child3] },
+    ]);
+
+    child2.replaceWith(child4);
+    expectLastEventsToBe([
+      { action: 'removed', target: elem, nodes: [child2] },
+      { action: 'added', target: elem, nodes: [child4] },
+    ]);
+  });
+});
+
