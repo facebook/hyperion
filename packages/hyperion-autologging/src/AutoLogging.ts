@@ -182,7 +182,7 @@ export function init(options: InitOptions): boolean {
   if (options.surfaceVisibilityPublisher) {
     ALSurfaceVisibilityPublisher.publish({
       ...sharedOptions,
-      ...options.surfaceMutationPublisher
+      ...options.surfaceVisibilityPublisher
     });
   }
 
