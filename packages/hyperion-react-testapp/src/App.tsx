@@ -9,6 +9,7 @@ import ElementNameComponent from './component/ElementNameComponent';
 import LargeComp from './component/LargeComponent';
 import NestedComponent from './component/NestedComponent';
 import NonInteractiveSurfaceComponent from './component/NonInteractiveSurfaceComponent';
+import DelayedChildrenSurfaceComponent from './component/DelayedChildrenSurfaceComponent';
 import ALEventLogger from './component/ALEventLogger';
 import { LocalStoragePersistentData } from 'hyperion-util/src/PersistentData';
 import ALGraphView from './component/ALGraphView';
@@ -39,6 +40,7 @@ function InitComp() {
 const maxDepth = 1000;
 const Modes = {
   'mutationOnlySurface': () => <NonInteractiveSurfaceComponent></NonInteractiveSurfaceComponent>,
+  'delayedChildrenSurface': () => <DelayedChildrenSurfaceComponent></DelayedChildrenSurfaceComponent>,
   'network': () => <DynamicSvgComponent></DynamicSvgComponent>,
   'nested': () => <>
     <div>
