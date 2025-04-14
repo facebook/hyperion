@@ -149,35 +149,60 @@ export function publish(options: InitOptions): void {
       // Set up mutation observer to watch for child additions
       const mutationObserver = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
-          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-            // Check if any of the added nodes are elements we can observe
-            let hasViableChild = false;
-            for (let i = 0; i < mutation.addedNodes.length; i++) {
-              const node = mutation.addedNodes[i];
-              if (node.nodeType === Node.ELEMENT_NODE) {
-                const childElement = node as Element;
-                console.log('Child found', element);
-                if (!ALSurfaceUtils.isSurfaceWrapper(childElement)) {
-                  // Found a viable child, switch observation to it
-                  observer.unobserve(element);
-                  observer.observe(childElement);
+          if (mutation.type === 'childList') {
+            // Handle removed nodes first
+            if (mutation.removedNodes.length > 0) {
+              for (let i = 0; i < mutation.removedNodes.length; i++) {
+                const node = mutation.removedNodes[i];
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  const childElement = node as Element;
+                  const surfaceDataList = observedRoots.get(childElement);
 
-                  // Update tracking maps
-                  observedRoots.delete(element, surfaceData);
-                  observedRoots.set(childElement, surfaceData);
-                  surfaceDataRoots.delete(surfaceData, element);
-                  surfaceDataRoots.set(surfaceData, childElement);
+                  // Check if this was a child we were observing
+                  if (surfaceDataList && surfaceDataList.includes(surfaceData)) {
+                    console.log('Child removed', childElement);
 
-                  hasViableChild = true;
-                  break;
+                    // Stop observing the removed child
+                    observer.unobserve(childElement);
+                    observedRoots.delete(childElement, surfaceData);
+                    surfaceDataRoots.delete(surfaceData, childElement);
+
+                    // Start observing the parent element again
+                    observer.observe(element);
+                    observedRoots.set(element, surfaceData);
+                    surfaceDataRoots.set(surfaceData, element);
+                  }
                 }
               }
             }
 
-            if (hasViableChild) {
-              // Disconnect the mutation observer as we no longer need it
-              mutationObserver.disconnect();
-              mutationObservers.delete(element);
+            // Then handle added nodes
+            if (mutation.addedNodes.length > 0) {
+              // Check if any of the added nodes are elements we can observe
+              for (let i = 0; i < mutation.addedNodes.length; i++) {
+                const node = mutation.addedNodes[i];
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  const childElement = node as Element;
+                  console.log('Child found', childElement);
+
+                  if (!ALSurfaceUtils.isSurfaceWrapper(childElement)) {
+                    // Check if we're currently observing the parent element
+                    const surfaceDataList = observedRoots.get(element);
+                    if (surfaceDataList && surfaceDataList.includes(surfaceData)) {
+                      // Found a viable child, switch observation to it
+                      observer.unobserve(element);
+                      observer.observe(childElement);
+
+                      // Update tracking maps
+                      observedRoots.delete(element, surfaceData);
+                      observedRoots.set(childElement, surfaceData);
+                      surfaceDataRoots.delete(surfaceData, element);
+                      surfaceDataRoots.set(surfaceData, childElement);
+                      break;
+                    }
+                  }
+                }
+              }
             }
           }
         }
