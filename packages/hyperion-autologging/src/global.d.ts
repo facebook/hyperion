@@ -7,4 +7,6 @@
 interface GlobalFlags {
   preciseTriggerFlowlet?: boolean;
   optimizeInteractibiltyCheck?: boolean;
+  enableDynamicChildTracking?: boolean;
+  enableDynamicChildTrackingForRemoval?: boolean;
 }
