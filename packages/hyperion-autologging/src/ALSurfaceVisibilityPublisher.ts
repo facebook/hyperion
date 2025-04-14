@@ -14,6 +14,7 @@ import { assert } from "hyperion-globals";
 import * as ALEventIndex from './ALEventIndex';
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
+import * as Flags from "hyperion-globals/src/Flags";
 
 export type ALSurfaceVisibilityEventData =
   ALElementEvent &
@@ -52,6 +53,10 @@ export type InitOptions = Types.Options<
 
 export function publish(options: InitOptions): void {
   const { channel } = options;
+  // Default to false if not specified in flags
+  const enableDynamicChildTracking = Flags.getFlags().enableDynamicChildTracking === true;
+  // This keeps observers around,  and may be more expensive then a one time setup for delayed children rendering
+  const enableDynamicChildTrackingForRemoval = Flags.getFlags().enableDynamicChildTrackingForRemoval === true;
 
   class MapToArray<Key, Value> {
     private map = new Map<Key, Value[]>();
@@ -139,7 +144,7 @@ export function publish(options: InitOptions): void {
         observedRoots.set(root, surfaceData);
         surfaceDataRoots.set(surfaceData, root);
       }
-    } else {
+    } else if (enableDynamicChildTracking) {
       // Special case: no viable children to observe, so observe the root element itself
       // and set up a mutation observer to watch for child additions
       observer.observe(element);
@@ -150,33 +155,36 @@ export function publish(options: InitOptions): void {
       const mutationObserver = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
           if (mutation.type === 'childList') {
-            // Handle removed nodes first
-            if (mutation.removedNodes.length > 0) {
-              for (let i = 0; i < mutation.removedNodes.length; i++) {
-                const node = mutation.removedNodes[i];
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                  const childElement = node as Element;
-                  const surfaceDataList = observedRoots.get(childElement);
+            if (enableDynamicChildTrackingForRemoval) {
+              // Handle removed nodes first
+              if (mutation.removedNodes.length > 0) {
+                for (let i = 0; i < mutation.removedNodes.length; i++) {
+                  const node = mutation.removedNodes[i];
+                  if (node.nodeType === Node.ELEMENT_NODE) {
+                    const childElement = node as Element;
+                    const surfaceDataList = observedRoots.get(childElement);
 
-                  // Check if this was a child we were observing
-                  if (surfaceDataList && surfaceDataList.includes(surfaceData)) {
-                    console.log('Child removed', childElement);
+                    // Check if this was a child we were observing
+                    if (surfaceDataList && surfaceDataList.includes(surfaceData)) {
+                      console.log('Child removed', childElement);
 
-                    // Stop observing the removed child
-                    observer.unobserve(childElement);
-                    observedRoots.delete(childElement, surfaceData);
-                    surfaceDataRoots.delete(surfaceData, childElement);
+                      // Stop observing the removed child
+                      observer.unobserve(childElement);
+                      observedRoots.delete(childElement, surfaceData);
+                      surfaceDataRoots.delete(surfaceData, childElement);
 
-                    // Start observing the parent element again
-                    observer.observe(element);
-                    observedRoots.set(element, surfaceData);
-                    surfaceDataRoots.set(surfaceData, element);
+                      // Start observing the parent element again
+                      observer.observe(element);
+                      observedRoots.set(element, surfaceData);
+                      surfaceDataRoots.set(surfaceData, element);
+                    }
                   }
                 }
               }
             }
 
             // Then handle added nodes
+            let hasViableChild = false;
             if (mutation.addedNodes.length > 0) {
               // Check if any of the added nodes are elements we can observe
               for (let i = 0; i < mutation.addedNodes.length; i++) {
@@ -198,11 +206,18 @@ export function publish(options: InitOptions): void {
                       observedRoots.set(childElement, surfaceData);
                       surfaceDataRoots.delete(surfaceData, element);
                       surfaceDataRoots.set(surfaceData, childElement);
+                      hasViableChild = true;
                       break;
                     }
                   }
                 }
               }
+            }
+            // If we are tracking removal,  we need to keep the observer around,  which could be potentially expensive
+            if (hasViableChild && !enableDynamicChildTrackingForRemoval) {
+              // Disconnect the mutation observer as we no longer need it
+              mutationObserver.disconnect();
+              mutationObservers.delete(element);
             }
           }
         }
@@ -225,7 +240,7 @@ export function publish(options: InitOptions): void {
         observedRoots.delete(root, surfaceData);
         surfaceDataRoots.delete(surfaceData, root);
       }
-    } else {
+    } else if (enableDynamicChildTracking) {
       // Special case: we might be observing the root element itself
       observer.unobserve(element);
       observedRoots.delete(element, surfaceData);
