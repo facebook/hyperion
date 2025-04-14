@@ -92,6 +92,9 @@ export function publish(options: InitOptions): void {
   // We need one observer per threshold
   const observers = new Map<number, IntersectionObserver>();
 
+  // Track mutation observers for empty surfaces
+  const mutationObservers = new Map<Element, MutationObserver>();
+
 
   function getNonSurfaceWrapperRoots(element: Element): Element[] {
     if (ALSurfaceUtils.isSurfaceWrapper(element)) {
@@ -127,21 +130,88 @@ export function publish(options: InitOptions): void {
      * So, instead we have to focus on the children of the parent element
      */
     const roots = getNonSurfaceWrapperRoots(element);
-    for (let i = 0; i < roots.length; ++i) {
-      const root = roots[i];
-      observer.observe(root);
-      observedRoots.set(root, surfaceData);
-      surfaceDataRoots.set(surfaceData, root);
+
+    if (roots.length > 0) {
+      // Normal case: we have viable children to observe
+      for (let i = 0; i < roots.length; ++i) {
+        const root = roots[i];
+        observer.observe(root);
+        observedRoots.set(root, surfaceData);
+        surfaceDataRoots.set(surfaceData, root);
+      }
+    } else {
+      // Special case: no viable children to observe, so observe the root element itself
+      // and set up a mutation observer to watch for child additions
+      observer.observe(element);
+      observedRoots.set(element, surfaceData);
+      surfaceDataRoots.set(surfaceData, element);
+
+      // Set up mutation observer to watch for child additions
+      const mutationObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            // Check if any of the added nodes are elements we can observe
+            let hasViableChild = false;
+            for (let i = 0; i < mutation.addedNodes.length; i++) {
+              const node = mutation.addedNodes[i];
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                const childElement = node as Element;
+                console.log('Child found', element);
+                if (!ALSurfaceUtils.isSurfaceWrapper(childElement)) {
+                  // Found a viable child, switch observation to it
+                  observer.unobserve(element);
+                  observer.observe(childElement);
+
+                  // Update tracking maps
+                  observedRoots.delete(element, surfaceData);
+                  observedRoots.set(childElement, surfaceData);
+                  surfaceDataRoots.delete(surfaceData, element);
+                  surfaceDataRoots.set(surfaceData, childElement);
+
+                  hasViableChild = true;
+                  break;
+                }
+              }
+            }
+
+            if (hasViableChild) {
+              // Disconnect the mutation observer as we no longer need it
+              mutationObserver.disconnect();
+              mutationObservers.delete(element);
+            }
+          }
+        }
+      });
+
+      // Start observing for child additions
+      mutationObserver.observe(element, { childList: true });
+      mutationObservers.set(element, mutationObserver);
     }
   }
   function unobserve(surfaceData: ALSurfaceData, element: Element, trackVisibilityThreshold: number): void {
     const observer = getOrCreateObserver(trackVisibilityThreshold);
     const roots = getNonSurfaceWrapperRoots(element);
-    for (let i = 0; i < roots.length; ++i) {
-      const root = roots[i];
-      observer.unobserve(root);
-      observedRoots.delete(root, surfaceData);
-      surfaceDataRoots.delete(surfaceData, root);
+
+    if (roots.length > 0) {
+      // Normal case: unobserve the child elements
+      for (let i = 0; i < roots.length; ++i) {
+        const root = roots[i];
+        observer.unobserve(root);
+        observedRoots.delete(root, surfaceData);
+        surfaceDataRoots.delete(surfaceData, root);
+      }
+    } else {
+      // Special case: we might be observing the root element itself
+      observer.unobserve(element);
+      observedRoots.delete(element, surfaceData);
+      surfaceDataRoots.delete(surfaceData, element);
+
+      // Clean up any mutation observer
+      const mutationObserver = mutationObservers.get(element);
+      if (mutationObserver) {
+        mutationObserver.disconnect();
+        mutationObservers.delete(element);
+      }
     }
   }
 
