@@ -9,6 +9,8 @@ type TimeoutID = number | any /* React expects Timeout?! */;
 
 const SUPPORTS_IDLE_CALLBACK = typeof requestIdleCallback === 'function' && typeof cancelIdleCallback === "function";
 
+type TimedAction = (timerFired: boolean) => void;
+
 /**
  * This class can be used when we want to run a function once either by calling
  * it explicitly, or have it run after a certain time automatically.
@@ -26,18 +28,19 @@ export class TimedTrigger {
   private _timeoutID: TimeoutID | null = null;
   private _timerFired: boolean = false;
   private _delay: number;
-  private _action: null | ((timerFired: boolean) => void);
-  private _useIdleCallback: boolean;
+  private _isdone: boolean = false;
+  private readonly _action: TimedAction;
+  private readonly _useIdleCallback: boolean;
 
 
-  constructor(action: (timerFired: boolean) => void, delay: number, useIdleCallback: boolean = false) {
+  constructor(action: TimedAction, delay: number, useIdleCallback: boolean = false) {
     this._action = action;
     this._delay = delay;
     this._useIdleCallback = useIdleCallback && SUPPORTS_IDLE_CALLBACK;
     this._setTimer();
   }
 
-  _clearTimer() {
+  private _clearTimer() {
     if (this._timeoutID != null) {
       if (this._useIdleCallback) {
         cancelIdleCallback(this._timeoutID);
@@ -48,7 +51,7 @@ export class TimedTrigger {
     this._timeoutID = null;
   }
 
-  _setTimer() {
+  private _setTimer() {
     if (!this.isDone()) {
       this._clearTimer();
       if (this._useIdleCallback) {
@@ -66,19 +69,19 @@ export class TimedTrigger {
   }
 
   isDone(): boolean {
-    return this._action === null;
+    return this._isdone;
   }
 
   isCancelled(): boolean {
-    return this._timeoutID === null && this._action !== null;
+    return this._timeoutID === null && !this.isDone();
   }
 
   run() {
     this._clearTimer();
-    if (this._action != null) {
+    if (!this.isDone()) {
       // Copy and change before calling so we know this isDone
       const action = this._action;
-      this._action = null;
+      this._isdone = true;
       action(this._timerFired);
     }
   }
@@ -94,5 +97,12 @@ export class TimedTrigger {
 
   cancel() {
     this._clearTimer();
+  }
+
+  restart(delay?: number) {
+    this._clearTimer();
+    this._timerFired = false;
+    this._isdone = false;
+    this.delay(delay);
   }
 }
