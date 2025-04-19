@@ -93,5 +93,29 @@ describe("timed trigger", () => {
     expect(f2.isDone()).toBe(true);
     expect(count).toBe(1);
   });
+
+
+  test('restart the timer', (done) => {
+    jest.useFakeTimers();
+
+    let count = 0;
+    const f1 = new TimedTrigger(() => {
+      count++;
+      if (count >= 2) {
+        done();
+      }
+    }, 10, true);
+
+
+
+    jest.runAllTimers();
+    expect(f1.isDone()).toBe(true);
+    expect(count).toBe(1);
+
+    f1.restart();
+    jest.runAllTimers();
+    expect(f1.isDone()).toBe(true);
+    expect(count).toBe(2);
+  });
   // jest.useRealTimers();
 });
