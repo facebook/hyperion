@@ -16,3 +16,4 @@ export { ALSurfaceData } from "./ALSurfaceData";
 export * as ALSurfaceUtils from "./ALSurfaceUtils";
 export { getCurrentUIEventData } from "./ALUIEventPublisher";
 export * as AutoLogging from "./AutoLogging";
+export { ALHeartbeatType } from "./ALHeartbeat";
