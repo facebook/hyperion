@@ -3,6 +3,7 @@
  */
 
 'use strict';
+
 export * as ALCustomEvent from './ALCustomEvent';
 export { default as ALElementInfo } from "./ALElementInfo";
 export * as ALEventExtension from "./ALEventExtension";
