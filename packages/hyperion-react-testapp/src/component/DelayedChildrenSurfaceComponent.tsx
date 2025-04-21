@@ -7,6 +7,14 @@ import { useState, useEffect } from 'react';
 import { SimpleSurface } from './Surface';
 
 export default function DelayedChildrenSurfaceComponent(): React.ReactElement {
+  return (<_DelayedSurface skey="A"><_DelayedSurface skey="B"/></_DelayedSurface>);
+}
+
+
+function _DelayedSurface(props : {
+  skey: string;
+  children?: React.ReactNode | undefined;
+}): React.ReactElement {
   const [showChildren, setShowChildren] = useState(false);
   const [delayMs, setDelayMs] = useState(10000);
   const [manualControl, setManualControl] = useState(false);
@@ -46,7 +54,7 @@ export default function DelayedChildrenSurfaceComponent(): React.ReactElement {
 
   return (
     <div>
-      <h3>Surface with Delayed Children</h3>
+      <h3>Surface ({props.skey}) with Delayed Children</h3>
       <div style={{ marginBottom: '10px' }}>
         <label>
           <input
@@ -87,11 +95,12 @@ export default function DelayedChildrenSurfaceComponent(): React.ReactElement {
       )}
 
       <div style={{ padding: '10px', border: '1px dashed #ccc' }}>
-        <SimpleSurface surface="DelayedSurface" capability={{ trackVisibilityThreshold: 0.5 }}>
+        <SimpleSurface surface={`DelayedSurface${props.skey}`} capability={{ trackVisibilityThreshold: 0.5 }}>
             {showChildren ? (
               <>
                 <div>Child content is now visible!</div>
                 <div>This tests the observer switching from parent to child.</div>
+                {props.children}
               </>
             ) : null}
         </SimpleSurface>
