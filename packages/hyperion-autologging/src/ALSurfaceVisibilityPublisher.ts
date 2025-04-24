@@ -85,7 +85,7 @@ export function publish(options: InitOptions): void {
     }
   }
 
-  // lookup surfaces that are mounted by their root element 
+  // lookup surfaces that are mounted by their root element
   const observedRoots = new MapToArray<Element, ALSurfaceData>();
   const surfaceDataRoots = new MapToArray<ALSurfaceData, Element>();
 
@@ -234,6 +234,7 @@ export function publish(options: InitOptions): void {
               element: mutationEvent.element,
               autoLoggingID: mutationEvent.autoLoggingID, // same element, same ID
               metadata: {
+                ...surfaceData.metadata,
                 emit_time: '' + performanceAbsoluteNow(), // just to keep track of the difference
               },
               callFlowlet: mutationEvent.callFlowlet,
