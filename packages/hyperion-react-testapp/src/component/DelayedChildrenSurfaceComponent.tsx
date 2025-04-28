@@ -54,7 +54,7 @@ function _DelayedSurface(props : {
 
   return (
     <div>
-      <h3>Surface ({props.skey}) with Delayed Children</h3>
+      <h3>Component with Surface ({props.skey}) rendering Delayed Children</h3>
       <div style={{ marginBottom: '10px' }}>
         <label>
           <input
