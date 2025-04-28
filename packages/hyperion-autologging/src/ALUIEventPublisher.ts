@@ -314,7 +314,6 @@ export function publish(options: InitOptions): void {
         surface,
         surfaceData,
         ...elementText,
-        metadata: {...surfaceData?.metadata,...uiEventData.metadata},
         reactComponentName: reactComponentData?.name,
         reactComponentStack: reactComponentData?.stack,
       };
