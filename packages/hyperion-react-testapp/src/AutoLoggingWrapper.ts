@@ -29,7 +29,6 @@ export function init() {
     preciseTriggerFlowlet: true,
     optimizeInteractibiltyCheck: true,
     enableDynamicChildTracking: true,
-    enableDynamicChildTrackingForRemoval: true,
   });
 
   interceptionStatus = "enabled";
