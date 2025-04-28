@@ -15,6 +15,7 @@ import * as ALEventIndex from './ALEventIndex';
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
 import { getFlags } from "hyperion-globals/src/Flags";
+import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
 
 export type ALSurfaceVisibilityEventData =
   ALElementEvent &
@@ -50,14 +51,14 @@ export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelSurfaceVisibilityEvent & ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>
 >;
 
+const VISIBILITY_OBSERVER_PROP = '_vis_observer';
+const SURFACE_DATA_PROP = '_vis_surfacedata';
+
 
 export function publish(options: InitOptions): void {
   const { channel } = options;
   // Default to false if not specified in flags
   const enableDynamicChildTracking = getFlags().enableDynamicChildTracking === true;
-  // This keeps observers around,  and may be more expensive then a one time setup for delayed children rendering
-  const enableDynamicChildTrackingForRemoval = getFlags().enableDynamicChildTrackingForRemoval === true;
-  console.log('Child: enableDynamicChildTracking enableDynamicChildTrackingForRemoval', enableDynamicChildTracking, enableDynamicChildTrackingForRemoval);
   class MapToArray<Key, Value> {
     private map = new Map<Key, Value[]>();
     get(key: Key): undefined | Value[] {
@@ -97,9 +98,6 @@ export function publish(options: InitOptions): void {
   // We need one observer per threshold
   const observers = new Map<number, IntersectionObserver>();
 
-  // Track mutation observers for empty surfaces
-  const mutationObservers = new Map<Element, MutationObserver>();
-
   function getNonSurfaceWrapperRoots(element: Element): Element[] {
     if (ALSurfaceUtils.isSurfaceWrapper(element)) {
       const subRoots: Element[] = [];
@@ -127,56 +125,53 @@ export function publish(options: InitOptions): void {
   }
 
   // Helper functions for tracking and untracking elements
-  function trackElement(observer: IntersectionObserver, element: Element, surfaceData: ALSurfaceData): void {
-    observer.observe(element);
+  function trackElement(observer: IntersectionObserver, element: Element, surfaceData: ALSurfaceData, observeElement: boolean = true): void {
+    if (observeElement) {
+      observer.observe(element);
+    }
+    setVirtualPropertyValue<IntersectionObserver | null>(
+      element,
+      VISIBILITY_OBSERVER_PROP,
+      observer,
+    )
+    setVirtualPropertyValue<ALSurfaceData | null>(
+      element,
+      SURFACE_DATA_PROP,
+      surfaceData,
+    )
     observedRoots.set(element, surfaceData);
     surfaceDataRoots.set(surfaceData, element);
   }
 
   function untrackElement(observer: IntersectionObserver, element: Element, surfaceData: ALSurfaceData): void {
     observer.unobserve(element);
+    setVirtualPropertyValue<IntersectionObserver | null>(
+      element,
+      VISIBILITY_OBSERVER_PROP,
+      null,
+    )
+    setVirtualPropertyValue<ALSurfaceData | null>(
+      element,
+      SURFACE_DATA_PROP,
+      null,
+    )
     observedRoots.delete(element, surfaceData);
     surfaceDataRoots.delete(surfaceData, element);
   }
 
-  // Handle an element by either observing its suitable children or setting up a mutation observer
-  function handleElementWithChildren(
-    observer: IntersectionObserver,
-    element: Element,
-    surfaceData: ALSurfaceData
-  ): void {
-    const roots = getNonSurfaceWrapperRoots(element);
-
-    if (roots.length > 0) {
-      // Normal case: we have viable children to observe
-      for (let i = 0; i < roots.length; ++i) {
-        trackElement(observer, roots[i], surfaceData);
-      }
-    } else if (enableDynamicChildTracking) {
-      // Special case: no viable children to observe, so set up a mutation observer
-      trackElement(observer, element, surfaceData);
-      // Set up mutation observer to watch for child additions
-      setupMutationObserver(observer, element, surfaceData);
-    }
-  }
-
-  // Set up a mutation observer for an element
-  function setupMutationObserver(
-    observer: IntersectionObserver,
-    element: Element,
-    surfaceData: ALSurfaceData
-  ): void {
-    // Clean up any existing mutation observer first
-    const existingObserver = mutationObservers.get(element);
-    if (existingObserver) {
-      existingObserver.disconnect();
-    }
-
-    const mutationObserver = new MutationObserver((mutations) => {
+  let mutationObserver: MutationObserver | null = null;
+  if (enableDynamicChildTracking) {
+    mutationObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === 'childList') {
-          // Handle removed nodes if enabled
-          if (enableDynamicChildTrackingForRemoval && mutation.removedNodes.length > 0) {
+          const element = mutation.target as Element;
+          const observer = getVirtualPropertyValue<IntersectionObserver | null>(element, VISIBILITY_OBSERVER_PROP);
+          const surfaceData = getVirtualPropertyValue<ALSurfaceData | null>(element, SURFACE_DATA_PROP);
+          if (!observer || !surfaceData) {
+            return;
+          }
+          // Handle removed nodes
+          if (mutation.removedNodes.length > 0) {
             handleRemovedNodes(observer, element, surfaceData, mutation.removedNodes);
           }
 
@@ -193,14 +188,11 @@ export function publish(options: InitOptions): void {
                 // Found suitable children, observe them
                 for (let i = 0; i < roots.length; ++i) {
                   trackElement(observer, roots[i], surfaceData);
-                }
-                // If we're not tracking removals, we can disconnect the mutation observer
-                if (!enableDynamicChildTrackingForRemoval) {
-                  mutationObserver.disconnect();
-                  mutationObservers.delete(element);
+                  break; // Only need to observe one viable child
                 }
               } else {
                 // Still no suitable children, track the parent again
+                // Which will check for observable roots again, and attach a mutation observer if needed
                 trackElement(observer, element, surfaceData);
               }
             }
@@ -208,9 +200,28 @@ export function publish(options: InitOptions): void {
         }
       }
     });
+  }
 
-    mutationObserver.observe(element, { childList: true });
-    mutationObservers.set(element, mutationObserver);
+  // Handle an element by either observing its suitable children or setting up a mutation observer
+  function handleElementWithChildren(
+    observer: IntersectionObserver,
+    element: Element,
+    surfaceData: ALSurfaceData,
+    mutObserver: MutationObserver | null = mutationObserver,
+  ): void {
+    const roots = getNonSurfaceWrapperRoots(element);
+
+    if (roots.length > 0) {
+      // Normal case: we have viable children to observe
+      for (let i = 0; i < roots.length; ++i) {
+        trackElement(observer, roots[i], surfaceData);
+      }
+    } else if (enableDynamicChildTracking) {
+      // Special case: no viable children to observe, so set up a mutation observer
+      trackElement(observer, element, surfaceData, false);
+      // Set up mutation observer to watch for child additions
+      mutObserver?.observe(element, { childList: true });
+    }
   }
 
   function handleRemovedNodes(
@@ -229,7 +240,6 @@ export function publish(options: InitOptions): void {
 
         // Check if this was a child we were observing
         if (surfaceDataList && surfaceDataList.includes(surfaceData)) {
-          console.log('Child removed', childElement);
           untrackElement(observer, childElement, surfaceData);
           needToReobserveParent = true;
         }
@@ -259,13 +269,6 @@ export function publish(options: InitOptions): void {
     } else if (enableDynamicChildTracking) {
       // Special case: we might be observing the root element itself
       untrackElement(observer, element, surfaceData);
-
-      // Clean up any mutation observer
-      const mutationObserver = mutationObservers.get(element);
-      if (mutationObserver) {
-        mutationObserver.disconnect();
-        mutationObservers.delete(element);
-      }
     }
   }
 

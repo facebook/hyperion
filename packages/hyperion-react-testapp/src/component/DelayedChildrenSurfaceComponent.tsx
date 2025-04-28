@@ -54,7 +54,7 @@ function _DelayedSurface(props : {
 
   return (
     <div>
-      <h3>Surface ({props.skey}) with Delayed Children</h3>
+      <h3>Component with Surface ({props.skey}) rendering Delayed Children</h3>
       <div style={{ marginBottom: '10px' }}>
         <label>
           <input
@@ -97,11 +97,11 @@ function _DelayedSurface(props : {
       <div style={{ padding: '10px', border: '1px dashed #ccc' }}>
         <SimpleSurface surface={`DelayedSurface${props.skey}`} capability={{ trackVisibilityThreshold: 0.5 }}>
             {showChildren ? (
-              <>
+              <SimpleSurface surface={`Inner${props.skey}`} capability={{ trackVisibilityThreshold: 0.5 }}>
                 <div>Child content is now visible!</div>
                 <div>This tests the observer switching from parent to child.</div>
                 {props.children}
-              </>
+                </SimpleSurface>
             ) : null}
         </SimpleSurface>
       </div>
