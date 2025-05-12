@@ -429,7 +429,8 @@ export type ALElementText = {
   text: string,
 
   /// The source attribute where we got the elementName from
-  readonly source: 'innerText' | 'aria-label' | 'aria-labelledby' | 'aria-description' | 'aria-describedby' | 'label';
+  readonly source: 'innerText' | 'aria-label' | 'aria-labelledby' | 'aria-description' | 'aria-describedby' | 'label',
+  elements: Array<Element>;
 };
 
 export type ALElementTextEvent = Readonly<{
@@ -489,7 +490,8 @@ function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, source:
     return callExternalTextProcessor(
       {
         text,
-        source
+        source,
+        elements: [domSource.element]
       },
       domSource,
       results,
@@ -523,7 +525,7 @@ function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementT
 
   for (let i = 0; i < indirectSources.length; i++) {
     if (i) {
-      results.push({ text: " ", source }); // Insert space between values
+      results.push({ text: " ", source, elements: []}); // Insert space between values
     }
 
     domSource.element = indirectSources[i];
@@ -539,7 +541,8 @@ function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALEleme
     return callExternalTextProcessor(
       {
         text: label,
-        source
+        source,
+        elements: [domSource.element]
       },
       domSource,
       results
@@ -740,12 +743,14 @@ export function getElementTextEvent(
         ...prev,
         ...current,
         text: prev.text + cleanText,
+        elements: [...prev.elements, ...current.elements]
       };
       return next;
     },
     {
       text: "",
-      source: 'innerText'
+      source: 'innerText',
+      elements: []
     }
   );
   const finalResult: ALElementTextEvent = {
