@@ -21,7 +21,7 @@ function createTestDom(): DomFragment.DomFragment {
   <span id='7' aria-description="test7" aria-describedby="8"></span>
   <span id='8'>test8</span>
   <span id='9' aria-label="test9">ignored</span>
-  <span id='10'><span aria-label="te"></span>s<span>t10</span></span>
+  <span id='10'><span id='10.1' aria-label="te"></span>s<span id='10.2'>t10</span></span>
   `);
 }
 function createInteractableTestDom(): DomFragment.DomFragment {
@@ -357,5 +357,28 @@ describe("Test various element text options", () => {
       node.addEventListener("mouseover", () => { });
       expect(node.getAttribute("data-interactable")).toContain("|mouseover|");
     }
+  });
+
+  test('element with text elements', () => {
+    ALInteractableDOMElement.init({}); // clear the options from the previous tests
+    const dom = createTestDom();
+    const children = dom.root.children;
+    const texts = Array.from(children).map(child => ALInteractableDOMElement.getElementTextEvent(child, null));
+
+    expect(texts[0].elementText?.elements[0]).toStrictEqual(document.getElementById('1'));
+    expect(texts[1].elementText?.elements[0]).toStrictEqual(document.getElementById('2'));
+    expect(texts[2].elementText?.elements[0]).toStrictEqual(document.getElementById('3'));
+    expect(texts[3].elementText?.elements[0]).toStrictEqual(document.getElementById('3'));
+    expect(texts[4].elementText?.elements[0]).toStrictEqual(document.getElementById('3'));
+    expect(texts[5].elementText?.elements[0]).toStrictEqual(document.getElementById('3'));
+    expect(texts[5].elementText?.elements[1]).toStrictEqual(document.getElementById('8'));
+    expect(texts[6].elementText?.elements[0]).toStrictEqual(document.getElementById('7'));
+    expect(texts[7].elementText?.elements[0]).toStrictEqual(document.getElementById('8'));
+    expect(texts[8].elementText?.elements[0]).toStrictEqual(document.getElementById('9'));
+    expect(texts[9].elementText?.elements[0]).toStrictEqual(document.getElementById('10.1'));
+    expect(texts[9].elementText?.elements[1]).toStrictEqual(document.getElementById('10'));
+    expect(texts[9].elementText?.elements[2]).toStrictEqual(document.getElementById('10.2'));
+
+    dom.cleanup();
   });
 });
