@@ -14,6 +14,8 @@ import { assert } from "hyperion-globals";
 import * as ALEventIndex from './ALEventIndex';
 import { ALChannelSurfaceEvent } from "./ALSurface";
 import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
+import { getFlags } from "hyperion-globals/src/Flags";
+import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
 
 export type ALSurfaceVisibilityEventData =
   ALElementEvent &
@@ -49,10 +51,14 @@ export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelSurfaceVisibilityEvent & ALChannelSurfaceMutationEvent & ALChannelSurfaceEvent>
 >;
 
+const VISIBILITY_OBSERVER_PROP = '_vis_observer';
+const SURFACE_DATA_PROP = '_vis_surfacedata';
+
 
 export function publish(options: InitOptions): void {
   const { channel } = options;
-
+  // Default to false if not specified in flags
+  const enableDynamicChildTracking = getFlags().enableDynamicChildTracking === true;
   class MapToArray<Key, Value> {
     private map = new Map<Key, Value[]>();
     get(key: Key): undefined | Value[] {
@@ -92,7 +98,6 @@ export function publish(options: InitOptions): void {
   // We need one observer per threshold
   const observers = new Map<number, IntersectionObserver>();
 
-
   function getNonSurfaceWrapperRoots(element: Element): Element[] {
     if (ALSurfaceUtils.isSurfaceWrapper(element)) {
       const subRoots: Element[] = [];
@@ -119,29 +124,151 @@ export function publish(options: InitOptions): void {
     }
   }
 
-  function observe(surfaceData: ALSurfaceData, element: Element, trackVisibilityThreshold: number): void {
-    const observer = getOrCreateObserver(trackVisibilityThreshold);
-    /**
-     * IntersectionObserver cannot track display:content styles because
-     * these elements don't have their own "box".
-     * So, instead we have to focus on the children of the parent element
-     */
+  // Helper functions for tracking and untracking elements
+  function trackElement(observer: IntersectionObserver, element: Element, surfaceData: ALSurfaceData, observeElement: boolean = true): void {
+    if (observeElement) {
+      observer.observe(element);
+    }
+    setVirtualPropertyValue<IntersectionObserver | null>(
+      element,
+      VISIBILITY_OBSERVER_PROP,
+      observer,
+    )
+    setVirtualPropertyValue<ALSurfaceData | null>(
+      element,
+      SURFACE_DATA_PROP,
+      surfaceData,
+    )
+    observedRoots.set(element, surfaceData);
+    surfaceDataRoots.set(surfaceData, element);
+  }
+
+  function untrackElement(observer: IntersectionObserver, element: Element, surfaceData: ALSurfaceData): void {
+    observer.unobserve(element);
+    setVirtualPropertyValue<IntersectionObserver | null>(
+      element,
+      VISIBILITY_OBSERVER_PROP,
+      null,
+    )
+    setVirtualPropertyValue<ALSurfaceData | null>(
+      element,
+      SURFACE_DATA_PROP,
+      null,
+    )
+    observedRoots.delete(element, surfaceData);
+    surfaceDataRoots.delete(surfaceData, element);
+  }
+
+  let mutationObserver: MutationObserver | null = null;
+  if (enableDynamicChildTracking) {
+    mutationObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          const element = mutation.target as Element;
+          const observer = getVirtualPropertyValue<IntersectionObserver | null>(element, VISIBILITY_OBSERVER_PROP);
+          const surfaceData = getVirtualPropertyValue<ALSurfaceData | null>(element, SURFACE_DATA_PROP);
+          if (!observer || !surfaceData) {
+            return;
+          }
+          // Handle removed nodes
+          if (mutation.removedNodes.length > 0) {
+            handleRemovedNodes(observer, element, surfaceData, mutation.removedNodes);
+          }
+
+          // Handle added nodes
+          if (mutation.addedNodes.length > 0) {
+            // Re-evaluate the entire element with its new children
+            const surfaceDataList = observedRoots.get(element);
+            if (surfaceDataList && surfaceDataList.includes(surfaceData)) {
+              // Untrack the parent element first
+              untrackElement(observer, element, surfaceData);
+              // Try to find suitable children with the updated DOM
+              const roots = getNonSurfaceWrapperRoots(element);
+              if (roots.length > 0) {
+                // Found suitable children, observe them
+                for (let i = 0; i < roots.length; ++i) {
+                  trackElement(observer, roots[i], surfaceData);
+                  break; // Only need to observe one viable child
+                }
+              } else {
+                // Still no suitable children, track the parent again
+                // Which will check for observable roots again, and attach a mutation observer if needed
+                trackElement(observer, element, surfaceData);
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Handle an element by either observing its suitable children or setting up a mutation observer
+  function handleElementWithChildren(
+    observer: IntersectionObserver,
+    element: Element,
+    surfaceData: ALSurfaceData,
+    mutObserver: MutationObserver | null = mutationObserver,
+  ): void {
     const roots = getNonSurfaceWrapperRoots(element);
-    for (let i = 0; i < roots.length; ++i) {
-      const root = roots[i];
-      observer.observe(root);
-      observedRoots.set(root, surfaceData);
-      surfaceDataRoots.set(surfaceData, root);
+
+    if (roots.length > 0) {
+      // Normal case: we have viable children to observe
+      for (let i = 0; i < roots.length; ++i) {
+        trackElement(observer, roots[i], surfaceData);
+      }
+    } else if (enableDynamicChildTracking) {
+      // Special case: no viable children to observe, so set up a mutation observer
+      trackElement(observer, element, surfaceData, false);
+      // Set up mutation observer to watch for child additions
+      mutObserver?.observe(element, { childList: true });
     }
   }
+
+  function handleRemovedNodes(
+    observer: IntersectionObserver,
+    parentElement: Element,
+    surfaceData: ALSurfaceData,
+    removedNodes: NodeList
+  ): void {
+    let needToReobserveParent = false;
+
+    for (let i = 0; i < removedNodes.length; i++) {
+      const node = removedNodes[i];
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const childElement = node as Element;
+        const surfaceDataList = observedRoots.get(childElement);
+
+        // Check if this was a child we were observing
+        if (surfaceDataList && surfaceDataList.includes(surfaceData)) {
+          untrackElement(observer, childElement, surfaceData);
+          needToReobserveParent = true;
+        }
+      }
+    }
+
+    // If we were observing a child that was removed, start observing the parent again
+    if (needToReobserveParent) {
+      handleElementWithChildren(observer, parentElement, surfaceData);
+    }
+  }
+
+  function observe(surfaceData: ALSurfaceData, element: Element, trackVisibilityThreshold: number): void {
+    const observer = getOrCreateObserver(trackVisibilityThreshold);
+    handleElementWithChildren(observer, element, surfaceData);
+  }
+
   function unobserve(surfaceData: ALSurfaceData, element: Element, trackVisibilityThreshold: number): void {
     const observer = getOrCreateObserver(trackVisibilityThreshold);
     const roots = getNonSurfaceWrapperRoots(element);
-    for (let i = 0; i < roots.length; ++i) {
-      const root = roots[i];
-      observer.unobserve(root);
-      observedRoots.delete(root, surfaceData);
-      surfaceDataRoots.delete(surfaceData, root);
+
+    if (roots.length > 0) {
+      // Normal case: unobserve the child elements
+      for (let i = 0; i < roots.length; ++i) {
+        untrackElement(observer, roots[i], surfaceData);
+      }
+    } else if (enableDynamicChildTracking) {
+      // Special case: we might be observing the root element itself
+      untrackElement(observer, element, surfaceData);
     }
   }
 
