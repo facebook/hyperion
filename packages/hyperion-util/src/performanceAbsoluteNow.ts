@@ -5,6 +5,7 @@
 'use strict';
 
 import { assert } from "hyperion-globals";
+import { performanceNowOnAdjust } from "./performanceNowOnAdjust";
 
 /**
  * Sometimes we want absolute time and we
@@ -22,6 +23,7 @@ type GetTimeFunc = () => number;
 type GetTimeFuncExtensions = {
   setFallback: (fallback: () => number) => void;
   fromRelativeTime(timestamp: number): number;
+  __adjust: () => number,
 };
 
 let performanceAbsoluteNow: GetTimeFunc & GetTimeFuncExtensions;
@@ -37,24 +39,54 @@ function setFallback(fn: () => number) {
 }
 
 let navigationStart = -1;
+let timeOriginDelta = 0;
 const performanceIsDefined = typeof performance === "object";
 const performanceNowIsDefined = performanceIsDefined && typeof performance.now === "function";
 if (performanceIsDefined) {
-  if (performance.timing && performance.timing.navigationStart) {
-    navigationStart = performance.timing.navigationStart;
-  } else if (performance.timeOrigin) {
+  if (performance.timeOrigin) {
     navigationStart = performance.timeOrigin;
+  } else if (performance.timing && performance.timing.navigationStart) {
+    navigationStart = performance.timing.navigationStart;
   }
 }
 
 let coreFunction: GetTimeFunc;
+let coreAdjustedFunction: GetTimeFunc;
+let __adjust: GetTimeFuncExtensions["__adjust"] = () => 0;
 if (performanceNowIsDefined && navigationStart !== -1) {
   coreFunction = () => performance.now() + navigationStart;
+  coreAdjustedFunction = () => coreFunction() + timeOriginDelta;
+  __adjust = () => {
+    const delta = Date.now() - coreFunction();
+    if (delta > 500) {
+      /**
+       * The delta should be generally withing a few ms.
+       * If the delta is greater than .5 second, we assume that the browser
+       * has been backgrounded and we need to adjust the timeOrigin.
+       * Assuming the initial timeOrigin was the same as Date.now, then
+       * delta shows how much performance.now() is lagging behind Date.now()
+       * so by adding that to timeOrigin we can "catch up"
+       */
+      timeOriginDelta = delta;
+      performanceNowOnAdjust.call(delta);
+    }
+    return delta;
+  };
+
+  if (
+    typeof window === "object" &&
+    typeof window.addEventListener === "function"
+  ) {
+    const SafeEventOptions = {
+      capture: false,
+      passive: true,
+    };
+    window.addEventListener("blur", __adjust, SafeEventOptions);
+    window.addEventListener("focus", __adjust, SafeEventOptions);
+  }
 } else {
-  coreFunction = () => fallback();
+  coreAdjustedFunction = coreFunction = () => fallback();
 }
-
-
 
 const extensions: GetTimeFuncExtensions = {
   setFallback,
@@ -74,8 +106,9 @@ const extensions: GetTimeFuncExtensions = {
       };
     }
   })(),
+  __adjust
 };
 
-performanceAbsoluteNow = Object.assign(coreFunction, extensions);
+performanceAbsoluteNow = Object.assign(coreAdjustedFunction, extensions);
 
 export default performanceAbsoluteNow;
