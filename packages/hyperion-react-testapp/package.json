@@ -8,7 +8,8 @@
     "../hyperion-hook",
     "../hyperion-react",
     "../hyperion-autologging",
-    "../hyperion-autologging-visualizer"
+    "../hyperion-autologging-visualizer",
+    "../hyperion-autologging-plugin-eventhash"
   ],
   "dependencies": {
     "@testing-library/jest-dom": "^6.6.3",
