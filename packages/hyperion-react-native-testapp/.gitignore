@@ -1,0 +1,13 @@
+*.log
+.DS_Store
+node_modules
+coverage
+package-lock.json
+dist/
+packages/*/src/**/*.js
+packages/*/src/**/*.jsx
+src/**/*.js
+test/**/*.js
+
+vendor/
+Pods/
