@@ -1,0 +1,10 @@
+- `npx --package react-native-test-app@$(npm view react-native-test-app version) init`
+- `npm install`
+- `npm run build:ios`
+- `sudo gem install cocoapods`
+- `cd ios && bundle install --path vendor/bundle`
+- Download XCode from Managed Software center
+- `xcode-select -s /Applications/Xcode.app/Contents/Developer`
+- `cd ios && pod install`
+- `npm run ios`
+  - Some issues with installing cocoapods
