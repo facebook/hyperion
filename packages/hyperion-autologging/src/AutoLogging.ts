@@ -46,7 +46,7 @@ export type ALChannelEvent = ChannelEventType<
 
 type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions<never> | 'react'>;
 
-type PluginInit = (channel: Channel<ALChannelEvent>) => void;
+export type PluginInit = (channel: Channel<ALChannelEvent>) => void;
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelEvent> &
