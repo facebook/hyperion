@@ -18,6 +18,7 @@ import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
 import * as Flags from "hyperion-globals/src/Flags";
 import "hyperion-autologging/src/reference";
 import * as PluginEventHash from "hyperion-autologging-plugin-eventhash/src/index";
+import * as PluginFPS from "hyperion-autologging-plugin-fps/src/index";
 import { getSessionFlowID } from "hyperion-autologging/src/ALSessionFlowID";
 
 export let interceptionStatus = "disabled";
@@ -28,7 +29,6 @@ export function init() {
   Flags.setFlags({
     preciseTriggerFlowlet: true,
     optimizeInteractibiltyCheck: true,
-    optimizeSurfaceMaps: true,
   });
 
   interceptionStatus = "enabled";
@@ -68,7 +68,11 @@ export function init() {
     flowletManager,
     channel,
     plugins: [
-      PluginEventHash.init
+      PluginEventHash.init,
+      PluginFPS.init({
+        channel,
+        minFPSThreshold: 10
+      }),
     ],
     componentNameValidator: testCompValidator,
     flowletPublisher: {

@@ -1,0 +1,39 @@
+{
+  "name": "hyperion-autologging-plugin-fps",
+  "description": "plugin for autologging to add Frame Per Second event",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "build-react": "react-scripts build",
+    "watch": "npm run build -- --watch",
+    "start": "npm run watch",
+    "test": "npm run build & jest"
+  },
+  "workspaces": [
+    "../hyperion-devtools",
+    "../hyperion-globals",
+    "../hyperion-channel"
+  ],
+  "dependencies": {
+    "hyperion-channel": "*",
+    "hyperion-globals": "*"
+  },
+  "devDependencies": {
+    "hyperion-devtools": "*",
+    "@types/jest": "^29.5.14"
+  },
+  "eslintConfig": {},
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

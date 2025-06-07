@@ -61,6 +61,7 @@
     "./packages/hyperion-react",
     "./packages/hyperion-autologging",
     "./packages/hyperion-autologging-plugin-eventhash",
+    "./packages/hyperion-autologging-plugin-fps",
     "./packages/hyperion-autologging-visualizer",
     "./packages/hyperion-util",
     "./packages/hyperion-react-testapp"
@@ -69,6 +70,7 @@
     "hyperion-async-counter": "*",
     "hyperion-autologging": "*",
     "hyperion-autologging-plugin-eventhash": "*",
+    "hyperion-autologging-plugin-fps": "*",
     "hyperion-autologging-visualizer": "*",
     "hyperion-channel": "*",
     "hyperion-core": "*",

@@ -111,6 +111,9 @@ export default defineConfig({
       ],
       "hyperionAutoLoggingPluginEventHash": [
         "hyperion-autologging-plugin-eventhash/src/index",
+      ],
+      "hyperionAutoLoggingPluginFPS": [
+        "hyperion-autologging-plugin-fps/src/index",
       ]
     },
     chunkFileNames: "[name].js",

@@ -17,7 +17,7 @@ export * from "hyperion-hook/src/index";
 export * from "hyperion-channel/src/index";
 
 // hyperionTimedTrigger
-export * from  "hyperion-timed-trigger/src/index";
+export * from "hyperion-timed-trigger/src/index";
 
 // hyperionTestAndSet
 export * from "hyperion-test-and-set/src/index";
@@ -47,14 +47,17 @@ export * from "hyperion-util/src/index";
 export * from "hyperion-flowlet/src/index";
 
 // hyperionReact
-export *  from "hyperion-react/src/index";
+export * from "hyperion-react/src/index";
 
 // hyperionAutoLogging
-export *  from "hyperion-autologging/src/index";
+export * from "hyperion-autologging/src/index";
 
 // hyperionAutoLoggingVisualizer
 export * from "hyperion-autologging-visualizer/src/index";
 
 // hyperionAutoLoggingPluginEventHash
-export * from "hyperion-autologging-plugin-eventhash/src/index";
+export { init as pluginEventHash } from "hyperion-autologging-plugin-eventhash/src/index";
+
+// hyperionAutoLoggingPluginFPS
+export { init as pluginFPS } from "hyperion-autologging-plugin-fps/src/index";
 
