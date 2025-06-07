@@ -68,8 +68,14 @@ if (
   window.addEventListener('hashchange', updateToLocation);
   window.addEventListener('popstate', updateToLocation);
   if (typeof window.navigation === 'object') {
-    window.navigation.addEventListener("navigate", (event: Event & { destination?: { url: string } }) => {
-      updateMainPageUrl(event.destination?.url ?? window.location.href, true);
+    window.navigation.addEventListener("navigate", (_event: Event & { destination?: { url: string } }) => {
+      /**
+       * the navigation event seems to fire multiple times and not always it matches window.location.href
+       * Also, the event fires before actual navigation to a new page, and we may incorrectly use the target
+       * page url for the events that happen at the end of the page lifecycle.
+       * So, instead of using the event.destination.url, we use the current window location.
+       */
+      updateMainPageUrl(window.location.href, true);
     });
   }
   IHistory.replaceState.onAfterCallMapperAdd(updateToLocation);
