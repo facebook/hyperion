@@ -129,32 +129,36 @@ export function publish(options: InitOptions): void {
     if (observeElement) {
       observer.observe(element);
     }
-    setVirtualPropertyValue<IntersectionObserver | null>(
-      element,
-      VISIBILITY_OBSERVER_PROP,
-      observer,
-    )
-    setVirtualPropertyValue<ALSurfaceData | null>(
-      element,
-      SURFACE_DATA_PROP,
-      surfaceData,
-    )
+    if (enableDynamicChildTracking) {
+      setVirtualPropertyValue<IntersectionObserver | null>(
+        element,
+        VISIBILITY_OBSERVER_PROP,
+        observer,
+      );
+      setVirtualPropertyValue<ALSurfaceData | null>(
+        element,
+        SURFACE_DATA_PROP,
+        surfaceData,
+      );
+    }
     observedRoots.set(element, surfaceData);
     surfaceDataRoots.set(surfaceData, element);
   }
 
   function untrackElement(observer: IntersectionObserver, element: Element, surfaceData: ALSurfaceData): void {
     observer.unobserve(element);
-    setVirtualPropertyValue<IntersectionObserver | null>(
-      element,
-      VISIBILITY_OBSERVER_PROP,
-      null,
-    )
-    setVirtualPropertyValue<ALSurfaceData | null>(
-      element,
-      SURFACE_DATA_PROP,
-      null,
-    )
+    if (enableDynamicChildTracking) {
+      setVirtualPropertyValue<IntersectionObserver | null>(
+        element,
+        VISIBILITY_OBSERVER_PROP,
+        null,
+      );
+      setVirtualPropertyValue<ALSurfaceData | null>(
+        element,
+        SURFACE_DATA_PROP,
+        null,
+      );
+    }
     observedRoots.delete(element, surfaceData);
     surfaceDataRoots.delete(surfaceData, element);
   }
@@ -207,7 +211,6 @@ export function publish(options: InitOptions): void {
     observer: IntersectionObserver,
     element: Element,
     surfaceData: ALSurfaceData,
-    mutObserver: MutationObserver | null = mutationObserver,
   ): void {
     const roots = getNonSurfaceWrapperRoots(element);
 
@@ -220,7 +223,7 @@ export function publish(options: InitOptions): void {
       // Special case: no viable children to observe, so set up a mutation observer
       trackElement(observer, element, surfaceData, false);
       // Set up mutation observer to watch for child additions
-      mutObserver?.observe(element, { childList: true });
+      mutationObserver?.observe(element, { childList: true });
     }
   }
 
