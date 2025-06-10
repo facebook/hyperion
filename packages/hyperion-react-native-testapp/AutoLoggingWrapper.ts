@@ -2,43 +2,53 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as Visualizer from "hyperion-autologging-visualizer/src/Visualizer";
-import { ALElementText } from "hyperion-autologging/src/ALInteractableDOMElement";
-import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
-import * as IReact from "hyperion-react/src/IReact";
-import * as IReactDOM from "hyperion-react/src/IReactDOM";
-import { ClientSessionID, getDomainSessionID } from "hyperion-util/src/ClientSessionID";
-import React from 'react';
-import * as ReactDOM from "react-dom";
-import ReactDev from "react/jsx-dev-runtime";
-import { SyncChannel } from "./Channel";
-import { FlowletManager } from "./FlowletManager";
-import { ALExtensibleEvent } from "hyperion-autologging/src/ALType";
-import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
-import * as Flags from "hyperion-globals/src/Flags";
-import "hyperion-autologging/src/reference";
-import * as PluginEventHash from "hyperion-autologging-plugin-eventhash/src/index";
-import { getSessionFlowID } from "hyperion-autologging/src/ALSessionFlowID";
+// import * as Visualizer from "hyperion-autologging-visualizer/src/Visualizer";
+// import { ALElementText } from "hyperion-autologging/src/ALInteractableDOMElement";
+// import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
+// import * as IReact from "hyperion-react/src/IReact";
+// import * as IReactDOM from "hyperion-react/src/IReactDOM";
+// import { ClientSessionID, getDomainSessionID } from "hyperion-util/src/ClientSessionID";
+// import React from 'react';
+// import * as ReactDOM from "react-dom";
+// import ReactDev from "react/jsx-dev-runtime";
+// import { SyncChannel } from "./Channel";
+// import { FlowletManager } from "./FlowletManager";
+// import { ALExtensibleEvent } from "hyperion-autologging/src/ALType";
+// import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
+// import * as Flags from "hyperion-globals/src/Flags";
+// import "hyperion-autologging/src/reference";
+// // import * as PluginEventHash from "hyperion-autologging-plugin-eventhash/src/index";
+// import { getSessionFlowID } from "hyperion-autologging/src/ALSessionFlowID";
 
-export let interceptionStatus = "disabled";
+// export let interceptionStatus = "disabled";
 
-globalThis.__DEV__ = true;
+// globalThis.__DEV__ = true;
 
 export function init() {
+  console.log('Running AL init!')
+
+  return;
   Flags.setFlags({
     preciseTriggerFlowlet: true,
     optimizeInteractibiltyCheck: true,
   });
 
+  return;
+
   interceptionStatus = "enabled";
   const flowletManager = FlowletManager;
-
-  const IReactModule = IReact.intercept("react", React, [])
+  console.log('Intercept react');
+  //                                           types incompatible
+  const IReactModule = IReact.intercept("react", React as any, []);
+  console.log('Intercept jsx');
   const IJsxRuntimeModule = IReact.interceptRuntime("react/jsx-dev-runtime", ReactDev as any, []);
-  const IReactDOMModule = IReactDOM.intercept("react-dom", ReactDOM, []);
+  //
+  console.log('Intercept reactDOM');
+  const IReactDOMModule = IReactDOM.intercept("react-dom", ReactDOM as any, []);
 
   const channel = SyncChannel;
-
+  console.log('Intercept react');
+  return;
   Visualizer.init({
     flowletManager,
     channel,
@@ -46,6 +56,11 @@ export function init() {
 
   channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
 
+  });
+
+  console.log('Subscribe to events!')
+  channel.on('al_ui_event').add(ev => {
+    console.log(ev);
   });
 
 
@@ -66,9 +81,9 @@ export function init() {
   AutoLogging.init({
     flowletManager,
     channel,
-    plugins: [
-      PluginEventHash.init
-    ],
+    // plugins: [
+    //   PluginEventHash.init
+    // ],
     componentNameValidator: testCompValidator,
     flowletPublisher: {
       channel
@@ -150,10 +165,10 @@ export function init() {
     network: {
       requestFilter: request => !/robots/.test(request.url.toString()),
       requestUrlMarker: (request, params) => {
-        const flowlet = FlowletManager.top();
-        if (flowlet) {
-          params.set('flowlet', flowlet.getFullName());
-        }
+        // const flowlet = FlowletManager.top();
+        // if (flowlet) {
+        //   params.set('flowlet', flowlet.getFullName());
+        // }
       }
     },
     domSnapshotPublisher: {
