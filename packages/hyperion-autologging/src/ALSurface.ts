@@ -325,7 +325,9 @@ export function init(options: InitOptions): ALSurfaceHOC {
 
     metadata.original_call_flowlet = callFlowlet.getFullName();
     metadata.surface_capability = surfaceCapabilityToString(capability);
-    surfaceData.metadata = metadata; // Want to make sure the tree always has the latest fresh version of metadata
+    // Update the metadata on every render to ensure it stays current
+    surfaceData.metadata = metadata;
+    surfaceData.setUIEventMetadata(eventMetadata);
 
     /**
      * We don't know when react decides to call effect callback, so to be safe make a copy
