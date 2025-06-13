@@ -23,4 +23,19 @@ describe('test performance now', () => {
     expect(Math.abs(t1 - t3)).toBeLessThan(1);
   });
 
+  test('test adjust', () => {
+    let beforeAdjust = performanceAbsoluteNow();
+    let adjustTime = performanceAbsoluteNow.__adjust();
+    let afterAdjust = performanceAbsoluteNow();
+    expect(adjustTime).toBeLessThan(afterAdjust - beforeAdjust);
+
+    const mockDateNow = -20000;
+    jest.spyOn(global.performance, 'now').mockImplementation(() => mockDateNow);
+    beforeAdjust = performanceAbsoluteNow();
+    adjustTime = performanceAbsoluteNow.__adjust();
+    afterAdjust = performanceAbsoluteNow();
+    expect(adjustTime).toBeGreaterThan(-mockDateNow);
+    expect(adjustTime).toBeCloseTo(afterAdjust - beforeAdjust);
+  });
+
 });
