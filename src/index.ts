@@ -28,9 +28,6 @@ export * from "hyperion-core/src/index";
 // hyperionDOM
 export * from "hyperion-dom/src/index";
 
-// hyperionTrackElementsWithAttributes
-export { trackElementsWithAttributes } from "hyperion-util/src/trackElementsWithAttributes";
-
 // hyperionSyncMutationObserver
 export * as SyncMutationObserver from "hyperion-util/src/SyncMutationObserver";
 
@@ -57,4 +54,3 @@ export * from "hyperion-autologging-visualizer/src/index";
 
 // hyperionAutoLoggingPluginEventHash
 export * from "hyperion-autologging-plugin-eventhash/src/index";
-
