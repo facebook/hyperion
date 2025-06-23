@@ -1,3 +1,6 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 import React from "react";
 import { SurfaceComp } from "./Surface";
 

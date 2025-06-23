@@ -1,3 +1,6 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
