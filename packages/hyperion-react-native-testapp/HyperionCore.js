@@ -1,22 +1,6 @@
 /**
- * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
- *
- * This file is auto generated from the Hyperion project hosted on
- * https://github.com/facebookincubator/hyperion
- * Instead of changing this file, you should:
- * - git clone https://github.com/facebookincubator/hyperion
- * - npm install
- * - npm run install-packages
- * - <make necessary modifications>
- * - npm run build
- * - npm test
- * - <copy the 'hyperion/dist/' folder>
- * - e.g. 'scp -r  ./dist/hyperion* $USER@my-od.facebook.com:www/html/js/hyperion/dist/'
- *
- * @generated <<SignedSource::d682d7395db265c610d071a8ad43845d>>
+ * @format
  */
-
-
 
 import { assert } from '../hyperion-globals';
 import globalScope from '../hyperion-globals/src/global';
