@@ -120,12 +120,12 @@ export class ALSurfaceData extends ALSurfaceDataCore {
   constructor(
     /** short name */
     public readonly surfaceName: string,
-    
+
     /** full interactive name */
     public readonly surface: string,
-    
+
     public readonly parent: ALSurfaceData | ALSurfaceDataRoot,
-    
+
     /** full path to be also used key */
     public readonly nonInteractiveSurface: string,
     public readonly callFlowlet: IALFlowlet,
@@ -166,11 +166,17 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     }
     surfacesData.set(nonInteractiveSurface, this);
 
-    /**
-     * We need to setup eventMetadata in a way that values from parent surfaces merge down with lower surfaces.
-     * To minimize the object creation, we use the getInheritedPropery mechanism to directly get the values
-     * from the surface node that does have eventMetadata
-     */
+    this.setUIEventMetadata(uiEventMetadata);
+  }
+
+  /**
+   * NOTE: With this function publicly exposed,  there is a possibility that if a new event is added to the parent's uiEventMetadata after the child node has been created, the child node will not be updated to reflect this change.
+   *
+   * We need to setup eventMetadata in a way that values from parent surfaces merge down with lower surfaces.
+   * To minimize the object creation, we use the getInheritedPropery mechanism to directly get the values
+   * from the surface node that does have eventMetadata
+   */
+  setUIEventMetadata(uiEventMetadata: EventMetadata | null | undefined): void {
     if (uiEventMetadata) {
       const parentEventMetadata = this.getInheritedPropery<EventMetadata>(InheritedEventMetadataProperyName);
       let fullEventMetadata: WritableEventMetadata;
@@ -219,7 +225,7 @@ export class ALSurfaceData extends ALSurfaceDataCore {
      * While mount event happens bottom-up, the unmount event (may) happen top down.
      * We can remove the parent node once all its children are removed. Also, since the
      * application might have associated surface data, we would want to keep those surfaces
-     * around. So, as soon as we reach a leaf node that has data, we should stop. 
+     * around. So, as soon as we reach a leaf node that has data, we should stop.
      */
     if (!this.isRemovable()) {
       return false;
