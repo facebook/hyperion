@@ -66,7 +66,7 @@ export type ALSurfaceProps = Readonly<{
   metadata?: ALMetadataEvent['metadata'];
   uiEventMetadata?: EventMetadata,
   capability?: ALSurfaceCapability,
-  nodeRef?: React.RefObject<HTMLElement | null | undefined> | React.RefCallback<HTMLElement | null | undefined>,
+  nodeRef?: React.RefObject<HTMLElement | null | undefined>,
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
@@ -340,8 +340,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
      * we have the node value, we can accurately assign the attribute, and
      * also use that for our mount/unmount event.
      */
-    const isPropsNodeRef = props.nodeRef != null && typeof props.nodeRef === "object";
-    let nodeRef = isPropsNodeRef ? props.nodeRef : localRef;
+    const nodeRef = props.nodeRef ?? localRef;
 
     ReactModule.useLayoutEffect(() => {
       __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
