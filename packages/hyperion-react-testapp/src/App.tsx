@@ -6,7 +6,7 @@ import React, { ChangeEventHandler, useCallback, useState } from 'react';
 import './App.css';
 import DynamicSvgComponent from './component/DynamicSvgComponent';
 import ElementNameComponent from './component/ElementNameComponent';
-import LargeComp from './component/LargeComponent';
+import LargeComponent from './component/LargeComponent';
 import NestedComponent from './component/NestedComponent';
 import NonInteractiveSurfaceComponent from './component/NonInteractiveSurfaceComponent';
 import DelayedChildrenSurfaceComponent from './component/DelayedChildrenSurfaceComponent';
@@ -37,7 +37,6 @@ function InitComp() {
   </div>);
 }
 
-const maxDepth = 1000;
 const Modes = {
   'mutationOnlySurface': () => <NonInteractiveSurfaceComponent></NonInteractiveSurfaceComponent>,
   'delayedChildrenSurface': () => <DelayedChildrenSurfaceComponent></DelayedChildrenSurfaceComponent>,
@@ -48,7 +47,6 @@ const Modes = {
     </div>
     <div>
       <NestedComponent></NestedComponent>
-      <LargeComp depth={1} maxDepth={maxDepth}></LargeComp>
     </div>
     <div>
       <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
@@ -60,6 +58,7 @@ const Modes = {
     <ElementNameComponent />
     <TextComponent />
   </div>,
+  'largeTree': () => <LargeComponent></LargeComponent>,
 };
 type ModeNames = keyof typeof Modes;
 const PersistedOptionValue = new LocalStoragePersistentData<ModeNames>(
