@@ -104,7 +104,8 @@ export function init() {
           eventName: 'click',
           cacheElementReactInfo: true,
           enableElementTextExtraction: true,
-          eventFilter: (domEvent) => domEvent.isTrusted
+          eventFilter: (domEvent) => domEvent.isTrusted,
+          interactableTypeExtension: ['mousedown'],
         },
         {
           eventName: 'mousedown',

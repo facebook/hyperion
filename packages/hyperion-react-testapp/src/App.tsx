@@ -18,6 +18,7 @@ import { PortalBodyContainerComponent } from './component/PortalComponent';
 import TextComponent from './component/TextComponent';
 import RecursiveFuncComponent from './component/RecursiveFuncComponent';
 import SVGClickComponent from './component/SVGClickComponent';
+import { MousedownInteractableComponent } from './component/MousedownInteractableComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -52,6 +53,7 @@ const Modes = {
       <PortalBodyContainerComponent message="Portal outside of Surface"></PortalBodyContainerComponent>
     </div>
     <RecursiveFuncComponent i={3}></RecursiveFuncComponent>
+    <MousedownInteractableComponent/>
     <SVGClickComponent></SVGClickComponent>
   </>,
   'ElementText': () => <div>
