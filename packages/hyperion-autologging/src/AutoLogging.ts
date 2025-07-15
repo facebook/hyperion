@@ -72,6 +72,7 @@ export type InitOptions = Types.Options<
 export type InitResults = Readonly<{
   initOptions: InitOptions;
   surfaceRenderer: ALSurface.ALSurfaceHOC;
+  surfaceComponent?: ALSurface.SurfaceComponent;
 }>;
 
 let cachedResults: InitResults | null = null;
@@ -229,13 +230,15 @@ export function init(options: InitOptions): boolean {
     })
   }
 
+  const surfaceRenderers = ALSurface.init({
+    react: options.react,
+    ...sharedOptions,
+    ...options.surface
+  });
   cachedResults = {
     initOptions: options,
-    surfaceRenderer: ALSurface.init({
-      react: options.react,
-      ...sharedOptions,
-      ...options.surface
-    }),
+    surfaceRenderer: surfaceRenderers.surfaceHOComponent,
+    surfaceComponent: surfaceRenderers.surfaceComponent,
   };
 
   return true;
@@ -257,7 +260,22 @@ export function getSurfaceRenderer(defaultALSurfaceHOC?: ALSurface.ALSurfaceHOC)
   );
   return renderer;
 }
-
+export function getSurfaceComponent(defaultALSurfaceComponet?: ALSurface.SurfaceComponent): ALSurface.SurfaceComponent {
+  const component = cachedResults?.surfaceComponent ?? defaultALSurfaceComponet;
+  assert(
+    component != null,
+    "AutoLogging must have been initilized first. Did you forget to call .init() functions?",
+    {
+      logger: {
+        error: msg => {
+          console.error(msg);
+          throw msg;
+        }
+      }
+    }
+  );
+  return component;
+}
 
 /**
  * Gets the init options passed when initializing AutoLogging.

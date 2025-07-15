@@ -6,7 +6,7 @@
 
 import * as IElement from "hyperion-dom/src/IElement";
 import { Flowlet } from "hyperion-flowlet/src/Flowlet";
-import { assert } from "hyperion-globals";
+import { assert, getFlags } from "hyperion-globals";
 import * as IReact from "hyperion-react/src/IReact";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import * as IReactElementVisitor from 'hyperion-react/src/IReactElementVisitor';
@@ -71,6 +71,11 @@ export type ALSurfaceProps = Readonly<{
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
 export type ALSurfaceHOC = (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
+export type ALSurfaceRenderers = {
+  surfaceComponent: SurfaceComponent;
+  surfaceHOComponent: (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
+};
+
 
 export type ALChannelSurfaceEvent = Readonly<{
   al_surface_mount: [ALSurfaceEventData];
@@ -86,6 +91,7 @@ export type SurfaceComponent = (props:
   IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> &
   ALSurfaceProps &
   {
+    renderer?: ALSurfaceRenderer;
     // callFlowlet: FlowletType;
     /** The optional incoming surface that we are re-wrapping via a proxy.
      * If this is provided,  then we won't emit mutations for this surface as we are
@@ -236,13 +242,85 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   });
 }
 
-
-export function init(options: InitOptions): ALSurfaceHOC {
+export function init(options: InitOptions): ALSurfaceRenderers {
   const { flowletManager, channel } = options;
   const { ReactModule } = options.react;
 
   setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
+  const optimizeSurfaceRendering = getFlags().optimizeSurfaceRendering ?? false;
+
+  function SurfaceWithEvent(props: React.PropsWithChildren<{
+    nodeRef: React.RefObject<HTMLElement | null | undefined> | React.MutableRefObject<Element | undefined>;
+    domAttributeName: string;
+    domAttributeValue: string;
+    surfaceData: ALSurfaceData;
+    callFlowlet: FlowletType;
+    triggerFlowlet: IALFlowlet<ALFlowletDataType> | undefined;
+    metadata: ALMetadataEvent['metadata'];
+    isProxy: boolean;
+    capability: ALSurfaceCapability | null | undefined;
+
+  }>): React.ReactNode {
+    const { surfaceData, nodeRef, domAttributeName, domAttributeValue, capability, callFlowlet, triggerFlowlet, metadata, isProxy } = props;
+
+    ReactModule.useLayoutEffect(() => {
+      const surface = surfaceData.surfaceName;
+
+      __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
+      const element = nodeRef.current;
+      if (element == null) {
+        return;
+      }
+      element.setAttribute(domAttributeName, domAttributeValue);
+      __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
+
+      /**
+       * Although the following check may seem logical, but it seems that react may first run the component body code
+       * then run unmount of the previous components. So, at this point, we may indeed have a previous instance of the
+       * surface still not unmounted (specially in DEV mode that react runs everything twice)
+       * So, commenting code and keeping it for future references.
+       */
+      // __DEV__ && assert(
+      //   !surfaceData.getMutationEvent() && !surfaceData.getVisibilityEvent(),
+      //   `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
+      // )
+
+      surfaceData.elements.add(element);
+
+      if (capability?.trackMutation === false) {
+        return () => {
+          surfaceData.elements.delete(element);
+        };
+      }
+
+      const event: ALSurfaceEventData = {
+        surface: domAttributeValue,
+        surfaceData,
+        callFlowlet,
+        triggerFlowlet,
+        metadata,
+        element,
+        isProxy,
+        capability
+      };
+
+      channel.emit('al_surface_mount', event);
+      return () => {
+        /**
+         * The trigger on the surface or its parent might be updated
+         * so, we should re-read that value again.
+         */
+        channel.emit('al_surface_unmount', {
+          ...event,
+          triggerFlowlet: callFlowlet.data.triggerFlowlet
+        });
+        surfaceData.elements.delete(element);
+      }
+    }, [domAttributeName, domAttributeValue, nodeRef]);
+
+    return props.children
+  }
 
   const Surface: SurfaceComponent = props => {
     const { surface, proxiedContext } = props;
@@ -329,76 +407,8 @@ export function init(options: InitOptions): ALSurfaceHOC {
     surfaceData.metadata = metadata;
     surfaceData.setUIEventMetadata(eventMetadata);
 
-    /**
-     * We don't know when react decides to call effect callback, so to be safe make a copy
-     * of what we care about incase by the time callback is called the values have changed.
-     */
-    const triggerFlowlet = callFlowlet.data.triggerFlowlet;
-
-    /**
-     * either we are given a ref, or we use our local one. In anycase once
-     * we have the node value, we can accurately assign the attribute, and
-     * also use that for our mount/unmount event.
-     */
-    const nodeRef = props.nodeRef ?? localRef;
-
-    ReactModule.useLayoutEffect(() => {
-      __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
-      const element = nodeRef.current;
-      if (element == null) {
-        return;
-      }
-      element.setAttribute(domAttributeName, domAttributeValue);
-      __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
-
-      /**
-       * Although the following check may seem logical, but it seems that react may first run the component body code
-       * then run unmount of the previous components. So, at this point, we may indeed have a previous instance of the
-       * surface still not unmounted (specially in DEV mode that react runs everything twice)
-       * So, commenting code and keeping it for future references.
-       */
-      // __DEV__ && assert(
-      //   !surfaceData.getMutationEvent() && !surfaceData.getVisibilityEvent(),
-      //   `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
-      // )
-
-      surfaceData.elements.add(element);
-
-      if (capability?.trackMutation === false) {
-        return () => {
-          surfaceData.elements.delete(element);
-        };
-      }
-
-      const event: ALSurfaceEventData = {
-        surface: domAttributeValue,
-        surfaceData,
-        callFlowlet,
-        triggerFlowlet,
-        metadata,
-        element,
-        isProxy,
-        capability
-      };
-
-      channel.emit('al_surface_mount', event);
-      return () => {
-        /**
-         * The trigger on the surface or its parent might be updated
-         * so, we should re-read that value again.
-         */
-        channel.emit('al_surface_unmount', {
-          ...event,
-          triggerFlowlet: callFlowlet.data.triggerFlowlet
-        });
-        surfaceData.elements.delete(element);
-      }
-    }, [domAttributeName, domAttributeValue, nodeRef]);
-
-
-
     // callFlowlet.data.surface = surfacePath;
-    let children = props.children;
+    let children = props.renderer ? props.renderer(props.children) : props.children;
 
     const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
 
@@ -424,7 +434,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
               [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
               style: { display: 'contents' },
             },
-            props.children
+            children
           );
           propagateFlowletDown(children, surfaceData);
         }
@@ -437,22 +447,68 @@ export function init(options: InitOptions): ALSurfaceHOC {
             [domAttributeName]: domAttributeValue,
             ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
           },
-          props.children
+          children
         );
       }
     }
 
-    // We want to override the intercepted values
-    flowletManager.push(callFlowlet);
-    const result = ReactModule.createElement(
-      SurfaceContext.Provider,
-      {
-        value: surfaceData
-      },
-      children
-    );
-    flowletManager.pop(callFlowlet);
-    return result;
+    if (
+      !optimizeSurfaceRendering || // optimizeSurfaceRendering is disabled
+      !capability || // all default capabilities enabled
+      capability.trackMutation !== false || // need mutation event
+      capability.trackVisibilityThreshold // needs visibility event
+    ) {
+      /**
+       * We don't know when react decides to call effect callback, so to be safe make a copy
+       * of what we care about incase by the time callback is called the values have changed.
+       */
+      const triggerFlowlet = callFlowlet.data.triggerFlowlet;
+
+      /**
+       * either we are given a ref, or we use our local one. In anycase once
+       * we have the node value, we can accurately assign the attribute, and
+       * also use that for our mount/unmount event.
+       */
+      const nodeRef = props.nodeRef ?? localRef;
+
+      children = ReactModule.createElement(
+        SurfaceWithEvent,
+        {
+          nodeRef,
+          domAttributeName,
+          domAttributeValue,
+          surfaceData,
+          callFlowlet,
+          triggerFlowlet,
+          metadata,
+          isProxy,
+          capability
+        },
+        children
+      );
+    }
+
+    if (optimizeSurfaceRendering) {
+      return ReactModule.createElement(
+        SurfaceContext.Provider,
+        {
+          value: surfaceData
+        },
+        children
+      );
+    } else {
+      // We want to override the intercepted values
+      flowletManager.push(callFlowlet);
+      const result = ReactModule.createElement(
+        SurfaceContext.Provider,
+        {
+          value: surfaceData
+        },
+        children
+      );
+      flowletManager.pop(callFlowlet);
+      return result;
+    }
   }
 
   SurfaceProxy.init({ ...options, surfaceComponent: Surface });
@@ -535,15 +591,18 @@ export function init(options: InitOptions): ALSurfaceHOC {
     },
   });
 
-  return (props, renderer) => {
-    return children => {
-      const result = ReactModule.createElement(
-        Surface,
-        props,
-        renderer ? renderer(children) : children
-      );
+  return {
+    surfaceComponent: Surface,
+    surfaceHOComponent: (props, renderer) => {
+      return children => {
+        const result = ReactModule.createElement(
+          Surface,
+          props,
+          renderer ? renderer(children) : children
+        );
 
-      return result;
-    };
+        return result;
+      };
+    }
   };
 }

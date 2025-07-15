@@ -29,6 +29,7 @@ export function init() {
     preciseTriggerFlowlet: true,
     optimizeInteractibiltyCheck: true,
     enableDynamicChildTracking: true,
+    optimizeSurfaceRendering: true,
   });
 
   interceptionStatus = "enabled";

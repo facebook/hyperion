@@ -3,25 +3,41 @@
  */
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { interceptionStatus } from "../AutoLoggingWrapper";
-import * as ALSurface from "hyperion-autologging/src/ALSurface";
 import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
 import { LocalStoragePersistentData } from "hyperion-util/src/PersistentData";
+import { getFlags } from "hyperion-globals";
 
 type Comp = React.FC<React.PropsWithChildren<{ id: string, enableSurface?: boolean }>>;
 
 const EnableSurface = new LocalStoragePersistentData<boolean>("enable-surface", () => false, (value) => value.toString(), (value) => value === "true", true);
-const Surface: Comp = ({ children, id, enableSurface = EnableSurface.getValue() }) => {
-  if (!enableSurface) {
-    return children;
-  }
-  // return <span>{children}</span>
-  return AutoLogging.getSurfaceRenderer()(
-    {
-      surface: id,
-      capability: { trackMutation: true }
+let Surface: Comp = (props) => {
+  const optimizeSurfaceRendering = getFlags().optimizeSurfaceRendering;
+  const capability = { trackMutation: false };
+  if (optimizeSurfaceRendering) {
+    const SurfaceComponent = AutoLogging.getSurfaceComponent();
+    Surface = ({ children, id, enableSurface = EnableSurface.getValue() }) => {
+      if (!enableSurface) {
+        return children;
+      }
+      return <SurfaceComponent surface={id} capability={capability} >{children}</SurfaceComponent>;
     }
-  )(children);
+  } else {
+    Surface = ({ children, id, enableSurface = EnableSurface.getValue() }) => {
+
+
+      if (!enableSurface) {
+        return children;
+      }
+
+      return AutoLogging.getSurfaceRenderer()(
+        {
+          surface: id,
+          capability: capability
+        },
+      )(children);
+    }
+  }
+  return <Surface  {...props}></Surface>
 }
 
 
