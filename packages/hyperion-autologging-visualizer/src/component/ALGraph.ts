@@ -438,8 +438,8 @@ export class ALGraph<DynamicOptionsType extends ALGraphDynamicOptionsType = ALGr
     }
   }
 
-  protected addNode(node: cytoscape.NodeDefinition): cytoscape.CollectionReturnValue {
-    return this.add(node);
+  protected addNode(node: Omit<cytoscape.NodeDefinition, "group">): cytoscape.CollectionReturnValue {
+    return this.add({ group: "nodes", ...node });
   }
 
   protected addEdge(sourceId: GraphID, targetId: GraphID, classes?: string | string[]): cytoscape.CollectionReturnValue | null {
