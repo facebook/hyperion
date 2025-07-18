@@ -13,7 +13,7 @@ import * as IReactElementVisitor from 'hyperion-react/src/IReactElementVisitor';
 import * as IReactFlowlet from "hyperion-react/src/IReactFlowlet";
 import * as IReactPropsExtension from "hyperion-react/src/IReactPropsExtension";
 import * as Types from "hyperion-util/src/Types";
-import type * as React from 'react';
+import * as React from 'react';
 import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
@@ -236,6 +236,17 @@ function setupDomElementSurfaceAttribute(options: InitOptions): void {
   });
 }
 
+function getRefElement<T>(ref: React.Ref<T> | undefined | null): T | null {
+  if (!ref) return null;
+  if (typeof ref === 'function') {
+    // Function refs don't expose current; you can't get element here safely
+    // unless you track it yourself, so return null
+    return null;
+  } else if ('current' in ref) {
+    return ref.current;
+  }
+  return null;
+}
 
 export function init(options: InitOptions): ALSurfaceHOC {
   const { flowletManager, channel } = options;
@@ -350,12 +361,12 @@ export function init(options: InitOptions): ALSurfaceHOC {
      * we have the node value, we can accurately assign the attribute, and
      * also use that for our mount/unmount event.
      */
-    const isPropsNodeRef = props.nodeRef != null && typeof props.nodeRef === "object";
-    const nodeRef = isPropsNodeRef ? props.nodeRef : localRef;
+    const nodeRef = props.nodeRef ?? localRef;
+
 
     ReactModule.useLayoutEffect(() => {
       __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
-      const element = nodeRef.current;
+      const element = getRefElement(nodeRef as React.Ref<HTMLElement>);
       if (element == null) {
         return;
       }
@@ -446,7 +457,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
             [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
             style: { display: 'contents' },
             [domAttributeName]: domAttributeValue,
-            ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
+            ref: mergedRef, // addSurfaceWrapper would have been false if a rep was passed in props
           },
           props.children
         );
@@ -460,7 +471,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       {
         value: surfaceData
       },
-      ReactModule.createElement('div', { ref: mergedRef }, children)
+      children
     );
     flowletManager.pop(callFlowlet);
     return result;
