@@ -259,7 +259,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
     const { surface: parentSurface, nonInteractiveSurface: parentNonInteractiveSurface } = surfaceCtx;
 
     let addSurfaceWrapper = props.nodeRef == null;
-    let localRef = ReactModule.useRef<Element>();
+    const localRef = ReactModule.useRef<Element | null>(null);
 
     // empty .capability field is default, means all enabled!
     const capability = props.capability ?? proxiedContext?.mainContext.capability;
@@ -322,6 +322,16 @@ export function init(options: InitOptions): ALSurfaceHOC {
     }
 
     const isProxy = proxiedContext != null;
+
+    const mergedRef = (node: Element | null) => {
+      const htmlNode = node instanceof HTMLElement ? node : null;
+      if (typeof props.nodeRef === 'function') {
+        props.nodeRef(htmlNode);
+      } else if (props.nodeRef && 'current' in props.nodeRef) {
+        (props.nodeRef as React.MutableRefObject<Element | null>).current = node;
+      }
+      localRef.current = node;
+    };
 
     metadata.original_call_flowlet = callFlowlet.getFullName();
     metadata.surface_capability = surfaceCapabilityToString(capability);
@@ -450,7 +460,7 @@ export function init(options: InitOptions): ALSurfaceHOC {
       {
         value: surfaceData
       },
-      children
+      ReactModule.createElement('div', { ref: mergedRef }, children)
     );
     flowletManager.pop(callFlowlet);
     return result;
