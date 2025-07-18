@@ -18,6 +18,7 @@ import { PortalBodyContainerComponent } from './component/PortalComponent';
 import TextComponent from './component/TextComponent';
 import RecursiveFuncComponent from './component/RecursiveFuncComponent';
 import SVGClickComponent from './component/SVGClickComponent';
+import { RefNodeComponent } from './component/RefNodeComponent';
 
 function InitComp() {
   const [count, setCount] = React.useState(0);
@@ -59,6 +60,9 @@ const Modes = {
   'ElementText': () => <div>
     <ElementNameComponent />
     <TextComponent />
+  </div>,
+  'RefNode': () => <div>
+    <RefNodeComponent />
   </div>,
 };
 type ModeNames = keyof typeof Modes;
