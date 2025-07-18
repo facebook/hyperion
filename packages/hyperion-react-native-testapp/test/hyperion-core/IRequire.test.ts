@@ -5,7 +5,7 @@
  */
 
 import "jest";
-import * as IRequire from "../../HyperionCore";
+import { IRequire } from "../../HyperionCore";
 import * as TestModule from "./IRequireTestModule";
 import TestModuleDefault from "./IRequireTestModuleDefault";
 import * as TestModuleDefaultExports from "./IRequireTestModuleDefault";

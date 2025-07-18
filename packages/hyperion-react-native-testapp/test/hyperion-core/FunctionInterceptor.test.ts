@@ -398,6 +398,7 @@ describe("test modern classes", () => {
     expect(observer.mock.results[1].value).toBe(output);
   });
 
+  // TODO investigate why this case fails
   test.skip("test prototype + name prop copied to interceptor", () => {
     function someFuncName(a: string, b: number) {
       return a + b;

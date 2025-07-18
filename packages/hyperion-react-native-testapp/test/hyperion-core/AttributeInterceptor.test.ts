@@ -3,8 +3,7 @@
  */
 
 import "jest";
-import { ShadowPrototype } from "../../HyperionCore";
-import { interceptAttribute } from "../../HyperionCore";
+import { ShadowPrototype, interceptAttribute } from "../../HyperionCore";
 
 describe("test Attribute Interceptor", () => {
 

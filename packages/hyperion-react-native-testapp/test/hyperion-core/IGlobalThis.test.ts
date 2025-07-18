@@ -4,8 +4,7 @@
 
 import "jest";
 import { AsyncCounter } from "hyperion-async-counter/src/AsyncCounter";
-import * as IGlobalThis from "../../HyperionCore";
-import { interceptFunction } from "../../HyperionCore";
+import { interceptFunction, IGlobalThis } from "../../HyperionCore";
 
 function wrapHandler(handler: Function | string, observer: jest.Mock<any, any>) {
   if (typeof handler === "string") {

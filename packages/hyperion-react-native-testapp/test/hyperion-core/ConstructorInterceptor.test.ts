@@ -6,7 +6,7 @@ import "jest";
 import { ShadowPrototype } from "../../HyperionCore";
 import { interceptConstructor, interceptConstructorMethod } from "../../HyperionCore";
 import { AttributeInterceptor } from "../../HyperionCore";
-import * as intercept from "../../HyperionCore";
+import { registerShadowPrototype } from "../../HyperionCore";
 
 describe("test Constructor Interceptor", () => {
 
@@ -44,7 +44,7 @@ describe("test Constructor Interceptor", () => {
     const IB = {
       b: new AttributeInterceptor('b', IBShadow),
     }
-    intercept.registerShadowPrototype(B.prototype, IBShadow);
+    registerShadowPrototype(B.prototype, IBShadow);
 
 
     const Ctors = { A, B };
