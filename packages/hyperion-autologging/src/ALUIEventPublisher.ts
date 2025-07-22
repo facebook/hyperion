@@ -108,6 +108,8 @@ type UIEventConfigMap = {
     eventFilter?: (domEvent: EventHandlerMap[K]) => boolean;
     // Whether to limit to elements that are "interactable", i.e. those that have event handlers registered to the element.  Defaults to true.
     interactableElementsOnly?: boolean;
+    // Whether to consider additional event handler types as interactable for capturing this event,  e.g. click,  extension=['mousedown'] would also treat onmousedown as interactable when handling clicks.
+    interactableTypeExtension?: Array<keyof ALUIEventMap>,
     // Whether to cache element's react information on capture, defaults to false.
     cacheElementReactInfo?: boolean;
     /**
@@ -164,7 +166,7 @@ export function trackAndEnableUIEventHandlers(eventName: UIEventConfig['eventNam
 function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEventConfig, eventName: T, event: DocumentEventMap[T]): CommonEventData | null {
   const eventTimestamp = performanceAbsoluteNow();
 
-  const { eventFilter, interactableElementsOnly = true } = eventConfig;
+  const { eventFilter, interactableElementsOnly = true, interactableTypeExtension } = eventConfig;
 
   if (eventFilter && !eventFilter(event as any)) {
     return null;
@@ -172,6 +174,8 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
 
   let element: Element | null = null;
   let autoLoggingID: ALID | null = null;
+  const metadata: Metadata = {};
+
   if (interactableElementsOnly) {
     /**
      * Because of how UI events work in browser, one could for example click anywhere
@@ -182,18 +186,23 @@ function getCommonEventData<T extends keyof DocumentEventMap>(eventConfig: UIEve
      * We use that as the base of event to ensure the text, surface, ... for events
      * remain consistent no matter where the user actually clicked, hovered, ...
      */
-    element = getInteractable(event.target, eventName);
+    const result = getInteractable(event.target, eventName, false, interactableTypeExtension);
+    element = result.element;
     if (element == null) {
       return null;
     }
     autoLoggingID = getOrSetAutoLoggingID(element);
+
+    // Add int_type metadata if matched via extension type
+    if (result.matchedExtensionType) {
+      metadata.int_type = result.matchedExtensionType;
+    }
   }
   else {
     element = event.target instanceof Element ? event.target : null;
   }
 
   let value: string | undefined;
-  const metadata: Metadata = {};
   if (eventName === 'change' && element) {
     switch (element.nodeName) {
       case 'INPUT': {

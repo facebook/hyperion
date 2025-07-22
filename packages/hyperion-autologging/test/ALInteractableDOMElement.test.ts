@@ -69,10 +69,11 @@ function getTextFromParent(id: string, parentEvent: UIEventConfig['eventName'] |
   return ALInteractableDOMElement.getElementTextEvent(element, null, parentEvent).elementName;
 }
 
+function interactable(node: HTMLElement | null, eventName: UIEventConfig['eventName']): Element | null {
+  return ALInteractableDOMElement.getInteractable(node, eventName).element;
+}
+
 describe("Test interactable detection algorithm", () => {
-  function interactable(node: HTMLElement | null, eventName: UIEventConfig['eventName']): HTMLElement | null {
-    return ALInteractableDOMElement.getInteractable(node, eventName);
-  }
 
   test("Detect interactable", () => {
     const dom = DomFragment.html(`
@@ -275,17 +276,19 @@ describe("Test various element text options", () => {
         elementText.text = elementText.text.replace(/\r\n|\r|\n/, '');
       },
       getText: (elementTexts: Readonly<ExtendedElementText[]>): ExtendedElementText => {
-        return elementTexts.reduce((prev, current) => {
+        return elementTexts.reduce((prev: ExtendedElementText, current: ExtendedElementText) => {
           return {
             ...prev,
             ...current,
             text: prev.text + ALInteractableDOMElement.extractCleanText(current.text),
             modifiedText: (prev.modifiedText ?? "") + (current.modifiedText ?? ""),
+            elements: [],
           }
         }, {
           text: "",
           source: 'innerText',
-          modifiedText: ""
+          modifiedText: "",
+          elements: []
         });
       }
     });
@@ -302,10 +305,6 @@ describe("Test various element text options", () => {
         <span id="3">Test</span>
       </div>
     `);
-
-    function interactable(node: HTMLElement | null, eventName: string): HTMLElement | null {
-      return ALInteractableDOMElement.getInteractable(node, "click", true);
-    }
 
     let node = document.getElementById("1");
     expect(interactable(node, "click")).toStrictEqual(node);
@@ -378,6 +377,32 @@ describe("Test various element text options", () => {
     expect(texts[9].elementText?.elements[0]).toStrictEqual(document.getElementById('10.1'));
     expect(texts[9].elementText?.elements[1]).toStrictEqual(document.getElementById('10'));
     expect(texts[9].elementText?.elements[2]).toStrictEqual(document.getElementById('10.2'));
+
+    dom.cleanup();
+  });
+
+  test("Test extension mousedown interactable", () => {
+    const dom = DomFragment.html(`
+      <div id='1' onmousedown="return 1;"></div>
+      <div id="2" data-interactable="|mousedown|">
+        <span id="3">Test</span>
+      </div>
+    `);
+
+    let node = document.getElementById("1");
+    let res = ALInteractableDOMElement.getInteractable(node, "click", undefined, ["mousedown"]);
+    expect(res.element).toStrictEqual(node);
+    expect(res.matchedExtensionType).toBe("mousedown");
+
+    node = document.getElementById("2");
+    res = ALInteractableDOMElement.getInteractable(node, "click", undefined, ["mousedown"]);
+    expect(res.element).toStrictEqual(node);
+    expect(res.matchedExtensionType).toBe("mousedown");
+
+    const testEl = document.getElementById("3");
+    res = ALInteractableDOMElement.getInteractable(testEl, "click", undefined, ["mousedown"]);
+    expect(res.element).toStrictEqual(node);
+    expect(res.matchedExtensionType).toBe("mousedown");
 
     dom.cleanup();
   });
