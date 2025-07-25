@@ -14,7 +14,7 @@ import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
 import { setEventExtension } from "./ALEventExtension";
 
 
-type TrackingChannels = (ALUIEventPublisher.InitOptions & ALSurfaceVisibilityPublisher.InitOptions)['channel'];
+type TrackingChannels = (Omit<ALUIEventPublisher.InitOptions, 'react'> & ALSurfaceVisibilityPublisher.InitOptions)['channel'];
 type TrackingEvents = ChannelEventType<TrackingChannels>;
 type TrackingEventNames = (keyof TrackingEvents) & ('al_ui_event' | 'al_surface_visibility_event'); // & is added to ensure the event names are a correct subset
 
@@ -84,4 +84,4 @@ export function publish(options: InitOptions): void {
       }
     }
   });
-} 
+}

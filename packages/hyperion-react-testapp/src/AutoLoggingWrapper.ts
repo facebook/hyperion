@@ -10,6 +10,7 @@ import * as IReactDOM from "hyperion-react/src/IReactDOM";
 import { ClientSessionID, getDomainSessionID } from "hyperion-util/src/ClientSessionID";
 import React from 'react';
 import * as ReactDOM from "react-dom";
+import * as ReactDOMClient from "react-dom/client";
 import ReactDev from "react/jsx-dev-runtime";
 import { SyncChannel } from "./Channel";
 import { FlowletManager } from "./FlowletManager";
@@ -37,7 +38,8 @@ export function init() {
 
   const IReactModule = IReact.intercept("react", React, [])
   const IJsxRuntimeModule = IReact.interceptRuntime("react/jsx-dev-runtime", ReactDev as any, []);
-  const IReactDOMModule = IReactDOM.intercept("react-dom", ReactDOM, []);
+  const IReactDOMModule = IReactDOM.interceptDOM("react-dom", ReactDOM, []);
+  const IReactDOMClientModule = IReactDOM.interceptDOMClient("react-dom/client", ReactDOMClient, []);
 
   const channel = SyncChannel;
 
@@ -82,6 +84,7 @@ export function init() {
     react: {
       ReactModule: React as any,
       IReactDOMModule,
+      IReactDOMClientModule,
       IReactModule,
       IJsxRuntimeModule,
     },
