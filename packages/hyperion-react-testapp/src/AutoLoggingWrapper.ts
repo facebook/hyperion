@@ -19,6 +19,7 @@ import * as Flags from "hyperion-globals/src/Flags";
 import "hyperion-autologging/src/reference";
 import * as PluginEventHash from "hyperion-autologging-plugin-eventhash/src/index";
 import { getSessionFlowID } from "hyperion-autologging/src/ALSessionFlowID";
+import * as PluginNetworkPerformanceTiming from "hyperion-autologging-plugin-network-performance-timing/src/index";
 
 export let interceptionStatus = "disabled";
 
@@ -69,7 +70,8 @@ export function init() {
     flowletManager,
     channel,
     plugins: [
-      PluginEventHash.init
+      PluginEventHash.init,
+      PluginNetworkPerformanceTiming.init,
     ],
     componentNameValidator: testCompValidator,
     flowletPublisher: {
