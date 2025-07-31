@@ -27,161 +27,165 @@
 export function init() {
   console.log('Running AL init!')
 
-  return;
-  Flags.setFlags({
-    preciseTriggerFlowlet: true,
-    optimizeInteractibiltyCheck: true,
-  });
+  // const observer = (function <T, V>(this: T, value: V) {
+  //   console.log('Observer', value);
+  // });
 
-  return;
+  // return;
+  // Flags.setFlags({
+  //   preciseTriggerFlowlet: true,
+  //   optimizeInteractibiltyCheck: true,
+  // });
 
-  interceptionStatus = "enabled";
-  const flowletManager = FlowletManager;
-  console.log('Intercept react');
-  //                                           types incompatible
-  const IReactModule = IReact.intercept("react", React as any, []);
-  console.log('Intercept jsx');
-  const IJsxRuntimeModule = IReact.interceptRuntime("react/jsx-dev-runtime", ReactDev as any, []);
-  //
-  console.log('Intercept reactDOM');
-  const IReactDOMModule = IReactDOM.intercept("react-dom", ReactDOM as any, []);
+  // return;
 
-  const channel = SyncChannel;
-  console.log('Intercept react');
-  return;
-  Visualizer.init({
-    flowletManager,
-    channel,
-  });
+  // interceptionStatus = "enabled";
+  // const flowletManager = FlowletManager;
+  // console.log('Intercept react');
+  // //                                           types incompatible
+  // const IReactModule = IReact.intercept("react", React as any, []);
+  // console.log('Intercept jsx');
+  // const IJsxRuntimeModule = IReact.interceptRuntime("react/jsx-dev-runtime", ReactDev as any, []);
+  // //
+  // console.log('Intercept reactDOM');
+  // const IReactDOMModule = IReactDOM.intercept("react-dom", ReactDOM as any, []);
 
-  channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
+  // const channel = SyncChannel;
+  // console.log('Intercept react');
+  // return;
+  // Visualizer.init({
+  //   flowletManager,
+  //   channel,
+  // });
 
-  });
+  // channel.on("test").add((i, s) => { // Showing channel can be extend beyond expected types
 
-  console.log('Subscribe to events!')
-  channel.on('al_ui_event').add(ev => {
-    console.log(ev);
-  });
+  // });
 
-
-  const testCompValidator = (name: string) => !name.match(/(^Surface(Proxy)?)/);
-
-  console.log('csid:', ClientSessionID);
-  console.log('dsid', getDomainSessionID('localhost'));
-  console.log('dsid', getDomainSessionID());
-
-  // Better to first setup listeners before initializing AutoLogging so we don't miss any events (e.g. Heartbeat(START))
+  // console.log('Subscribe to events!')
+  // channel.on('al_ui_event').add(ev => {
+  //   console.log(ev);
+  // });
 
 
+  // const testCompValidator = (name: string) => !name.match(/(^Surface(Proxy)?)/);
 
-  interface ExtendedElementText extends ALElementText {
-    isExtended?: boolean;
-  }
-
-  AutoLogging.init({
-    flowletManager,
-    channel,
-    // plugins: [
-    //   PluginEventHash.init
-    // ],
-    componentNameValidator: testCompValidator,
-    flowletPublisher: {
-      channel
-    },
-    triggerFlowlet: {
-      enableReactMethodFlowlet: false,
-      enableFlowletConstructorTracking: false,
-    },
-    react: {
-      ReactModule: React as any,
-      IReactDOMModule,
-      IReactModule,
-      IJsxRuntimeModule,
-    },
-    surface: {
-      enableReactDomPropsExtension: false,
-    },
-    sessionFlowID: {
-      domain: 'localhost',
-      cookieName: 'axaxax',
-    },
-    elementText: {
-      updateText(elementText: ExtendedElementText, domSource) {
-        elementText.isExtended = true;
-        // console.log("Element Text ", elementText, domSource);
-      },
-    },
-    uiEventPublisher: {
-      uiEvents: [
-        {
-          eventName: 'click',
-          cacheElementReactInfo: true,
-          enableElementTextExtraction: true,
-          eventFilter: (domEvent) => domEvent.isTrusted
-        },
-        {
-          eventName: 'mousedown',
-          cacheElementReactInfo: true,
-          enableElementTextExtraction: false,
-          eventFilter: (domEvent) => domEvent.isTrusted
-        },
-        {
-          eventName: 'keydown',
-          cacheElementReactInfo: true,
-          interactableElementsOnly: false,
-          enableElementTextExtraction: false,
-          eventFilter: (domEvent) => domEvent.code === 'Enter',
-        },
-        {
-          eventName: 'keyup',
-          cacheElementReactInfo: true,
-          interactableElementsOnly: false,
-          enableElementTextExtraction: false,
-          eventFilter: (domEvent) => domEvent.code === 'Enter',
-        },
-        {
-          eventName: 'change',
-          cacheElementReactInfo: true,
-          enableElementTextExtraction: true,
-          interactableElementsOnly: false,
-        },
-        // {
-        //   eventName: 'mouseover',
-        //   cacheElementReactInfo: true,
-        //   interactableElementsOnly: false,
-        //   enableElementTextExtraction: true,
-        //   durationThresholdToEmitHoverEvent: 1000,
-        // },
-      ]
-    },
-    heartbeat: {
-      heartbeatInterval: 30 * 1000
-    },
-    surfaceMutationPublisher: {
-      cacheElementReactInfo: true,
-      enableElementTextExtraction: false,
-    },
-    surfaceVisibilityPublisher: {},
-    network: {
-      requestFilter: request => !/robots/.test(request.url.toString()),
-      requestUrlMarker: (request, params) => {
-        // const flowlet = FlowletManager.top();
-        // if (flowlet) {
-        //   params.set('flowlet', flowlet.getFullName());
-        // }
-      }
-    },
-    domSnapshotPublisher: {
-      eventConfig: [
-        'al_ui_event',
-        'al_surface_visibility_event'
-      ]
-    }
-  });
-
-  console.log('AutoLogging.init options:', AutoLogging.getInitOptions());
+  // console.log('csid:', ClientSessionID);
   // console.log('dsid', getDomainSessionID('localhost'));
   // console.log('dsid', getDomainSessionID());
-  console.log('sfid', getSessionFlowID());
+
+  // // Better to first setup listeners before initializing AutoLogging so we don't miss any events (e.g. Heartbeat(START))
+
+
+
+  // interface ExtendedElementText extends ALElementText {
+  //   isExtended?: boolean;
+  // }
+
+  // AutoLogging.init({
+  //   flowletManager,
+  //   channel,
+  //   // plugins: [
+  //   //   PluginEventHash.init
+  //   // ],
+  //   componentNameValidator: testCompValidator,
+  //   flowletPublisher: {
+  //     channel
+  //   },
+  //   triggerFlowlet: {
+  //     enableReactMethodFlowlet: false,
+  //     enableFlowletConstructorTracking: false,
+  //   },
+  //   react: {
+  //     ReactModule: React as any,
+  //     IReactDOMModule,
+  //     IReactModule,
+  //     IJsxRuntimeModule,
+  //   },
+  //   surface: {
+  //     enableReactDomPropsExtension: false,
+  //   },
+  //   sessionFlowID: {
+  //     domain: 'localhost',
+  //     cookieName: 'axaxax',
+  //   },
+  //   elementText: {
+  //     updateText(elementText: ExtendedElementText, domSource) {
+  //       elementText.isExtended = true;
+  //       // console.log("Element Text ", elementText, domSource);
+  //     },
+  //   },
+  //   uiEventPublisher: {
+  //     uiEvents: [
+  //       {
+  //         eventName: 'click',
+  //         cacheElementReactInfo: true,
+  //         enableElementTextExtraction: true,
+  //         eventFilter: (domEvent) => domEvent.isTrusted
+  //       },
+  //       {
+  //         eventName: 'mousedown',
+  //         cacheElementReactInfo: true,
+  //         enableElementTextExtraction: false,
+  //         eventFilter: (domEvent) => domEvent.isTrusted
+  //       },
+  //       {
+  //         eventName: 'keydown',
+  //         cacheElementReactInfo: true,
+  //         interactableElementsOnly: false,
+  //         enableElementTextExtraction: false,
+  //         eventFilter: (domEvent) => domEvent.code === 'Enter',
+  //       },
+  //       {
+  //         eventName: 'keyup',
+  //         cacheElementReactInfo: true,
+  //         interactableElementsOnly: false,
+  //         enableElementTextExtraction: false,
+  //         eventFilter: (domEvent) => domEvent.code === 'Enter',
+  //       },
+  //       {
+  //         eventName: 'change',
+  //         cacheElementReactInfo: true,
+  //         enableElementTextExtraction: true,
+  //         interactableElementsOnly: false,
+  //       },
+  //       // {
+  //       //   eventName: 'mouseover',
+  //       //   cacheElementReactInfo: true,
+  //       //   interactableElementsOnly: false,
+  //       //   enableElementTextExtraction: true,
+  //       //   durationThresholdToEmitHoverEvent: 1000,
+  //       // },
+  //     ]
+  //   },
+  //   heartbeat: {
+  //     heartbeatInterval: 30 * 1000
+  //   },
+  //   surfaceMutationPublisher: {
+  //     cacheElementReactInfo: true,
+  //     enableElementTextExtraction: false,
+  //   },
+  //   surfaceVisibilityPublisher: {},
+  //   network: {
+  //     requestFilter: request => !/robots/.test(request.url.toString()),
+  //     requestUrlMarker: (request, params) => {
+  //       // const flowlet = FlowletManager.top();
+  //       // if (flowlet) {
+  //       //   params.set('flowlet', flowlet.getFullName());
+  //       // }
+  //     }
+  //   },
+  //   domSnapshotPublisher: {
+  //     eventConfig: [
+  //       'al_ui_event',
+  //       'al_surface_visibility_event'
+  //     ]
+  //   }
+  // });
+
+  // console.log('AutoLogging.init options:', AutoLogging.getInitOptions());
+  // // console.log('dsid', getDomainSessionID('localhost'));
+  // // console.log('dsid', getDomainSessionID());
+  // console.log('sfid', getSessionFlowID());
 
 }

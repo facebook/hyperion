@@ -1654,7 +1654,7 @@ PODS:
     - React-logger (= 0.79.2)
     - React-perflogger (= 0.79.2)
     - React-utils (= 0.79.2)
-  - ReactNativeHost (0.5.8):
+  - ReactNativeHost (0.5.9):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1680,7 +1680,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - ReactTestApp-DevSupport (4.3.10):
+  - ReactTestApp-DevSupport (4.3.15):
     - React-Core
     - React-jsi
   - ReactTestApp-Resources (1.0.0-dev)
@@ -1987,12 +1987,12 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: d5dcc564f129632276bd3184e60f053fcd574d6b
   ReactCodegen: fda99a79c866370190e162083a35602fdc314e5d
   ReactCommon: 4d0da92a5eb8da86c08e3ec34bd23ab439fb2461
-  ReactNativeHost: 2002cc963022a296ef9e85fc7825aa8f62c55ac7
-  ReactTestApp-DevSupport: 8f2bfaea9444fcf141b1f694c02d2af51fd6ec1c
+  ReactNativeHost: 5a6ea16a1b3ccb4bcb8fe27edcbb54752d0571b8
+  ReactTestApp-DevSupport: f58269a9a36b8dbd726e576b8af1b318a51b84d4
   ReactTestApp-Resources: 1bd9ff10e4c24f2ad87101a32023721ae923bccf
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 9f110fc4b7aa538663cba3c14cbb1c335f43c13f
 
 PODFILE CHECKSUM: 68e23d81c86a616329b89ef189269b6dd97123e1
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2
