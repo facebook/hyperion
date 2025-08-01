@@ -22,14 +22,22 @@
 
 // export let interceptionStatus = "disabled";
 
-// globalThis.__DEV__ = true;
+import * as IPromise from "hyperion-core/src/IPromise";
+
+globalThis.__DEV__ = true;
 
 export function init() {
   console.log('Running AL init!')
 
-  // const observer = (function <T, V>(this: T, value: V) {
-  //   console.log('Observer', value);
-  // });
+  function observer(name: string) {
+    return function <T, V>(this: T, value: V) {
+      console.log(name, value);
+    }
+  }
+
+  IPromise.resolve.onBeforeCallObserverAdd(observer('IPromise.resolve'));
+  IPromise.reject.onBeforeCallObserverAdd(observer('IPromise.reject'));
+  IPromise.all.onBeforeCallObserverAdd(observer('IPromise.all'));
 
   // return;
   // Flags.setFlags({
