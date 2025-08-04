@@ -2,33 +2,68 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-// import * as Visualizer from "hyperion-autologging-visualizer/src/Visualizer";
-// import { ALElementText } from "hyperion-autologging/src/ALInteractableDOMElement";
-// import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
-// import * as IReact from "hyperion-react/src/IReact";
-// import * as IReactDOM from "hyperion-react/src/IReactDOM";
-// import { ClientSessionID, getDomainSessionID } from "hyperion-util/src/ClientSessionID";
-// import React from 'react';
-// import * as ReactDOM from "react-dom";
-// import ReactDev from "react/jsx-dev-runtime";
-// import { SyncChannel } from "./Channel";
-// import { FlowletManager } from "./FlowletManager";
-// import { ALExtensibleEvent } from "hyperion-autologging/src/ALType";
-// import { getEventExtension } from "hyperion-autologging/src/ALEventExtension";
-// import * as Flags from "hyperion-globals/src/Flags";
-// import "hyperion-autologging/src/reference";
-// // import * as PluginEventHash from "hyperion-autologging-plugin-eventhash/src/index";
-// import { getSessionFlowID } from "hyperion-autologging/src/ALSessionFlowID";
-
-// export let interceptionStatus = "disabled";
-
+import * as IReact from "hyperion-react/src/IReact";
+import * as IReactComponent from "hyperion-react/src/IReactComponent";
+import ReactDev from "react/jsx-runtime";
+import React from "react";
 import * as IPromise from "hyperion-core/src/IPromise";
 
 globalThis.__DEV__ = true;
 
-export function init() {
-  console.log('Running AL init!')
+export let interceptionStatus = "disabled";
 
+export function init() {
+  console.log('Running AL init!');
+
+  // ReactModule/JSX
+  const IReactModule = IReact.intercept("react", React as any, []);
+  const IJsxRuntimeModule = IReact.interceptRuntime("react/jsx-runtime", ReactDev as any, []);
+
+  /**
+  * *****************************
+  * IReactComponent / JSX - END
+  * *****************************
+  */
+  IReactComponent.init({
+    ReactModule: React as any,
+    IReactModule,
+    IJsxRuntimeModule: IJsxRuntimeModule as any,
+    enableInterceptClassComponentConstructor: true,
+    enableInterceptClassComponentMethods: true,
+    enableInterceptFunctionComponentRender: true,
+    enableInterceptDomElement: true,
+    enableInterceptComponentElement: true,
+    enableInterceptSpecialElement: true,
+  });
+
+
+  IReactComponent.onReactClassComponentElement.add((component, props) => {
+    console.log("IReactComponent [React] onReactClassComponentElement", component.name || component.displayName, props);
+  });
+  IReactComponent.onReactFunctionComponentElement.add((component, props) => {
+    console.log("IReactComponent [Func] onReactFunctionComponentElement", component.name || component.displayName, props);
+  });
+  IReactComponent.onReactDOMElement.add((element, props) => {
+    console.log("IReactComponent [DOM] onReactDOMElement", element, props);
+  });
+
+  // IJsxRuntimeModule?.jsxDEV.onBeforeCallObserverAdd((jsxDEV, ...args) => {
+  //   console.log('jsxDEV:', jsxDEV, args);
+  // });
+  // IJsxRuntimeModule?.jsx.onBeforeCallObserverAdd((jsx, ...args) => {
+  //   console.log('jsx:', jsx, args);
+  // });
+  // IJsxRuntimeModule?.jsxs.onBeforeCallObserverAdd((jsxs, ...args) => {
+  //   console.log('jsxs:', jsxs, args);
+  // });
+
+  /**
+   * *****************************
+   * IReactComponent / JSX - END
+   * *****************************
+   */
+
+  // Add Promise interception for debugging
   function observer(name: string) {
     return function <T, V>(this: T, value: V) {
       console.log(name, value);

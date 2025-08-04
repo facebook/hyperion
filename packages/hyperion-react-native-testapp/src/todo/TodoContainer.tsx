@@ -11,6 +11,8 @@ import {Colors} from 'react-native/Libraries/NewAppScreen';
 import TodoListContent from './TodoView';
 import { TodoDataManager, TodoItem } from '../data/TodoDataManager';
 
+
+
 const LoadingFallback = () => {
   const isDarkMode = useColorScheme() === 'dark';
   return (
