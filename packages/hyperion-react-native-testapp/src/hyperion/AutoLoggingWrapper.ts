@@ -10,6 +10,7 @@ import * as IPromise from "hyperion-core/src/IPromise";
 import {interceptFunction} from "hyperion-core/src/FunctionInterceptor";
 import TestAndSet from 'hyperion-test-and-set/src/TestAndSet';
 import interceptReactProps from "./interceptReactProps";
+import { useALSurfaceContext } from "hyperion-autologging/src/ALSurfaceContext";
 
 globalThis.__DEV__ = true;
 
@@ -18,6 +19,8 @@ export let interceptionStatus = "disabled";
 const initialized = new TestAndSet();
 
 export function init() {
+  const RENDER_FUNCTION_INTERCEPTED = '__IS_RENDER_INTERCEPTED__TODO_LIST';
+
   if (initialized.testAndSet()) {
     return;
   }
@@ -27,6 +30,12 @@ export function init() {
   function observer(name: string) {
     return function <T, V>(this: T, value: V) {
       console.log(name, this, value);
+    }
+  }
+
+  function observer1(name: string) {
+    return function <T>(this: T) {
+      console.log(name, this);
     }
   }
 
@@ -72,6 +81,21 @@ export function init() {
     const interceptor = interceptReactProps(props);
     for (const [key, value] of Object.entries(interceptor)) {
       value?.onBeforeCallObserverAdd(observer(prefix+"["+key+"]"));
+    }
+  });
+
+  IReactComponent.onReactClassComponentIntercept.add(shadow => {
+    const render = shadow.render;
+    if (!render.testAndSet(RENDER_FUNCTION_INTERCEPTED)) {
+      const name = render.getOriginal().name ?? shadow.name
+      render.onBeforeCallObserverAdd(observer1(`[${name}][Class][render]`));
+    }
+  })
+
+  IReactComponent.onReactFunctionComponentIntercept.add(render => {
+    const name: string = render.getOriginal().displayName ?? render.name;
+    if (!render.testAndSet(RENDER_FUNCTION_INTERCEPTED) && name != null) {
+      render.onBeforeCallObserverAdd(observer1(`[${name}][Func][render]`));
     }
   });
 
