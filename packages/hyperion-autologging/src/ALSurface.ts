@@ -4,23 +4,17 @@
 
 'use strict';
 
-import * as IElement from "hyperion-dom/src/IElement";
-import { Flowlet } from "hyperion-flowlet/src/Flowlet";
-import { assert, getFlags } from "hyperion-globals";
+import { assert } from "hyperion-globals";
 import * as IReact from "hyperion-react/src/IReact";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
-import * as IReactElementVisitor from 'hyperion-react/src/IReactElementVisitor';
-import * as IReactFlowlet from "hyperion-react/src/IReactFlowlet";
-import * as IReactPropsExtension from "hyperion-react/src/IReactPropsExtension";
 import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
-import type { SurfacePropsExtension } from "./ALSurfacePropsExtension";
+import { ALSurfaceData, ALSurfaceEvent, EventMetadata } from "./ALSurfaceData";
 import * as SurfaceProxy from "./ALSurfaceProxy";
 import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
-import { ALSurfaceData, ALSurfaceEvent, EventMetadata } from "./ALSurfaceData";
 
 
 export type ALSurfaceEventData =
@@ -82,13 +76,11 @@ export type ALChannelSurfaceEvent = Readonly<{
   al_surface_unmount: [ALSurfaceEventData];
 }>;
 
-type DataType = ALFlowletDataType;
 type FlowletType = IALFlowlet;
 type ALChannelEventType = ALChannelSurfaceEvent;
 
 
-export type SurfaceComponent = (props:
-  IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> &
+export type SurfaceComponent = (props: React.PropsWithChildren<
   ALSurfaceProps &
   {
     renderer?: ALSurfaceRenderer;
@@ -102,7 +94,7 @@ export type SurfaceComponent = (props:
       container?: Element | DocumentFragment
     }
   }
-) => React.ReactElement;
+>) => React.ReactElement;
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelEventType> &
@@ -125,130 +117,11 @@ export type InitOptions = Types.Options<
   }
 >;
 
-
-class SurfaceDOMString<
-  DataType extends ALFlowletDataType,
-  FlowletType extends Flowlet<DataType>
-> extends IReactFlowlet.PropsExtension<DataType, FlowletType> {
-  surface: string | undefined;
-  getSurface(): string | undefined {
-    return this.surface;
-  }
-
-  toString(): string {
-    return this.getSurface() ?? '';
-  }
-}
-
-function setupDomElementSurfaceAttribute(options: InitOptions): void {
-  if (!options.enableReactDomPropsExtension) {
-    return;
-  }
-
-  // We should make sure the following enabled for our particular usage in this function.
-  IReactComponent.init(options.react);
-
-  const { flowletManager, domCallFlowletAttributeName } = options;
-  /**
-  * if flowlets are disabled, but we still want to extend the props, we use
-  * the following placeholder flowlet to let the rest of the logic work.
-  * This is safer than changing the whole logic since we will eventually
-  * enable AM_AL_REACT_FLOWLET fully.
-  */
-  const UNKNOWN_CALL_FLOWLET = new flowletManager.flowletCtor('UNKNOWN');
-
-  const allowedTags = new Set(['div', 'span', 'li', 'button']);
-
-  IReactComponent.onReactDOMElement.add((component, props) => {
-    const hasProps = props && typeof props === 'object';
-    if (!hasProps) {
-      return;
-    }
-
-    const callFlowlet = flowletManager.top() ?? UNKNOWN_CALL_FLOWLET;
-
-    /**
-     * This is a dom node and will directly go to dom later, i.e. all of its
-     * props are directly added as attributes. So, just add necessary info
-     * here in props.
-     * We will set the surface attribute here, but for now it is null. Later
-     * the <Surface> component will assigne value to the top DOM nodes under
-     * its own tree. The null surface attributes will be filtered later.
-     */
-    if (allowedTags.has(component)) {
-      props[AUTO_LOGGING_SURFACE] = new SurfaceDOMString(callFlowlet);
-      props[AUTO_LOGGING_NON_INTERACTIVE_SURFACE] = new SurfaceDOMString(callFlowlet);
-
-      if (__DEV__) {
-        if (domCallFlowletAttributeName) {
-          /**
-           * The following may add a lot of attributes to the dom nodes
-           * But it is a good way to debug & validate the flow of flowlet on
-           * mounted dom
-           */
-          props[domCallFlowletAttributeName] = callFlowlet.getFullName();
-        }
-      }
-    }
-    /**
-     * The DOM node will be rendered directly, so we should make sure we
-     * remove the __ext object from props so it does not show up as an
-     * attribute of any node in the DOM.
-     * __ext might be added when props of parent is copied to child via ...props
-     */
-    delete props.__ext;
-  });
-
-  /**
-   * If a DOM node has a surface attribute with a null value, we want to make
-   * sure that is not added to the DOM tree.
-   * The following code blocks the effect of `setAttribute` by returning true
-   */
-  IElement.setAttribute.onBeforeCallObserverAdd(function (
-    this: Element,
-    attrName,
-    attrValue: any,
-  ) {
-    switch (attrName) {
-      case AUTO_LOGGING_SURFACE:
-      case AUTO_LOGGING_NON_INTERACTIVE_SURFACE:
-        if (
-          attrValue === '' ||
-          attrValue === 'null' ||
-          (attrValue instanceof SurfaceDOMString && attrValue.toString() === '')
-        ) {
-          return true;
-        }
-        break;
-      case 'data-testids':
-        /**
-         * This is manage JEST innerworking and assersions. When surface wrappers are added
-         * jest might mark them the same way as other elements on the page, but they are not
-         * actually part of the application.
-         * The following code prevents any such markings, to ensure normal application
-         * assertions work correctly.
-         */
-        if (
-          this.nodeName === 'SPAN' && (
-            this.hasAttribute(SURFACE_WRAPPER_ATTRIBUTE_NAME) ||
-            this.hasAttribute(AUTO_LOGGING_SURFACE)
-          )
-        ) {
-          return true;
-        }
-        break;
-    }
-    return false;
-  });
-}
-
 export function init(options: InitOptions): ALSurfaceRenderers {
   const { flowletManager, channel } = options;
   const { ReactModule } = options.react;
 
-  setupDomElementSurfaceAttribute(options);
   const SurfaceContext = ALSurfaceContext.init(options);
-  const optimizeSurfaceRendering = getFlags().optimizeSurfaceRendering ?? false;
 
   function SurfaceWithEvent(props: React.PropsWithChildren<{
     nodeRef: React.RefObject<HTMLElement | null | undefined> | React.MutableRefObject<Element | undefined>;
@@ -413,47 +286,19 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
 
     if (addSurfaceWrapper) {
-      if (options.enableReactDomPropsExtension) {
-        const foundDomElement = propagateFlowletDown(props.children, surfaceData);
-
-        if (foundDomElement !== true) {
-          /**
-           * We could not find a dom node to safely add the attribute to it.
-           *
-           * We wrap the content in a dom node ourselves. Note that this will trigger
-           * all the right logic and automatically add the attributes for us, and
-           * this time we should succeed propagating surface/callFlowlet down.
-           * This option works in almost all cases, but later we add an option to
-           * the surface to prevent this option and fall back to the more expensive
-           * algorithm as before (will add later)
-           *
-           */
-          children = ReactModule.createElement(
-            wrapperElementType,
-            {
-              [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
-              style: { display: 'contents' },
-            },
-            children
-          );
-          propagateFlowletDown(children, surfaceData);
-        }
-      } else {
-        children = ReactModule.createElement(
-          wrapperElementType,
-          {
-            [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
-            style: { display: 'contents' },
-            [domAttributeName]: domAttributeValue,
-            ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
-          },
-          children
-        );
-      }
+      children = ReactModule.createElement(
+        wrapperElementType,
+        {
+          [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
+          style: { display: 'contents' },
+          [domAttributeName]: domAttributeValue,
+          ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
+        },
+        children
+      );
     }
 
     if (
-      !optimizeSurfaceRendering || // optimizeSurfaceRendering is disabled
       !capability || // all default capabilities enabled
       capability.trackMutation !== false || // need mutation event
       capability.trackVisibilityThreshold // needs visibility event
@@ -488,108 +333,16 @@ export function init(options: InitOptions): ALSurfaceRenderers {
       );
     }
 
-    if (optimizeSurfaceRendering) {
-      return ReactModule.createElement(
-        SurfaceContext.Provider,
-        {
-          value: surfaceData
-        },
-        children
-      );
-    } else {
-      // We want to override the intercepted values
-      flowletManager.push(callFlowlet);
-      const result = ReactModule.createElement(
-        SurfaceContext.Provider,
-        {
-          value: surfaceData
-        },
-        children
-      );
-      flowletManager.pop(callFlowlet);
-      return result;
-    }
+    return ReactModule.createElement(
+      SurfaceContext.Provider,
+      {
+        value: surfaceData
+      },
+      children
+    );
   }
 
   SurfaceProxy.init({ ...options, surfaceComponent: Surface });
-
-  function updateFlowlet(
-    ext: IReactFlowlet.PropsExtension<DataType, FlowletType> | undefined,
-    params: ALSurfaceData,
-    children: React.ReactNode,
-    deep: boolean,
-  ): boolean | undefined | null {
-    if (!ext || !(ext instanceof IReactFlowlet.PropsExtension/* <DataType, FlowletType> */)) {
-      return;
-    }
-
-    const extCallFlowlet = ext.callFlowlet;
-    if (!extCallFlowlet) {
-      return;
-    }
-
-    if (extCallFlowlet.data.surface !== params.callFlowlet.data.surface) {
-      ext.callFlowlet = params.callFlowlet;
-    }
-    if (deep) {
-      return propagateFlowletDown(children, params);
-    }
-    return;
-  }
-
-
-  type IDomElementExtendedProps = IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>> & {
-    [index: string]: SurfaceDOMString<DataType, FlowletType>;
-  }
-
-  const propagateFlowletDown = IReactElementVisitor.createReactNodeVisitor<
-    IDomElementExtendedProps,
-    IReactPropsExtension.ExtendedProps<SurfacePropsExtension<DataType, FlowletType>>,
-    ALSurfaceData,
-    boolean | undefined
-  >({
-    domElement: (_component, props, params, _node) => {
-      const ext = props[params.domAttributeName];
-      if (ext instanceof SurfaceDOMString) {
-        ext.surface = params.domAttributeValue;
-      }
-      updateFlowlet(ext, params, props.children, false);
-      return true;
-    },
-    component: (component, props, params, _node) => {
-      if (component !== Surface) {
-        return updateFlowlet(props.__ext, params, props.children, true);
-      }
-      return;
-    },
-    memo: (_component, _props, params, node) => {
-      let result: boolean | undefined;
-      for (
-        // @ts-ignore
-        let fiberNode = node?._owner;
-        fiberNode;
-        fiberNode = fiberNode.sibling
-      ) {
-        const memoized = fiberNode.memoizedProps;
-        const pending = fiberNode.pendingProps;
-        if (memoized) {
-          result =
-            updateFlowlet(memoized.__ext, params, memoized.children, true) ||
-            result;
-        }
-
-        if (memoized !== pending && pending) {
-          result =
-            updateFlowlet(pending.__ext, params, pending.children, true) ||
-            result;
-        }
-      }
-      return result;
-    },
-    __default: (_component, props, params, _node) => {
-      return updateFlowlet(props.__ext, params, props.children, true);
-    },
-  });
 
   return {
     surfaceComponent: Surface,
