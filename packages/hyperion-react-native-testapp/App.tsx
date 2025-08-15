@@ -10,7 +10,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import * as AutoLoggingWrapper from './AutoLoggingWrapper';
+import * as AutoLoggingWrapper from './src/hyperion/AutoLoggingWrapper';
 
 import TodoList from './src/todo/TodoContainer';
 
