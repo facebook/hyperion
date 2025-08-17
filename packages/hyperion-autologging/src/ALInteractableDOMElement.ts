@@ -71,6 +71,8 @@ type InteractableAncestorCache = {
   [index: string]: (Element | null)[];
 }
 
+export const IGNORE_INTERACTIVITY_VP = `ignoreInteractivity`;
+
 let getInteractableImpl: (node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean) => Element | null = (node, eventName, requireHandlerAssigned) => {
   function getInteractableOptimized(node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean, selectorString?: string): Element | null {
     /**
@@ -152,10 +154,9 @@ let ignoreInteractiveElement: (node: Element) => boolean = node => {
       (node.clientHeight === window.innerHeight && node.clientWidth === window.innerWidth);
   }
 
-  const IgnoreInteractivity = `ignoreInteractivity`;
   function ignoreInteractiveElementOptimized(node: Element): boolean {
     let shouldIgnore: boolean | undefined;
-    shouldIgnore = getVirtualPropertyValue<boolean>(node, IgnoreInteractivity);
+    shouldIgnore = getVirtualPropertyValue<boolean>(node, IGNORE_INTERACTIVITY_VP);
     if (shouldIgnore === false || shouldIgnore === true) {
       return shouldIgnore;
     }
@@ -163,7 +164,7 @@ let ignoreInteractiveElement: (node: Element) => boolean = node => {
     if (shouldIgnore) {
       // In some cases, the size of the component changes slightly and can change the answer from false to true.
       // So only caching the true values to be safe.
-      setVirtualPropertyValue(node, IgnoreInteractivity, shouldIgnore);
+      setVirtualPropertyValue(node, IGNORE_INTERACTIVITY_VP, shouldIgnore);
     }
     return shouldIgnore;
   }
@@ -273,6 +274,7 @@ let installHandlers = () => {
       }
     }
   });
+
 
   // for (const eventHandler of [
   //   IGlobalEventHandlers.onabort,
@@ -525,7 +527,7 @@ function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementT
 
   for (let i = 0; i < indirectSources.length; i++) {
     if (i) {
-      results.push({ text: " ", source, elements: []}); // Insert space between values
+      results.push({ text: " ", source, elements: [] }); // Insert space between values
     }
 
     domSource.element = indirectSources[i];
