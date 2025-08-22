@@ -71,8 +71,31 @@ type InteractableAncestorCache = {
   [index: string]: (Element | null)[];
 }
 
-let getInteractableImpl: (node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean) => Element | null = (node, eventName, requireHandlerAssigned) => {
-  function getInteractableOptimized(node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean, selectorString?: string): Element | null {
+function checkElementMatches(
+  element: Element,
+  eventName: UIEventConfig['eventName'],
+  selectorString: string
+): boolean {
+  // Check if element matches the primary event or has handler
+  return element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames);
+}
+
+function checkElementMatchesExtension(
+  element: Element,
+  interactableTypeExtension: Array<UIEventConfig['eventName']>
+): string | null {
+  // Check if element matches any extension types
+  for (const extensionType of interactableTypeExtension) {
+    const extensionSelector = `[${EventHandlerTrackerAttribute}*="${extensionType}"]`;
+    if (checkElementMatches(element, extensionType, extensionSelector)) {
+      return extensionType;
+    }
+  }
+  return null;
+}
+
+let getInteractableImpl: (node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean, interactableTypeExtension?: Array<UIEventConfig['eventName']>) => { element: Element | null, matchedExtensionType?: string } = (node, eventName, requireHandlerAssigned, interactableTypeExtension) => {
+  function getInteractableOptimized(node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean, interactableTypeExtension?: Array<UIEventConfig['eventName']>, selectorString?: string): { element: Element | null, matchedExtensionType?: string } {
     /**
      * We should be careful to only cache the result based on given arguments. We use a map from eventName to a array based on requiredHandlerAassigned
      * In this way, each node may point to its closest ancestor that matches the criteria of the interactablity.
@@ -83,44 +106,74 @@ let getInteractableImpl: (node: Element, eventName: UIEventConfig['eventName'], 
     cached = getVirtualPropertyValue<InteractableAncestorCache>(node, InteractableAncestor);
     let interactable: Element | null | undefined = cached?.[eventName]?.[requireHandlerAssigned ? 0 : 1];
     if (interactable !== void 0) { // Not undefined means we have computed it before
-      return interactable;
+      return { element: interactable };
     }
 
     // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
     selectorString ??= `[${EventHandlerTrackerAttribute}*="${eventName}"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
     const element = node;
-    if ((element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames)) && !ignoreInteractiveElement(element)) {
+    let matchedExtensionType: string | undefined;
+
+    // First check if element matches the primary event
+    if (checkElementMatches(element, eventName, selectorString) && !ignoreInteractiveElement(element)) {
       interactable = element;
-    } else if (element.parentElement) {
-      interactable = getInteractableOptimized(element.parentElement, eventName, requireHandlerAssigned, selectorString);
     } else {
-      interactable = null; // We also cache null to indicate we have already tried for this element. May be unsafe!
+      // If primary event doesn't match, check extensions for this element
+      if (interactableTypeExtension) {
+        const extensionType = checkElementMatchesExtension(element, interactableTypeExtension);
+        if (extensionType && !ignoreInteractiveElement(element)) {
+          interactable = element;
+          matchedExtensionType = extensionType;
+        }
+      }
+
+      // If still no match, recurse to parent
+      if (!interactable && element.parentElement) {
+        const parentResult = getInteractableOptimized(element.parentElement, eventName, requireHandlerAssigned, interactableTypeExtension, selectorString);
+        interactable = parentResult.element;
+        matchedExtensionType = parentResult.matchedExtensionType;
+      } else if (!interactable) {
+        interactable = null; // We also cache null to indicate we have already tried for this element. May be unsafe!
+      }
     }
 
     cached ??= {};
     const tmp = cached[eventName] ??= [];
     tmp[requireHandlerAssigned ? 0 : 1] = interactable;
     setVirtualPropertyValue<InteractableAncestorCache>(node, InteractableAncestor, cached);
-    return interactable;
+    return { element: interactable, matchedExtensionType };
   };
 
-  function getInteractableUnoptimized(node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean): Element | null {
+  function getInteractableUnoptimized(node: Element, eventName: UIEventConfig['eventName'], requireHandlerAssigned: boolean, interactableTypeExtension?: Array<UIEventConfig['eventName']>): { element: Element | null, matchedExtensionType?: string } {
     // https://www.w3.org/TR/2011/WD-html5-20110525/interactive-elements.html
     const selectorString = `[${EventHandlerTrackerAttribute}*="${eventName}"]${requireHandlerAssigned ? '' : ',input,button,select,option,details,dialog,summary,a[href]'}`;
     for (let element: Element | null = node; element != null; element = element.parentElement) {
-      if (element.matches(selectorString) || elementHasEventHandler(element, eventName as HTMLElementEventNames)) {
+      // First check if element matches the primary event
+      if (checkElementMatches(element, eventName, selectorString)) {
         if (ignoreInteractiveElement(element)) {
           continue;
         }
-        return element;
+        return { element };
+      }
+
+      // If primary event doesn't match, check extensions for this element
+      if (interactableTypeExtension) {
+        const extensionType = checkElementMatchesExtension(element, interactableTypeExtension);
+        if (extensionType) {
+          if (ignoreInteractiveElement(element)) {
+            continue;
+          }
+          return { element, matchedExtensionType: extensionType };
+        }
       }
     }
-    return null;
+
+    return { element: null };
   };
 
   const shouldOptimizeInteractivityCheck = getFlags()?.optimizeInteractibiltyCheck;
   getInteractableImpl = (shouldOptimizeInteractivityCheck) ? getInteractableOptimized : getInteractableUnoptimized;
-  return getInteractableImpl(node, eventName, requireHandlerAssigned);
+  return getInteractableImpl(node, eventName, requireHandlerAssigned, interactableTypeExtension);
 }
 
 export function getInteractable(
@@ -128,12 +181,14 @@ export function getInteractable(
   eventName: UIEventConfig['eventName'],
   // Whether to require an actual handler is assigned to determine interactiveness, rather than including "interactive" element tags
   requireHandlerAssigned: boolean = false,
-): Element | null {
+  // Additional event types to consider as interactable for this event type
+  interactableTypeExtension?: Array<UIEventConfig['eventName']>,
+): { element: Element | null, matchedExtensionType?: string } {
   if (!(node instanceof Element)) {
-    return null;
+    return { element: null };
   }
 
-  return getInteractableImpl(node, eventName, requireHandlerAssigned);
+  return getInteractableImpl(node, eventName, requireHandlerAssigned, interactableTypeExtension);
 }
 
 function elementHasEventHandler(node: HTMLElementWithHandlers, eventName: HTMLElementEventNames): boolean {
@@ -525,7 +580,7 @@ function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementT
 
   for (let i = 0; i < indirectSources.length; i++) {
     if (i) {
-      results.push({ text: " ", source, elements: []}); // Insert space between values
+      results.push({ text: " ", source, elements: [] }); // Insert space between values
     }
 
     domSource.element = indirectSources[i];
@@ -720,14 +775,14 @@ export function getElementTextEvent(
  * to find the interactable element and then look into that sub-tree for text.
  */
   if (results.length === 0 && tryInteractableParentEventName) {
-    const parentInteractable = getInteractable(
+    const parentInteractableResult = getInteractable(
       element.parentElement,
       tryInteractableParentEventName,
       // Limit to elements with installed handlers for interactiveness check.
       true
     );
-    if (parentInteractable) {
-      getElementName(parentInteractable, surface, results, 0, options);
+    if (parentInteractableResult.element) {
+      getElementName(parentInteractableResult.element, surface, results, 0, options);
     }
   }
 
