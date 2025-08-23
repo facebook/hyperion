@@ -46,9 +46,9 @@ export default function (/* props: Props */) {
         return;
       } else {
         const link = next.value;
-        console.log("Fetching link: ", link, FlowletManager.top());
+        console.log("Fetching link: ", link, FlowletManager.top(), FlowletManager.top().data.triggerFlowlet);
         fetch(link).then(response => response.text()).then(text => {
-          console.log("Fetch results for ", link, FlowletManager.top());
+          console.log("Fetch results for ", link, FlowletManager.top(), FlowletManager.top().data.triggerFlowlet);
           setText(text);
           setTimeout(fetchNext, 1000); // Wait a bit before fetching the next link
           // fetchNext();
