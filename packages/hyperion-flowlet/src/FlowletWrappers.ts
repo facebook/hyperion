@@ -12,6 +12,7 @@ import * as IXMLHttpRequest from "hyperion-dom/src/IXMLHttpRequest";
 import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
 import { FlowletManager } from "./FlowletManager";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "./TriggerFlowlet";
+import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
 
 const initialized = new TestAndSet();
 
@@ -271,15 +272,34 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
 
   }
 
+  /**
+   * We may have many .then or .chatch chained together, we can be a bit smarter and reuse the 
+   * trigger flowlet getters.
+   * More importantly, the .catch may call .then behind the scenes, and we will get a lot
+   * of warning during wrapping. 
+   * So, we attach one flowlet getter to the promise, and reuse it for all .then and .catch
+   */
+
+  type TriggerFlowletGetter = () => TriggerFlowlet | null | undefined;
+  const PromiseTriggerFlowletGetterProp = "_PROMISE_TRIGGER_FLOWLET_GETTER";
+  function getTriggerFlowletGetter(p: Promise<any>): TriggerFlowletGetter {
+    let getter = getVirtualPropertyValue<TriggerFlowletGetter>(p, PromiseTriggerFlowletGetterProp);
+    if (!getter) {
+      getter = () => getTriggerFlowlet(p);
+      setVirtualPropertyValue(p, PromiseTriggerFlowletGetterProp, getter);
+    }
+    return getter;
+  }
 
   IPromise.then.onBeforeAndAfterCallMapperAdd(function (this, args) {
-    const triggerFlowlet = getTriggerFlowlet(this);
-    args[0] = flowletManager.wrap(args[0], IPromise.then.name, () => triggerFlowlet);
-    args[1] = flowletManager.wrap(args[1], IPromise.then.name, () => triggerFlowlet);
+    const triggerFlowletGetter = getTriggerFlowletGetter(this);
+    args[0] = flowletManager.wrap(args[0], IPromise.then.name, triggerFlowletGetter);
+    args[1] = flowletManager.wrap(args[1], IPromise.then.name, triggerFlowletGetter);
     return value => {
-      if (value !== this && triggerFlowlet) {
+      if (value !== this) {
+        const triggerFlowlet = getTriggerFlowlet(this);
         const newTriggerFlowlet = getTriggerFlowlet(value);
-        if (!newTriggerFlowlet) {
+        if (triggerFlowlet && !newTriggerFlowlet) {
           setTriggerFlowlet(value, triggerFlowlet);
         }
       }
@@ -288,12 +308,13 @@ export function initFlowletTrackers(flowletManager: FlowletManager) {
   });
 
   IPromise.Catch.onBeforeAndAfterCallMapperAdd(function (this, args) {
-    const triggerFlowlet = getTriggerFlowlet(this);
-    args[0] = flowletManager.wrap(args[0], IPromise.then.name, () => triggerFlowlet);
+    const triggerFlowletGetter = getTriggerFlowletGetter(this);
+    args[0] = flowletManager.wrap(args[0], IPromise.then.name, triggerFlowletGetter);
     return value => {
-      if (value !== this && triggerFlowlet) {
+      if (value !== this) {
+        const triggerFlowlet = getTriggerFlowlet(this);
         const newTriggerFlowlet = getTriggerFlowlet(value);
-        if (!newTriggerFlowlet) {
+        if (triggerFlowlet && !newTriggerFlowlet) {
           setTriggerFlowlet(value, triggerFlowlet);
         }
       }

@@ -168,7 +168,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
       // 
       const fData = funcInterceptor.getData<FlowletData>(FLOWLET_DATA_PROP_NAME);
       assert(fData != null, `Flowlet data is not set on the interceptor! This should never happen!`);
-      if (__DEV__ && fData.getTriggerFlowlet !== getTriggerFlowlet) {
+      if (Flags.getFlags().verboseFlowletLogs && fData.getTriggerFlowlet !== getTriggerFlowlet) {
         console.warn(`try reusing the same getTriggerFlowlet function for the same apiName: ${apiName} to avoid unnecessary interceptor recreation`);
       }
       if (
