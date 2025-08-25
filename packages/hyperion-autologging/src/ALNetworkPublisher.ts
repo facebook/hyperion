@@ -11,9 +11,9 @@ import { assert } from "hyperion-globals";
 import * as Types from "hyperion-util/src/Types";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import * as ALEventIndex from "./ALEventIndex";
-import { ALLoggableEvent, ALOptionalFlowletEvent, ALSharedInitOptions } from "./ALType";
+import { ALExtensibleEvent, ALLoggableEvent, ALOptionalFlowletEvent, ALSharedInitOptions } from "./ALType";
 
-type ALNetworkEvent = ALLoggableEvent & ALOptionalFlowletEvent & Readonly<{
+type ALNetworkEvent = ALLoggableEvent & ALOptionalFlowletEvent & ALExtensibleEvent & Readonly<{
   initiatorType: "fetch" | "xmlhttprequest"; // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/initiatorType
 }>;
 

@@ -9,7 +9,8 @@
     "../hyperion-react",
     "../hyperion-autologging",
     "../hyperion-autologging-visualizer",
-    "../hyperion-autologging-plugin-eventhash"
+    "../hyperion-autologging-plugin-eventhash",
+    "../hyperion-autologging-plugin-network-performance-timing"
   ],
   "dependencies": {
     "@testing-library/jest-dom": "^6.6.3",
@@ -22,6 +23,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "hyperion-autologging": "*",
     "hyperion-autologging-visualizer": "*",
+    "hyperion-autologging-plugin-eventhash": "*",
+    "hyperion-autologging-plugin-network-performance-timing": "*",
     "hyperion-globals": "*",
     "hyperion-hook": "*",
     "hyperion-react": "*",
