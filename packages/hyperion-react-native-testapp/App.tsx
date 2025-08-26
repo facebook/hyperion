@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import * as AutoLoggingWrapper from './src/hyperion/AutoLoggingWrapper';
+import { Surface } from './src/hyperion/Surface';
+import './src/hyperion/SurfaceTreeDebugger';
 
-import TodoList from './src/todo/TodoContainer';
-
+import TodoContainer from './src/todo/TodoContainer';
 AutoLoggingWrapper.init();
 
 function App(): React.JSX.Element {
@@ -26,7 +27,9 @@ function App(): React.JSX.Element {
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <TodoList />
+      {Surface({ surface: 'app-root' })(
+        <TodoContainer />
+      )}
     </SafeAreaView>
   );
 }
