@@ -319,7 +319,7 @@ export function publish(options: InitOptions): void {
       };
       updateLastUIEvent(eventData);
       intercept(event); // making sure we can track changes to the Event object
-      setTriggerFlowlet(event, triggerFlowlet);
+      setTriggerFlowlet(event, triggerFlowlet); // now every event handler will push the right flowlet on the stack
       channel.emit('al_ui_event_capture', eventData);
     };
 
