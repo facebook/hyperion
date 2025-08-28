@@ -148,7 +148,7 @@ let ignoreInteractiveElement: (node: Element) => boolean = node => {
    * Later, when we wanted to remove the flag, the cleanup is easy.
    */
   function ignoreInteractiveElementCore(node: Element): boolean {
-    return node.tagName === 'BODY' || node.tagName === 'HTML' ||
+    return node.tagName === 'BODY' || node.tagName === 'HTML' || node.tagName === 'LABEL' ||
       (node.clientHeight === window.innerHeight && node.clientWidth === window.innerWidth);
   }
 
