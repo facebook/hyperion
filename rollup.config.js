@@ -88,6 +88,12 @@ export default defineConfig({
         "hyperion-react/src/IReactComponent",
         "hyperion-react/src/index",
       ],
+      "hyperionReactNative": [
+        "hyperion-react/src/ALComponentPropPublisher",
+        "hyperion-react/src/ALSurfacePublisher",
+        "hyperion-react/src/AutoLogging",
+        "hyperion-react/src/index",
+      ],
       "hyperionAutoLogging": [
         "hyperion-autologging/src/ALEventExtension",
         "hyperion-autologging/src/ALCustomEvent",

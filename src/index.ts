@@ -49,6 +49,9 @@ export * from "hyperion-flowlet/src/index";
 // hyperionReact
 export *  from "hyperion-react/src/index";
 
+// hyperionReactNative
+export *  from "hyperion-react-native/src/index";
+
 // hyperionAutoLogging
 export *  from "hyperion-autologging/src/index";
 
@@ -57,4 +60,3 @@ export * from "hyperion-autologging-visualizer/src/index";
 
 // hyperionAutoLoggingPluginEventHash
 export * from "hyperion-autologging-plugin-eventhash/src/index";
-
