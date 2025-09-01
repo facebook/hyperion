@@ -4,18 +4,13 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "build": "tsc", 
+    "build": "tsc",
     "build-go": "tsgo",
     "watch": "npm run build -- --watch",
     "start": "npm run watch",
     "test": "npm run build & jest"
   },
   "workspaces": [
-    "../hyperion-channel",
-    "../hyperion-core",
-    "../hyperion-devtools",
-    "../hyperion-react",
-    "../hyperion-test-and-set",
     "../hyperion-util"
   ],
   "dependencies": {

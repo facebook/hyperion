@@ -4,6 +4,7 @@ node_modules
 coverage
 package-lock.json
 dist/
+dist_mobile/
 packages/*/src/**/*.js
 packages/*/src/**/*.jsx
 src/**/*.js
