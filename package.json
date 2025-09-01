@@ -15,6 +15,7 @@
     "watch": "tsc --watch",
     "install-packages": "npm install --workspaces",
     "build": "tsc && npm run build --workspaces && rollup -c",
+    "build-mobile": "tsc && npm run build --workspaces && rollup -c rollup-mobile.config.js",
     "test": "npm test --workspaces",
     "lint": "eslint .",
     "prepare": "npm run build",

@@ -7,10 +7,8 @@ import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import ReactDev from "react/jsx-runtime";
 import React from "react";
 import * as IPromise from "hyperion-core/src/IPromise";
-import {interceptFunction} from "hyperion-core/src/FunctionInterceptor";
 import TestAndSet from 'hyperion-test-and-set/src/TestAndSet';
 import interceptReactProps from "./interceptReactProps";
-import { useALSurfaceContext } from "hyperion-autologging/src/ALSurfaceContext";
 
 globalThis.__DEV__ = true;
 
