@@ -79,8 +79,8 @@ const TodoContainer = () => {
       metadata={{
         tabId: item.id,
         tabName: item.name,
-        isActive: activeTabId === item.id,
-        timestamp: Date.now()
+        isActive: String(activeTabId === item.id),
+        timestamp: String(Date.now())
       }}
     >
       <TouchableOpacity

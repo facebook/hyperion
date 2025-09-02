@@ -13,6 +13,12 @@ import {
   TrackedEvent,
 } from './AutoLoggingWrapper';
 
+import {
+  getAllRNSurfaces,
+  getRNSurfaceData,
+  clearRNSurfaceRegistry,
+} from 'hyperion-autologging/src/RNSurface';
+
 export function printSurfaceTree(): void {
   const stats = getSurfaceStats();
 
@@ -121,39 +127,180 @@ export function exportCurrentState(): {
   };
 }
 
+export function printRNSurfaceTree(): void {
+  const rnSurfaces = getAllRNSurfaces();
+
+  console.log('\n🚀 === RN SURFACE REGISTRY ===');
+  console.log(`📊 Total RNSurfaces: ${rnSurfaces.size}`);
+
+  if (rnSurfaces.size === 0) {
+    console.log('\n(No RNSurfaces currently registered)');
+    return;
+  }
+
+  console.log('\n🌳 RNSurface Tree:');
+  const sortedSurfaces = Array.from(rnSurfaces.entries())
+    .sort(([pathA], [pathB]) => pathA.localeCompare(pathB));
+
+  sortedSurfaces.forEach(([path, surfaceData]) => {
+    const depth = path.split('/').filter(Boolean).length;
+    const indent = '  '.repeat(depth - 1);
+    const isInteractive = !surfaceData.capability?.nonInteractive;
+    const icon = isInteractive ? '🔴' : '🔵';
+
+    console.log(`${indent}${icon} ${surfaceData.surfaceName}`);
+    console.log(`${indent}   Path: ${surfaceData.surfacePath}`);
+    console.log(`${indent}   Non-Interactive Path: ${surfaceData.nonInteractiveSurfacePath}`);
+
+    if (surfaceData.componentIds.size > 0) {
+      console.log(`${indent}   Component IDs: ${Array.from(surfaceData.componentIds).join(', ')}`);
+    }
+
+    if (surfaceData.capability) {
+      console.log(`${indent}   Capability:`, surfaceData.capability);
+    }
+
+    if (Object.keys(surfaceData.metadata || {}).length > 0) {
+      console.log(`${indent}   Metadata:`, surfaceData.metadata);
+    }
+
+    console.log(`${indent}   Flowlet: ${surfaceData.callFlowlet.getFullName()}`);
+    console.log('');
+  });
+}
+
+export function printRNSurfaceStats(): void {
+  const rnSurfaces = getAllRNSurfaces();
+  const surfaces = Array.from(rnSurfaces.values());
+
+  const interactive = surfaces.filter(s => !s.capability?.nonInteractive);
+  const nonInteractive = surfaces.filter(s => s.capability?.nonInteractive);
+  const withMetadata = surfaces.filter(s => Object.keys(s.metadata || {}).length > 0);
+
+  console.log('\n📊 === RN SURFACE STATISTICS ===');
+  console.log(`🌳 Total RNSurfaces: ${surfaces.length}`);
+  console.log(`🔴 Interactive: ${interactive.length}`);
+  console.log(`🔵 Non-Interactive: ${nonInteractive.length}`);
+  console.log(`📝 With Metadata: ${withMetadata.length}`);
+
+  if (surfaces.length > 0) {
+    const depths = surfaces.map(s => s.nonInteractiveSurfacePath.split('/').filter(Boolean).length);
+    console.log(`📏 Max Depth: ${Math.max(...depths)}`);
+    console.log(`📐 Min Depth: ${Math.min(...depths)}`);
+  }
+}
+
+export function findRNSurfaces(pattern: string) {
+  const rnSurfaces = getAllRNSurfaces();
+  const regex = new RegExp(pattern, 'i');
+
+  const matches = Array.from(rnSurfaces.entries())
+    .filter(([path, data]) =>
+      regex.test(path) ||
+      regex.test(data.surfaceName) ||
+      regex.test(data.surfacePath)
+    );
+
+  console.log(`\n🔍 === RN SURFACES MATCHING "${pattern}" ===`);
+
+  if (matches.length === 0) {
+    console.log('(No matches found)');
+    return [];
+  }
+
+  matches.forEach(([path, data]) => {
+    console.log(`🎯 ${data.surfaceName}`);
+    console.log(`   Path: ${data.surfacePath}`);
+    console.log(`   Registry Key: ${path}`);
+    console.log('');
+  });
+
+  return matches;
+}
+
+export function getRNSurfaceByName(surfaceName: string) {
+  const rnSurfaces = getAllRNSurfaces();
+
+  for (const [path, data] of rnSurfaces) {
+    if (data.surfaceName === surfaceName) {
+      console.log(`\n🎯 === RN SURFACE: ${surfaceName} ===`);
+      console.log(`Surface Path: ${data.surfacePath}`);
+      console.log(`Non-Interactive Path: ${data.nonInteractiveSurfacePath}`);
+      console.log(`Capability:`, data.capability);
+      console.log(`Metadata:`, data.metadata);
+      console.log(`Component IDs:`, Array.from(data.componentIds));
+      console.log(`Flowlet: ${data.callFlowlet.getFullName()}`);
+      return data;
+    }
+  }
+
+  console.log(`❌ RNSurface "${surfaceName}" not found`);
+  return null;
+}
+
+export function clearAllRNSurfaces(): void {
+  clearRNSurfaceRegistry();
+  console.log('🗑️ Cleared all RNSurface registry data');
+}
+
+export function compareRNSurfaceWithAutoLogging(): void {
+  const rnSurfaces = getAllRNSurfaces();
+  const autoLoggingSurfaces = surfaceTree;
+
+  console.log('\n⚡ === RN SURFACE vs AUTO LOGGING COMPARISON ===');
+  console.log(`🚀 RNSurfaces: ${rnSurfaces.size}`);
+  console.log(`🏠 AutoLogging Surfaces: ${autoLoggingSurfaces.size}`);
+  console.log('');
+
+  console.log('📋 RNSurface Registry:');
+  Array.from(rnSurfaces.keys()).forEach(path => {
+    console.log(`  🚀 ${path}`);
+  });
+
+  console.log('\n📋 AutoLogging Registry:');
+  Array.from(autoLoggingSurfaces.keys()).forEach(path => {
+    console.log(`  🏠 ${path}`);
+  });
+}
+
 declare global {
   var SurfaceDebugger: {
-    logTree: () => void;
-    logEvents: (limit?: number) => void;
-    findSurfaces: (pattern: string) => SurfaceTreeNode[];
-    getEventsFor: (surfaceName: string) => TrackedEvent[];
-    exportState: () => any;
     help: () => void;
+    logRNSurfaces: () => void;
+    statsRN: () => void;
+    findRN: (pattern: string) => any[];
+    getRN: (surfaceName: string) => any;
+    clearRN: () => void;
+    compare: () => void;
   };
 }
 
 globalThis.SurfaceDebugger = {
-  logTree: printSurfaceTree,
-  logEvents: printRecentEvents,
-  findSurfaces: findSurfaces,
-  getEventsFor: getEventsForSurface,
-  exportState: exportCurrentState,
+  logRNSurfaces: printRNSurfaceTree,
+  statsRN: printRNSurfaceStats,
+  findRN: findRNSurfaces,
+  getRN: getRNSurfaceByName,
+  clearRN: clearAllRNSurfaces,
+  compare: compareRNSurfaceWithAutoLogging,
   help: () => {
     console.log(`
 🛠️ Surface Debugger Commands:
 
-📊 SurfaceDebugger.logTree()           - Log current surface tree hierarchy
-🎯 SurfaceDebugger.logEvents(10)       - Log recent surface events (default: 10)
-🔍 SurfaceDebugger.findSurfaces('todo') - Find surfaces matching pattern
-📝 SurfaceDebugger.getEventsFor('todo') - Get events for specific surface
-📤 SurfaceDebugger.exportState()       - Export full debugging state
+🚀 SurfaceDebugger.logRNSurfaces()     - Log RNSurface registry tree
+📊 SurfaceDebugger.statsRN()           - Show RNSurface statistics
+🔍 SurfaceDebugger.findRN('todo')      - Find RNSurfaces matching pattern
+🎯 SurfaceDebugger.getRN('todo-item')  - Get specific RNSurface by name
+🗑️ SurfaceDebugger.clearRN()          - Clear all RNSurface data
+⚡ SurfaceDebugger.compare()           - Compare RNSurface vs AutoLogging registries
+
 ❓ SurfaceDebugger.help()              - Show this help
 
 Examples:
-  SurfaceDebugger.logTree()
-  SurfaceDebugger.logEvents(5)
-  SurfaceDebugger.findSurfaces('todo-item')
-  SurfaceDebugger.getEventsFor('app-root')
+  SurfaceDebugger.logRNSurfaces()      // Most useful for RNSurface debugging!
+  SurfaceDebugger.statsRN()
+  SurfaceDebugger.findRN('todo-item')
+  SurfaceDebugger.getRN('app-root')
+  SurfaceDebugger.compare()
   `);
   },
 };

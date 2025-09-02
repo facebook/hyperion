@@ -2,6 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
+import * as RNSurface from 'hyperion-autologging/src/RNSurface';
 import * as IReact from 'hyperion-react/src/IReact';
 import * as IReactComponent from 'hyperion-react/src/IReactComponent';
 import ReactDev from 'react/jsx-runtime';
@@ -9,12 +10,22 @@ import React from 'react';
 import * as IPromise from 'hyperion-core/src/IPromise';
 import TestAndSet from 'hyperion-test-and-set/src/TestAndSet';
 import interceptReactProps from './interceptReactProps';
+import { ALFlowletManager } from 'hyperion-autologging/src/ALFlowletManager';
+import { Channel } from "hyperion-channel/src/Channel";
+import { assert } from "hyperion-globals";
 
 globalThis.__DEV__ = true;
 
 export let initializationStatus = 'not_initialized';
 
 const initialized = new TestAndSet();
+
+export type InitResults = Readonly<{
+  surfaceRenderer: RNSurface.RNSurfaceHOC;
+  surfaceComponent: RNSurface.RNSurfaceComponent;
+}>;
+
+let cachedResults: InitResults | null = null;
 
 export interface SurfaceTreeNode {
   surface: string;
@@ -38,48 +49,61 @@ export interface TrackedEvent {
 
 export const eventLog: TrackedEvent[] = [];
 
-export function init() {
-
-  if (initialized.testAndSet()) {
-    return;
+export function init(): boolean {
+  if (cachedResults !== null) {
+    return false; // Already initialized
   }
 
-  console.log('Running AL init!');
-  initializationStatus = 'initializing';
+  if (!initialized.testAndSet()) {
+    console.log('Running RN AutoLogging init!');
+    initializationStatus = 'initializing';
 
-  try {
-    initializeReactInterception();
-    initializationStatus = 'initialized';
-    console.log('React Native AutoLogging initialized successfully');
-    return;
-  } catch (error) {
-    console.error('Failed to initialize React Native AutoLogging:', error);
-    return;
+    try {
+      const surfaceRenderers = initializeReactInterception();
+
+      cachedResults = {
+        surfaceRenderer: surfaceRenderers.surfaceHOComponent,
+        surfaceComponent: surfaceRenderers.surfaceComponent,
+      };
+
+      initializationStatus = 'initialized';
+      console.log('React Native AutoLogging initialized successfully');
+      return true;
+    } catch (error) {
+      console.error('Failed to initialize React Native AutoLogging:', error);
+      initializationStatus = 'error';
+      return false;
+    }
   }
+
+  return false;
 }
 
 function initializeReactInterception() {
   const RENDER_FUNCTION_INTERCEPTED = '__IS_RENDER_INTERCEPTED__TODO_LIST';
-  function observer(name: string) {
-    return function <T, V>(this: T, value: V) {
-      console.log(name, this, value);
-      trackEvent('react-interception', name, { context: this, value });
-    };
-  }
 
-  function observer1(name: string) {
-    return function <T>(this: T) {
-      console.log(name, this);
-    }
-  }
-
-  // ReactModule/JSX
   const IReactModule = IReact.intercept('react', React as any, []);
   const IJsxRuntimeModule = IReact.interceptRuntime(
     'react/jsx-runtime',
     ReactDev as any,
     []
   );
+
+  const flowletManager = new ALFlowletManager();
+  const channel = new Channel<RNSurface.RNChannelSurfaceEvent>();
+
+  function observer(name: string) {
+    return function <T, V>(this: T, value: V) {
+      // console.log(name, this, value);
+      trackEvent('react-interception', name, { context: this, value });
+    };
+  }
+
+  function observer1(name: string) {
+    return function <T>(this: T) {
+      // console.log(name, this);
+    }
+  }
 
   /**
    * *****************************
@@ -137,16 +161,31 @@ function initializeReactInterception() {
     }
   });
 
-  /**
-   * *****************************
-   * IReactComponent / JSX - END
-   * *****************************
-   */
-
   // Add Promise interception for debugging
   IPromise.resolve.onBeforeCallObserverAdd(observer('IPromise.resolve'));
   IPromise.reject.onBeforeCallObserverAdd(observer('IPromise.reject'));
   IPromise.all.onBeforeCallObserverAdd(observer('IPromise.all'));
+
+  const surfaceRenderers = RNSurface.init({
+    flowletManager,
+    channel,
+    react: {
+      ReactModule: {
+        createElement: React.createElement as any,
+        useLayoutEffect: React.useLayoutEffect as any,
+        useRef: React.useRef as any,
+        createContext: React.createContext as any,
+        useContext: React.useContext as any,
+        Children: React.Children as any,
+        Component: React.Component as any,
+      },
+      IReactModule,
+      IJsxRuntimeModule,
+    },
+    enableReactPropsExtension: false,
+  });
+
+  return surfaceRenderers;
 }
 
 export function trackEvent(surface: string, eventType: string, data: any = {}) {
@@ -296,4 +335,38 @@ export function clearAll() {
   surfaceTree.clear();
   eventLog.length = 0;
   console.log('Cleared all surface tree and event data');
+}
+
+// export function getSurfaceRenderer(defaultRNSurfaceHOC?: RNSurface.RNSurfaceHOC): RNSurface.RNSurfaceHOC {
+//   const renderer = cachedResults?.surfaceRenderer ?? defaultRNSurfaceHOC;
+//   assert(
+//     renderer != null,
+//     "RN AutoLogging must have been initialized first. Did you forget to call .init() functions?",
+//     {
+//       logger: {
+//         error: msg => {
+//           console.error(msg);
+//           throw msg;
+//         }
+//       }
+//     }
+//   );
+//   return renderer;
+// }
+
+export function getSurfaceComponent(defaultRNSurfaceComponent?: RNSurface.RNSurfaceComponent): RNSurface.RNSurfaceComponent {
+  const component = cachedResults?.surfaceComponent ?? defaultRNSurfaceComponent;
+  assert(
+    component != null,
+    "RN AutoLogging must have been initialized first. Did you forget to call .init() functions?",
+    {
+      logger: {
+        error: msg => {
+          console.error(msg);
+          throw msg;
+        }
+      }
+    }
+  );
+  return component;
 }
