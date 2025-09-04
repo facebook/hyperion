@@ -33,13 +33,23 @@ abstract class ALSurfaceDataCore {
   #locked: boolean = false; // allow removal by default
 
   readonly children: ALSurfaceData[] = [];
-  readonly elements: Set<Element> = new Set<Element>();
+  private readonly elements: Set<Element> = new Set<Element>();
 
   constructor(
     public readonly surface: string | null,
     public readonly parent: ALSurfaceDataCore | null,
   ) {
     this.__ext = Object.create(this.parent?.__ext ?? null);
+  }
+
+  addElement(element: Element): void {
+    this.elements.add(element);
+  }
+  getElements(_lookupIfEmpty: boolean = false): Element[] {
+    return Array.from(this.elements);
+  }
+  removeElement(element: Element): void {
+    this.elements.delete(element);
   }
 
   public isRemovable(): boolean {
@@ -167,6 +177,22 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     surfacesData.set(nonInteractiveSurface, this);
 
     this.setUIEventMetadata(uiEventMetadata);
+  }
+
+  getElements(lookupIfEmpty?: boolean): Element[] {
+    const elements = super.getElements(lookupIfEmpty);
+
+    if (elements.length === 0 && lookupIfEmpty) {
+      // try to lookup the element again
+      const el = document.querySelectorAll(`[${this.domAttributeName}="${this.domAttributeValue}"]`);
+      for (let i = 0; i < el.length; i++) {
+        const e = el.item(i);
+        this.addElement(e);
+        elements.push(e);
+      }
+    }
+
+    return elements;
   }
 
   /**

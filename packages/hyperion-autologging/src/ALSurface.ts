@@ -159,11 +159,11 @@ export function init(options: InitOptions): ALSurfaceRenderers {
       //   `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
       // )
 
-      surfaceData.elements.add(element);
+      surfaceData.addElement(element);
 
       if (capability?.trackMutation === false) {
         return () => {
-          surfaceData.elements.delete(element);
+          surfaceData.removeElement(element);
         };
       }
 
@@ -188,7 +188,7 @@ export function init(options: InitOptions): ALSurfaceRenderers {
           ...event,
           triggerFlowlet: callFlowlet.data.triggerFlowlet
         });
-        surfaceData.elements.delete(element);
+        surfaceData.removeElement(element);
       }
     }, [domAttributeName, domAttributeValue, nodeRef]);
 
