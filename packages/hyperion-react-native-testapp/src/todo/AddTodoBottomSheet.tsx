@@ -15,6 +15,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { SurfaceComp } from '../hyperion/Surface';
 
 interface Props {
   isVisible: boolean;
@@ -126,180 +127,194 @@ export default function AddTodoBottomSheet({
             },
           ]}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.keyboardAvoidingView}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          <SurfaceComp
+            surface="add-todo-bottom-sheet"
+            metadata={{
+              isVisible: String(isVisible),
+              timestamp: String(Date.now()),
+            }}
           >
-            <View
-              style={[
-                styles.header,
-                { borderBottomColor: isDarkMode ? '#2c2c2e' : '#e0e0e0' },
-              ]}
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.keyboardAvoidingView}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
               <View
                 style={[
-                  styles.dragHandle,
-                  { backgroundColor: isDarkMode ? '#48484a' : '#c6c6c8' },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.headerTitle,
-                  { color: isDarkMode ? Colors.white : Colors.black },
+                  styles.header,
+                  { borderBottomColor: isDarkMode ? '#2c2c2e' : '#e0e0e0' },
                 ]}
               >
-                Add New Todo Item
-              </Text>
-            </View>
-
-            <ScrollView
-              style={styles.scrollContent}
-              contentContainerStyle={styles.scrollContentContainer}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-            >
-              <View style={styles.inputContainer}>
-                <View style={styles.inputSection}>
-                  <Text
-                    style={[
-                      styles.inputLabel,
-                      { color: isDarkMode ? Colors.light : Colors.dark },
-                    ]}
-                  >
-                    Title *
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.titleInput,
-                      {
-                        backgroundColor: isDarkMode ? '#2c2c2e' : '#f2f2f7',
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        borderColor: isDarkMode ? '#38383a' : '#d1d1d6',
-                      },
-                    ]}
-                    value={title}
-                    onChangeText={setTitle}
-                    placeholder="Enter todo title..."
-                    placeholderTextColor={isDarkMode ? '#8e8e93' : '#8e8e93'}
-                    autoCorrect={false}
-                    returnKeyType="next"
-                    maxLength={100}
-                    autoFocus={true}
-                    selectionColor={isDarkMode ? '#0a84ff' : '#007aff'}
-                  />
-                </View>
-
-                <View style={styles.inputSection}>
-                  <Text
-                    style={[
-                      styles.inputLabel,
-                      { color: isDarkMode ? Colors.light : Colors.dark },
-                    ]}
-                  >
-                    Description (Optional)
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.descriptionInput,
-                      {
-                        backgroundColor: isDarkMode ? '#2c2c2e' : '#f2f2f7',
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        borderColor: isDarkMode ? '#38383a' : '#d1d1d6',
-                      },
-                    ]}
-                    value={description}
-                    onChangeText={setDescription}
-                    placeholder="Add a detailed description of what needs to be done..."
-                    placeholderTextColor={isDarkMode ? '#8e8e93' : '#8e8e93'}
-                    autoCorrect={true}
-                    multiline={true}
-                    numberOfLines={4}
-                    returnKeyType="done"
-                    onSubmitEditing={handleAddTodo}
-                    maxLength={500}
-                    textAlignVertical="top"
-                    selectionColor={isDarkMode ? '#0a84ff' : '#007aff'}
-                  />
-                  <Text
-                    style={[
-                      styles.characterCount,
-                      { color: isDarkMode ? '#8e8e93' : '#8e8e93' },
-                    ]}
-                  >
-                    {description.length}/500 characters
-                  </Text>
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Fixed Footer Buttons */}
-            <View
-              style={[
-                styles.footer,
-                {
-                  borderTopColor: isDarkMode ? '#2c2c2e' : '#e0e0e0',
-                  backgroundColor: isDarkMode ? '#1c1c1e' : '#ffffff',
-                },
-              ]}
-            >
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.cancelButton,
-                  {
-                    backgroundColor: isDarkMode ? '#2c2c2e' : '#f2f2f7',
-                    borderColor: isDarkMode ? '#38383a' : '#d1d1d6',
-                  },
-                ]}
-                onPress={handleCancel}
-                activeOpacity={0.7}
-              >
+                <View
+                  style={[
+                    styles.dragHandle,
+                    { backgroundColor: isDarkMode ? '#48484a' : '#c6c6c8' },
+                  ]}
+                />
                 <Text
                   style={[
-                    styles.buttonText,
-                    { color: isDarkMode ? Colors.light : Colors.dark },
+                    styles.headerTitle,
+                    { color: isDarkMode ? Colors.white : Colors.black },
                   ]}
                 >
-                  Cancel
+                  Add New Todo Item
                 </Text>
-              </TouchableOpacity>
+              </View>
 
-              <TouchableOpacity
+              <ScrollView
+                style={styles.scrollContent}
+                contentContainerStyle={styles.scrollContentContainer}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+              >
+                <SurfaceComp surface="add-todo-list-title">
+                  <View style={styles.inputContainer}>
+                    <View style={styles.inputSection}>
+                      <Text
+                        style={[
+                          styles.inputLabel,
+                          { color: isDarkMode ? Colors.light : Colors.dark },
+                        ]}
+                      >
+                        Title *
+                      </Text>
+                      <TextInput
+                        style={[
+                          styles.titleInput,
+                          {
+                            backgroundColor: isDarkMode ? '#2c2c2e' : '#f2f2f7',
+                            color: isDarkMode ? Colors.white : Colors.black,
+                            borderColor: isDarkMode ? '#38383a' : '#d1d1d6',
+                          },
+                        ]}
+                        value={title}
+                        onChangeText={setTitle}
+                        placeholder="Enter todo title..."
+                        placeholderTextColor={
+                          isDarkMode ? '#8e8e93' : '#8e8e93'
+                        }
+                        autoCorrect={false}
+                        returnKeyType="next"
+                        maxLength={100}
+                        autoFocus={true}
+                        selectionColor={isDarkMode ? '#0a84ff' : '#007aff'}
+                      />
+                    </View>
+
+                    <View style={styles.inputSection}>
+                      <Text
+                        style={[
+                          styles.inputLabel,
+                          { color: isDarkMode ? Colors.light : Colors.dark },
+                        ]}
+                      >
+                        Description (Optional)
+                      </Text>
+                      <TextInput
+                        style={[
+                          styles.descriptionInput,
+                          {
+                            backgroundColor: isDarkMode ? '#2c2c2e' : '#f2f2f7',
+                            color: isDarkMode ? Colors.white : Colors.black,
+                            borderColor: isDarkMode ? '#38383a' : '#d1d1d6',
+                          },
+                        ]}
+                        value={description}
+                        onChangeText={setDescription}
+                        placeholder="Add a detailed description of what needs to be done..."
+                        placeholderTextColor={
+                          isDarkMode ? '#8e8e93' : '#8e8e93'
+                        }
+                        autoCorrect={true}
+                        multiline={true}
+                        numberOfLines={4}
+                        returnKeyType="done"
+                        onSubmitEditing={handleAddTodo}
+                        maxLength={500}
+                        textAlignVertical="top"
+                        selectionColor={isDarkMode ? '#0a84ff' : '#007aff'}
+                      />
+                      <Text
+                        style={[
+                          styles.characterCount,
+                          { color: isDarkMode ? '#8e8e93' : '#8e8e93' },
+                        ]}
+                      >
+                        {description.length}/500 characters
+                      </Text>
+                    </View>
+                  </View>
+                </SurfaceComp>
+              </ScrollView>
+
+              {/* Fixed Footer Buttons */}
+              <View
                 style={[
-                  styles.button,
+                  styles.footer,
                   {
-                    backgroundColor: !title.trim()
-                      ? isDarkMode
-                        ? '#2c2c2e'
-                        : '#e5e5ea'
-                      : isDarkMode
-                      ? '#0a84ff'
-                      : '#007aff',
+                    borderTopColor: isDarkMode ? '#2c2c2e' : '#e0e0e0',
+                    backgroundColor: isDarkMode ? '#1c1c1e' : '#ffffff',
                   },
                 ]}
-                onPress={handleAddTodo}
-                disabled={!title.trim()}
-                activeOpacity={0.7}
               >
-                <Text
+                <TouchableOpacity
                   style={[
-                    styles.buttonText,
+                    styles.button,
+                    styles.cancelButton,
                     {
-                      color: !title.trim()
-                        ? isDarkMode
-                          ? '#8e8e93'
-                          : '#8e8e93'
-                        : '#ffffff',
+                      backgroundColor: isDarkMode ? '#2c2c2e' : '#f2f2f7',
+                      borderColor: isDarkMode ? '#38383a' : '#d1d1d6',
                     },
                   ]}
+                  onPress={handleCancel}
+                  activeOpacity={0.7}
                 >
-                  Add Todo Item
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      { color: isDarkMode ? Colors.light : Colors.dark },
+                    ]}
+                  >
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor: !title.trim()
+                        ? isDarkMode
+                          ? '#2c2c2e'
+                          : '#e5e5ea'
+                        : isDarkMode
+                        ? '#0a84ff'
+                        : '#007aff',
+                    },
+                  ]}
+                  onPress={handleAddTodo}
+                  disabled={!title.trim()}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      {
+                        color: !title.trim()
+                          ? isDarkMode
+                            ? '#8e8e93'
+                            : '#8e8e93'
+                          : '#ffffff',
+                      },
+                    ]}
+                  >
+                    Add Todo Item
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </KeyboardAvoidingView>
+          </SurfaceComp>
         </Animated.View>
       </SafeAreaView>
     </Modal>

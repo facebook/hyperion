@@ -10,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { SurfaceComp } from '../hyperion/Surface';
 
 import {
   TodoListMetaManager,
@@ -90,123 +91,143 @@ const TodoContainer = () => {
   };
 
   const renderTab = ({ item }: { item: TodoListMeta }) => (
-    <TouchableOpacity
-      style={[
-        styles.tab,
-        activeTabId === item.id && styles.activeTab,
-        {
-          backgroundColor:
-            activeTabId === item.id
-              ? isDarkMode
-                ? '#4A90E2'
-                : '#2196F3'
-              : isDarkMode
-              ? '#2c2c2c'
-              : '#f5f5f5',
-        },
-      ]}
-      onPress={() => switchTab(item.id)}
+    <SurfaceComp
+      surface={`tab-${item.name}`}
+      metadata={{
+        tabId: item.id,
+        tabName: item.name,
+        isActive: String(activeTabId === item.id),
+        timestamp: String(Date.now()),
+      }}
     >
-      <Text
+      <TouchableOpacity
         style={[
-          styles.tabText,
-          activeTabId === item.id && styles.activeTabText,
+          styles.tab,
+          activeTabId === item.id && styles.activeTab,
           {
-            color:
+            backgroundColor:
               activeTabId === item.id
-                ? 'white'
+                ? isDarkMode
+                  ? '#4A90E2'
+                  : '#2196F3'
                 : isDarkMode
-                ? Colors.white
-                : Colors.black,
+                ? '#2c2c2c'
+                : '#f5f5f5',
           },
         ]}
+        onPress={() => switchTab(item.id)}
       >
-        {item.name}
-      </Text>
-      <TouchableOpacity
-        style={styles.deleteTabButton}
-        onPress={() => deleteTodoList(item.id)}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Text style={styles.deleteTabButtonText}>×</Text>
+        <Text
+          style={[
+            styles.tabText,
+            activeTabId === item.id && styles.activeTabText,
+            {
+              color:
+                activeTabId === item.id
+                  ? 'white'
+                  : isDarkMode
+                  ? Colors.white
+                  : Colors.black,
+            },
+          ]}
+        >
+          {item.name}
+        </Text>
+        <TouchableOpacity
+          style={styles.deleteTabButton}
+          onPress={() => deleteTodoList(item.id)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={styles.deleteTabButtonText}>×</Text>
+        </TouchableOpacity>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </SurfaceComp>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text
-          style={[
-            styles.title,
-            { color: isDarkMode ? Colors.white : Colors.black },
-          ]}
-        >
-          Todo Lists
-        </Text>
-      </View>
-
-      <View style={styles.addListSection}>
-        <View style={styles.addListInputContainer}>
-          <TextInput
-            style={styles.addListInput}
-            value={newListName}
-            onChangeText={setNewListName}
-            placeholder="Enter new list name..."
-            placeholderTextColor="#888"
-            onSubmitEditing={() => {
-              if (newListName.trim()) {
-                addTodoList(newListName.trim());
-                setNewListName('');
-              }
-            }}
-            returnKeyType="done"
-            maxLength={50}
-          />
-          <Text
-            style={[
-              styles.addListLabel,
-              { color: isDarkMode ? Colors.light : Colors.dark },
-            ]}
-          >
-            Add New List
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.tabsSection}>
-        <FlatList
-          data={todoListMetas}
-          renderItem={renderTab}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tabsList}
-          contentContainerStyle={styles.tabsListContent}
-        />
-      </View>
-
-      <View style={styles.contentContainer}>
-        {activeTabId ? (
-          <TodoView
-            listId={activeTabId}
-            listManager={getListManager(activeTabId)}
-            listName={activeTabName}
-          />
-        ) : (
-          <View style={styles.noTabsContainer}>
+    <SurfaceComp surface="todo-container">
+      <View style={styles.container}>
+        <SurfaceComp surface="header">
+          <View style={styles.header}>
             <Text
               style={[
-                styles.noTabsText,
-                { color: isDarkMode ? Colors.light : Colors.dark },
+                styles.title,
+                { color: isDarkMode ? Colors.white : Colors.black },
               ]}
             >
-              No todo lists available. Create one above!
+              Todo Lists
             </Text>
           </View>
-        )}
+        </SurfaceComp>
+
+        <SurfaceComp surface="add-list-section">
+          <View style={styles.addListSection}>
+            <View style={styles.addListInputContainer}>
+              <TextInput
+                style={styles.addListInput}
+                value={newListName}
+                onChangeText={setNewListName}
+                placeholder="Enter new list name..."
+                placeholderTextColor="#888"
+                onSubmitEditing={() => {
+                  if (newListName.trim()) {
+                    addTodoList(newListName.trim());
+                    setNewListName('');
+                  }
+                }}
+                returnKeyType="done"
+                maxLength={50}
+              />
+              <Text
+                style={[
+                  styles.addListLabel,
+                  { color: isDarkMode ? Colors.light : Colors.dark },
+                ]}
+              >
+                Add New List
+              </Text>
+            </View>
+          </View>
+        </SurfaceComp>
+
+        <SurfaceComp surface="todo-tabs">
+          <View style={styles.tabsSection}>
+            <FlatList
+              data={todoListMetas}
+              renderItem={renderTab}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.tabsList}
+              contentContainerStyle={styles.tabsListContent}
+            />
+          </View>
+        </SurfaceComp>
+
+        <SurfaceComp surface="active-todo-list">
+          <View style={styles.contentContainer}>
+            {activeTabId ? (
+              <TodoView
+                listId={activeTabId}
+                listManager={getListManager(activeTabId)}
+                listName={activeTabName}
+              />
+            ) : (
+              <View style={styles.noTabsContainer}>
+                <Text
+                  style={[
+                    styles.noTabsText,
+                    { color: isDarkMode ? Colors.light : Colors.dark },
+                  ]}
+                >
+                  No todo lists available. Create one above!
+                </Text>
+              </View>
+            )}
+          </View>
+        </SurfaceComp>
       </View>
-    </View>
+    </SurfaceComp>
   );
 };
 

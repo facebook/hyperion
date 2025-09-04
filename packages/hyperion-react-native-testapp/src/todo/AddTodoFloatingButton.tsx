@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { TouchableOpacity, Text, Animated, useColorScheme } from 'react-native';
+import { SurfaceComp } from '../hyperion/Surface';
 
 type Props = {
   listId: string;
@@ -34,51 +35,59 @@ export default function AddTodoFloatingButton({
   }, [mountAnimation]);
 
   return (
-    <Animated.View
-      style={[
-        style,
-        {
-          opacity: mountAnimation,
-          transform: [
-            {
-              scale: mountAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.8, 1],
-              }),
-            },
-          ],
-        },
-      ]}
+    <SurfaceComp
+      surface="add-todo-floating-action-button"
+      metadata={{
+        listId: listId,
+        timestamp: String(Date.now()),
+      }}
     >
-      <TouchableOpacity
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          justifyContent: 'center',
-          alignItems: 'center',
-          elevation: 8,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          backgroundColor: isDarkMode ? '#4A90E2' : '#2196F3',
-          shadowColor: isDarkMode ? '#000' : '#2196F3',
-        }}
-        id="addTodoItem"
-        onPress={onPress}
-        activeOpacity={0.8}
+      <Animated.View
+        style={[
+          style,
+          {
+            opacity: mountAnimation,
+            transform: [
+              {
+                scale: mountAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+            ],
+          },
+        ]}
       >
-        <Text
+        <TouchableOpacity
           style={{
-            color: '#ffffff',
-            fontSize: 24,
-            fontWeight: '300',
-            lineHeight: 28,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            justifyContent: 'center',
+            alignItems: 'center',
+            elevation: 8,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+            backgroundColor: isDarkMode ? '#4A90E2' : '#2196F3',
+            shadowColor: isDarkMode ? '#000' : '#2196F3',
           }}
+          id="addTodoItem"
+          onPress={onPress}
+          activeOpacity={0.8}
         >
-          +
-        </Text>
-      </TouchableOpacity>
-    </Animated.View>
+          <Text
+            style={{
+              color: '#ffffff',
+              fontSize: 24,
+              fontWeight: '300',
+              lineHeight: 28,
+            }}
+          >
+            +
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </SurfaceComp>
   );
 }

@@ -20,6 +20,7 @@ import {
   TodoItem,
   PaginatedResponse,
 } from '../data/TodoDataManager';
+import { SurfaceComp } from '../hyperion/Surface';
 
 type Props = {
   listId: string;
@@ -158,41 +159,55 @@ export default function TodoView({ listId, listManager, listName }: Props) {
   };
 
   const renderTodoItem: ListRenderItem<TodoItem> = ({ item, index }) => (
-    <View style={styles.todoItem}>
-      <TouchableOpacity
-        style={[styles.checkbox, item.completed && styles.checkboxChecked]}
-        onPress={() => toggleTodo(item.id)}
-      />
-      <View style={styles.todoContent}>
-        <Text
-          style={[
-            styles.todoTitle,
-            item.completed && styles.todoTextCompleted,
-            { color: isDarkMode ? Colors.white : Colors.black },
-          ]}
-        >
-          {item.text}
-        </Text>
-        {item.description && (
+    <SurfaceComp
+      surface={`todo-item-${item.text}(${item.id})`}
+      metadata={{
+        todoId: item.id,
+        text: item.text,
+        description: item.description,
+        completed: String(item.completed),
+        index: String(index),
+        listId: listId,
+        page: String(Math.floor(index / 10) + 1),
+        timestamp: String(Date.now()),
+      }}
+    >
+      <View style={styles.todoItem}>
+        <TouchableOpacity
+          style={[styles.checkbox, item.completed && styles.checkboxChecked]}
+          onPress={() => toggleTodo(item.id)}
+        />
+        <View style={styles.todoContent}>
           <Text
             style={[
-              styles.todoDescription,
+              styles.todoTitle,
               item.completed && styles.todoTextCompleted,
-              { color: isDarkMode ? Colors.light : Colors.dark },
+              { color: isDarkMode ? Colors.white : Colors.black },
             ]}
           >
-            {item.description}
+            {item.text}
           </Text>
-        )}
+          {item.description && (
+            <Text
+              style={[
+                styles.todoDescription,
+                item.completed && styles.todoTextCompleted,
+                { color: isDarkMode ? Colors.light : Colors.dark },
+              ]}
+            >
+              {item.description}
+            </Text>
+          )}
+        </View>
+        <TouchableOpacity
+          id="deleteButton"
+          style={styles.deleteButton}
+          onPress={() => deleteTodo(item.id)}
+        >
+          <Text style={styles.deleteButtonText}>✕</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        id="deleteButton"
-        style={styles.deleteButton}
-        onPress={() => deleteTodo(item.id)}
-      >
-        <Text style={styles.deleteButtonText}>✕</Text>
-      </TouchableOpacity>
-    </View>
+    </SurfaceComp>
   );
 
   const renderFooter = () => {
@@ -214,145 +229,170 @@ export default function TodoView({ listId, listManager, listName }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2196F3" />
-          <Text
-            style={[
-              styles.loadingText,
-              { color: isDarkMode ? Colors.light : Colors.dark },
-            ]}
-          >
-            Loading todos...
-          </Text>
-        </View>
-      ) : todos.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text
-            style={[
-              styles.emptyText,
-              { color: isDarkMode ? Colors.light : Colors.dark },
-            ]}
-          >
-            No items in this list yet.
-          </Text>
-          <Text
-            style={[
-              styles.emptySubtext,
-              { color: isDarkMode ? Colors.light : Colors.dark },
-            ]}
-          >
-            Tap the + button to add your first todo!
-          </Text>
-        </View>
-      ) : (
-        <View style={styles.listContainer}>
-          <View style={styles.statsContainer}>
+    <SurfaceComp
+      surface={`todo-list-${listName}(${listId})`}
+      metadata={{
+        listId: listId,
+        totalItems: String(totalItems),
+        loadedItems: String(todos.length),
+        completedItems: String(todos.filter((todo) => todo.completed).length),
+        currentPage: String(currentPage),
+        hasNextPage: String(hasNextPage),
+        timestamp: String(Date.now()),
+      }}
+    >
+      <View style={styles.container}>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#2196F3" />
             <Text
               style={[
-                styles.statsText,
+                styles.loadingText,
                 { color: isDarkMode ? Colors.light : Colors.dark },
               ]}
             >
-              {todos.filter((todo) => todo.completed).length} of {todos.length}{' '}
-              completed
-            </Text>
-            <Text
-              style={[
-                styles.paginationText,
-                { color: isDarkMode ? Colors.light : Colors.dark },
-              ]}
-            >
-              Showing {todos.length} of {totalItems} items
-              {hasNextPage && ' (scroll for more)'}
+              Loading todos...
             </Text>
           </View>
+        ) : todos.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text
+              style={[
+                styles.emptyText,
+                { color: isDarkMode ? Colors.light : Colors.dark },
+              ]}
+            >
+              No items in this list yet.
+            </Text>
+            <Text
+              style={[
+                styles.emptySubtext,
+                { color: isDarkMode ? Colors.light : Colors.dark },
+              ]}
+            >
+              Tap the + button to add your first todo!
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.listContainer}>
+            <View style={styles.statsContainer}>
+              <Text
+                style={[
+                  styles.statsText,
+                  { color: isDarkMode ? Colors.light : Colors.dark },
+                ]}
+              >
+                {todos.filter((todo) => todo.completed).length} of{' '}
+                {todos.length} completed
+              </Text>
+              <Text
+                style={[
+                  styles.paginationText,
+                  { color: isDarkMode ? Colors.light : Colors.dark },
+                ]}
+              >
+                Showing {todos.length} of {totalItems} items
+                {hasNextPage && ' (scroll for more)'}
+              </Text>
+            </View>
 
-          <FlatList
-            data={todos}
-            renderItem={renderTodoItem}
-            keyExtractor={(item) => item.id}
-            style={styles.list}
-            showsVerticalScrollIndicator={true}
-            onEndReached={handleEndReached}
-            onEndReachedThreshold={0.2}
-            ListFooterComponent={renderFooter}
-            removeClippedSubviews={true}
-            maxToRenderPerBatch={10}
-            updateCellsBatchingPeriod={50}
-            initialNumToRender={10}
-            windowSize={21}
-          />
-        </View>
-      )}
-
-      {/* Floating Action Buttons */}
-      <View style={styles.fabContainer}>
-        {isMenuExpanded && (
-          <AddTodoFloatingButton
-            listId={listId}
-            onPress={() => {
-              setIsBottomSheetVisible(true);
-              toggleMenu();
-            }}
-            style={[styles.fab, { position: 'absolute', bottom: 80, right: 0 }]}
-          />
+            <FlatList
+              data={todos}
+              renderItem={renderTodoItem}
+              keyExtractor={(item) => item.id}
+              style={styles.list}
+              showsVerticalScrollIndicator={true}
+              onEndReached={handleEndReached}
+              onEndReachedThreshold={0.2}
+              ListFooterComponent={renderFooter}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={10}
+              updateCellsBatchingPeriod={50}
+              initialNumToRender={10}
+              windowSize={21}
+            />
+          </View>
         )}
 
-        {isMenuExpanded && todos.length > 0 && (
-          <DeleteAllFloatingButton
-            listId={listId}
-            itemCount={todos.length}
-            onPress={() => {
-              handleDeleteAllPress();
-              toggleMenu();
-            }}
-            style={[
-              styles.fab,
-              { position: 'absolute', bottom: 140, right: 0 },
-            ]}
-          />
-        )}
+        {/* Floating Action Buttons */}
+        <View style={styles.fabContainer}>
+          {isMenuExpanded && (
+            <AddTodoFloatingButton
+              listId={listId}
+              onPress={() => {
+                setIsBottomSheetVisible(true);
+                toggleMenu();
+              }}
+              style={[
+                styles.fab,
+                { position: 'absolute', bottom: 80, right: 0 },
+              ]}
+            />
+          )}
 
-        <Animated.View
-          style={[
-            styles.fab,
-            styles.menuFab,
-            {
-              transform: [
-                {
-                  rotate: menuRotation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '45deg'],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <TouchableOpacity
-            style={[
-              styles.fabButton,
-              {
-                backgroundColor: isDarkMode ? '#6C757D' : '#495057',
-                shadowColor: isDarkMode ? '#000' : '#495057',
-              },
-            ]}
-            onPress={toggleMenu}
-            activeOpacity={0.8}
+          {isMenuExpanded && todos.length > 0 && (
+            <DeleteAllFloatingButton
+              listId={listId}
+              itemCount={todos.length}
+              onPress={() => {
+                handleDeleteAllPress();
+                toggleMenu();
+              }}
+              style={[
+                styles.fab,
+                { position: 'absolute', bottom: 140, right: 0 },
+              ]}
+            />
+          )}
+
+          <SurfaceComp
+            surface="menu-floating-action-button"
+            metadata={{
+              listId: listId,
+              isExpanded: String(isMenuExpanded),
+              timestamp: String(Date.now()),
+            }}
           >
-            <Text style={styles.fabText}>⋯</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
+            <Animated.View
+              style={[
+                styles.fab,
+                styles.menuFab,
+                {
+                  transform: [
+                    {
+                      rotate: menuRotation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '45deg'],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.fabButton,
+                  {
+                    backgroundColor: isDarkMode ? '#6C757D' : '#495057',
+                    shadowColor: isDarkMode ? '#000' : '#495057',
+                  },
+                ]}
+                onPress={toggleMenu}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.fabText}>⋯</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </SurfaceComp>
+        </View>
 
-      <AddTodoBottomSheet
-        isVisible={isBottomSheetVisible}
-        onClose={() => setIsBottomSheetVisible(false)}
-        onAddTodo={addTodo}
-      />
-    </View>
+        <AddTodoBottomSheet
+          isVisible={isBottomSheetVisible}
+          onClose={() => setIsBottomSheetVisible(false)}
+          onAddTodo={addTodo}
+        />
+      </View>
+    </SurfaceComp>
   );
 }
 

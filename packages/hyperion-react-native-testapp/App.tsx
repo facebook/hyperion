@@ -7,6 +7,8 @@
 import React from 'react';
 import { SafeAreaView, useColorScheme } from 'react-native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { Surface } from './src/hyperion/Surface';
+import './src/hyperion/SurfaceTreeDebugger';
 import * as AutoLoggingWrapper from './src/hyperion/AutoLoggingWrapper';
 
 import TodoContainer from './src/todo/TodoContainer';
@@ -22,7 +24,7 @@ function App(): React.JSX.Element {
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <TodoContainer />
+      {Surface({ surface: 'app-root' })(<TodoContainer />)}
     </SafeAreaView>
   );
 }
