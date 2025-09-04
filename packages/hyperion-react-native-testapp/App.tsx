@@ -5,15 +5,11 @@
  */
 
 import React from 'react';
-import {
-  SafeAreaView,
-  useColorScheme,
-} from 'react-native';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { SafeAreaView, useColorScheme } from 'react-native';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import * as AutoLoggingWrapper from './src/hyperion/AutoLoggingWrapper';
 
-import TodoList from './src/todo/TodoContainer';
-
+import TodoContainer from './src/todo/TodoContainer';
 AutoLoggingWrapper.init();
 
 function App(): React.JSX.Element {
@@ -26,7 +22,7 @@ function App(): React.JSX.Element {
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <TodoList />
+      <TodoContainer />
     </SafeAreaView>
   );
 }
