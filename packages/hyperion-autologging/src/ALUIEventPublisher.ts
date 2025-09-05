@@ -5,7 +5,7 @@
 'use strict';
 import type * as Types from "hyperion-util/src/Types";
 
-import { intercept } from "hyperion-core/src/intercept";
+import { intercept, setVirtualPropertyValue } from "hyperion-core/src/intercept";
 import * as IEvent from "hyperion-dom/src/IEvent";
 import { setTriggerFlowlet } from "hyperion-flowlet/src/TriggerFlowlet";
 import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
@@ -13,7 +13,7 @@ import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from "./ALEventIndex";
 import { ALID, getOrSetAutoLoggingID } from "./ALID";
-import { ALElementTextEvent, TrackEventHandlerConfig, enableUIEventHandlers, getElementTextEvent, getInteractable, isTrackedEvent } from "./ALInteractableDOMElement";
+import { ALElementTextEvent, IGNORE_INTERACTIVITY_VP, TrackEventHandlerConfig, enableUIEventHandlers, getElementTextEvent, getInteractable, isTrackedEvent } from "./ALInteractableDOMElement";
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
@@ -21,6 +21,7 @@ import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import * as Flags from "hyperion-globals/src/Flags";
 import { getCurrMainPageUrl } from "./MainPageUrl";
 import { ALSurfaceData, ALSurfaceEvent } from "./ALSurfaceData";
+import * as IReactDOM from "hyperion-react/src/IReactDOM";
 
 
 /**
@@ -146,6 +147,9 @@ export type UIEventConfig = UIEventConfigMap[keyof Omit<EventHandlerMap, 'change
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelUIEvent> &
   {
+    react: {
+      IReactDOMClientModule: IReactDOM.IReactDOMClientModuleExports | Promise<IReactDOM.IReactDOMClientModuleExports>;
+    }
     uiEvents: Array<UIEventConfig>;
   }
 >;
@@ -239,9 +243,32 @@ export function getCurrentUIEventData(): ALUIEventData | null | undefined {
  * and filtering of events is configured via {@link UIEventConfig}.
  */
 export function publish(options: InitOptions): void {
-  const { uiEvents, flowletManager, channel } = options;
+  const { uiEvents, flowletManager, channel, react } = options;
+
+  if (react.IReactDOMClientModule instanceof Promise) {
+    react.IReactDOMClientModule.then(iReactDOMClientModule => {
+      publish({
+        ...options,
+        react: {
+          ...options.react,
+          IReactDOMClientModule: iReactDOMClientModule,
+        }
+      })
+    });
+    return;
+  }
+  // Initialize root interception,  for ignoring these containers as interactable elements
+  react.IReactDOMClientModule.createRoot.onBeforeCallMapperAdd(args => {
+    const [container] = args;
+    if (container instanceof Element) {
+      setVirtualPropertyValue<boolean>(container, IGNORE_INTERACTIVITY_VP, true);
+    }
+
+    return args;
+  });
 
 
+  // Track all events
   uiEvents.forEach((eventConfig => {
     const {
       eventName,

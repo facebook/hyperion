@@ -12,12 +12,15 @@ import * as ALUIEventPublisher from "../src/ALUIEventPublisher";
 import * as DomFragment from "./DomFragment";
 import * as  ALDOMSnapshotPublisher from "../src/ALDOMSnaptshotPublisher";
 import { ALChannelCustomEvent } from "../src/ALCustomEvent";
+import * as IReactDOM from "hyperion-react/src/IReactDOM";
+import * as ReactDOMClient from "react-dom/client";
 
 describe("dom snapshot publisher", () => {
   test("dom snapshot taken for clicks", (done) => {
     const flowletManager = new ALFlowletManager();
 
     const channel = new Channel<ALDOMSnapshotPublisher.ALChannelDOMSnapshotPublisherEvent>();
+    const IReactDOMClientModule = IReactDOM.interceptDOMClient("react-dom/client", ReactDOMClient, []);
 
     ALUIEventPublisher.publish({
       flowletManager,
@@ -27,7 +30,10 @@ describe("dom snapshot publisher", () => {
           cacheElementReactInfo: true,
           eventName: 'click',
         }
-      ]
+      ],
+      react: {
+        IReactDOMClientModule
+      }
     });
     ALDOMSnapshotPublisher.publish({
       flowletManager,
