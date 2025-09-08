@@ -14,28 +14,19 @@
     "build": ""
   },
   "workspaces": [
-    "../hyperion-devtools",
-    "../hyperion-globals",
-    "../hyperion-hook",
     "../hyperion-react",
-    "../hyperion-autologging",
-    "../hyperion-autologging-visualizer",
-    "../hyperion-util",
-    "../hyperion-channel",
-    "../hyperion-core"
+    "../hyperion-react-native"
   ],
   "dependencies": {
-    "hyperion-autologging": "*",
-    "hyperion-autologging-visualizer": "*",
-    "hyperion-globals": "*",
-    "hyperion-hook": "*",
     "hyperion-react": "*",
+    "hyperion-react-native": "*",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-export-namespace-from": "^7.24.7",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.27.4",
     "@react-native-community/cli": "18.0.0",
