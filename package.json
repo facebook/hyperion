@@ -60,6 +60,7 @@
     "./packages/hyperion-dom",
     "./packages/hyperion-flowlet",
     "./packages/hyperion-react",
+    "./packages/hyperion-react-native",
     "./packages/hyperion-autologging",
     "./packages/hyperion-autologging-plugin-eventhash",
     "./packages/hyperion-autologging-visualizer",
@@ -79,6 +80,7 @@
     "hyperion-globals": "*",
     "hyperion-hook": "*",
     "hyperion-react": "*",
+    "hyperion-react-native": "*",
     "hyperion-test-and-set": "*",
     "hyperion-timed-trigger": "*",
     "hyperion-util": "*"

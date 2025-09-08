@@ -14,22 +14,14 @@
     "build": ""
   },
   "workspaces": [
-    "../hyperion-devtools",
-    "../hyperion-globals",
-    "../hyperion-hook",
-    "../hyperion-react",
-    "../hyperion-autologging",
-    "../hyperion-autologging-visualizer",
-    "../hyperion-util",
     "../hyperion-channel",
-    "../hyperion-core"
+    "../hyperion-react",
+    "../hyperion-react-native"
   ],
   "dependencies": {
-    "hyperion-autologging": "*",
-    "hyperion-autologging-visualizer": "*",
-    "hyperion-globals": "*",
-    "hyperion-hook": "*",
+    "hyperion-channel": "*",
     "hyperion-react": "*",
+    "hyperion-react-native": "*",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2"
