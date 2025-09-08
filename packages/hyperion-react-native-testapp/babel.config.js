@@ -1,3 +1,2 @@
-module.exports = {
-  presets: ['module:@react-native/babel-preset'],
-};
+const baseConfig = require('hyperion-react-native/babel.config');
+module.exports = baseConfig;
