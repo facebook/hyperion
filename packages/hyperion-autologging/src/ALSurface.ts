@@ -290,7 +290,6 @@ export function init(options: InitOptions): ALSurfaceRenderers {
         wrapperElementType,
         {
           [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
-          style: { display: 'contents' },
           [domAttributeName]: domAttributeValue,
           ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
         },
