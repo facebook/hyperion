@@ -10,7 +10,7 @@ import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
-import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
+import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import { ALSurfaceData, ALSurfaceEvent, EventMetadata } from "./ALSurfaceData";
 import * as SurfaceProxy from "./ALSurfaceProxy";
@@ -22,7 +22,8 @@ export type ALSurfaceEventData =
   ALFlowletEvent &
   ALSurfaceEvent &
   Readonly<{
-    element: Element;
+    // DOM-specific: element: Element;
+    elementId?: string; // React Native compatible - use string ID instead
     isProxy: boolean;
     capability: ALSurfaceCapability | null | undefined;
   }>;
@@ -60,7 +61,8 @@ export type ALSurfaceProps = Readonly<{
   metadata?: ALMetadataEvent['metadata'];
   uiEventMetadata?: EventMetadata,
   capability?: ALSurfaceCapability,
-  nodeRef?: React.RefObject<HTMLElement | null | undefined>,
+  // DOM-specific: nodeRef?: React.RefObject<HTMLElement | null | undefined>,
+  nodeRef?: React.RefObject<any>, // React Native compatible - accept any ref type
 }>;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
@@ -117,6 +119,21 @@ export type InitOptions = Types.Options<
   }
 >;
 
+// Debugging functions for development and testing
+export function getAllALSurfaces(): Map<string, ALSurfaceData> {
+  // This accesses the static methods we added to ALSurfaceData for debugging
+  return ALSurfaceData.getAllSurfaces();
+}
+
+export function clearALSurfaceRegistry(): void {
+  // Clear all surface data for debugging/testing
+  ALSurfaceData.clearAllSurfaces();
+}
+
+export function getALSurfaceData(nonInteractiveSurfacePath: string): ALSurfaceData | undefined {
+  return ALSurfaceData.tryGet(nonInteractiveSurfacePath) || undefined;
+}
+
 export function init(options: InitOptions): ALSurfaceRenderers {
   const { flowletManager, channel } = options;
   const { ReactModule } = options.react;
@@ -124,7 +141,8 @@ export function init(options: InitOptions): ALSurfaceRenderers {
   const SurfaceContext = ALSurfaceContext.init(options);
 
   function SurfaceWithEvent(props: React.PropsWithChildren<{
-    nodeRef: React.RefObject<HTMLElement | null | undefined> | React.MutableRefObject<Element | undefined>;
+    // DOM-specific: nodeRef: React.RefObject<HTMLElement | null | undefined> | React.MutableRefObject<Element | undefined>;
+    nodeRef?: React.RefObject<any>; // React Native compatible
     domAttributeName: string;
     domAttributeValue: string;
     surfaceData: ALSurfaceData;
@@ -140,13 +158,14 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     ReactModule.useLayoutEffect(() => {
       const surface = surfaceData.surfaceName;
 
-      __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
-      const element = nodeRef.current;
-      if (element == null) {
-        return;
-      }
-      element.setAttribute(domAttributeName, domAttributeValue);
-      __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
+      // DOM-specific operations - commented out for React Native compatibility
+      // __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
+      // const element = nodeRef.current;
+      // if (element == null) {
+      //   return;
+      // }
+      // element.setAttribute(domAttributeName, domAttributeValue);
+      // __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
 
       /**
        * Although the following check may seem logical, but it seems that react may first run the component body code
@@ -159,11 +178,18 @@ export function init(options: InitOptions): ALSurfaceRenderers {
       //   `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
       // )
 
-      surfaceData.addElement(element);
+      // For React Native, we'll use string-based component ID tracking instead of DOM elements
+      const elementId = nodeRef?.current || `surface_${surface}_${Date.now()}`;
+
+      // DOM-specific: surfaceData.addElement(element);
+      // React Native compatible: track component ID as string
+      surfaceData.addElement(elementId);
 
       if (capability?.trackMutation === false) {
         return () => {
-          surfaceData.removeElement(element);
+          // DOM-specific: surfaceData.removeElement(element);
+          // React Native compatible: remove component ID
+          surfaceData.removeElement(elementId);
         };
       }
 
@@ -173,7 +199,8 @@ export function init(options: InitOptions): ALSurfaceRenderers {
         callFlowlet,
         triggerFlowlet,
         metadata,
-        element,
+        // DOM-specific: element,
+        elementId, // React Native compatible - use string ID instead
         isProxy,
         capability
       };
@@ -188,7 +215,9 @@ export function init(options: InitOptions): ALSurfaceRenderers {
           ...event,
           triggerFlowlet: callFlowlet.data.triggerFlowlet
         });
-        surfaceData.removeElement(element);
+        // DOM-specific: surfaceData.removeElement(element);
+        // React Native compatible: remove component ID
+        surfaceData.removeElement(elementId);
       }
     }, [domAttributeName, domAttributeValue, nodeRef]);
 
@@ -209,8 +238,8 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
     const { surface: parentSurface, nonInteractiveSurface: parentNonInteractiveSurface } = surfaceCtx;
 
-    let addSurfaceWrapper = props.nodeRef == null;
-    let localRef = ReactModule.useRef<Element>();
+    // DOM-specific: let addSurfaceWrapper = props.nodeRef == null;
+    let localRef = ReactModule.useRef<any>(); // React Native compatible - use any instead of Element
 
     // empty .capability field is default, means all enabled!
     const capability = props.capability ?? proxiedContext?.mainContext.capability;
@@ -231,14 +260,15 @@ export function init(options: InitOptions): ALSurfaceRenderers {
       nonInteractiveSurfacePath = proxiedContext.mainContext.nonInteractiveSurface;
       domAttributeName = AUTO_LOGGING_SURFACE
       domAttributeValue = surfacePath;
-      if (proxiedContext.container instanceof Element) {
-        const container = proxiedContext.container;
-        if (container.childElementCount === 0 || container.getAttribute(domAttributeName) === domAttributeValue) {
-          addSurfaceWrapper = false;
-          container.setAttribute(domAttributeName, domAttributeValue);
-          localRef.current = container;
-        }
-      }
+      // DOM-specific container logic - commented out for React Native compatibility
+      // if (proxiedContext.container instanceof Element) {
+      //   const container = proxiedContext.container;
+      //   if (container.childElementCount === 0 || container.getAttribute(domAttributeName) === domAttributeValue) {
+      //     addSurfaceWrapper = false;
+      //     container.setAttribute(domAttributeName, domAttributeValue);
+      //     localRef.current = container;
+      //   }
+      // }
     }
 
     // Emit surface mutation events on mount/unmount
@@ -280,23 +310,32 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     surfaceData.metadata = metadata;
     surfaceData.setUIEventMetadata(eventMetadata);
 
+    // Add cleanup effect to remove surface from registry on unmount
+    ReactModule.useLayoutEffect(() => {
+      return () => {
+        surfaceData.remove()
+      };
+    }, [nonInteractiveSurfacePath, surfaceData]);
+
     // callFlowlet.data.surface = surfacePath;
     let children = props.renderer ? props.renderer(props.children) : props.children;
 
-    const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
+    // DOM-specific wrapper creation - commented out for React Native compatibility
+    // const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
 
-    if (addSurfaceWrapper) {
-      children = ReactModule.createElement(
-        wrapperElementType,
-        {
-          [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
-          style: { display: 'contents' },
-          [domAttributeName]: domAttributeValue,
-          ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
-        },
-        children
-      );
-    }
+    // DOM-specific wrapper element creation - React Native doesn't support span/g elements or CSS styles
+    // if (addSurfaceWrapper) {
+    //   children = ReactModule.createElement(
+    //     wrapperElementType,
+    //     {
+    //       [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
+    //       style: { display: 'contents' }, // CSS doesn't exist in React Native
+    //       [domAttributeName]: domAttributeValue,
+    //       ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
+    //     },
+    //     children
+    //   );
+    // }
 
     if (
       !capability || // all default capabilities enabled
@@ -342,7 +381,7 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     );
   }
 
-  SurfaceProxy.init({ ...options, surfaceComponent: Surface });
+  // SurfaceProxy.init({ ...options, surfaceComponent: Surface });
 
   return {
     surfaceComponent: Surface,

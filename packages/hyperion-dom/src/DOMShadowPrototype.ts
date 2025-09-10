@@ -30,7 +30,8 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
     if (!targetPrototype && options) {
       const { sampleObject, nodeName, nodeType } = options;
       let obj: object | undefined = sampleObject;
-      if (!obj && nodeType) {
+      if (!obj && nodeType && typeof window !== 'undefined' && window.document) {
+        // React Native compatible DOM access checks
         switch (nodeType) {
           // case window.document.ATTRIBUTE_NODE: obj = document.createElement(""); break;
           // case window.document.CDATA_SECTION_NODE: obj = document.createElement(""); break;
@@ -55,7 +56,7 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
             break;
         }
       }
-      if (!obj && nodeName) {
+      if (!obj && nodeName && typeof window !== 'undefined' && window.document) {
         obj = window.document.createElement(nodeName);
       }
       if (obj) {
@@ -90,7 +91,10 @@ export class DOMShadowPrototype<ClassType extends Object, ParentType extends Obj
 
 }
 
-export const sampleHTMLElement: HTMLElement = window.document.head;
+// React Native compatible DOM access check
+export const sampleHTMLElement: HTMLElement = (typeof window !== 'undefined' && window.document?.head)
+  ? window.document.head
+  : null as any; // React Native fallback - this won't be used in RN
 
 export function getVirtualAttribute<Name extends string>(obj: Object, name: Name): VirtualAttribute<Element, Name> | null {
   let shadowProto = getObjectExtension(obj, true)?.shadowPrototype;
@@ -100,7 +104,7 @@ export function getVirtualAttribute<Name extends string>(obj: Object, name: Name
 
   if (__DEV__) {
     /**
-     * For DOM node, HTML nodes use case insensitive attributes, 
+     * For DOM node, HTML nodes use case insensitive attributes,
      * while other node types (e.g. svg, xml, ...) use case sensitive attribute names
      * we can check this based on the namespaceURI of the node
      * https://developer.mozilla.org/en-US/docs/Web/API/Element/namespaceURI

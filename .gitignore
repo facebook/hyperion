@@ -8,3 +8,6 @@ packages/*/src/**/*.js
 packages/*/src/**/*.jsx
 src/**/*.js
 test/**/*.js
+
+# CocoaPods
+Podfile.lock
