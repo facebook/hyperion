@@ -4,77 +4,135 @@
 
 'use strict';
 
-import * as Types from 'hyperion-util/src/Types';
+import { assert } from "hyperion-globals";
+import * as IReact from "hyperion-react/src/IReact";
+import * as IReactComponent from "hyperion-react/src/IReactComponent";
+import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
-import { ALFlowletDataType, IALFlowlet } from './ALFlowletManager';
-import { SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
-import * as ALSurfaceContext from './ALSurfaceContext';
-import { ALSurfaceData } from './ALSurfaceData';
-import * as SurfaceProxy from './ALSurfaceProxy';
-import { ALMetadataEvent, ALSharedInitOptions } from './ALType';
-import {
-  SurfaceCapability,
-  BaseSurfaceProps,
-  BaseSurfaceInitOptions,
-  SurfaceDataConstructorParams,
-  initializeSurface,
-  createSurfaceWithEventComponent,
-  createSurfaceHOC,
-  shouldTrackSurface,
-  SurfacePlatform,
-  SurfaceRenderer,
-  SurfaceHOC,
-  SurfaceRenderers,
-  ChannelSurfaceEvent,
-  SurfaceEventData,
-  WebSurfaceEventExtension,
-  createSurfaceDataRegistry,
-} from './common/ALSurfaceUtils';
+import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
+import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR } from './ALSurfaceConsts';
+import * as ALSurfaceContext from "./ALSurfaceContext";
+import { ALSurfaceData, ALSurfaceEvent, EventMetadata } from "./ALSurfaceData";
+import * as SurfaceProxy from "./ALSurfaceProxy";
+import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 
-export type ALSurfaceEventData = SurfaceEventData<WebSurfaceEventExtension>;
 
-export type ALSurfaceCapability = SurfaceCapability;
-
-export type ALSurfaceProps = BaseSurfaceProps &
+export type ALSurfaceEventData =
+  ALMetadataEvent &
+  ALFlowletEvent &
+  ALSurfaceEvent &
   Readonly<{
-    nodeRef?: React.RefObject<HTMLElement | null | undefined>;
+    // DOM-specific: element: Element;
+    elementId?: string; // React Native compatible - use string ID instead
+    isProxy: boolean;
+    capability: ALSurfaceCapability | null | undefined;
   }>;
 
-export type ALSurfaceRenderer = SurfaceRenderer;
-export type ALSurfaceHOC = SurfaceHOC<ALSurfaceProps>;
-export type ALSurfaceRenderers = SurfaceRenderers<
-  SurfaceComponent,
-  ALSurfaceProps
->;
-export type ALChannelSurfaceEvent = ChannelSurfaceEvent<ALSurfaceEventData>;
+export interface ALSurfaceCapability {
+  /**
+   * By default, in addition to reporting mount/unmount of a surface, all
+   * interactions are also marked with a the name of their surface, unless
+   * the following flag is set.
+   */
+  nonInteractive?: boolean;
+
+  /**
+   * In many cases, we only need to have a surface to mark various events UI
+   * eith it. We may not need the mutation or visibility events for it.
+   * if this options is explicitly set to false, we won't generate the mutation events.
+   */
+  trackMutation?: boolean;
+
+  /**
+   * When set, will track when the provided ratio [0,1] of the surface becomes visible
+   */
+  trackVisibilityThreshold?: number;
+}
+
+function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): string {
+  if (!capability) {
+    return '';
+  }
+  return JSON.stringify(capability);
+}
+
+export type ALSurfaceProps = Readonly<{
+  surface: string;
+  metadata?: ALMetadataEvent['metadata'];
+  uiEventMetadata?: EventMetadata,
+  capability?: ALSurfaceCapability,
+  // DOM-specific: nodeRef?: React.RefObject<HTMLElement | null | undefined>,
+  nodeRef?: React.RefObject<any>, // React Native compatible - accept any ref type
+}>;
+
+export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
+export type ALSurfaceHOC = (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
+export type ALSurfaceRenderers = {
+  surfaceComponent: SurfaceComponent;
+  surfaceHOComponent: (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
+};
+
+
+export type ALChannelSurfaceEvent = Readonly<{
+  al_surface_mount: [ALSurfaceEventData];
+  al_surface_unmount: [ALSurfaceEventData];
+}>;
+
+type FlowletType = IALFlowlet;
 type ALChannelEventType = ALChannelSurfaceEvent;
 
-export type SurfaceComponent = (
-  props: React.PropsWithChildren<
-    ALSurfaceProps & {
-      renderer?: ALSurfaceRenderer;
-      /** The optional incoming surface that we are re-wrapping via a proxy.
-       * If this is provided,  then we won't emit mutations for this surface as we are
-       * doubly wrapping that surface, for surface attribution purposes.
-       */
-      proxiedContext?: {
-        mainContext: ALSurfaceContext.ALSurfaceContextFilledValue;
-        container?: Element | DocumentFragment;
-      };
+
+export type SurfaceComponent = (props: React.PropsWithChildren<
+  ALSurfaceProps &
+  {
+    renderer?: ALSurfaceRenderer;
+    // callFlowlet: FlowletType;
+    /** The optional incoming surface that we are re-wrapping via a proxy.
+     * If this is provided,  then we won't emit mutations for this surface as we are
+     * doubly wrapping that surface, for surface attribution purposes.
+     */
+    proxiedContext?: {
+      mainContext: ALSurfaceContext.ALSurfaceContextFilledValue,
+      container?: Element | DocumentFragment
     }
-  >
-) => React.ReactElement;
+  }
+>) => React.ReactElement;
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelEventType> &
-    ALSurfaceContext.InitOptions &
-    SurfaceProxy.InitOptions &
-    BaseSurfaceInitOptions & {
-      enableReactDomPropsExtension?: boolean;
-    }
+  // IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
+  // ALIReactFlowlet.InitOptions &
+  ALSurfaceContext.InitOptions &
+  SurfaceProxy.InitOptions &
+  {
+    react: IReactComponent.InitOptions & {
+      ReactModule: {
+        createElement: typeof React.createElement;
+        useLayoutEffect: typeof React.useLayoutEffect;
+        useRef: typeof React.useRef;
+      };
+      IReactModule: IReact.IReactModuleExports;
+      IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
+    };
+    domCallFlowletAttributeName?: string;
+    enableReactDomPropsExtension?: boolean;
+  }
 >;
 
-const alDataRegistry = createSurfaceDataRegistry<ALSurfaceData>();
+// Debugging functions for development and testing
+export function getAllALSurfaces(): Map<string, ALSurfaceData> {
+  // This accesses the static methods we added to ALSurfaceData for debugging
+  return ALSurfaceData.getAllSurfaces();
+}
+
+export function clearALSurfaceRegistry(): void {
+  // Clear all surface data for debugging/testing
+  ALSurfaceData.clearAllSurfaces();
+}
+
+export function getALSurfaceData(nonInteractiveSurfacePath: string): ALSurfaceData | undefined {
+  return ALSurfaceData.tryGet(nonInteractiveSurfacePath) || undefined;
+}
 
 export function init(options: InitOptions): ALSurfaceRenderers {
   const { flowletManager, channel } = options;
@@ -82,162 +140,233 @@ export function init(options: InitOptions): ALSurfaceRenderers {
 
   const SurfaceContext = ALSurfaceContext.init(options);
 
-  function createALSurfaceEventData(props: {
-    surface: string;
+  function SurfaceWithEvent(props: React.PropsWithChildren<{
+    // DOM-specific: nodeRef: React.RefObject<HTMLElement | null | undefined> | React.MutableRefObject<Element | undefined>;
+    nodeRef?: React.RefObject<any>; // React Native compatible
+    domAttributeName: string;
+    domAttributeValue: string;
     surfaceData: ALSurfaceData;
-    callFlowlet: IALFlowlet;
+    callFlowlet: FlowletType;
     triggerFlowlet: IALFlowlet<ALFlowletDataType> | undefined;
     metadata: ALMetadataEvent['metadata'];
-    elementOrId: Element | string;
     isProxy: boolean;
-    capability: SurfaceCapability | null | undefined;
-  }): ALSurfaceEventData {
-    return {
-      surface: props.surface,
-      surfaceData: props.surfaceData,
-      callFlowlet: props.callFlowlet,
-      triggerFlowlet: props.triggerFlowlet,
-      metadata: props.metadata,
-      element: props.elementOrId as Element,
-      isProxy: props.isProxy,
-      capability: props.capability,
-    };
+    capability: ALSurfaceCapability | null | undefined;
+
+  }>): React.ReactNode {
+    const { surfaceData, nodeRef, domAttributeName, domAttributeValue, capability, callFlowlet, triggerFlowlet, metadata, isProxy } = props;
+
+    ReactModule.useLayoutEffect(() => {
+      const surface = surfaceData.surfaceName;
+
+      // DOM-specific operations - commented out for React Native compatibility
+      // __DEV__ && assert(nodeRef != null, "Invalid surface effect without a ref: " + surface);
+      // const element = nodeRef.current;
+      // if (element == null) {
+      //   return;
+      // }
+      // element.setAttribute(domAttributeName, domAttributeValue);
+      // __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
+
+      /**
+       * Although the following check may seem logical, but it seems that react may first run the component body code
+       * then run unmount of the previous components. So, at this point, we may indeed have a previous instance of the
+       * surface still not unmounted (specially in DEV mode that react runs everything twice)
+       * So, commenting code and keeping it for future references.
+       */
+      // __DEV__ && assert(
+      //   !surfaceData.getMutationEvent() && !surfaceData.getVisibilityEvent(),
+      //   `Invalid surface setup for ${surfaceData.surface}. Didn't expect mutation and visibility events`
+      // )
+
+      // For React Native, we'll use string-based component ID tracking instead of DOM elements
+      const elementId = nodeRef?.current || `surface_${surface}_${Date.now()}`;
+
+      // DOM-specific: surfaceData.addElement(element);
+      // React Native compatible: track component ID as string
+      surfaceData.addElement(elementId);
+
+      if (capability?.trackMutation === false) {
+        return () => {
+          // DOM-specific: surfaceData.removeElement(element);
+          // React Native compatible: remove component ID
+          surfaceData.removeElement(elementId);
+        };
+      }
+
+      const event: ALSurfaceEventData = {
+        surface: domAttributeValue,
+        surfaceData,
+        callFlowlet,
+        triggerFlowlet,
+        metadata,
+        // DOM-specific: element,
+        elementId, // React Native compatible - use string ID instead
+        isProxy,
+        capability
+      };
+
+      channel.emit('al_surface_mount', event);
+      return () => {
+        /**
+         * The trigger on the surface or its parent might be updated
+         * so, we should re-read that value again.
+         */
+        channel.emit('al_surface_unmount', {
+          ...event,
+          triggerFlowlet: callFlowlet.data.triggerFlowlet
+        });
+        // DOM-specific: surfaceData.removeElement(element);
+        // React Native compatible: remove component ID
+        surfaceData.removeElement(elementId);
+      }
+    }, [domAttributeName, domAttributeValue, nodeRef]);
+
+    return props.children
   }
 
-  function getALSurfaceElements(surfaceData: ALSurfaceData): Set<Element> {
-    return surfaceData.elements;
-  }
-
-  const SurfaceWithEvent = createSurfaceWithEventComponent<
-    ALSurfaceData,
-    ALSurfaceEventData
-  >(
-    'web' as SurfacePlatform,
-    ReactModule,
-    channel,
-    createALSurfaceEventData,
-    getALSurfaceElements
-  );
-
-  const Surface: SurfaceComponent = (props) => {
+  const Surface: SurfaceComponent = props => {
     const { surface, proxiedContext } = props;
     // if (__ext && __ext.flowlet !== flowlet) {
     //   __ext.flowlet = flowlet;
     // }
 
+    let surfacePath: string;
+    let nonInteractiveSurfacePath: string;
+    let domAttributeName: string;
+    let domAttributeValue: string;
+
     const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
-    const {
-      surface: parentSurface,
-      nonInteractiveSurface: parentNonInteractiveSurface,
-    } = surfaceCtx;
+    const { surface: parentSurface, nonInteractiveSurface: parentNonInteractiveSurface } = surfaceCtx;
 
-    let addSurfaceWrapper = props.nodeRef == null;
-    let localRef = ReactModule.useRef<Element>();
+    // DOM-specific: let addSurfaceWrapper = props.nodeRef == null;
+    let localRef = ReactModule.useRef<any>(); // React Native compatible - use any instead of Element
 
-    const metadata = props.metadata ?? {};
-    const eventMetadata = props.uiEventMetadata;
-    const capability =
-      props.capability ?? proxiedContext?.mainContext.capability;
+    // empty .capability field is default, means all enabled!
+    const capability = props.capability ?? proxiedContext?.mainContext.capability;
 
-    const result = initializeSurface(
-      surface,
-      parentSurface,
-      parentNonInteractiveSurface,
-      capability,
-      metadata,
-      eventMetadata,
-      proxiedContext,
-      surfaceCtx,
-      flowletManager,
-      alDataRegistry,
-      (params: SurfaceDataConstructorParams) => {
-        const alSurfaceData = new ALSurfaceData(
-          params.surfaceName,
-          params.surfacePath,
-          params.surfaceContext,
-          params.nonInteractiveSurfacePath,
-          params.callFlowlet,
-          params.capability,
-          params.metadata,
-          params.uiEventMetadata,
-          params.attributeName,
-          params.attributeValue
-        );
-        return alSurfaceData;
+    if (!proxiedContext) {
+      nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
+      if (capability?.nonInteractive) {
+        surfacePath = parentSurface ?? SURFACE_SEPARATOR;
+        domAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE;
+        domAttributeValue = nonInteractiveSurfacePath;
+      } else {
+        surfacePath = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
+        domAttributeName = AUTO_LOGGING_SURFACE;
+        domAttributeValue = surfacePath;
       }
-    );
-
-    const {
-      surfacePath,
-      nonInteractiveSurfacePath,
-      attributeName,
-      attributeValue,
-      surfaceData,
-      callFlowlet,
-      isProxy,
-    } = result;
-
-    ReactModule.useLayoutEffect(() => {
-      return () => {
-        if (surfaceData && surfaceData.remove()) {
-          alDataRegistry.delete(nonInteractiveSurfacePath);
-          if (!capability?.nonInteractive) {
-            alDataRegistry.delete(surfacePath);
-          }
-        }
-      };
-    }, [
-      nonInteractiveSurfacePath,
-      surfacePath,
-      surfaceData,
-      capability?.nonInteractive,
-    ]);
-
-    if (proxiedContext?.container instanceof Element) {
-      const container = proxiedContext.container;
-      if (
-        container.childElementCount === 0 ||
-        container.getAttribute(attributeName) === attributeValue
-      ) {
-        addSurfaceWrapper = false;
-        container.setAttribute(attributeName, attributeValue);
-        localRef.current = container;
-      }
+    } else {
+      surfacePath = proxiedContext.mainContext.surface;
+      nonInteractiveSurfacePath = proxiedContext.mainContext.nonInteractiveSurface;
+      domAttributeName = AUTO_LOGGING_SURFACE
+      domAttributeValue = surfacePath;
+      // DOM-specific container logic - commented out for React Native compatibility
+      // if (proxiedContext.container instanceof Element) {
+      //   const container = proxiedContext.container;
+      //   if (container.childElementCount === 0 || container.getAttribute(domAttributeName) === domAttributeValue) {
+      //     addSurfaceWrapper = false;
+      //     container.setAttribute(domAttributeName, domAttributeValue);
+      //     localRef.current = container;
+      //   }
+      // }
     }
 
-    let children = props.renderer
-      ? props.renderer(props.children)
-      : props.children;
+    // Emit surface mutation events on mount/unmount
+    const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
+    const eventMetadata = props.uiEventMetadata;
+    let surfaceData = ALSurfaceData.tryGet(nonInteractiveSurfacePath);
+    let callFlowlet: FlowletType;
+    if (!surfaceData) {
+      assert(!proxiedContext, "Proxied surface should always have surface data already");
 
-    const wrapperElementType =
-      proxiedContext?.container instanceof SVGElement ? 'g' : 'span';
+      /**
+       * In case surfaces are unmounted, we want them all to have one common
+       * ancestor so that we can assign triggerFlowlet to it and have them all
+       * pick it up. This is specially useful to link event to unmount
+       */
+      callFlowlet = new flowletManager.flowletCtor(surface, surfaceCtx.callFlowlet ?? flowletManager.root);
+      callFlowlet.data.surface = nonInteractiveSurfacePath;
+      surfaceData = new ALSurfaceData(
+        surface,
+        surfacePath,
+        surfaceCtx,
+        nonInteractiveSurfacePath,
+        callFlowlet,
+        capability,
+        metadata,
+        eventMetadata,
+        domAttributeName,
+        domAttributeValue,
+      );
+    } else {
+      callFlowlet = surfaceData.callFlowlet;
+    }
 
-    children = createSurfaceWrapper(
-      ReactModule,
-      addSurfaceWrapper,
-      wrapperElementType,
-      attributeName,
-      attributeValue,
-      localRef,
-      children
-    );
+    const isProxy = proxiedContext != null;
 
-    if (shouldTrackSurface(capability)) {
+    metadata.original_call_flowlet = callFlowlet.getFullName();
+    metadata.surface_capability = surfaceCapabilityToString(capability);
+    // Update the metadata on every render to ensure it stays current
+    surfaceData.metadata = metadata;
+    surfaceData.setUIEventMetadata(eventMetadata);
+
+    // Add cleanup effect to remove surface from registry on unmount
+    ReactModule.useLayoutEffect(() => {
+      return () => {
+        surfaceData.remove()
+      };
+    }, [nonInteractiveSurfacePath, surfaceData]);
+
+    // callFlowlet.data.surface = surfacePath;
+    let children = props.renderer ? props.renderer(props.children) : props.children;
+
+    // DOM-specific wrapper creation - commented out for React Native compatibility
+    // const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
+
+    // DOM-specific wrapper element creation - React Native doesn't support span/g elements or CSS styles
+    // if (addSurfaceWrapper) {
+    //   children = ReactModule.createElement(
+    //     wrapperElementType,
+    //     {
+    //       [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
+    //       style: { display: 'contents' }, // CSS doesn't exist in React Native
+    //       [domAttributeName]: domAttributeValue,
+    //       ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
+    //     },
+    //     children
+    //   );
+    // }
+
+    if (
+      !capability || // all default capabilities enabled
+      capability.trackMutation !== false || // need mutation event
+      capability.trackVisibilityThreshold // needs visibility event
+    ) {
+      /**
+       * We don't know when react decides to call effect callback, so to be safe make a copy
+       * of what we care about incase by the time callback is called the values have changed.
+       */
       const triggerFlowlet = callFlowlet.data.triggerFlowlet;
+
+      /**
+       * either we are given a ref, or we use our local one. In anycase once
+       * we have the node value, we can accurately assign the attribute, and
+       * also use that for our mount/unmount event.
+       */
       const nodeRef = props.nodeRef ?? localRef;
 
       children = ReactModule.createElement(
         SurfaceWithEvent,
         {
           nodeRef,
-          attributeName,
-          attributeValue,
+          domAttributeName,
+          domAttributeValue,
           surfaceData,
           callFlowlet,
           triggerFlowlet,
           metadata,
           isProxy,
-          capability,
+          capability
         },
         children
       );
@@ -246,55 +375,26 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     return ReactModule.createElement(
       SurfaceContext.Provider,
       {
-        value: surfaceData,
+        value: surfaceData
       },
       children
     );
-  };
+  }
 
-  SurfaceProxy.init({ ...options, surfaceComponent: Surface });
-
-  const surfaceHOComponent = createSurfaceHOC(ReactModule, Surface);
+  // SurfaceProxy.init({ ...options, surfaceComponent: Surface });
 
   return {
     surfaceComponent: Surface,
-    surfaceHOComponent,
+    surfaceHOComponent: (props, renderer) => {
+      return children => {
+        const result = ReactModule.createElement(
+          Surface,
+          props,
+          renderer ? renderer(children) : children
+        );
+
+        return result;
+      };
+    }
   };
-}
-
-export function getALSurfaceData(
-  nonInteractiveSurfacePath: string
-): ALSurfaceData | undefined {
-  return alDataRegistry.tryGet(nonInteractiveSurfacePath);
-}
-
-export function clearALSurfaceRegistry(): void {
-  alDataRegistry.clear();
-}
-
-export function getAllALSurfaces(): Map<string, ALSurfaceData> {
-  return alDataRegistry.getAll();
-}
-
-function createSurfaceWrapper(
-  ReactModule: { createElement: typeof React.createElement },
-  addSurfaceWrapper: boolean,
-  wrapperElementType: string,
-  attributeName: string,
-  attributeValue: string,
-  localRef: React.RefObject<any>,
-  children: React.ReactNode
-): React.ReactNode {
-  if (!addSurfaceWrapper) {
-    return children;
-  }
-
-  const wrapperProps: any = {
-    [attributeName]: attributeValue,
-    ref: localRef,
-    [SURFACE_WRAPPER_ATTRIBUTE_NAME]: '1',
-    style: { display: 'contents' },
-  };
-
-  return ReactModule.createElement(wrapperElementType, wrapperProps, children);
 }

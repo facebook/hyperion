@@ -6,9 +6,9 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 import * as AutoLoggingWrapper from './AutoLoggingWrapper';
-import * as ALSurface from 'hyperion-autologging/src/react-native/ALSurface';
+import * as ALSurface from 'hyperion-autologging/src/ALSurface';
 
-const getALSurfaceComponent = (): ALSurface.ALSurfaceComponent => {
+const getALSurfaceComponent = (): ALSurface.SurfaceComponent => {
   return AutoLoggingWrapper.getSurfaceComponent(
     ({ children }) => <View>{children}</View>
   );

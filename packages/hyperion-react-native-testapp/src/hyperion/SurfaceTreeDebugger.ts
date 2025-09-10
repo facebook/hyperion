@@ -7,7 +7,7 @@
 import {
   getAllALSurfaces,
   clearALSurfaceRegistry,
-} from 'hyperion-autologging/src/react-native/ALSurface';
+} from 'hyperion-autologging/src/ALSurface';
 
 export function printRNSurfaceTree(): void {
   const rnSurfaces = getAllALSurfaces();
@@ -31,11 +31,12 @@ export function printRNSurfaceTree(): void {
     const icon = isInteractive ? '🔴' : '🔵';
 
     console.log(`${indent}${icon} ${surfaceData.surfaceName}`);
-    console.log(`${indent}   Path: ${surfaceData.surfacePath}`);
-    console.log(`${indent}   Non-Interactive Path: ${surfaceData.nonInteractiveSurfacePath}`);
+    console.log(`${indent}   Path: ${surfaceData.surface}`);
+    console.log(`${indent}   Non-Interactive Path: ${surfaceData.nonInteractiveSurface}`);
 
-    if (surfaceData.componentIds.size > 0) {
-      console.log(`${indent}   Component IDs: ${Array.from(surfaceData.componentIds).join(', ')}`);
+    const elements = surfaceData.getElements();
+    if (elements.length > 0) {
+      console.log(`${indent}   Elements: ${elements.length} (${elements.join(', ')})`);
     }
 
     if (surfaceData.capability) {
@@ -66,7 +67,7 @@ export function printRNSurfaceStats(): void {
   console.log(`📝 With Metadata: ${withMetadata.length}`);
 
   if (surfaces.length > 0) {
-    const depths = surfaces.map(s => s.nonInteractiveSurfacePath.split('/').filter(Boolean).length);
+    const depths = surfaces.map(s => s.nonInteractiveSurface.split('/').filter(Boolean).length);
     console.log(`📏 Max Depth: ${Math.max(...depths)}`);
     console.log(`📐 Min Depth: ${Math.min(...depths)}`);
   }
@@ -80,7 +81,7 @@ export function findRNSurfaces(pattern: string) {
     .filter(([path, data]) =>
       regex.test(path) ||
       regex.test(data.surfaceName) ||
-      regex.test(data.surfacePath)
+      regex.test(data.surface)
     );
 
   console.log(`\n🔍 === RN SURFACES MATCHING "${pattern}" ===`);
@@ -92,7 +93,7 @@ export function findRNSurfaces(pattern: string) {
 
   matches.forEach(([path, data]) => {
     console.log(`🎯 ${data.surfaceName}`);
-    console.log(`   Path: ${data.surfacePath}`);
+    console.log(`   Path: ${data.surface}`);
     console.log(`   Registry Key: ${path}`);
     console.log('');
   });
@@ -106,11 +107,11 @@ export function getRNSurfaceByName(surfaceName: string) {
   for (const [path, data] of rnSurfaces) {
     if (data.surfaceName === surfaceName) {
       console.log(`\n🎯 === RN SURFACE: ${surfaceName} ===`);
-      console.log(`Surface Path: ${data.surfacePath}`);
-      console.log(`Non-Interactive Path: ${data.nonInteractiveSurfacePath}`);
+      console.log(`Surface Path: ${data.surface}`);
+      console.log(`Non-Interactive Path: ${data.nonInteractiveSurface}`);
       console.log(`Capability:`, data.capability);
       console.log(`Metadata:`, data.metadata);
-      console.log(`Component IDs:`, Array.from(data.componentIds));
+      console.log(`Elements:`, data.getElements());
       console.log(`Flowlet: ${data.callFlowlet.getFullName()}`);
       return data;
     }

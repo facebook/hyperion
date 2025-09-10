@@ -33,7 +33,7 @@ abstract class ALSurfaceDataCore {
   #locked: boolean = false; // allow removal by default
 
   readonly children: ALSurfaceData[] = [];
-  private readonly elements: Set<Element> = new Set<Element>();
+  private readonly elements: Set<Element | string> = new Set<Element | string>(); // React Native compatible - support both DOM Elements and string IDs
 
   constructor(
     public readonly surface: string | null,
@@ -42,13 +42,13 @@ abstract class ALSurfaceDataCore {
     this.__ext = Object.create(this.parent?.__ext ?? null);
   }
 
-  addElement(element: Element): void {
+  addElement(element: Element | string): void { // React Native compatible - accept both DOM Elements and string IDs
     this.elements.add(element);
   }
-  getElements(_lookupIfEmpty: boolean = false): Element[] {
+  getElements(_lookupIfEmpty: boolean = false): (Element | string)[] { // React Native compatible
     return Array.from(this.elements);
   }
-  removeElement(element: Element): void {
+  removeElement(element: Element | string): void { // React Native compatible - accept both DOM Elements and string IDs
     this.elements.delete(element);
   }
 
@@ -106,6 +106,15 @@ export class ALSurfaceData extends ALSurfaceDataCore {
 
   static tryGet(surface: string): ALSurfaceData | null | undefined {
     return surfacesData.get(surface);
+  }
+
+  // Debug functions for development and testing
+  static getAllSurfaces(): Map<string, ALSurfaceData> {
+    return new Map(surfacesData);
+  }
+
+  static clearAllSurfaces(): void {
+    surfacesData.clear();
   }
   static get(surface: string): ALSurfaceData {
     let data = surfacesData.get(surface);
@@ -179,17 +188,20 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     this.setUIEventMetadata(uiEventMetadata);
   }
 
-  getElements(lookupIfEmpty?: boolean): Element[] {
+  getElements(lookupIfEmpty?: boolean): (Element | string)[] {
     const elements = super.getElements(lookupIfEmpty);
 
     if (elements.length === 0 && lookupIfEmpty) {
-      // try to lookup the element again
-      const el = document.querySelectorAll(`[${this.domAttributeName}="${this.domAttributeValue}"]`);
-      for (let i = 0; i < el.length; i++) {
-        const e = el.item(i);
-        this.addElement(e);
-        elements.push(e);
-      }
+      // DOM-specific lookup - commented out for React Native compatibility
+      // React Native doesn't have document.querySelectorAll
+      // const el = document.querySelectorAll(`[${this.domAttributeName}="${this.domAttributeValue}"]`);
+      // for (let i = 0; i < el.length; i++) {
+      //   const e = el.item(i);
+      //   this.addElement(e);
+      //   elements.push(e);
+      // }
+
+
     }
 
     return elements;
@@ -275,7 +287,9 @@ export class ALSurfaceData extends ALSurfaceDataCore {
       }
     }
 
+    // Remove from registry using both keys - interactive and non-interactive surface paths
     surfacesData.delete(this.surface);
+    surfacesData.delete(this.nonInteractiveSurface);
     return true;
   }
 

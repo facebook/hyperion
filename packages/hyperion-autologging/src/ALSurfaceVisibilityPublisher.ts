@@ -293,16 +293,18 @@ export function publish(options: InitOptions): void {
 
   // We need to also handle surface proxies
   channel.addListener('al_surface_mount', event => {
-    if (!event.isProxy || !event.capability?.trackVisibilityThreshold || !event.element) {
+    if (!event.isProxy || !event.capability?.trackVisibilityThreshold || !event.elementId) {
       return;
     }
-    observe(event.surfaceData, event.element, event.capability.trackVisibilityThreshold);
+    // DOM-specific functionality - this would need React Native specific implementation
+    // observe(event.surfaceData, event.element, event.capability.trackVisibilityThreshold);
   });
   channel.addListener('al_surface_unmount', event => {
-    if (!event.isProxy || !event.capability?.trackVisibilityThreshold) {
+    if (!event.isProxy || !event.capability?.trackVisibilityThreshold || !event.elementId) {
       return;
     }
-    unobserve(event.surfaceData, event.element, event.capability.trackVisibilityThreshold);
+    // DOM-specific functionality - this would need React Native specific implementation
+    // unobserve(event.surfaceData, event.element, event.capability.trackVisibilityThreshold);
   });
 
   function getOrCreateObserver(threshold: number): IntersectionObserver {

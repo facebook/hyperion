@@ -231,6 +231,7 @@ export default function TodoView({ listId, listManager, listName }: Props) {
   return (
     <SurfaceComp
       surface={`todo-list-${listName}(${listId})`}
+      capability={{ nonInteractive: true, trackVisibilityThreshold: 0.5 }}
       metadata={{
         listId: listId,
         totalItems: String(totalItems),

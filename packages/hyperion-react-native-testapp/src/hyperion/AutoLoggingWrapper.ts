@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import * as ALSurface from 'hyperion-autologging/src/react-native/ALSurface';
+import * as ALSurface from 'hyperion-autologging/src/ALSurface';
 import * as IReact from 'hyperion-react/src/IReact';
 import * as IReactComponent from 'hyperion-react/src/IReactComponent';
 import ReactDev from 'react/jsx-runtime';
@@ -22,7 +22,7 @@ const initialized = new TestAndSet();
 
 export type InitResults = Readonly<{
   surfaceRenderer: ALSurface.ALSurfaceHOC;
-  surfaceComponent: ALSurface.ALSurfaceComponent;
+  surfaceComponent: ALSurface.SurfaceComponent;
 }>;
 
 let cachedResults: InitResults | null = null;
@@ -156,19 +156,21 @@ function initializeReactInterception() {
         useContext: React.useContext as any,
         Children: React.Children as any,
         Component: React.Component as any,
+        Fragment: React.Fragment as any,
       },
       IReactModule,
       IJsxRuntimeModule,
+      IReactDOMModule: undefined as any,
     },
-    enableReactPropsExtension: false,
+    enableReactDomPropsExtension: false,
   });
 
   return surfaceRenderers;
 }
 
 export function getSurfaceComponent(
-  defaultALSurfaceComponent?: ALSurface.ALSurfaceComponent
-): ALSurface.ALSurfaceComponent {
+  defaultALSurfaceComponent?: ALSurface.SurfaceComponent
+): ALSurface.SurfaceComponent {
   const component =
     cachedResults?.surfaceComponent ?? defaultALSurfaceComponent;
   assert(
