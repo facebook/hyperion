@@ -46,10 +46,6 @@ export interface ALSurfaceCapability {
    * When set, will track when the provided ratio [0,1] of the surface becomes visible
    */
   trackVisibilityThreshold?: number;
-  /**
-   * Optional style to apply to the surface wrapper
-   */
-  wrapperStyle?: React.CSSProperties;
 }
 
 function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): string {
@@ -290,13 +286,11 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
 
     if (addSurfaceWrapper) {
-      const style = props?.capability?.wrapperStyle ?? {display: "contents"};
       children = ReactModule.createElement(
         wrapperElementType,
         {
           [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
           [domAttributeName]: domAttributeValue,
-          style,
           ref: localRef, // addSurfaceWrapper would have been false if a rep was passed in props
         },
         children
