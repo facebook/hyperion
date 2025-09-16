@@ -51,7 +51,7 @@ type PluginInit = (channel: Channel<ALChannelEvent>) => void;
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelEvent> &
   {
-    react: (ALSurface.InitOptions & ALTriggerFlowlet.InitOptions)['react'];
+    react: (ALSurface.InitOptions & ALTriggerFlowlet.InitOptions & ALUIEventPublisher.InitOptions)['react'];
     enableReactComponentVisitors?: boolean;
     componentNameValidator?: ComponentNameValidator;
     flowletPublisher?: PublicInitOptions<ALFlowletPublisher.InitOptions> | null;
@@ -190,7 +190,8 @@ export function init(options: InitOptions): boolean {
   if (options.uiEventPublisher) {
     ALUIEventPublisher.publish({
       ...sharedOptions,
-      ...options.uiEventPublisher
+      ...options.uiEventPublisher,
+      react: options.react,
     });
 
     ALHoverPublisher.publish({

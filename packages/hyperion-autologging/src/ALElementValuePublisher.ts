@@ -25,7 +25,7 @@ import { ALSurfaceData } from "./ALSurfaceData";
 
 
 export type InitOptions = Types.Options<
-  ALUIEventPublisher.InitOptions &
+  Omit<ALUIEventPublisher.InitOptions, 'react'> &
   ALSharedInitOptions<ChannelEventType<(ALUIEventPublisher.InitOptions & ALSurface.InitOptions & ALSurfaceMutationPublisher.InitOptions)['channel']>>
 >;
 

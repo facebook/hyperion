@@ -3,6 +3,7 @@
  */
 
 import type ReactDOM from "react-dom";
+import type { createRoot } from "react-dom/client";
 
 import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys } from 'hyperion-core/src/IRequire';
 
@@ -13,9 +14,24 @@ export type ReactDOMModuleExports = {
 export type IReactDOMModuleExports = InterceptedModuleExports<ReactDOMModuleExports>;
 let IReactDOMModule: IReactDOMModuleExports | null = null;
 
-export function intercept(moduleId: string, moduleExports: ReactDOMModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactDOMModuleExports>): IReactDOMModuleExports {
+export type ReactDOMClientModuleExports = {
+  createRoot: typeof createRoot;
+}
+
+export type IReactDOMClientModuleExports = InterceptedModuleExports<ReactDOMClientModuleExports>;
+let IReactDOMClientModule: IReactDOMClientModuleExports | null = null;
+
+
+export function interceptDOM(moduleId: string, moduleExports: ReactDOMModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactDOMModuleExports>): IReactDOMModuleExports {
   if (!IReactDOMModule) {
     IReactDOMModule = interceptModuleExports(moduleId, moduleExports, ['createPortal'], failedExportsKeys);
   }
   return IReactDOMModule;
+}
+
+export function interceptDOMClient(moduleId: string, moduleExports: ReactDOMClientModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactDOMClientModuleExports>): IReactDOMClientModuleExports {
+  if (!IReactDOMClientModule) {
+    IReactDOMClientModule = interceptModuleExports(moduleId, moduleExports, ['createRoot'], failedExportsKeys);
+  }
+  return IReactDOMClientModule;
 }

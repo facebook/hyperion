@@ -10,12 +10,15 @@ import { Channel } from "hyperion-channel/src/Channel";
 import { ALFlowletManager } from "../src/ALFlowletManager";
 import * as ALUIEventPublisher from "../src/ALUIEventPublisher";
 import * as DomFragment from "./DomFragment";
+import * as IReactDOM from "hyperion-react/src/IReactDOM";
+import * as ReactDOMClient from "react-dom/client";
 
 describe("UI event publisher", () => {
   test("meta data transfer between capture and bubble", (done) => {
     const flowletManager = new ALFlowletManager();
 
     const channel = new Channel<ALUIEventPublisher.ALChannelUIEvent>();
+    const IReactDOMClientModule = IReactDOM.interceptDOMClient("react-dom/client", ReactDOMClient, []);
 
     ALUIEventPublisher.publish({
       flowletManager,
@@ -25,7 +28,10 @@ describe("UI event publisher", () => {
           cacheElementReactInfo: true,
           eventName: 'click',
         }
-      ]
+      ],
+      react: {
+        IReactDOMClientModule,
+      }
     });
 
     channel.addListener('al_ui_event_capture', event => {
