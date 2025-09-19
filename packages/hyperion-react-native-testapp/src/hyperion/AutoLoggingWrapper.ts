@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { AutoLogging, TestAndSet } from "hyperion-react-native/src/"
+import { MobileAutoLogging, TestAndSet } from "hyperion-react-native/src/"
 import { SyncChannel } from "./Channel";
 import * as IReact from "hyperion-react/src/IReact";
 import React from "react";
@@ -27,7 +27,7 @@ export function init() {
 
   const channel = SyncChannel;
 
-  AutoLogging.init({
+  MobileAutoLogging.init({
     react: {
       ReactModule: React as any,
       IReactModule,

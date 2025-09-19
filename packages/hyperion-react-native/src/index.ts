@@ -4,6 +4,6 @@
 
 'use strict';
 
-export * as AutoLogging from "./AutoLogging";
+export * as MobileAutoLogging from "./AutoLogging";
 export { Channel } from "hyperion-channel/src/";
 export { TestAndSet } from 'hyperion-test-and-set/src';
