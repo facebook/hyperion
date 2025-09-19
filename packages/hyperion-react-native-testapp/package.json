@@ -11,7 +11,8 @@
     "mkdist": "node -e \"require('node:fs').mkdirSync('dist', { recursive: true, mode: 0o755 })\"",
     "start": "react-native start",
     "test": "jest",
-    "build": ""
+    "build": "",
+    "build-go": ""
   },
   "workspaces": [
     "../hyperion-react",

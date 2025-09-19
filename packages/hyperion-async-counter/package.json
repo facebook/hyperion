@@ -6,7 +6,8 @@
   "author": "Mehrdad Reshadi",
   "main": "./src/AsyncCounter.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc", 
+    "build-go": "tsgo",
     "watch": "npm run build -- --watch",
     "start": "npm run watch",
     "test": "npm run build & jest"
