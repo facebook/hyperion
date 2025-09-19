@@ -5,7 +5,8 @@
   "license": "MIT",
   "author": "Mehrdad Reshadi",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc", 
+    "build-go": "tsgo",
     "watch": "npm run build -- --watch",
     "start": "npm run type-check:watch",
     "type-check": "tsc --noEmit",

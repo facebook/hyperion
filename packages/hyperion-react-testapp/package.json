@@ -38,6 +38,7 @@
   "scripts": {
     "start": "vite",
     "build": "",
+    "build-go": "",
     "build-prod": "tsc && vite build",
     "serve": "vite preview",
     "test": ""

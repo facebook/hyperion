@@ -4,7 +4,8 @@
   "version": "0.3.4",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc", 
+    "build-go": "tsgo",
     "watch": "npm run build -- --watch",
     "start": "npm run watch",
     "test": "npm run build & jest"
