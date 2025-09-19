@@ -88,38 +88,52 @@ export function init<
   const IS_FLOWLET_SETUP_PROP = 'isFlowletSetup';
 
   IReactComponent.onReactClassComponentIntercept.add(shadowComponent => {
-    const methods = [
-      shadowComponent.render,
-      shadowComponent.componentWillMount,
-      shadowComponent.componentDidMount,
-      shadowComponent.componentWillReceiveProps,
-      shadowComponent.shouldComponentUpdate,
-      shadowComponent.componentWillUpdate,
-      shadowComponent.componentDidUpdate,
-      shadowComponent.componentWillUnmount,
-      shadowComponent.componentDidCatch,
-    ];
+  // Define a type for the component with the flowlet property.
+// Replace 'any' with the actual type of your component if known.
+interface ComponentWithFlowlet extends React.Component {
+  props: {
+    // Replace with the actual type of your props.
+    [key: string]: any;
+  };
+}
 
-    methods.forEach(method => {
-      if (method.testAndSet(IS_FLOWLET_SETUP_PROP)) {
-        return;
+// A helper function to apply the flowlet logic.
+const applyFlowletInterceptor = (method: Function): void => {
+  // Check if the method has already been set up.
+  if (method.testAndSet(IS_FLOWLET_SETUP_PROP)) {
+    return;
+  }
+
+  /**
+   * The interceptor methods run before & after the intercepted method.
+   * This allows us to push the flowlet before the method's body
+   * and pop it after the method has finished executing.
+   */
+  method.onBeforeAndAfterCallMapperAdd(function(this: ComponentWithFlowlet) {
+    const activeCallFlowlet = flowletPusher(this.props);
+    return (value: any) => {
+      if (activeCallFlowlet) {
+        flowletManager.pop(activeCallFlowlet);
       }
+      return value;
+    };
+  });
+};
 
-      /**
-       * The following interceptor methods run immediately before & after
-       * intercepted method. So, we can push before and pop after so that
-       * the body of the method has access to flowlet.
-       * We will expand these methods to other lifecycle methods later.
-       */
-      method.onBeforeAndAfterCallMapperAdd(function (this: ComponentWithFlowlet) {
-        const activeCallFlowlet = flowletPusher(this.props);
-        return (value) => {
-          if (activeCallFlowlet) {
-            flowletManager.pop(activeCallFlowlet);
-          }
-          return value;
-        }
-      });
+const methods: Function[] = [
+  shadowComponent.render,
+  shadowComponent.componentWillMount,
+  shadowComponent.componentDidMount,
+  shadowComponent.componentWillReceiveProps,
+  shadowComponent.shouldComponentUpdate,
+  shadowComponent.componentWillUpdate,
+  shadowComponent.componentDidUpdate,
+  shadowComponent.componentWillUnmount,
+  shadowComponent.componentDidCatch,
+];
+
+// Apply the flowlet logic to each method.
+methods.forEach(applyFlowletInterceptor);
 
     });
   });
