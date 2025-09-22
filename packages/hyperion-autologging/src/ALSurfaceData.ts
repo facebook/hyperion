@@ -32,7 +32,6 @@ abstract class ALSurfaceDataCore {
   private __ext: { [namespace: string]: any; };
   #locked: boolean = false; // allow removal by default
 
-  // protected readonly children: ALSurfaceData[] = [];
   private readonly elements: Set<Element> = new Set<Element>();
   private readonly childrenMap: Map<string, ALSurfaceData> = new Map<string, ALSurfaceData>();
 
@@ -48,24 +47,12 @@ abstract class ALSurfaceDataCore {
   }
   getChildren(): ALSurfaceData[] {
     return Array.from(this.childrenMap.values());
-    // return this.children;
   }
   addChild(child: ALSurfaceData): void {
     this.childrenMap.set(child.surfaceName, child);
-    // this.children.push(child);
   }
   removeChild(child: ALSurfaceData): boolean {
     return this.childrenMap.delete(child.surfaceName);
-    // if (this.childrenMap.delete(child.surfaceName)) {
-    //   // The following is a fast remove
-    //   const index = this.children.indexOf(child);
-    //   if (index > -1) {
-    //     this.children[index] = this.children[this.children.length - 1]; // move the last one to the found location
-    //     this.children.length -= 1;
-    //     return true;
-    //   }
-    // }
-    // return false;
   }
 
   addElement(element: Element): void {
@@ -80,7 +67,6 @@ abstract class ALSurfaceDataCore {
 
   public isRemovable(): boolean {
     const isChildless = this.childrenMap.size === 0
-    // const isChildless = this.children.length === 0
     return isChildless && !this.#locked;
   }
   remove(): boolean {
@@ -173,35 +159,33 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     public readonly domAttributeValue: string,
   ) {
     super(surface, parent);
-    this.parent.addChild(this);
 
     /**
      * Every surface gets a unique nonInteractiveSurface name that
      * is full path from all surfaces from the root.
      * However, the nonInteractive surfaces, get the parent interactive
      * surface name as their `this.surface`.
-     * To make sure all of these are searchable, we always add surface
-     * to the map with the unique nonInteractiveSurface key, and for
-     * interactive ones, also add based on surface key
+     * We need search for interactive surfaces by their interactive name,
+     * therefore we need to add them to the map with that key.
+     * We could add the unique nonInteractiveSurface key as well, but that
+     * can increase the size of the map significantly.
+     * For those, we mostly rely on the per-node Maps which usually hold significantly
+     * less entries.
      */
     if (__DEV__) {
-      // assert(
-      //   !surfacesData.get(nonInteractiveSurface),
-      //   `Surface ${nonInteractiveSurface} is already added to list`
-      // );
+      assert(
+        !parent.getChild(surfaceName),
+        `Surface ${nonInteractiveSurface} is already added to its parent ${parent.surface}`
+      );
       assert(
         capability?.nonInteractive || !surfacesData.get(surface),
         `Surface ${surface} is already added to list`
       )
-      // assert(
-      //   this.parent.surface === null || surfacesData.has(this.parent.nonInteractiveSurface),
-      //   `Parent of surface ${surface} does not exist in the list`
-      // );
     }
+    this.parent.addChild(this);
     if (!capability?.nonInteractive) {
       surfacesData.set(surface, this);
     }
-    // surfacesData.set(nonInteractiveSurface, this);
 
     this.setUIEventMetadata(uiEventMetadata);
   }
