@@ -32,14 +32,40 @@ abstract class ALSurfaceDataCore {
   private __ext: { [namespace: string]: any; };
   #locked: boolean = false; // allow removal by default
 
-  readonly children: ALSurfaceData[] = [];
+  // protected readonly children: ALSurfaceData[] = [];
   private readonly elements: Set<Element> = new Set<Element>();
+  private readonly childrenMap: Map<string, ALSurfaceData> = new Map<string, ALSurfaceData>();
 
   constructor(
     public readonly surface: string | null,
     public readonly parent: ALSurfaceDataCore | null,
   ) {
     this.__ext = Object.create(this.parent?.__ext ?? null);
+  }
+
+  getChild(surfaceName: string): ALSurfaceData | null {
+    return this.childrenMap.get(surfaceName) ?? null;
+  }
+  getChildren(): ALSurfaceData[] {
+    return Array.from(this.childrenMap.values());
+    // return this.children;
+  }
+  addChild(child: ALSurfaceData): void {
+    this.childrenMap.set(child.surfaceName, child);
+    // this.children.push(child);
+  }
+  removeChild(child: ALSurfaceData): boolean {
+    return this.childrenMap.delete(child.surfaceName);
+    // if (this.childrenMap.delete(child.surfaceName)) {
+    //   // The following is a fast remove
+    //   const index = this.children.indexOf(child);
+    //   if (index > -1) {
+    //     this.children[index] = this.children[this.children.length - 1]; // move the last one to the found location
+    //     this.children.length -= 1;
+    //     return true;
+    //   }
+    // }
+    // return false;
   }
 
   addElement(element: Element): void {
@@ -53,7 +79,8 @@ abstract class ALSurfaceDataCore {
   }
 
   public isRemovable(): boolean {
-    const isChildless = this.children.length === 0
+    const isChildless = this.childrenMap.size === 0
+    // const isChildless = this.children.length === 0
     return isChildless && !this.#locked;
   }
   remove(): boolean {
@@ -136,7 +163,7 @@ export class ALSurfaceData extends ALSurfaceDataCore {
 
     public readonly parent: ALSurfaceData | ALSurfaceDataRoot,
 
-    /** full path to be also used key */
+    /** full path to be also used as key for global lookup */
     public readonly nonInteractiveSurface: string,
     public readonly callFlowlet: IALFlowlet,
     public readonly capability: ALSurfaceCapability | null | undefined,
@@ -146,7 +173,7 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     public readonly domAttributeValue: string,
   ) {
     super(surface, parent);
-    this.parent.children.push(this);
+    this.parent.addChild(this);
 
     /**
      * Every surface gets a unique nonInteractiveSurface name that
@@ -158,23 +185,23 @@ export class ALSurfaceData extends ALSurfaceDataCore {
      * interactive ones, also add based on surface key
      */
     if (__DEV__) {
-      assert(
-        !surfacesData.get(nonInteractiveSurface),
-        `Surface ${nonInteractiveSurface} is already added to list`
-      );
+      // assert(
+      //   !surfacesData.get(nonInteractiveSurface),
+      //   `Surface ${nonInteractiveSurface} is already added to list`
+      // );
       assert(
         capability?.nonInteractive || !surfacesData.get(surface),
         `Surface ${surface} is already added to list`
       )
-      assert(
-        this.parent.surface === null || surfacesData.has(this.parent.nonInteractiveSurface),
-        `Parent of surface ${surface} does not exist in the list`
-      );
+      // assert(
+      //   this.parent.surface === null || surfacesData.has(this.parent.nonInteractiveSurface),
+      //   `Parent of surface ${surface} does not exist in the list`
+      // );
     }
     if (!capability?.nonInteractive) {
       surfacesData.set(surface, this);
     }
-    surfacesData.set(nonInteractiveSurface, this);
+    // surfacesData.set(nonInteractiveSurface, this);
 
     this.setUIEventMetadata(uiEventMetadata);
   }
@@ -258,20 +285,14 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     }
 
     if (this.parent) {
-      const parentsChildren = this.parent.children;
       // Remove this from parent's children
-
-      // The following is a fast remove
-      const index = parentsChildren.indexOf(this);
-      if (index > -1) {
-        parentsChildren[index] = parentsChildren[parentsChildren.length - 1]; // move the last one to the found location
-        parentsChildren.length -= 1;
-        const canPropageUpwardRemove = this.parent.isRemovable();
-        if (canPropageUpwardRemove) {
+      const foundAndDeleted = this.parent.removeChild(this);
+      if (foundAndDeleted) {
+        if (this.parent.isRemovable()) {
           this.parent.remove();
+        } else {
+          __DEV__ && assert(foundAndDeleted, `Invalid situation! surface ${this.surface} should be child of ${this.parent.surface}`);
         }
-      } else {
-        __DEV__ && assert(index > -1, `Invalid situation! surface ${this.surface} should be child of ${this.parent.surface}`);
       }
     }
 

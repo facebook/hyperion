@@ -164,6 +164,7 @@ export function publish(options: InitOptions): void {
           }));
           // Now that we are done with this surface, we can try removing it
           surfaceData.setMutationEvent(null);
+          surfaceData.remove();
         } else {
           if (!surfaceData.getInheritedPropery<boolean>('hasDuplicates')) {
             console.error(`Surface ${surface} is unmounted without proper previous mount event`);
