@@ -248,7 +248,9 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     // Emit surface mutation events on mount/unmount
     const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
     const eventMetadata = props.uiEventMetadata;
-    let surfaceData = ALSurfaceData.tryGet(nonInteractiveSurfacePath);
+    // let surfaceData = ALSurfaceData.tryGet(nonInteractiveSurfacePath);
+    let surfaceData =  surfaceCtx.getChild(surface);
+
     let callFlowlet: FlowletType;
     if (!surfaceData) {
       assert(!proxiedContext, "Proxied surface should always have surface data already");
