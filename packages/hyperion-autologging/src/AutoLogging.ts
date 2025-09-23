@@ -21,6 +21,7 @@ import * as ALNetworkPublisher from "./ALNetworkPublisher";
 import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
 import * as ALSessionFlowID from "./ALSessionFlowID";
 import * as ALSurface from "./ALSurface";
+import * as ALSurfaceTypes from "./ALSurfaceTypes";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
 import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
@@ -71,8 +72,8 @@ export type InitOptions = Types.Options<
 
 export type InitResults = Readonly<{
   initOptions: InitOptions;
-  surfaceRenderer: ALSurface.ALSurfaceHOC;
-  surfaceComponent?: ALSurface.SurfaceComponent;
+  surfaceRenderer: ALSurfaceTypes.ALSurfaceHOC;
+  surfaceComponent?: ALSurfaceTypes.SurfaceComponent;
 }>;
 
 let cachedResults: InitResults | null = null;
@@ -244,7 +245,7 @@ export function init(options: InitOptions): boolean {
   return true;
 }
 
-export function getSurfaceRenderer(defaultALSurfaceHOC?: ALSurface.ALSurfaceHOC): ALSurface.ALSurfaceHOC {
+export function getSurfaceRenderer(defaultALSurfaceHOC?: ALSurfaceTypes.ALSurfaceHOC): ALSurfaceTypes.ALSurfaceHOC {
   const renderer = cachedResults?.surfaceRenderer ?? defaultALSurfaceHOC;
   assert(
     renderer != null,
@@ -260,7 +261,7 @@ export function getSurfaceRenderer(defaultALSurfaceHOC?: ALSurface.ALSurfaceHOC)
   );
   return renderer;
 }
-export function getSurfaceComponent(defaultALSurfaceComponet?: ALSurface.SurfaceComponent): ALSurface.SurfaceComponent {
+export function getSurfaceComponent(defaultALSurfaceComponet?: ALSurfaceTypes.SurfaceComponent): ALSurfaceTypes.SurfaceComponent {
   const component = cachedResults?.surfaceComponent ?? defaultALSurfaceComponet;
   assert(
     component != null,
