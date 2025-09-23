@@ -18,7 +18,7 @@ import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";
-import { ALChannelSurfaceEvent } from "./ALSurface";
+import { ALChannelSurfaceEvent } from "./ALSurfaceTypes";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";

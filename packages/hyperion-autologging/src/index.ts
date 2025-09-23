@@ -11,7 +11,7 @@ export * as ALEventIndex from "./ALEventIndex";
 export { ALFlowlet, ALFlowletManager } from "./ALFlowletManager";
 export * as ALInteractableDOMElement from "./ALInteractableDOMElement";
 export { getSessionFlowID } from "./ALSessionFlowID";
-export { ALSurfaceCapability } from "./ALSurface";
+export { ALSurfaceCapability } from "./ALSurfaceTypes";
 export { useALSurfaceContext } from "./ALSurfaceContext";
 export { ALSurfaceData } from "./ALSurfaceData";
 export * as ALSurfaceUtils from "./ALSurfaceUtils";
