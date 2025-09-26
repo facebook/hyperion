@@ -9,7 +9,7 @@ import * as IReactDOM from "hyperion-react/src/IReactDOM";
 import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 import { ALFlowletManager } from './ALFlowletManager';
-import { SurfaceComponent } from './ALSurface';
+import { SurfaceComponent } from './ALSurfaceTypes';
 import { useALSurfaceContext } from './ALSurfaceContext';
 
 

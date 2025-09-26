@@ -12,8 +12,7 @@ import * as ALEventIndex from './ALEventIndex';
 import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
-import type { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData } from './ALSurface';
-import { ALSurfaceEvent } from "./ALSurfaceData";
+import type { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData, ALSurfaceEvent } from './ALSurfaceTypes';
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 import { getCurrMainPageUrl } from "./MainPageUrl";
 import { assert } from "hyperion-globals";
@@ -103,7 +102,7 @@ export function publish(options: InitOptions): void {
             eventTimestamp: timestamp,
             eventIndex: ALEventIndex.getNextEventIndex(),
             surface, // already in the evet, need to add again?
-            surfaceData, // already in the event. 
+            surfaceData, // already in the event.
             element, // already in the evet, need to add again?
             autoLoggingID: ALID.getOrSetAutoLoggingID(element),
             reactComponentName: reactComponentData?.name,

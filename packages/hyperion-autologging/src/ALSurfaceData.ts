@@ -8,18 +8,8 @@ import { assert } from "hyperion-globals/src/assert";
 import type { ALSurfaceMutationEventData } from "./ALSurfaceMutationPublisher";
 import type { ALSurfaceVisibilityEventData } from "./ALSurfaceVisibilityPublisher";
 import { type IALFlowlet } from "./ALFlowletManager";
-import type { ALSurfaceCapability } from "./ALSurface";
 import { type Metadata } from "./ALType";
-
-export type ALSurfaceEvent = Readonly<{
-  surface: string;
-  surfaceData: ALSurfaceData;
-}>;
-
-type WritableEventMetadata = {
-  [eventName in keyof DocumentEventMap]?: Metadata
-};
-export type EventMetadata = Readonly<WritableEventMetadata>;
+import { ALSurfaceCapability, EventMetadata, WritableEventMetadata } from "./ALSurfaceTypes";
 
 /**
  * This core class captures the general structure of the tree.

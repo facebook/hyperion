@@ -12,45 +12,11 @@ import type * as React from 'react';
 import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
-import { ALSurfaceData, ALSurfaceEvent, EventMetadata } from "./ALSurfaceData";
+import { ALSurfaceData } from "./ALSurfaceData";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import { ALFlowletEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
+import { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData, ALSurfaceRenderers, SurfaceComponent } from "./ALSurfaceTypes";
 
-
-export type ALSurfaceEventData =
-  ALMetadataEvent &
-  ALFlowletEvent &
-  ALSurfaceEvent &
-  Readonly<{
-    element: Element;
-    isProxy: boolean;
-    capability: ALSurfaceCapability | null | undefined;
-  }>;
-
-export interface ALSurfaceCapability {
-  /**
-   * By default, in addition to reporting mount/unmount of a surface, all
-   * interactions are also marked with a the name of their surface, unless
-   * the following flag is set.
-   */
-  nonInteractive?: boolean;
-
-  /**
-   * In many cases, we only need to have a surface to mark various events UI
-   * eith it. We may not need the mutation or visibility events for it.
-   * if this options is explicitly set to false, we won't generate the mutation events.
-   */
-  trackMutation?: boolean;
-
-  /**
-   * When set, will track when the provided ratio [0,1] of the surface becomes visible
-   */
-  trackVisibilityThreshold?: number;
-  /**
-   * Optional style to apply to the surface wrapper
-   */
-  wrapperStyle?: React.CSSProperties;
-}
 
 function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): string {
   if (!capability) {
@@ -59,46 +25,11 @@ function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): str
   return JSON.stringify(capability);
 }
 
-export type ALSurfaceProps = Readonly<{
-  surface: string;
-  metadata?: ALMetadataEvent['metadata'];
-  uiEventMetadata?: EventMetadata,
-  capability?: ALSurfaceCapability,
-  nodeRef?: React.RefObject<HTMLElement | null | undefined>,
-}>;
-
-export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
-export type ALSurfaceHOC = (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
-export type ALSurfaceRenderers = {
-  surfaceComponent: SurfaceComponent;
-  surfaceHOComponent: (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
-};
-
-
-export type ALChannelSurfaceEvent = Readonly<{
-  al_surface_mount: [ALSurfaceEventData];
-  al_surface_unmount: [ALSurfaceEventData];
-}>;
 
 type FlowletType = IALFlowlet;
 type ALChannelEventType = ALChannelSurfaceEvent;
 
 
-export type SurfaceComponent = (props: React.PropsWithChildren<
-  ALSurfaceProps &
-  {
-    renderer?: ALSurfaceRenderer;
-    // callFlowlet: FlowletType;
-    /** The optional incoming surface that we are re-wrapping via a proxy.
-     * If this is provided,  then we won't emit mutations for this surface as we are
-     * doubly wrapping that surface, for surface attribution purposes.
-     */
-    proxiedContext?: {
-      mainContext: ALSurfaceContext.ALSurfaceContextFilledValue,
-      container?: Element | DocumentFragment
-    }
-  }
->) => React.ReactElement;
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelEventType> &
@@ -248,7 +179,7 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     // Emit surface mutation events on mount/unmount
     const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
     const eventMetadata = props.uiEventMetadata;
-    
+
     // Let's see if the parent node (context) already has this surface
     let surfaceData =  surfaceCtx.getChild(surface);
 
