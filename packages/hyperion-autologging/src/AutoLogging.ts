@@ -129,10 +129,6 @@ export function init(options: InitOptions): boolean {
 
   // Enumerating the cases where we need react interception and visitors
   const reactOptions = options.react;
-  if (typeof reactOptions.enableInterceptDomElement !== 'boolean') {
-    reactOptions.enableInterceptDomElement =
-      options.surface.enableReactDomPropsExtension;
-  }
   if (typeof reactOptions.enableInterceptClassComponentConstructor !== "boolean") {
     reactOptions.enableInterceptClassComponentConstructor =
       options.triggerFlowlet?.enableReactMethodFlowlet;

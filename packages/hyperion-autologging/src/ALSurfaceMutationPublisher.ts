@@ -15,7 +15,7 @@ import { ReactComponentData } from './ALReactUtils';
 import type { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData, ALSurfaceEvent } from './ALSurfaceTypes';
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
 import { getCurrMainPageUrl } from "./MainPageUrl";
-import { assert } from "hyperion-globals";
+import { assert, getFlags } from "hyperion-globals";
 
 export type ALSurfaceMutationEventData =
   ALLoggableEvent &
@@ -64,6 +64,7 @@ export type InitOptions = Types.Options<
 export function publish(options: InitOptions): void {
   const { channel, flowletManager, cacheElementReactInfo, enableElementTextExtraction = false } = options;
 
+  const enableSurfaceDataGC = getFlags().enableSurfaceDataGC ?? false;
   function processNode(event: ALSurfaceEventData, action: 'added' | 'removed') {
     const timestamp = performanceAbsoluteNow();
     const { element, surface, metadata, surfaceData } = event;
@@ -163,7 +164,17 @@ export function publish(options: InitOptions): void {
           }));
           // Now that we are done with this surface, we can try removing it
           surfaceData.setMutationEvent(null);
-          surfaceData.remove();
+
+          /**
+           * In react strict mode during DEV, the useEffect, useLayoutEffect may be called multiple times
+           * We add the SurfaceData node to the tree during render, but remove it during unmount
+           * So, we may end up removing surfaceData node from tree without ensuring it is added back
+           * To avoid this, we add the feature behind a flag that one can turn on in production if needed
+           */
+          if (enableSurfaceDataGC) {
+            surfaceData.remove();
+          }
+
         } else {
           if (!surfaceData.getInheritedPropery<boolean>('hasDuplicates')) {
             console.error(`Surface ${surface} is unmounted without proper previous mount event`);

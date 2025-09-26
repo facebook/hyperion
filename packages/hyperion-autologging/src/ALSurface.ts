@@ -48,12 +48,12 @@ export type InitOptions = Types.Options<
       IJsxRuntimeModule: IReact.IJsxRuntimeModuleExports;
     };
     domCallFlowletAttributeName?: string;
-    enableReactDomPropsExtension?: boolean;
+    enableRenderEvents?: boolean;
   }
 >;
 
 export function init(options: InitOptions): ALSurfaceRenderers {
-  const { flowletManager, channel } = options;
+  const { flowletManager, channel, enableRenderEvents } = options;
   const { ReactModule } = options.react;
 
   const SurfaceContext = ALSurfaceContext.init(options);
@@ -71,6 +71,15 @@ export function init(options: InitOptions): ALSurfaceRenderers {
 
   }>): React.ReactNode {
     const { surfaceData, nodeRef, domAttributeName, domAttributeValue, capability, callFlowlet, triggerFlowlet, metadata, isProxy } = props;
+    enableRenderEvents && channel.emit('al_surface_render', {
+      surface: domAttributeValue,
+      surfaceData,
+      callFlowlet,
+      triggerFlowlet,
+      metadata,
+      isProxy,
+      capability
+    });
 
     ReactModule.useLayoutEffect(() => {
       const surface = surfaceData.surfaceName;
@@ -125,7 +134,7 @@ export function init(options: InitOptions): ALSurfaceRenderers {
         });
         surfaceData.removeElement(element);
       }
-    }, [domAttributeName, domAttributeValue, nodeRef]);
+    }, [surfaceData, domAttributeName, domAttributeValue, nodeRef]);
 
     return props.children
   }
@@ -149,6 +158,7 @@ export function init(options: InitOptions): ALSurfaceRenderers {
 
     // empty .capability field is default, means all enabled!
     const capability = props.capability ?? proxiedContext?.mainContext.capability;
+    let surfaceData: ALSurfaceData | null;
 
     if (!proxiedContext) {
       nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
@@ -161,6 +171,8 @@ export function init(options: InitOptions): ALSurfaceRenderers {
         domAttributeName = AUTO_LOGGING_SURFACE;
         domAttributeValue = surfacePath;
       }
+      // Let's see if the parent node (context) already has this surface
+      surfaceData = surfaceCtx.getChild(surface);
     } else {
       surfacePath = proxiedContext.mainContext.surface;
       nonInteractiveSurfacePath = proxiedContext.mainContext.nonInteractiveSurface;
@@ -174,14 +186,12 @@ export function init(options: InitOptions): ALSurfaceRenderers {
           localRef.current = container;
         }
       }
+      surfaceData = proxiedContext.mainContext;
     }
 
     // Emit surface mutation events on mount/unmount
     const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
     const eventMetadata = props.uiEventMetadata;
-
-    // Let's see if the parent node (context) already has this surface
-    let surfaceData =  surfaceCtx.getChild(surface);
 
     let callFlowlet: FlowletType;
     if (!surfaceData) {
@@ -224,7 +234,7 @@ export function init(options: InitOptions): ALSurfaceRenderers {
     const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
 
     if (addSurfaceWrapper) {
-      const style = props?.capability?.wrapperStyle ?? {display: "contents"};
+      const style = props?.capability?.wrapperStyle ?? { display: "contents" };
       children = ReactModule.createElement(
         wrapperElementType,
         {
