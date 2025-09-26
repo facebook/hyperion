@@ -41,6 +41,7 @@ export type ALSurfaceRenderers = {
 
 
 export type ALChannelSurfaceEvent = Readonly<{
+  al_surface_render: [Omit<ALSurfaceEventData, "element">];
   al_surface_mount: [ALSurfaceEventData];
   al_surface_unmount: [ALSurfaceEventData];
 }>;
@@ -71,9 +72,9 @@ export interface ALSurfaceCapability {
 }
 
 export type ALSurfaceEvent = Readonly<{
-    surface: string;
-    surfaceData: ALSurfaceData;
-  }>;
+  surface: string;
+  surfaceData: ALSurfaceData;
+}>;
 
 
 export type ALSurfaceEventData =
