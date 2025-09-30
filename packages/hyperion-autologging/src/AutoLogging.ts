@@ -13,6 +13,7 @@ import * as Types from "hyperion-util/src/Types";
 import * as ALCustomEvent from "./ALCustomEvent";
 import * as ALDOMSnapshotPublisher from "./ALDOMSnaptshotPublisher";
 import * as ALElementValuePublisher from "./ALElementValuePublisher";
+import { ALFlowletManagerInstance } from "./ALFlowletManager";
 import * as ALFlowletPublisher from "./ALFlowletPublisher";
 import * as ALHeartbeat from "./ALHeartbeat";
 import * as ALHoverPublisher from "./ALHoverPublisher";
@@ -21,12 +22,11 @@ import * as ALNetworkPublisher from "./ALNetworkPublisher";
 import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
 import * as ALSessionFlowID from "./ALSessionFlowID";
 import * as ALSurface from "./ALSurface";
-import * as ALSurfaceTypes from "./ALSurfaceTypes";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
+import * as ALSurfaceTypes from "./ALSurfaceTypes";
 import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
 import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
 import { ALSharedInitOptions } from "./ALType";
-import * as ALUIEventGroupPublishers from "./ALUIEventGroupPublisher";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
 
 /**
@@ -112,19 +112,16 @@ export function init(options: InitOptions): boolean {
   }
 
   const sharedOptions: ALSharedInitOptions<ALChannelEvent> = {
-    flowletManager: options.flowletManager,
     channel,
   }
 
   if (typeof global !== 'undefined' && (global as Window)?.document?.createElement != null) {
-    initFlowletTrackers(options.flowletManager);
+    initFlowletTrackers(ALFlowletManagerInstance);
     options.triggerFlowlet && ALTriggerFlowlet.init({
       react: options.react,
       ...sharedOptions,
       ...options.triggerFlowlet,
     });
-    ALUIEventGroupPublishers.init(options);
-
   }
 
   // Enumerating the cases where we need react interception and visitors

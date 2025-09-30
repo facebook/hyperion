@@ -7,11 +7,12 @@
 
 import { ChannelEventType } from "hyperion-channel/src/Channel";
 import * as Types from "hyperion-util/src/Types";
+import { ALCustomEventChannel, emitALCustomEvent } from "./ALCustomEvent";
+import { setEventExtension } from "./ALEventExtension";
+import { ALFlowletManagerInstance } from "./ALFlowletManager";
+import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
 import { ALElementEvent, ALExtensibleEvent, ALLoggableEvent, ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
-import { ALCustomEventChannel, emitALCustomEvent } from "./ALCustomEvent";
-import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
-import { setEventExtension } from "./ALEventExtension";
 
 
 type TrackingChannels = (ALUIEventPublisher.InitOptions & ALSurfaceVisibilityPublisher.InitOptions)['channel'];
@@ -28,7 +29,7 @@ export type InitOptions = Types.Options<
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel, flowletManager } = options;
+  const { channel } = options;
 
   function copyNodeStyle(sourceNode: HTMLElement, targetNode: HTMLElement) {
     const computedStyle = window.getComputedStyle(sourceNode);
@@ -54,7 +55,7 @@ export function publish(options: InitOptions): void {
     const snapshot = clone.outerHTML;
     const customEvent = emitALCustomEvent(
       channel,
-      flowletManager,
+      ALFlowletManagerInstance,
       {
         event_name: "dom_snapshot",
         snapshot,

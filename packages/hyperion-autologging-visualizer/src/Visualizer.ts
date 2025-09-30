@@ -9,12 +9,11 @@ import { Channel } from "hyperion-channel/src/Channel";
 import * as ElementTextTooltip from "./component/ElementTextTooltip.react";
 
 export type InitOptions = Types.Options<
-  Pick<AutoLogging.InitOptions, 'flowletManager'> &
   {
     channel: Channel<AutoLogging.ALChannelEvent>
   }
 >;
 
- export function init(options: InitOptions) {
+export function init(options: InitOptions) {
   ElementTextTooltip.init(options);
 }

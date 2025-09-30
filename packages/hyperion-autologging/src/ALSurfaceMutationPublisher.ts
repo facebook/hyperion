@@ -14,6 +14,7 @@ import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElem
 import { ReactComponentData } from './ALReactUtils';
 import type { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData, ALSurfaceEvent } from './ALSurfaceTypes';
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
+import { ALFlowletManagerInstance } from "./ALFlowletManager";
 import { getCurrMainPageUrl } from "./MainPageUrl";
 import { assert, getFlags } from "hyperion-globals";
 
@@ -62,7 +63,8 @@ export type InitOptions = Types.Options<
 >;
 
 export function publish(options: InitOptions): void {
-  const { channel, flowletManager, cacheElementReactInfo, enableElementTextExtraction = false } = options;
+  const { channel, cacheElementReactInfo, enableElementTextExtraction = false } = options;
+  const flowletManager = ALFlowletManagerInstance;
 
   const enableSurfaceDataGC = getFlags().enableSurfaceDataGC ?? false;
   function processNode(event: ALSurfaceEventData, action: 'added' | 'removed') {

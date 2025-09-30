@@ -17,6 +17,7 @@ import { ALElementTextEvent, TrackEventHandlerConfig, enableUIEventHandlers, get
 import { ReactComponentData } from "./ALReactUtils";
 import { getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions, ALTimedEvent, Metadata } from "./ALType";
+import { ALFlowletManagerInstance } from "./ALFlowletManager";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import * as Flags from "hyperion-globals/src/Flags";
 import { getCurrMainPageUrl } from "./MainPageUrl";
@@ -240,7 +241,8 @@ export function getCurrentUIEventData(): ALUIEventData | null | undefined {
  * and filtering of events is configured via {@link UIEventConfig}.
  */
 export function publish(options: InitOptions): void {
-  const { uiEvents, flowletManager, channel } = options;
+  const { uiEvents, channel } = options;
+  const flowletManager = ALFlowletManagerInstance;
 
 
   uiEvents.forEach((eventConfig => {
