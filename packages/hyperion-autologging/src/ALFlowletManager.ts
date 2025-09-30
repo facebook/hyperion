@@ -60,3 +60,5 @@ export class ALFlowletManager<DataType extends ALFlowletDataType = ALFlowletData
     super(ALFlowlet);
   }
 }
+
+export const ALFlowletManagerInstance = new ALFlowletManager();

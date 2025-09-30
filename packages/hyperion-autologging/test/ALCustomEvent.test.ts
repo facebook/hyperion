@@ -7,14 +7,10 @@
 import "jest";
 
 import { Channel } from "hyperion-channel/src/Channel";
-import { ALFlowletManager } from "../src/ALFlowletManager";
-import { AUTO_LOGGING_SURFACE } from "../src/ALSurfaceConsts";
 import * as ALCustomEvent from "../src/ALCustomEvent";
-import * as DomFragment from "./DomFragment";
 
 describe("emit custom events", () => {
   test("emit with metadata", () => {
-    const flowletManager = new ALFlowletManager();
 
     const channel = new Channel<ALCustomEvent.ALChannelCustomEvent>();
 
@@ -26,6 +22,6 @@ describe("emit custom events", () => {
       expect(event.metadata).toStrictEqual(metadata);
     });
 
-    ALCustomEvent.emitALCustomEvent(channel, flowletManager, metadata);
+    ALCustomEvent.emitALCustomEvent(channel, metadata);
   });
 });

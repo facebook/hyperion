@@ -8,9 +8,8 @@
 import * as IReactDOM from "hyperion-react/src/IReactDOM";
 import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
-import { ALFlowletManager } from './ALFlowletManager';
-import { SurfaceComponent } from './ALSurfaceTypes';
 import { useALSurfaceContext } from './ALSurfaceContext';
+import { SurfaceComponent } from './ALSurfaceTypes';
 
 
 export type InitOptions = Types.Options<{
@@ -18,7 +17,6 @@ export type InitOptions = Types.Options<{
     ReactModule: { createElement: typeof React.createElement, Fragment: typeof React.Fragment };
     IReactDOMModule: IReactDOM.IReactDOMModuleExports | Promise<IReactDOM.IReactDOMModuleExports>;
   };
-  flowletManager: ALFlowletManager;
 }>;
 
 type ProxyInitOptions =
