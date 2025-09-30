@@ -3,10 +3,7 @@
  */
 
 'use strict';
-import * as Types from "hyperion-util/src/Types";
-import { IALFlowlet } from "./ALFlowletManager";
-import { ALSharedInitOptions } from "./ALType";
-import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
+import { IALFlowlet, ALFlowletManagerInstance } from "./ALFlowletManager";
 
 
 enum UIEventGroup {
@@ -61,10 +58,6 @@ updateInfo(
   ]
 );
 
-export type InitOptions = Types.Options<
-  Pick<ALSharedInitOptions<never>, 'flowletManager'>
->;
-let _options: InitOptions | null = null;
 
 
 export function isSupported(eventType: string): boolean {
@@ -74,7 +67,7 @@ export function isSupported(eventType: string): boolean {
 export function getGroupRootFlowlet(event: Event): IALFlowlet | null | undefined {
   const targetElement = event.target;
   const eventInfo = EventInfo[event.type as keyof GlobalEventHandlersEventMap]; // We do know event.type is a valid name
-  if (targetElement instanceof Element && eventInfo && _options) {
+  if (targetElement instanceof Element && eventInfo) {
     let groupRootFlowlet = GroupFlowlets.get(targetElement);
     if (
       groupRootFlowlet
@@ -92,7 +85,7 @@ export function getGroupRootFlowlet(event: Event): IALFlowlet | null | undefined
      * we use a common parent for all ui events to avoid tracking each ui event's
      * flowlet individually.
      */
-    const groupFlowlet = new _options.flowletManager.flowletCtor(type, _options.flowletManager.root);
+  const groupFlowlet = new ALFlowletManagerInstance.flowletCtor(type, ALFlowletManagerInstance.root);
     groupRootFlowlet = {
       groupFlowlet,
       type,
@@ -107,13 +100,5 @@ export function getGroupRootFlowlet(event: Event): IALFlowlet | null | undefined
     GroupFlowlets.set(targetElement, groupRootFlowlet);
     return groupFlowlet;
   }
-  return _options?.flowletManager.root;
-}
-
-let initialized = new TestAndSet();
-export function init(options: InitOptions) {
-  if (initialized.testAndSet()) {
-    return;
-  }
-  _options = options;
+  return ALFlowletManagerInstance.root;
 }

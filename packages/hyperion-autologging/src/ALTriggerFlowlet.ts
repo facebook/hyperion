@@ -6,23 +6,23 @@
 import type * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 
-import { assert } from "hyperion-globals";
 import { Channel } from "hyperion-channel/src/Channel";
 import { getFunctionInterceptor, interceptFunction } from "hyperion-core/src/FunctionInterceptor";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
 import * as IEventTarget from "hyperion-dom/src/IEventTarget";
+import * as Flowlet from "hyperion-flowlet/src/Flowlet";
 import { TriggerFlowlet, getTriggerFlowlet, setTriggerFlowlet } from "hyperion-flowlet/src/TriggerFlowlet";
+import { assert } from "hyperion-globals";
 import * as IReact from "hyperion-react/src/IReact";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
-import { ALFlowletManager, IALFlowlet } from "./ALFlowletManager";
+import { ALFlowletManagerInstance, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";
-import { ALChannelSurfaceEvent } from "./ALSurfaceTypes";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
+import { ALChannelSurfaceEvent } from "./ALSurfaceTypes";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
-import * as  Flowlet from "hyperion-flowlet/src/Flowlet";
 
 export type InitOptions<> = Types.Options<
   {
@@ -34,7 +34,6 @@ export type InitOptions<> = Types.Options<
       }
       IReactModule: IReact.IReactModuleExports;
     };
-    flowletManager: ALFlowletManager;
     channel: Channel<ALChannelSurfaceEvent & ALChannelUIEvent>;
     enableFlowletConstructorTracking?: boolean;
     enablePerSurfaceTracking?: boolean;
@@ -55,7 +54,8 @@ export function init(options: InitOptions) {
     return;
   }
 
-  const { channel, flowletManager } = options;
+  const { channel } = options;
+  const flowletManager = ALFlowletManagerInstance;
 
   let currTriggerFlowlet = new flowletManager.flowletCtor('pageload', flowletManager.root);
   currTriggerFlowlet.data.triggerFlowlet = currTriggerFlowlet;

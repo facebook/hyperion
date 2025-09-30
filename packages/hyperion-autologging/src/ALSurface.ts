@@ -9,7 +9,7 @@ import * as IReact from "hyperion-react/src/IReact";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
-import { ALFlowletDataType, IALFlowlet } from "./ALFlowletManager";
+import { ALFlowletDataType, ALFlowletManagerInstance, IALFlowlet } from "./ALFlowletManager";
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import { ALSurfaceData } from "./ALSurfaceData";
@@ -53,7 +53,7 @@ export type InitOptions = Types.Options<
 >;
 
 export function init(options: InitOptions): ALSurfaceRenderers {
-  const { flowletManager, channel, enableRenderEvents } = options;
+  const { channel, enableRenderEvents } = options;
   const { ReactModule } = options.react;
 
   const SurfaceContext = ALSurfaceContext.init(options);
@@ -202,7 +202,7 @@ export function init(options: InitOptions): ALSurfaceRenderers {
        * ancestor so that we can assign triggerFlowlet to it and have them all
        * pick it up. This is specially useful to link event to unmount
        */
-      callFlowlet = new flowletManager.flowletCtor(surface, surfaceCtx.callFlowlet ?? flowletManager.root);
+      callFlowlet = new ALFlowletManagerInstance.flowletCtor(surface, surfaceCtx.callFlowlet ?? ALFlowletManagerInstance.root);
       callFlowlet.data.surface = nonInteractiveSurfacePath;
       surfaceData = new ALSurfaceData(
         surface,

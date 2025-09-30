@@ -12,6 +12,7 @@ import * as Types from "hyperion-util/src/Types";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import * as ALEventIndex from "./ALEventIndex";
 import { ALLoggableEvent, ALOptionalFlowletEvent, ALSharedInitOptions } from "./ALType";
+import { ALFlowletManagerInstance } from "./ALFlowletManager";
 
 type ALNetworkEvent = ALLoggableEvent & ALOptionalFlowletEvent & Readonly<{
   initiatorType: "fetch" | "xmlhttprequest"; // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/initiatorType
@@ -115,7 +116,8 @@ export function getFetchRequestInfo(...args: Parameters<Window['fetch']>): Reque
 }
 
 function captureFetch(options: InitOptions): void {
-  const { channel, flowletManager, requestUrlMarker } = options;
+  const { channel, requestUrlMarker } = options;
+  const flowletManager = ALFlowletManagerInstance;
 
   if (requestUrlMarker) {
     /**
@@ -223,7 +225,8 @@ function captureFetch(options: InitOptions): void {
 }
 
 function captureXHR(options: InitOptions): void {
-  const { channel, flowletManager, requestUrlMarker } = options;
+  const { channel, requestUrlMarker } = options;
+  const flowletManager = ALFlowletManagerInstance;
 
   if (requestUrlMarker) {
     /**

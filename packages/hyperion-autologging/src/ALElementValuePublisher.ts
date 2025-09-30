@@ -19,6 +19,7 @@ import { AUTO_LOGGING_SURFACE } from "./ALSurfaceConsts";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
 import { getAncestralSurfaceNode, getSurfacePath } from "./ALSurfaceUtils";
 import { ALElementEvent, ALSharedInitOptions } from "./ALType";
+import { ALFlowletManagerInstance } from "./ALFlowletManager";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
 import { getCurrMainPageUrl } from "./MainPageUrl";
 import { ALSurfaceData } from "./ALSurfaceData";
@@ -31,6 +32,7 @@ export type InitOptions = Types.Options<
 
 export function publish(options: InitOptions): void {
   const { channel } = options;
+  const flowletManager = ALFlowletManagerInstance;
 
   const changeEvent = options.uiEvents.find(config => config.eventName === 'change');
 
@@ -67,7 +69,7 @@ export function publish(options: InitOptions): void {
     }
 
     const elementText = enableElementTextExtraction ? getElementTextEvent(element, surface, tryInteractiveParentTextEventName, true) : getElementTextEvent(null, null);
-    const callFlowlet = options.flowletManager.top();
+  const callFlowlet = flowletManager.top();
 
     channel.emit('al_ui_event', {
       event: 'change',
