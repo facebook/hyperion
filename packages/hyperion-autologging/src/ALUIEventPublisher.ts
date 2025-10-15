@@ -22,7 +22,7 @@ import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import * as Flags from "hyperion-globals/src/Flags";
 import { getCurrMainPageUrl } from "./MainPageUrl";
 import { ALSurfaceData } from "./ALSurfaceData";
-import { ALSurfaceEvent } from "./ALSurfaceTypes";
+import { ALSurfaceEvent } from "./ALSurfaceEventData";
 
 
 /**

@@ -13,9 +13,10 @@ import { ALFlowletDataType, ALFlowletManagerInstance, IALFlowlet } from "./ALFlo
 import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEPARATOR, SURFACE_WRAPPER_ATTRIBUTE_NAME } from './ALSurfaceConsts';
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import { ALSurfaceData } from "./ALSurfaceData";
+import { ALSurfaceEventData, ALSurfaceChannel, ALChannelSurfaceEvent } from "./ALSurfaceEventData";
 import * as SurfaceProxy from "./ALSurfaceProxy";
+import { ALSurfaceCapability, ALSurfaceRenderers, SurfaceComponent } from "./ALSurfaceTypes";
 import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
-import { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData, ALSurfaceRenderers, SurfaceComponent } from "./ALSurfaceTypes";
 
 
 function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): string {
@@ -27,12 +28,11 @@ function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): str
 
 
 type FlowletType = IALFlowlet;
-type ALChannelEventType = ALChannelSurfaceEvent;
 
 
 
 export type InitOptions = Types.Options<
-  ALSharedInitOptions<ALChannelEventType> &
+  ALSharedInitOptions<ALChannelSurfaceEvent> &
   // IReactFlowlet.InitOptions<ALFlowletDataType, FlowletType, FlowletManagerType> &
   // ALIReactFlowlet.InitOptions &
   ALSurfaceContext.InitOptions &
@@ -53,8 +53,11 @@ export type InitOptions = Types.Options<
 >;
 
 export function init(options: InitOptions): ALSurfaceRenderers {
-  const { channel, enableRenderEvents } = options;
+  const { enableRenderEvents } = options;
   const { ReactModule } = options.react;
+  
+  ALSurfaceChannel.set(options.channel);
+  const channel = ALSurfaceChannel.get();
 
   const SurfaceContext = ALSurfaceContext.init(options);
 
