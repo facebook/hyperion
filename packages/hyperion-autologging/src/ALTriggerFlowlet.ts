@@ -20,7 +20,7 @@ import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import { ALFlowletManagerInstance, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";
 import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
-import { ALChannelSurfaceEvent } from "./ALSurfaceTypes";
+import { ALChannelSurfaceEvent } from "./ALSurfaceEventData";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
 

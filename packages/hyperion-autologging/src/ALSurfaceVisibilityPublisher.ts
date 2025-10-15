@@ -12,7 +12,7 @@ import type { ALElementEvent, ALExtensibleEvent, ALFlowletEvent, ALLoggableEvent
 
 import { assert } from "hyperion-globals";
 import * as ALEventIndex from './ALEventIndex';
-import { ALChannelSurfaceEvent, ALSurfaceEvent } from "./ALSurfaceTypes";
+import { ALChannelSurfaceEvent, ALSurfaceEvent } from "./ALSurfaceEventData";
 import { ALSurfaceData } from "./ALSurfaceData";
 import { getFlags } from "hyperion-globals/src/Flags";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
