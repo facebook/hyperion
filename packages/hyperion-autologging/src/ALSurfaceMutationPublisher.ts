@@ -4,19 +4,20 @@
 
 'use strict';
 
+import { assert, getFlags } from "hyperion-globals";
 import * as Types from "hyperion-util/src/Types";
 import performanceAbsoluteNow from 'hyperion-util/src/performanceAbsoluteNow';
 import * as ALCustomEvent from "./ALCustomEvent";
 import ALElementInfo from './ALElementInfo';
 import * as ALEventIndex from './ALEventIndex';
+import { ALFlowletManagerInstance } from "./ALFlowletManager";
 import * as ALID from './ALID';
 import { ALElementTextEvent, getElementTextEvent } from './ALInteractableDOMElement';
 import { ReactComponentData } from './ALReactUtils';
-import type { ALChannelSurfaceEvent, ALSurfaceCapability, ALSurfaceEventData, ALSurfaceEvent } from './ALSurfaceTypes';
+import type { ALChannelSurfaceEvent, ALSurfaceEvent, ALSurfaceEventData } from "./ALSurfaceEventData";
+import type { ALSurfaceCapability, } from './ALSurfaceTypes';
 import { ALElementEvent, ALFlowletEvent, ALLoggableEvent, ALMetadataEvent, ALPageEvent, ALReactElementEvent, ALSharedInitOptions } from "./ALType";
-import { ALFlowletManagerInstance } from "./ALFlowletManager";
 import { getCurrMainPageUrl } from "./MainPageUrl";
-import { assert, getFlags } from "hyperion-globals";
 
 export type ALSurfaceMutationEventData =
   ALLoggableEvent &
