@@ -12,7 +12,6 @@ export class SafeGetterSetter<T> {
   isSet(): boolean {
     return this._instance !== null;
   }
-
   get(): T {
     assert(this._instance !== null, `${this.name} instance read before set`, { logger: { error(msg) { console.error(msg); throw msg; } } });
     return this._instance;
