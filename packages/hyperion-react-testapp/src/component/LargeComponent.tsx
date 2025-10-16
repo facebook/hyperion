@@ -4,6 +4,7 @@
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
+import * as ALSurface from "hyperion-autologging/src/ALSurface";
 import { LocalStoragePersistentData } from "hyperion-util/src/PersistentData";
 import { getFlags } from "hyperion-globals";
 
@@ -14,7 +15,7 @@ let Surface: Comp = (props) => {
   const optimizeSurfaceRendering = getFlags().optimizeSurfaceRendering;
   const capability = { trackMutation: false };
   if (optimizeSurfaceRendering) {
-    const SurfaceComponent = AutoLogging.getSurfaceComponent();
+    const SurfaceComponent = ALSurface.Surface;
     Surface = ({ children, id, enableSurface = EnableSurface.getValue() }) => {
       if (!enableSurface) {
         return children;
@@ -29,12 +30,11 @@ let Surface: Comp = (props) => {
         return children;
       }
 
-      return AutoLogging.getSurfaceRenderer()(
-        {
-          surface: id,
-          capability: capability
-        },
-      )(children);
+      return <ALSurface.Surface
+
+        surface={id}
+        capability={capability}
+      >{children}</ALSurface.Surface>
     }
   }
   return <Surface  {...props}></Surface>
