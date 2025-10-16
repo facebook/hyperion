@@ -19,7 +19,7 @@ import TestAndSet from "hyperion-test-and-set/src/TestAndSet";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import { ALFlowletManagerInstance, IALFlowlet } from "./ALFlowletManager";
 import { isTrackedEvent } from "./ALInteractableDOMElement";
-import { ALSurfaceContext, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
+import { ALSurfaceContextInstance, ALSurfaceContextFilledValue, useALSurfaceContext } from "./ALSurfaceContext";
 import { ALChannelSurfaceEvent } from "./ALSurfaceEventData";
 import * as ALUIEventGroupPublisher from "./ALUIEventGroupPublisher";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
@@ -333,8 +333,8 @@ export function init(options: InitOptions) {
        * assigned to the component and then read the surface info from there
        */
       if (!component.contextType && !component.contextTypes) {
-        component.contextType = ALSurfaceContext; // Just to be consistent
-        (ictor.interceptor as any).contextType = ALSurfaceContext; // the real constructor used by the application
+        component.contextType = ALSurfaceContextInstance; // Just to be consistent
+        (ictor.interceptor as any).contextType = ALSurfaceContextInstance; // the real constructor used by the application
 
         ictor.onAfterCallObserverAdd((value: ComponentWithFlowlet & { context?: any }) => {
           value._callFlowlet = value.context?.callFlowlet;
