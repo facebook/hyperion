@@ -9,22 +9,16 @@ import * as IReactDOM from "hyperion-react/src/IReactDOM";
 import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 import { useALSurfaceContext } from './ALSurfaceContext';
-import { SurfaceComponent } from './ALSurfaceTypes';
+import { Surface } from "./ALSurface";
+import { ReactModule } from "hyperion-react/src/IReact";
 
 
 export type InitOptions = Types.Options<{
   react: {
-    ReactModule: { createElement: typeof React.createElement, Fragment: typeof React.Fragment };
+    // ReactModule: { createElement: typeof React.createElement, Fragment: typeof React.Fragment };
     IReactDOMModule: IReactDOM.IReactDOMModuleExports | Promise<IReactDOM.IReactDOMModuleExports>;
   };
 }>;
-
-type ProxyInitOptions =
-  InitOptions &
-  // Additional options that will be passed from within ALSurface
-  Readonly<{
-    surfaceComponent: SurfaceComponent;
-  }>;
 
 /**
  * We need to use a hook to get the surface value, but the rules of using
@@ -34,14 +28,13 @@ type ProxyInitOptions =
  * If we can find a way around this limitation, we can use a simpler logic
  * like the following:
  */
-function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions & { container: Element | DocumentFragment }>): React.ReactNode {
-  const { surfaceComponent, children, container } = props;
-  const { ReactModule, } = props.react;
+function SurfaceProxy(props: React.PropsWithChildren<{ container: Element | DocumentFragment }>): React.ReactNode {
+  const { children, container } = props;
   const surfaceContext = useALSurfaceContext();
   const { surface } = surfaceContext;
   if (surface != null) {
-    return ReactModule.createElement(
-      surfaceComponent,
+    return ReactModule.get().createElement(
+      Surface,
       {
         surface,
         proxiedContext: { mainContext: surfaceContext, container },
@@ -54,8 +47,8 @@ function SurfaceProxy(props: React.PropsWithChildren<ProxyInitOptions & { contai
   }
 }
 
-export function init(options: ProxyInitOptions): void {
-  const { IReactDOMModule, ReactModule } = options.react;
+export function init(options: InitOptions): void {
+  const { IReactDOMModule } = options.react;
 
   /**
    * In case an application loads ReactDOM dynamically and on demand,
@@ -86,7 +79,7 @@ export function init(options: ProxyInitOptions): void {
     const [node, container] = args;
 
     if (node != null) {
-      args[0] = ReactModule.createElement(SurfaceProxy, { ...options, container }, node);
+      args[0] = ReactModule.get().createElement(SurfaceProxy, { ...options, container }, node);
     }
     return args;
   });

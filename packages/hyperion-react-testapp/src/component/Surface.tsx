@@ -16,7 +16,7 @@ let SurfaceRenderer: ALSurfaceTypes.ALSurfaceHOC = (props, render) => {
   return children => render ? render(children) : <>{children}</>;
 }
 
-export const Surface = (props: ALSurfaceTypes.ALSurfaceProps) => {
+export const Surface = (props: React.PropsWithChildren<ALSurfaceTypes.ALSurfaceProps>) => {
   if (!props.capability?.trackVisibilityThreshold) {
     props = {
       ...props,
@@ -27,12 +27,12 @@ export const Surface = (props: ALSurfaceTypes.ALSurfaceProps) => {
       }
     }
   }
-  return AutoLogging.getSurfaceRenderer(SurfaceRenderer)(props, children => (
+  return children => <ALSurface.Surface {...props} >
     <div style={{ border: '1px solid red', marginLeft: '5px' }}>
       <div style={{ color: props.capability?.nonInteractive ? 'blue' : 'red' }}>{props.surface}</div>
       {children}
     </div>
-  ));
+  </ALSurface.Surface>;
 }
 
 export function SurfaceComp(props: React.PropsWithChildren<ALSurfaceTypes.ALSurfaceProps>) {
@@ -50,5 +50,5 @@ export function SimpleSurface(props: React.PropsWithChildren<ALSurfaceTypes.ALSu
       }
     }
   }
-  return AutoLogging.getSurfaceRenderer(SurfaceRenderer)(props)(props.children);
+  return <ALSurface.Surface {...props}>{props.children}</ALSurface.Surface>;
 }
