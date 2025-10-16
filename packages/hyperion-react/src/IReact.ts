@@ -7,6 +7,8 @@ import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys, va
 import type React from "react";
 
 import { Class } from './FlowToTsTypes';
+import { assert } from 'hyperion-globals';
+import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
 
 export type ReactComponentObjectProps = {
   [keys: string]: any,
@@ -90,22 +92,45 @@ type ReactModuleExports = {
 
   useEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useEffect>) => ReturnType<typeof React.useEffect>;
 
-  useLayoutEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useEffect>) => ReturnType<typeof React.useEffect>;
+  // useLayoutEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useLayoutEffect>[1]) => ReturnType<typeof React.useEffect>;
+  useLayoutEffect: typeof React.useLayoutEffect;
 
   useMemo: typeof React.useMemo;
 
   useReducer: typeof React.useReducer;
 
   useState: typeof React.useState;
+
+  createContext: typeof React.createContext;
+
+  useContext: typeof React.useContext;
+
+  useRef: typeof React.useRef;
 }
 
 export type IJsxRuntimeModuleExports = InterceptedModuleExports<JsxRuntimeModuleExports>;
 export type IReactModuleExports = InterceptedModuleExports<ReactModuleExports>;
+export const JsxRuntimeModule = new SafeGetterSetter<JsxRuntimeModuleExports>("JsxRuntimeModule");
 let IJsxRuntimeModule: IJsxRuntimeModuleExports | null = null;
+export const ReactModule = new SafeGetterSetter<ReactModuleExports>("ReactModule");
 let IReactModule: IReactModuleExports | null = null;
+
+function ensureInitialized<T>(module: T | null, moduleName: string): T {
+  assert(module !== null, `${moduleName} is not initialized yet. Make sure to call intercept before calling getIReact.`, { logger: { error: msg => { console.error(msg); throw new Error(msg); } } });
+  return module;
+}
+
+export function getIReactModule(): IReactModuleExports {
+  return ensureInitialized(IReactModule, 'IReactModule');
+}
+
+export function getIJsxRuntimeModule(): IJsxRuntimeModuleExports {
+  return ensureInitialized(IJsxRuntimeModule, 'IJsxRuntimeModule');
+}
 
 export function interceptRuntime(moduleId: string, moduleExports: JsxRuntimeModuleExports, failedExportsKeys?: ModuleExportsKeys<typeof moduleExports>): IJsxRuntimeModuleExports {
   if (!IJsxRuntimeModule) {
+    JsxRuntimeModule.set(moduleExports);
     IJsxRuntimeModule = interceptModuleExports(moduleId, moduleExports, ['jsx', 'jsxs', 'jsxDEV']);
 
     /**
@@ -134,6 +159,7 @@ export function interceptRuntime(moduleId: string, moduleExports: JsxRuntimeModu
 
 export function intercept(moduleId: string, moduleExports: ReactModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactModuleExports>): IReactModuleExports {
   if (!IReactModule) {
+    ReactModule.set(moduleExports);
     IReactModule = interceptModuleExports(
       moduleId,
       moduleExports,

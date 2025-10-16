@@ -5,7 +5,7 @@
 import React from "react";
 import FuncComponent from "./FuncComponent";
 import { Props, Surface } from "./Surface";
-import { ALSurfaceContext } from "hyperion-autologging/src/ALSurfaceContext";
+import { ALSurfaceContextInstance } from "hyperion-autologging/src/ALSurfaceContext";
 import { FlowletManager } from "../FlowletManager";
 
 class ClassCompWithSurface extends React.Component<{}>{
@@ -18,8 +18,9 @@ class ClassCompWithSurface extends React.Component<{}>{
     }
   }
   render(): React.ReactNode {
-    if (ALSurfaceContext) {
+    if (ALSurfaceContextInstance.isSet()) {
       const outerFlowlet = FlowletManager.top();
+      const ALSurfaceContext = ALSurfaceContextInstance.get();
       return <ALSurfaceContext.Consumer>
         {value => {
           const surface = value.surface;
