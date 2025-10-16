@@ -3,6 +3,7 @@
  */
 
 import * as ALSurface from "hyperion-autologging/src/ALSurface";
+import * as ALSurfaceTypes from "hyperion-autologging/src/ALSurfaceTypes";
 import * as AutoLogging from "hyperion-autologging/src/AutoLogging";
 import * as React from "react";
 
@@ -11,11 +12,11 @@ export type Props = {
   children?: React.ReactNode,
 };
 
-let SurfaceRenderer: ALSurface.ALSurfaceHOC = (props, render) => {
+let SurfaceRenderer: ALSurfaceTypes.ALSurfaceHOC = (props, render) => {
   return children => render ? render(children) : <>{children}</>;
 }
 
-export const Surface = (props: ALSurface.ALSurfaceProps) => {
+export const Surface = (props: React.PropsWithChildren<ALSurfaceTypes.ALSurfaceProps>) => {
   if (!props.capability?.trackVisibilityThreshold) {
     props = {
       ...props,
@@ -26,19 +27,19 @@ export const Surface = (props: ALSurface.ALSurfaceProps) => {
       }
     }
   }
-  return AutoLogging.getSurfaceRenderer(SurfaceRenderer)(props, children => (
+  return children => <ALSurface.Surface {...props} >
     <div style={{ border: '1px solid red', marginLeft: '5px' }}>
       <div style={{ color: props.capability?.nonInteractive ? 'blue' : 'red' }}>{props.surface}</div>
       {children}
     </div>
-  ));
+  </ALSurface.Surface>;
 }
 
-export function SurfaceComp(props: React.PropsWithChildren<ALSurface.ALSurfaceProps>) {
+export function SurfaceComp(props: React.PropsWithChildren<ALSurfaceTypes.ALSurfaceProps>) {
   return Surface(props)(props.children);
 }
 
-export function SimpleSurface(props: React.PropsWithChildren<ALSurface.ALSurfaceProps>) {
+export function SimpleSurface(props: React.PropsWithChildren<ALSurfaceTypes.ALSurfaceProps>) {
   if (!props.capability?.trackVisibilityThreshold) {
     props = {
       ...props,
@@ -49,5 +50,5 @@ export function SimpleSurface(props: React.PropsWithChildren<ALSurface.ALSurface
       }
     }
   }
-  return AutoLogging.getSurfaceRenderer(SurfaceRenderer)(props)(props.children);
+  return <ALSurface.Surface {...props}>{props.children}</ALSurface.Surface>;
 }

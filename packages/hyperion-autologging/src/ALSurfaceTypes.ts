@@ -4,9 +4,8 @@
 
 'use strict';
 
-import { ALSurfaceData } from "./ALSurfaceData";
-import { ALFlowletEvent, ALMetadataEvent, Metadata } from "./ALType";
 import * as ALSurfaceContext from "./ALSurfaceContext";
+import { ALMetadataEvent, Metadata } from "./ALType";
 
 export type ALSurfaceProps = Readonly<{
   surface: string;
@@ -40,11 +39,6 @@ export type ALSurfaceRenderers = {
 };
 
 
-export type ALChannelSurfaceEvent = Readonly<{
-  al_surface_render: [Omit<ALSurfaceEventData, "element">];
-  al_surface_mount: [ALSurfaceEventData];
-  al_surface_unmount: [ALSurfaceEventData];
-}>;
 
 export interface ALSurfaceCapability {
   /**
@@ -70,22 +64,6 @@ export interface ALSurfaceCapability {
    */
   wrapperStyle?: React.CSSProperties;
 }
-
-export type ALSurfaceEvent = Readonly<{
-  surface: string;
-  surfaceData: ALSurfaceData;
-}>;
-
-
-export type ALSurfaceEventData =
-  ALMetadataEvent &
-  ALFlowletEvent &
-  ALSurfaceEvent &
-  Readonly<{
-    element: Element;
-    isProxy: boolean;
-    capability: ALSurfaceCapability | null | undefined;
-  }>;
 
 export type WritableEventMetadata = {
   [eventName in keyof DocumentEventMap]?: Metadata
