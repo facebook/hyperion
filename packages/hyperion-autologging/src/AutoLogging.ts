@@ -6,9 +6,9 @@
 
 import { Channel, ChannelEventType } from "hyperion-channel/src/Channel";
 import { initFlowletTrackers } from "hyperion-flowlet/src/FlowletWrappers";
-import { assert } from "hyperion-globals";
 import global from "hyperion-globals/src/global";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
+import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
 import * as Types from "hyperion-util/src/Types";
 import * as ALCustomEvent from "./ALCustomEvent";
 import * as ALDOMSnapshotPublisher from "./ALDOMSnaptshotPublisher";
@@ -23,7 +23,7 @@ import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtil
 import * as ALSessionFlowID from "./ALSessionFlowID";
 import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
-import * as ALSurfaceTypes from "./ALSurfaceTypes";
+import * as ALSurfaceProxy from "./ALSurfaceProxy";
 import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
 import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
 import { ALSharedInitOptions } from "./ALType";
@@ -70,13 +70,7 @@ export type InitOptions = Types.Options<
   }
 >;
 
-export type InitResults = Readonly<{
-  initOptions: InitOptions;
-  surfaceRenderer: ALSurfaceTypes.ALSurfaceHOC;
-  surfaceComponent?: ALSurfaceTypes.SurfaceComponent;
-}>;
-
-let cachedResults: InitResults | null = null;
+const _options = new SafeGetterSetter<InitOptions>('AutoLogging options');
 
 /**
  *
@@ -84,9 +78,10 @@ let cachedResults: InitResults | null = null;
  * @returns true if initilized (the first time) or false if it is already initialized.
  */
 export function init(options: InitOptions): boolean {
-  if (cachedResults !== null) {
+  if (_options.isSet()) {
     return false;
   }
+  _options.set(options);
 
   /**
    * To support plugins, we have an internal channel that
@@ -224,70 +219,21 @@ export function init(options: InitOptions): boolean {
     })
   }
 
-  const surfaceRenderers = ALSurface.init({
+  ALSurface.init({
     react: options.react,
     ...sharedOptions,
     ...options.surface
   });
-  cachedResults = {
-    initOptions: options,
-    surfaceRenderer: surfaceRenderers.surfaceHOComponent,
-    surfaceComponent: surfaceRenderers.surfaceComponent,
-  };
+  ALSurfaceProxy.init({ react: options.react });
 
   return true;
 }
 
-export function getSurfaceRenderer(defaultALSurfaceHOC?: ALSurfaceTypes.ALSurfaceHOC): ALSurfaceTypes.ALSurfaceHOC {
-  const renderer = cachedResults?.surfaceRenderer ?? defaultALSurfaceHOC;
-  assert(
-    renderer != null,
-    "AutoLogging must have been initilized first. Did you forget to call .init() functions?",
-    {
-      logger: {
-        error: msg => {
-          console.error(msg);
-          throw msg;
-        }
-      }
-    }
-  );
-  return renderer;
-}
-export function getSurfaceComponent(defaultALSurfaceComponet?: ALSurfaceTypes.SurfaceComponent): ALSurfaceTypes.SurfaceComponent {
-  const component = cachedResults?.surfaceComponent ?? defaultALSurfaceComponet;
-  assert(
-    component != null,
-    "AutoLogging must have been initilized first. Did you forget to call .init() functions?",
-    {
-      logger: {
-        error: msg => {
-          console.error(msg);
-          throw msg;
-        }
-      }
-    }
-  );
-  return component;
-}
 
 /**
  * Gets the init options passed when initializing AutoLogging.
  * Can be useful to get configured channels, registered events, and other information after framework initialization.
  */
 export function getInitOptions(): InitOptions {
-  const options = cachedResults?.initOptions;
-  assert(
-    options != null,
-    "AutoLogging must have been initilized first. Did you forget to call .init() functions?",
-    {
-      logger: {
-        error: msg => {
-          console.error(msg);
-          throw msg;
-        }
-      }
-    }
-  );
-  return options;
+  return _options.get();
 }

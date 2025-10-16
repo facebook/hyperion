@@ -14,12 +14,12 @@ export class SafeGetterSetter<T> {
     return this._instance !== null;
   }
   get(): T {
-    assert(this._instance !== null, 'Channel instance read before set', { logger: { error(msg) { console.error(msg); throw msg; } } });
+    assert(this._instance !== null, `${this.name} instance read before set`, { logger: { error(msg) { console.error(msg); throw msg; } } });
     return this._instance;
   }
 
   set(instance: T): void {
-    assert(!this.isSet(), 'Channel instance can only be set once');
+    assert(!this.isSet(), `${this.name} instance can only be set once.`);
     this._instance = instance;
   }
 }

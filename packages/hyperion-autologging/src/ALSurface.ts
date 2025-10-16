@@ -14,7 +14,7 @@ import * as ALSurfaceContext from "./ALSurfaceContext";
 import { ALSurfaceData } from "./ALSurfaceData";
 import { ALSurfaceEventData, ALSurfaceChannel, ALChannelSurfaceEvent } from "./ALSurfaceEventData";
 import * as SurfaceProxy from "./ALSurfaceProxy";
-import { ALSurfaceCapability, ALSurfaceRenderers, SurfaceComponent } from "./ALSurfaceTypes";
+import { ALSurfaceCapability, SurfaceComponent } from "./ALSurfaceTypes";
 import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
 
@@ -277,28 +277,10 @@ export const Surface: SurfaceComponent = props => {
   );
 }
 
-export function init(options: InitOptions): ALSurfaceRenderers {
+export function init(options: InitOptions): void {
   _options.set(options);
 
   ALSurfaceChannel.set(options.channel);
 
   ALSurfaceContext.init(options);
-
-
-  SurfaceProxy.init({ ...options, surfaceComponent: Surface });
-
-  return {
-    surfaceComponent: Surface,
-    surfaceHOComponent: (props, renderer) => {
-      return children => {
-        const result = IReact.ReactModule.get().createElement(
-          Surface,
-          props,
-          renderer ? renderer(children) : children
-        );
-
-        return result;
-      };
-    }
-  };
-}
+  }
