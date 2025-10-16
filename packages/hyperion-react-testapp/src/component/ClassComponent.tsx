@@ -24,7 +24,7 @@ class ClassCompWithSurface extends React.Component<{}>{
       return <ALSurfaceContext.Consumer>
         {value => {
           const surface = value.surface;
-          const surfaceFlowlet = value.flowlet;
+          const surfaceFlowlet = value.callFlowlet;
           const flowlet = FlowletManager.top();
           const newFlowlet = FlowletManager.push(new FlowletManager.flowletCtor("In Render", surfaceFlowlet));
           const result = <table border={1} ><tbody>
