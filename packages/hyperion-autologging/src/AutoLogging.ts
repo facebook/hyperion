@@ -52,7 +52,7 @@ type PluginInit = (channel: Channel<ALChannelEvent>) => void;
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelEvent> &
   {
-    react: (ALSurface.InitOptions & ALTriggerFlowlet.InitOptions)['react'];
+    react: (ALSurfaceProxy.InitOptions & ALTriggerFlowlet.InitOptions)['react'];
     enableReactComponentVisitors?: boolean;
     componentNameValidator?: ComponentNameValidator;
     flowletPublisher?: PublicInitOptions<ALFlowletPublisher.InitOptions> | null;
@@ -220,7 +220,6 @@ export function init(options: InitOptions): boolean {
   }
 
   ALSurface.init({
-    react: options.react,
     ...sharedOptions,
     ...options.surface
   });

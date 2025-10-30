@@ -13,7 +13,6 @@ import { AUTO_LOGGING_NON_INTERACTIVE_SURFACE, AUTO_LOGGING_SURFACE, SURFACE_SEP
 import * as ALSurfaceContext from "./ALSurfaceContext";
 import { ALSurfaceData } from "./ALSurfaceData";
 import { ALSurfaceEventData, ALSurfaceChannel, ALChannelSurfaceEvent } from "./ALSurfaceEventData";
-import * as SurfaceProxy from "./ALSurfaceProxy";
 import { ALSurfaceCapability, SurfaceComponent } from "./ALSurfaceTypes";
 import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
@@ -34,7 +33,6 @@ type FlowletType = IALFlowlet;
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelSurfaceEvent> &
   ALSurfaceContext.InitOptions &
-  SurfaceProxy.InitOptions &
   {
     domCallFlowletAttributeName?: string;
     enableRenderEvents?: boolean;
