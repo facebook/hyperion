@@ -42,7 +42,7 @@ export type InitOptions = Types.Options<
 const _options = new SafeGetterSetter<InitOptions>();
 
 export function SurfaceWithEvent(props: React.PropsWithChildren<{
-  nodeRef: React.RefObject<HTMLElement | null | undefined> | React.MutableRefObject<Element | undefined>;
+  nodeRef: React.RefObject<Element | null | undefined> | React.MutableRefObject<Element | undefined>;
   domAttributeName: string;
   domAttributeValue: string;
   surfaceData: ALSurfaceData;
@@ -125,102 +125,27 @@ export function SurfaceWithEvent(props: React.PropsWithChildren<{
   return props.children
 }
 
-export const Surface: SurfaceComponent = props => {
-  const { surface, proxiedContext } = props;
+export function SurfaceImpl(props: React.PropsWithChildren<{
+  wrapperElementType: string;
+  capability: ALSurfaceCapability | null | undefined;
+  domAttributeName: string;
+  domAttributeValue: string;
+  surfaceData: ALSurfaceData;
+  callFlowlet: FlowletType;
+  metadata: ALMetadataEvent['metadata'];
+  isProxy: boolean;
+  nodeRef?: React.RefObject<Element | null | undefined> | null;
+}>): React.ReactNode {
+  const { capability, domAttributeName, domAttributeValue, surfaceData } = props;
+  let { children } = props;
   const ReactModule = IReact.ReactModule.get();
-
-  let surfacePath: string;
-  let nonInteractiveSurfacePath: string;
-  let domAttributeName: string;
-  let domAttributeValue: string;
-
-  const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
-  const { surface: parentSurface, nonInteractiveSurface: parentNonInteractiveSurface } = surfaceCtx;
-
   let addSurfaceWrapper = props.nodeRef == null;
   let localRef = IReact.ReactModule.get().useRef<Element>();
 
-  // empty .capability field is default, means all enabled!
-  const capability = props.capability ?? proxiedContext?.mainContext.capability;
-  let surfaceData: ALSurfaceData | null;
-
-  if (!proxiedContext) {
-    nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
-    if (capability?.nonInteractive) {
-      surfacePath = parentSurface ?? SURFACE_SEPARATOR;
-      domAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE;
-      domAttributeValue = nonInteractiveSurfacePath;
-    } else {
-      surfacePath = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
-      domAttributeName = AUTO_LOGGING_SURFACE;
-      domAttributeValue = surfacePath;
-    }
-    // Let's see if the parent node (context) already has this surface
-    surfaceData = surfaceCtx.getChild(surface);
-  } else {
-    surfacePath = proxiedContext.mainContext.surface;
-    nonInteractiveSurfacePath = proxiedContext.mainContext.nonInteractiveSurface;
-    domAttributeName = AUTO_LOGGING_SURFACE
-    domAttributeValue = surfacePath;
-    if (proxiedContext.container instanceof Element) {
-      const container = proxiedContext.container;
-      if (container.childElementCount === 0 || container.getAttribute(domAttributeName) === domAttributeValue) {
-        addSurfaceWrapper = false;
-        container.setAttribute(domAttributeName, domAttributeValue);
-        localRef.current = container;
-      }
-    }
-    surfaceData = proxiedContext.mainContext;
-  }
-
-  // Emit surface mutation events on mount/unmount
-  const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
-  const eventMetadata = props.uiEventMetadata;
-
-  let callFlowlet: FlowletType;
-  if (!surfaceData) {
-    assert(!proxiedContext, "Proxied surface should always have surface data already");
-
-    /**
-     * In case surfaces are unmounted, we want them all to have one common
-     * ancestor so that we can assign triggerFlowlet to it and have them all
-     * pick it up. This is specially useful to link event to unmount
-     */
-    callFlowlet = new ALFlowletManagerInstance.flowletCtor(surface, surfaceCtx.callFlowlet ?? ALFlowletManagerInstance.root);
-    callFlowlet.data.surface = nonInteractiveSurfacePath;
-    surfaceData = new ALSurfaceData(
-      surface,
-      surfacePath,
-      surfaceCtx,
-      nonInteractiveSurfacePath,
-      callFlowlet,
-      capability,
-      metadata,
-      eventMetadata,
-      domAttributeName,
-      domAttributeValue,
-    );
-  } else {
-    callFlowlet = surfaceData.callFlowlet;
-  }
-
-  const isProxy = proxiedContext != null;
-
-  metadata.original_call_flowlet = callFlowlet.getFullName();
-  metadata.surface_capability = surfaceCapabilityToString(capability);
-  // Update the metadata on every render to ensure it stays current
-  surfaceData.metadata = metadata;
-  surfaceData.setUIEventMetadata(eventMetadata);
-
-  // callFlowlet.data.surface = surfacePath;
-  let children = props.renderer ? props.renderer(props.children) : props.children;
-
-  const wrapperElementType = proxiedContext?.container instanceof SVGElement ? "g" : "span";
-
   if (addSurfaceWrapper) {
-    const style = props?.capability?.wrapperStyle ?? { display: "contents" };
+    const style = capability?.wrapperStyle ?? { display: "contents" };
     children = ReactModule.createElement(
-      wrapperElementType,
+      props.wrapperElementType,
       {
         [SURFACE_WRAPPER_ATTRIBUTE_NAME]: "1",
         [domAttributeName]: domAttributeValue,
@@ -236,6 +161,7 @@ export const Surface: SurfaceComponent = props => {
     capability.trackMutation !== false || // need mutation event
     capability.trackVisibilityThreshold // needs visibility event
   ) {
+    const { callFlowlet, metadata, isProxy } = props;
     /**
      * We don't know when react decides to call effect callback, so to be safe make a copy
      * of what we care about incase by the time callback is called the values have changed.
@@ -275,10 +201,95 @@ export const Surface: SurfaceComponent = props => {
   );
 }
 
+export const Surface: SurfaceComponent = props => {
+  const { surface } = props;
+  const ReactModule = IReact.ReactModule.get();
+
+  let surfacePath: string;
+  let nonInteractiveSurfacePath: string;
+  let domAttributeName: string;
+  let domAttributeValue: string;
+
+  const surfaceCtx = ALSurfaceContext.useALSurfaceContext();
+  const { surface: parentSurface, nonInteractiveSurface: parentNonInteractiveSurface } = surfaceCtx;
+
+  // empty .capability field is default, means all enabled!
+  const capability = props.capability;
+  let surfaceData: ALSurfaceData | null;
+
+  nonInteractiveSurfacePath = (parentNonInteractiveSurface ?? '') + SURFACE_SEPARATOR + surface;
+  if (capability?.nonInteractive) {
+    surfacePath = parentSurface ?? SURFACE_SEPARATOR;
+    domAttributeName = AUTO_LOGGING_NON_INTERACTIVE_SURFACE;
+    domAttributeValue = nonInteractiveSurfacePath;
+  } else {
+    surfacePath = (parentSurface ?? '') + SURFACE_SEPARATOR + surface;
+    domAttributeName = AUTO_LOGGING_SURFACE;
+    domAttributeValue = surfacePath;
+  }
+  // Let's see if the parent node (context) already has this surface
+  surfaceData = surfaceCtx.getChild(surface);
+
+  // Emit surface mutation events on mount/unmount
+  const metadata = props.metadata ?? {}; // Note that we want the same object to be shared between events to share the changes.
+  const eventMetadata = props.uiEventMetadata;
+
+  let callFlowlet: FlowletType;
+  if (!surfaceData) {
+    /**
+     * In case surfaces are unmounted, we want them all to have one common
+     * ancestor so that we can assign triggerFlowlet to it and have them all
+     * pick it up. This is specially useful to link event to unmount
+     */
+    callFlowlet = new ALFlowletManagerInstance.flowletCtor(surface, surfaceCtx.callFlowlet ?? ALFlowletManagerInstance.root);
+    callFlowlet.data.surface = nonInteractiveSurfacePath;
+    surfaceData = new ALSurfaceData(
+      surface,
+      surfacePath,
+      surfaceCtx,
+      nonInteractiveSurfacePath,
+      callFlowlet,
+      capability,
+      metadata,
+      eventMetadata,
+      domAttributeName,
+      domAttributeValue,
+    );
+  } else {
+    callFlowlet = surfaceData.callFlowlet;
+  }
+
+
+  metadata.original_call_flowlet = callFlowlet.getFullName();
+  metadata.surface_capability = surfaceCapabilityToString(capability);
+  // Update the metadata on every render to ensure it stays current
+  surfaceData.metadata = metadata;
+  surfaceData.setUIEventMetadata(eventMetadata);
+
+  // callFlowlet.data.surface = surfacePath;
+  let children = props.renderer ? props.renderer(props.children) : props.children;
+
+  return ReactModule.createElement(
+    SurfaceImpl,
+    {
+      wrapperElementType: "span",
+      capability,
+      domAttributeName,
+      domAttributeValue,
+      surfaceData,
+      callFlowlet,
+      metadata,
+      isProxy: false,
+      nodeRef: props.nodeRef,
+    },
+    children
+  );
+}
+
 export function init(options: InitOptions): void {
   _options.set(options);
 
   ALSurfaceChannel.set(options.channel);
 
   ALSurfaceContext.init(options);
-  }
+}
