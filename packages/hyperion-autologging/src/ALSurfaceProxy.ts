@@ -9,7 +9,7 @@ import * as IReactDOM from "hyperion-react/src/IReactDOM";
 import * as Types from "hyperion-util/src/Types";
 import type * as React from 'react';
 import { useALSurfaceContext } from './ALSurfaceContext';
-import { Surface } from "./ALSurface";
+import { SurfaceImpl } from "./ALSurface";
 import { ReactModule } from "hyperion-react/src/IReact";
 
 
@@ -31,20 +31,37 @@ export type InitOptions = Types.Options<{
 function SurfaceProxy(props: React.PropsWithChildren<{ container: Element | DocumentFragment }>): React.ReactNode {
   const { children, container } = props;
   const surfaceContext = useALSurfaceContext();
-  const { surface } = surfaceContext;
-  if (surface != null) {
-    return ReactModule.get().createElement(
-      Surface,
-      {
-        surface,
-        proxiedContext: { mainContext: surfaceContext, container },
-      },
-      children
-    );
-  } else {
+  if (surfaceContext.surface == null) {
     // return ReactModule.createElement(ReactModule.Fragment, {}, children);
     return children;
   }
+
+  const { domAttributeName, domAttributeValue, capability, callFlowlet, metadata } = surfaceContext;
+
+  const nodeRef = ReactModule.get().useRef<Element>();
+
+  if (container instanceof Element &&
+    (container.childElementCount === 0 || container.getAttribute(domAttributeName) === domAttributeValue)
+  ) {
+    container.setAttribute(domAttributeName, domAttributeValue);
+    nodeRef.current = container; // will disable wrapper
+  }
+
+  return ReactModule.get().createElement(
+    SurfaceImpl,
+    {
+      wrapperElementType: container instanceof SVGElement ? "g" : "span",
+      capability,
+      domAttributeName,
+      domAttributeValue,
+      surfaceData: surfaceContext,
+      callFlowlet,
+      metadata,
+      isProxy: true,
+      nodeRef: nodeRef.current != null ? nodeRef : null,
+    },
+    children
+  );
 }
 
 export function init(options: InitOptions): void {

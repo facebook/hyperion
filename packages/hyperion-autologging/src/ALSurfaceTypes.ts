@@ -12,7 +12,7 @@ export type ALSurfaceProps = Readonly<{
   metadata?: ALMetadataEvent['metadata'];
   uiEventMetadata?: EventMetadata,
   capability?: ALSurfaceCapability,
-  nodeRef?: React.RefObject<HTMLElement | null | undefined>,
+  nodeRef?: React.RefObject<Element | null | undefined> | null,
 }>;
 
 export type SurfaceComponent = (props: React.PropsWithChildren<
