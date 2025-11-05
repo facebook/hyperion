@@ -5,17 +5,20 @@
 import type ReactDOM from "react-dom";
 
 import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys } from 'hyperion-core/src/IRequire';
+import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
 
 export type ReactDOMModuleExports = {
   createPortal: typeof ReactDOM.createPortal;
 }
 
 export type IReactDOMModuleExports = InterceptedModuleExports<ReactDOMModuleExports>;
-let IReactDOMModule: IReactDOMModuleExports | null = null;
+const ReactDOMModule = new SafeGetterSetter<ReactDOMModuleExports>("ReactDOMModule");
+const IReactDOMModule = new SafeGetterSetter<IReactDOMModuleExports>("IReactDOMModule");
 
 export function intercept(moduleId: string, moduleExports: ReactDOMModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactDOMModuleExports>): IReactDOMModuleExports {
-  if (!IReactDOMModule) {
-    IReactDOMModule = interceptModuleExports(moduleId, moduleExports, ['createPortal'], failedExportsKeys);
+  if (!IReactDOMModule.isSet()) {
+    ReactDOMModule.set(moduleExports);
+    IReactDOMModule.set(interceptModuleExports(moduleId, moduleExports, ['createPortal'], failedExportsKeys));
   }
-  return IReactDOMModule;
+  return IReactDOMModule.get();
 }
