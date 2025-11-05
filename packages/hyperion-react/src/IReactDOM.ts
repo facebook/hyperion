@@ -13,7 +13,7 @@ export type ReactDOMModuleExports = {
 
 export type IReactDOMModuleExports = InterceptedModuleExports<ReactDOMModuleExports>;
 const ReactDOMModule = new SafeGetterSetter<ReactDOMModuleExports>("ReactDOMModule");
-const IReactDOMModule = new SafeGetterSetter<IReactDOMModuleExports>("IReactDOMModule");
+export const IReactDOMModule = new SafeGetterSetter<IReactDOMModuleExports>("IReactDOMModule");
 
 export function intercept(moduleId: string, moduleExports: ReactDOMModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactDOMModuleExports>): IReactDOMModuleExports {
   if (!IReactDOMModule.isSet()) {
