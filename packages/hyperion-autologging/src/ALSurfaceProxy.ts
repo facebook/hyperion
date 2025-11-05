@@ -26,7 +26,10 @@ export type InitOptions = Types.Options<{
  * So, the following proxy component is purely for getting around this
  * limitation and reading the current surface value during rendering.
  * If we can find a way around this limitation, we can use a simpler logic
- * like the following:
+ * like the following.
+ * 
+ * For a SurfaceProxy we won't emit mutations since the original surface
+ * is already emitting them.
  */
 function SurfaceProxy(props: React.PropsWithChildren<{ container: Element | DocumentFragment }>): React.ReactNode {
   const { children, container } = props;

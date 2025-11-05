@@ -4,7 +4,6 @@
 
 'use strict';
 
-import * as ALSurfaceContext from "./ALSurfaceContext";
 import { ALMetadataEvent, Metadata } from "./ALType";
 
 export type ALSurfaceProps = Readonly<{
@@ -20,24 +19,11 @@ export type SurfaceComponent = (props: React.PropsWithChildren<
   {
     renderer?: ALSurfaceRenderer;
     // callFlowlet: FlowletType;
-    /** The optional incoming surface that we are re-wrapping via a proxy.
-     * If this is provided,  then we won't emit mutations for this surface as we are
-     * doubly wrapping that surface, for surface attribution purposes.
-     */
-    proxiedContext?: {
-      mainContext: ALSurfaceContext.ALSurfaceContextFilledValue,
-      container?: Element | DocumentFragment
-    }
   }
 >) => React.ReactElement;
 
 export type ALSurfaceRenderer = (node: React.ReactNode) => React.ReactElement;
 export type ALSurfaceHOC = (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
-export type ALSurfaceRenderers = {
-  surfaceComponent: SurfaceComponent;
-  surfaceHOComponent: (props: ALSurfaceProps, renderer?: ALSurfaceRenderer) => ALSurfaceRenderer;
-};
-
 
 
 export interface ALSurfaceCapability {
