@@ -71,6 +71,7 @@ export default defineConfig({
       "hyperionUtil": [
         "hyperion-util/src/ClientSessionID",
         "hyperion-util/src/PersistentData",
+        "hyperion-util/src/SafeGetterSetter",
         "hyperion-util/src/index",
       ],
       "hyperionFlowletCore": [

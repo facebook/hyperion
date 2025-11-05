@@ -7,6 +7,7 @@ import { InterceptedModuleExports, interceptModuleExports, ModuleExportsKeys, va
 import type React from "react";
 
 import { Class } from './FlowToTsTypes';
+import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
 
 export type ReactComponentObjectProps = {
   [keys: string]: any,
@@ -88,25 +89,37 @@ type ReactModuleExports = {
 
   useCallback: typeof React.useCallback;
 
-  useEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useEffect>) => ReturnType<typeof React.useEffect>;
+  // useEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useEffect>) => ReturnType<typeof React.useEffect>;
+  useEffect: typeof React.useEffect;
 
-  useLayoutEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useEffect>) => ReturnType<typeof React.useEffect>;
+  // useLayoutEffect: (effect: () => (void | (() => void)), deps?: Parameters<typeof React.useLayoutEffect>[1]) => ReturnType<typeof React.useEffect>;
+  useLayoutEffect: typeof React.useLayoutEffect;
 
   useMemo: typeof React.useMemo;
 
   useReducer: typeof React.useReducer;
 
   useState: typeof React.useState;
+
+  createContext: typeof React.createContext;
+
+  useContext: typeof React.useContext;
+
+  useRef: typeof React.useRef;
 }
 
 export type IJsxRuntimeModuleExports = InterceptedModuleExports<JsxRuntimeModuleExports>;
 export type IReactModuleExports = InterceptedModuleExports<ReactModuleExports>;
-let IJsxRuntimeModule: IJsxRuntimeModuleExports | null = null;
-let IReactModule: IReactModuleExports | null = null;
+export const JsxRuntimeModule = new SafeGetterSetter<JsxRuntimeModuleExports>("JsxRuntimeModule");
+export const IJsxRuntimeModule = new SafeGetterSetter<IJsxRuntimeModuleExports>("IJsxRuntimeModule");
+export const ReactModule = new SafeGetterSetter<ReactModuleExports>("ReactModule");
+export const IReactModule = new SafeGetterSetter<IReactModuleExports>("IReactModule");
 
 export function interceptRuntime(moduleId: string, moduleExports: JsxRuntimeModuleExports, failedExportsKeys?: ModuleExportsKeys<typeof moduleExports>): IJsxRuntimeModuleExports {
-  if (!IJsxRuntimeModule) {
-    IJsxRuntimeModule = interceptModuleExports(moduleId, moduleExports, ['jsx', 'jsxs', 'jsxDEV']);
+  if (!IJsxRuntimeModule.isSet()) {
+    JsxRuntimeModule.set(moduleExports);
+
+    const iJsxRuntimeModule = interceptModuleExports(moduleId, moduleExports, ['jsx', 'jsxs', 'jsxDEV']);
 
     /**
      * https://github.com/facebook/react/blob/cae635054e17a6f107a39d328649137b83f25972/packages/react/src/jsx/ReactJSX.js#L19
@@ -119,22 +132,24 @@ export function interceptRuntime(moduleId: string, moduleExports: JsxRuntimeModu
      * then we do the following patch up and then call the validation explicitly.
      */
     if (!__DEV__) {
-      if (moduleExports.jsxs !== IJsxRuntimeModule.jsxs.interceptor) {
-        moduleExports.jsxs = IJsxRuntimeModule.jsxs.interceptor;
+      if (moduleExports.jsxs !== iJsxRuntimeModule.jsxs.interceptor) {
+        moduleExports.jsxs = iJsxRuntimeModule.jsxs.interceptor;
       }
-      if (moduleExports.jsxDEV !== IJsxRuntimeModule.jsxDEV.interceptor) {
-        moduleExports.jsxDEV = IJsxRuntimeModule.jsxDEV.interceptor;
+      if (moduleExports.jsxDEV !== iJsxRuntimeModule.jsxDEV.interceptor) {
+        moduleExports.jsxDEV = iJsxRuntimeModule.jsxDEV.interceptor;
       }
     }
 
-    validateModuleInterceptor(moduleId, moduleExports, IJsxRuntimeModule, failedExportsKeys);
+    validateModuleInterceptor(moduleId, moduleExports, iJsxRuntimeModule, failedExportsKeys);
+    IJsxRuntimeModule.set(iJsxRuntimeModule);
   }
-  return IJsxRuntimeModule;
+  return IJsxRuntimeModule.get();
 }
 
 export function intercept(moduleId: string, moduleExports: ReactModuleExports, failedExportsKeys?: ModuleExportsKeys<ReactModuleExports>): IReactModuleExports {
-  if (!IReactModule) {
-    IReactModule = interceptModuleExports(
+  if (!IReactModule.isSet()) {
+    ReactModule.set(moduleExports);
+    IReactModule.set(interceptModuleExports(
       moduleId,
       moduleExports,
       [
@@ -148,7 +163,7 @@ export function intercept(moduleId: string, moduleExports: ReactModuleExports, f
         'useState'
       ],
       failedExportsKeys
-    );
+    ));
   }
-  return IReactModule;
+  return IReactModule.get();
 }
