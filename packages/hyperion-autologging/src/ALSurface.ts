@@ -16,6 +16,7 @@ import { ALSurfaceEventData, ALSurfaceChannel, ALChannelSurfaceEvent } from "./A
 import { ALSurfaceCapability, SurfaceComponent } from "./ALSurfaceTypes";
 import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
+import { ALSurfaceUtils } from ".";
 
 
 function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): string {
@@ -75,8 +76,13 @@ export function SurfaceWithEvent(props: React.PropsWithChildren<{
     if (element == null) {
       return;
     }
-    element.setAttribute(domAttributeName, domAttributeValue);
-    __DEV__ && assert(element != null, "Invalid surface effect without an element: " + surface);
+
+    ALSurfaceUtils.setSurfaceAttribute(
+      element,
+      domAttributeName,
+      domAttributeValue,
+      capability?.nonInteractive !== true
+    );
 
     /**
      * Although the following check may seem logical, but it seems that react may first run the component body code

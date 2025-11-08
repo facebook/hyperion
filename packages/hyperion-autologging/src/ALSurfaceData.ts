@@ -10,6 +10,7 @@ import type { ALSurfaceVisibilityEventData } from "./ALSurfaceVisibilityPublishe
 import { type IALFlowlet } from "./ALFlowletManager";
 import { type Metadata } from "./ALType";
 import { ALSurfaceCapability, EventMetadata, WritableEventMetadata } from "./ALSurfaceTypes";
+import * as ALSurfaceUtils from "./ALSurfaceUtils";
 
 /**
  * This core class captures the general structure of the tree.
@@ -185,7 +186,7 @@ export class ALSurfaceData extends ALSurfaceDataCore {
 
     if (elements.length === 0 && lookupIfEmpty) {
       // try to lookup the element again
-      const el = document.querySelectorAll(`[${this.domAttributeName}="${this.domAttributeValue}"]`);
+      const el = ALSurfaceUtils.getSurfaceElements(this.domAttributeName, this.domAttributeValue, this.capability?.nonInteractive === true);
       for (let i = 0; i < el.length; i++) {
         const e = el.item(i);
         this.addElement(e);
