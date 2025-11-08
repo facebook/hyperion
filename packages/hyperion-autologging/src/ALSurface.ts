@@ -16,7 +16,7 @@ import { ALSurfaceEventData, ALSurfaceChannel, ALChannelSurfaceEvent } from "./A
 import { ALSurfaceCapability, SurfaceComponent } from "./ALSurfaceTypes";
 import { ALMetadataEvent, ALSharedInitOptions } from "./ALType";
 import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
-import { ALSurfaceUtils } from ".";
+import * as  ALSurfaceUtils from "./ALSurfaceUtils";
 
 
 function surfaceCapabilityToString(capability?: ALSurfaceCapability | null): string {

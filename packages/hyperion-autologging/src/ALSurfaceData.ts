@@ -187,11 +187,10 @@ export class ALSurfaceData extends ALSurfaceDataCore {
     if (elements.length === 0 && lookupIfEmpty) {
       // try to lookup the element again
       const el = ALSurfaceUtils.getSurfaceElements(this.domAttributeName, this.domAttributeValue, this.capability?.nonInteractive === true);
-      for (let i = 0; i < el.length; i++) {
-        const e = el.item(i);
+      el.forEach(e => {
         this.addElement(e);
         elements.push(e);
-      }
+      });
     }
 
     return elements;
