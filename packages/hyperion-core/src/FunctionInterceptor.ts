@@ -700,7 +700,13 @@ export function setFunctionInterceptor<FuncType extends InterceptableFunction>(
     !getFunctionInterceptor(func), `Function already has an interceptor assigned to it`,
     { logger: { error() { debugger; } } }
   );
-  func[FuncExtensionPropName] = funcInterceptor;
+  //It might be faster to just do `func[FuncExtensionPropName] = funcInterceptor;` but the following can fully hide the property.
+  Object.defineProperty(func, FuncExtensionPropName, {
+    value: funcInterceptor,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
 }
 
 export function interceptFunction<FuncType extends InterceptableFunction>(
