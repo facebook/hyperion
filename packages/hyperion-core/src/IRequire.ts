@@ -79,7 +79,7 @@ const ModuleRuntime: ModuleRuntimeBase = (() => {
     return new WebpackModuleRuntime(__webpack_module_cache__);
   } else if (typeof require === "function") {
     try {
-      const __debug = require("__debug");
+      const __debug = require.call(null, "__debug");
       if (typeof __debug === "object") {
         // In Meta custom runtime world
         return new MetaModuleRuntime(__debug);
