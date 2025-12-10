@@ -20,13 +20,10 @@ export type ALChannelEvent = ChannelEventType<
 
 type PublicInitOptions<T> = Omit<T, 'react' | 'channel'>;
 
-type PluginInit = (channel: Channel<ALChannelEvent>) => void;
-
 export type InitOptions = Types.Options<{
   react: IReactComponent.InitOptions;
   channel: Channel<ALChannelEvent>;
   componentProps?: PublicInitOptions<ALComponentPropPublisher.InitOptions> | null;
-  plugins?: (null | undefined | PluginInit)[];
 }>
 
 const initialized = new TestAndSet();
@@ -36,13 +33,6 @@ export function init(options: InitOptions): void {
   }
 
   let channel = options.channel;
-
-  if (options.plugins) {
-    const pluginChannel = new Channel<ALChannelEvent>();
-    pluginChannel.pipe(options.channel);
-    options.plugins.forEach(plugin => plugin?.(pluginChannel));
-    channel = pluginChannel;
-  }
 
   IReactComponent.init(options.react);
 
