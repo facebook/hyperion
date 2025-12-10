@@ -40,7 +40,7 @@ export function init() {
       enableInterceptSpecialElement: true,
     },
     channel,
-    componentProps: {
+    props: {
       intercept: [
         "onBlur",
         "onChange",
@@ -60,9 +60,16 @@ export function init() {
         "onSelectionChange",
         "onSubmitEditing",
       ],
+      enableInterceptReactComponentProp: true,
+      enableReactComponentPropPublisher: true,
     },
   });
 
-  channel.addListener("al_react_function", (event) => { console.log(event) });
-  channel.addListener("al_surface_mount", (event) => { console.log(event) });
+  channel.addListener("al_react_component_prop", (event) => {
+    console.log("al_react_component_prop", event);
+  });
+
+  channel.addListener("al_surface_mount", (event) => {
+    console.log("al_surface_mount", event);
+  });
 }
