@@ -44,12 +44,15 @@ type ALFunctionEventData = {
 };
 
 type ALComponentPropChannel = Readonly<{
-  al_react_function: [ALFunctionEventData],
+  al_react_component_prop: [ALFunctionEventData],
 }>;
 
 export type InitOptions = Types.Options<{
   channel: Channel<ALComponentPropChannel>;
   intercept: ReadonlyArray<keyof ALFuncionProps>;
+
+  enableInterceptReactComponentProp?: boolean;
+  enableReactComponentPropPublisher?: boolean;
 }>;
 
 function isInterceptable(value: any): boolean {
@@ -66,20 +69,24 @@ function intercept(name: string, props: any): GenericFunctionInterceptor<any> | 
 }
 
 export function publish(options: InitOptions): void {
+  if (!options.enableInterceptReactComponentProp) {
+    return;
+  }
+
   const { channel } = options;
 
-  function interceptReactProps(
+  function interceptReactComponentProps(
     props: any,
     componentName: string,
     componentType: ALComponentType,
   ): void {
     for (const name of options.intercept) {
       const interceptor = intercept(name, props);
-      if (!interceptor) {
+      if (!options.enableReactComponentPropPublisher || !interceptor) {
         continue
       }
       interceptor.onBeforeCallObserverAdd(function (this: any, ...args: any[]) {
-        channel.emit("al_react_function", {
+        channel.emit("al_react_component_prop", {
           component: componentName,
           prop: name,
           args,
@@ -90,14 +97,14 @@ export function publish(options: InitOptions): void {
   }
 
   IReactComponent.onReactClassComponentElement.add((component, props) => {
-    interceptReactProps(props, component.name, 'class')
+    interceptReactComponentProps(props, component.name, 'class')
   });
 
   IReactComponent.onReactFunctionComponentElement.add((component, props) => {
-    interceptReactProps(props, component.name, 'func')
+    interceptReactComponentProps(props, component.name, 'func')
   });
 
   IReactComponent.onReactDOMElement.add((element, props) => {
-    interceptReactProps(props, element, 'dom')
+    interceptReactComponentProps(props, element, 'dom')
   });
 }
