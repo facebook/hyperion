@@ -15,11 +15,13 @@ type ALSurfaceEventData = {
 };
 
 type ALSurfaceChannel = Readonly<{
-  al_surface_mount: [ALSurfaceEventData],
+  al_react_component_mount: [ALSurfaceEventData],
 }>;
 
 export type InitOptions = Types.Options<{
   channel: Channel<ALSurfaceChannel>;
+
+  enableReactComponentPublisher?: boolean;
 }>;
 
 
@@ -29,6 +31,10 @@ export function publish(options: InitOptions): void {
   const { channel } = options;
 
   IReactComponent.onReactClassComponentIntercept.add(shadow => {
+    if (!options.enableReactComponentPublisher) {
+      return;
+    }
+
     const render = shadow.render;
     if (render.testAndSet(RENDER_INTERCEPTED)) {
       return;
@@ -37,7 +43,7 @@ export function publish(options: InitOptions): void {
     const surface = render.getOriginal().name ?? shadow.name;
 
     render.onBeforeCallObserverAdd(function (this: any, ...args: any[]) {
-      channel.emit("al_surface_mount", {
+      channel.emit("al_react_component_mount", {
         surface,
         args,
       });
@@ -45,14 +51,14 @@ export function publish(options: InitOptions): void {
   })
 
   IReactComponent.onReactFunctionComponentIntercept.add(render => {
-    if (render.testAndSet(RENDER_INTERCEPTED)) {
+    if (!options.enableReactComponentPublisher || render.testAndSet(RENDER_INTERCEPTED)) {
       return;
     }
 
     const surface = render.getOriginal().displayName ?? render.name;
 
     render.onBeforeCallObserverAdd(function (this: any, ...args: any[]) {
-      channel.emit("al_surface_mount", {
+      channel.emit("al_react_component_mount", {
         surface,
         args,
       });
