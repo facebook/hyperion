@@ -38,6 +38,7 @@ export function init() {
       enableInterceptDomElement: true,
       enableInterceptComponentElement: true,
       enableInterceptSpecialElement: true,
+      enableReactComponentPublisher: true,
     },
     channel,
     props: {
@@ -69,7 +70,7 @@ export function init() {
     console.log("al_react_component_prop", event);
   });
 
-  channel.addListener("al_surface_mount", (event) => {
-    console.log("al_surface_mount", event);
+  channel.addListener("al_react_component_mount", (event) => {
+    console.log("al_react_component_mount", event);
   });
 }

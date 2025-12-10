@@ -8,20 +8,22 @@ import type * as Types from "hyperion-util/src/Types";
 import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import TestAndSet from 'hyperion-test-and-set/src/TestAndSet';
 import * as ALReactComponentProps from "./ALReactComponentProps";
-import * as ALSurfacePublisher from "./ALSurfacePublisher";
+import * as ALReactComponent from "./ALReactComponent";
 
 'use strict';
 
 
 export type ALChannelEvent = ChannelEventType<
   & ALReactComponentProps.InitOptions['channel']
-  & ALSurfacePublisher.InitOptions['channel']
+  & ALReactComponent.InitOptions['channel']
 >
 
 type PublicInitOptions<T> = Omit<T, 'react' | 'channel'>;
 
 export type InitOptions = Types.Options<{
-  react: IReactComponent.InitOptions;
+  react:
+    & IReactComponent.InitOptions
+    & PublicInitOptions<ALReactComponent.InitOptions>;
   channel: Channel<ALChannelEvent>;
   props?: PublicInitOptions<ALReactComponentProps.InitOptions> | null;
 }>
@@ -34,9 +36,21 @@ export function init(options: InitOptions): void {
 
   let channel = options.channel;
 
-  IReactComponent.init(options.react);
+  if (
+    options.react.enableInterceptClassComponentConstructor ||
+    options.react.enableInterceptClassComponentMethods ||
+    options.react.enableInterceptFunctionComponentRender ||
+    options.react.enableInterceptDomElement ||
+    options.react.enableInterceptComponentElement ||
+    options.react.enableInterceptSpecialElement
+  ) {
+    IReactComponent.init(options.react);
+  }
 
-  ALSurfacePublisher.publish({channel})
+  ALReactComponent.publish({
+    channel,
+    enableReactComponentPublisher: options.react.enableReactComponentPublisher,
+  })
 
   if (options.props) {
     ALReactComponentProps.publish({
