@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
+'use strict';
+
 import { Channel } from "hyperion-channel";
 import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
 import { ALSurfaceData } from "./ALSurfaceData";
