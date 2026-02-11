@@ -450,6 +450,7 @@ export type ALElementTextOptions = Types.Options<
     updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
     getText?: <T extends ALElementText>(elementTexts: T[]) => ALElementText;
     enableElementTextCache?: boolean;
+    excludeElementsFromCache?: boolean;
   }
 >;
 
@@ -488,11 +489,7 @@ function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, source:
   const text = textNode.nodeValue;
   if (text != null && text !== '') {
     return callExternalTextProcessor(
-      {
-        text,
-        source,
-        elements: [domSource.element]
-      },
+      { text, source, elements: _options?.excludeElementsFromCache ? [] : [domSource.element] },
       domSource,
       results,
       options
@@ -539,11 +536,7 @@ function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALEleme
   const label = domSource.element.getAttribute(source);
   if (label != null && label !== '') {
     return callExternalTextProcessor(
-      {
-        text: label,
-        source,
-        elements: [domSource.element]
-      },
+      { text: label, source, elements: _options?.excludeElementsFromCache ? [] :  [domSource.element]},
       domSource,
       results
     );
