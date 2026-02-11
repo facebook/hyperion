@@ -430,7 +430,6 @@ export type ALElementText = {
 
   /// The source attribute where we got the elementName from
   readonly source: 'innerText' | 'aria-label' | 'aria-labelledby' | 'aria-description' | 'aria-describedby' | 'label',
-  elements: Array<Element>;
 };
 
 export type ALElementTextEvent = Readonly<{
@@ -448,9 +447,8 @@ export type ALElementTextOptions = Types.Options<
   {
     maxDepth?: number;
     updateText?: <T extends ALElementText>(elementText: T, domSource: ALDOMTextSource) => void;
-    getText?: <T extends ALElementText>(elementTexts: T[]) => ALElementText;
+    getText?: <T extends ALElementText>(elementTexts: T[]) => T;
     enableElementTextCache?: boolean;
-    excludeElementsFromCache?: boolean;
   }
 >;
 
@@ -489,7 +487,7 @@ function getTextFromTextNode(domSource: ALDOMTextSource, textNode: Text, source:
   const text = textNode.nodeValue;
   if (text != null && text !== '') {
     return callExternalTextProcessor(
-      { text, source, elements: _options?.excludeElementsFromCache ? [] : [domSource.element] },
+      { text, source },
       domSource,
       results,
       options
@@ -505,7 +503,7 @@ function isValidElement(element: Element | null): element is Element {
 
 
 // Takes a space-delimited list of DOM element IDs and returns the inner text of those elements joined by spaces
-function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
+function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[], options?: LocalOptions): ALElementText[] | null {
   /**
    * Check the descrtion of https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-labelledby#benefits_and_drawbacks
    * we need to drop repeated attributes and ensure there is a space between the values
@@ -522,23 +520,24 @@ function getTextFromElementsByIds(domSource: ALDOMTextSource, source: ALElementT
 
   for (let i = 0; i < indirectSources.length; i++) {
     if (i) {
-      results.push({ text: " ", source, elements: []}); // Insert space between values
+      results.push({ text: " ", source }); // Insert space between values
     }
 
     domSource.element = indirectSources[i];
-    getTextFromInnerText(domSource, source, results);
+    getTextFromInnerText(domSource, source, results, options);
   }
 
   return results;
 }
 
-function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[]): ALElementText[] | null {
+function getTextFromElementAttribute(domSource: ALDOMTextSource, source: ALElementText['source'], results: ALElementText[], options?: LocalOptions): ALElementText[] | null {
   const label = domSource.element.getAttribute(source);
   if (label != null && label !== '') {
     return callExternalTextProcessor(
-      { text: label, source, elements: _options?.excludeElementsFromCache ? [] :  [domSource.element]},
+      { text: label, source },
       domSource,
-      results
+      results,
+      options
     );
   }
   return null;
@@ -588,7 +587,7 @@ export const cssEscape = typeof window.CSS?.escape === 'function'
 
 //https://developer.mozilla.org/en-US/docs/Web/HTML/Content_categories#labelable
 const LabelableElememts = /BUTTON|INPUT|METER|OUTPUT|PROGRESS|SELECT|TEXTAREA/;
-function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', results: ALElementText[]): ALElementText[] | null {
+function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', results: ALElementText[], options?: LocalOptions): ALElementText[] | null {
   const { element, surface } = domSource;
 
   // Many labelable elements could have a label assigned to them a few possible ways
@@ -596,7 +595,7 @@ function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', re
   if (labels && labels.length) {
     for (let i = 0, len = labels.length; i < len; ++i) {
       const label = labels[i];
-      getTextFromInnerText({ element: label, surface }, source, results);
+      getTextFromInnerText({ element: label, surface }, source, results, options);
     }
     return results;
   }
@@ -607,7 +606,7 @@ function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', re
 
   //https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label#:~:text=Alternatively%2C%20you%20can%20nest%20the%20%3Cinput%3E%20directly%20inside%20the%20%3Clabel%3E
   if (element.parentElement instanceof HTMLLabelElement) {
-    getTextFromInnerText({ element: element.parentElement, surface }, source, results);
+    getTextFromInnerText({ element: element.parentElement, surface }, source, results, options);
     return results;
   }
 
@@ -626,7 +625,7 @@ function getTextFromElementLabel(domSource: ALDOMTextSource, source: 'label', re
       if (labels.length > 0) {
         for (let i = 0, len = labels.length; i < len; ++i) {
           const label = labels[i];
-          getTextFromInnerText({ element: label, surface }, source, results);
+          getTextFromInnerText({ element: label, surface }, source, results, options);
         }
         return results;
       }
@@ -655,11 +654,11 @@ function getElementName(element: Element, surface: string | null, results: ALEle
    * However, since the visible text on the screen is the most likley thing to be search for, we start from <label>
    */
   const selfText =
-    getTextFromElementLabel(domSource, 'label', results)
-    ?? getTextFromElementsByIds(domSource, 'aria-labelledby', results)
-    ?? getTextFromElementAttribute(domSource, 'aria-label', results)
-    ?? getTextFromElementAttribute(domSource, 'aria-description', results)
-    ?? getTextFromElementsByIds(domSource, 'aria-describedby', results)
+    getTextFromElementLabel(domSource, 'label', results, options)
+    ?? getTextFromElementsByIds(domSource, 'aria-labelledby', results, options)
+    ?? getTextFromElementAttribute(domSource, 'aria-label', results, options)
+    ?? getTextFromElementAttribute(domSource, 'aria-description', results, options)
+    ?? getTextFromElementsByIds(domSource, 'aria-describedby', results, options)
     ;
 
   if (!selfText) {
@@ -681,7 +680,12 @@ function getElementName(element: Element, surface: string | null, results: ALEle
 
 }
 
-export function getElementTextEvent(
+type ALElementTextResult<T extends ALElementText> = /*Omit<ALElementTextEvent, 'elementText'> & */Readonly<{
+  elementName: string | null;
+  elementText: T | null;
+}>;
+
+export function getElementTextEvent<T extends ALElementText>(
   element: Element | null,
   surface: string | null,
   // Event name to utilize when attempting to resolve text from a parent interactable
@@ -689,7 +693,7 @@ export function getElementTextEvent(
   tryInteractableParentEventName?: UIEventConfig['eventName'] | null,
   useCachedElementText?: boolean,
   options?: LocalOptions
-): ALElementTextEvent {
+): ALElementTextResult<T> {
   if (!element || !(element instanceof HTMLElement)) {
     return {
       elementName: null,
@@ -700,11 +704,11 @@ export function getElementTextEvent(
   if (useCachedElementText) {
     const cached = ElementTextCache?.get(element);
     if (cached && cached.surface === surface) {
-      return cached.result;
+      return cached.result as ALElementTextResult<T>;
     }
   }
 
-  const results: ALElementText[] = [];
+  const results: T[] = [];
   getElementName(element, surface, results, 0, options);
 
   /**
@@ -732,30 +736,30 @@ export function getElementTextEvent(
        * Therefore, we spread both prev and current bellow
        */
       const cleanText = extractCleanText(current.text);
-      const next: ALElementText = {
+      const next: T = {
         ...prev,
         ...current,
         text: prev.text + cleanText,
-        elements: [...prev.elements, ...current.elements]
       };
       return next;
     },
     {
       text: "",
       source: 'innerText',
-      elements: []
-    }
+    } as T
   );
-  const finalResult: ALElementTextEvent = {
+  const finalResult: ALElementTextResult<T> = {
     elementName: elementText?.text ?? null,
     elementText,
   };
 
   // even if skipCache is set, we update the cache, this way, certain events can be used to keep the cache uptodate
-  ElementTextCache?.set(element, {
-    surface,
-    result: finalResult,
-  })
+  if (useCachedElementText) {
+    ElementTextCache?.set(element, {
+      surface,
+      result: finalResult,
+    });
+  }
 
   return finalResult;
 }

@@ -9,6 +9,7 @@ import "jest";
 import * as ALInteractableDOMElement from "../src/ALInteractableDOMElement";
 import * as DomFragment from "./DomFragment";
 import { UIEventConfig, trackAndEnableUIEventHandlers } from "../src/ALUIEventPublisher";
+import { ALDOMTextSource, ALElementText } from "../src/ALInteractableDOMElement";
 
 function createTestDom(): DomFragment.DomFragment {
   return DomFragment.html(`
@@ -70,7 +71,7 @@ function getTextFromParent(id: string, parentEvent: UIEventConfig['eventName'] |
 }
 
 describe("Test interactable detection algorithm", () => {
-  function interactable(node: HTMLElement | null, eventName: UIEventConfig['eventName']): HTMLElement | null {
+  function interactable(node: HTMLElement | null, eventName: UIEventConfig['eventName']): Element | null {
     return ALInteractableDOMElement.getInteractable(node, eventName);
   }
 
@@ -274,19 +275,21 @@ describe("Test various element text options", () => {
         }
         elementText.text = elementText.text.replace(/\r\n|\r|\n/, '');
       },
-      getText: (elementTexts: Readonly<ExtendedElementText[]>): ExtendedElementText => {
-        return elementTexts.reduce((prev, current) => {
-          return {
-            ...prev,
-            ...current,
-            text: prev.text + ALInteractableDOMElement.extractCleanText(current.text),
-            modifiedText: (prev.modifiedText ?? "") + (current.modifiedText ?? ""),
-          }
-        }, {
+      getText<T extends ExtendedElementText>(elementTexts: Readonly<ExtendedElementText[]>): T {
+        return elementTexts.reduce(
+          (prev, current) => {
+            return {
+              ...prev,
+              ...current,
+              text: prev.text + ALInteractableDOMElement.extractCleanText(current.text),
+              modifiedText: (prev.modifiedText ?? "") + (current.modifiedText ?? ""),
+            }
+          }, {
           text: "",
           source: 'innerText',
           modifiedText: ""
-        });
+        } 
+        )as T;
       }
     });
     const text = ALInteractableDOMElement.getElementTextEvent(dom.root, null);
@@ -303,7 +306,7 @@ describe("Test various element text options", () => {
       </div>
     `);
 
-    function interactable(node: HTMLElement | null, eventName: string): HTMLElement | null {
+    function interactable(node: HTMLElement | null, eventName: string): Element | null {
       return ALInteractableDOMElement.getInteractable(node, "click", true);
     }
 
@@ -363,21 +366,52 @@ describe("Test various element text options", () => {
     ALInteractableDOMElement.init({}); // clear the options from the previous tests
     const dom = createTestDom();
     const children = dom.root.children;
-    const texts = Array.from(children).map(child => ALInteractableDOMElement.getElementTextEvent(child, null));
+    function testText(id: string, expectedTextIds: string[]) {
+      interface CustomElementText extends ALElementText {
+        elements?: Element[];
+      }
 
-    expect(texts[0].elementText?.elements[0]).toStrictEqual(document.getElementById('1'));
-    expect(texts[1].elementText?.elements[0]).toStrictEqual(document.getElementById('2'));
-    expect(texts[2].elementText?.elements[0]).toStrictEqual(document.getElementById('3'));
-    expect(texts[3].elementText?.elements[0]).toStrictEqual(document.getElementById('3'));
-    expect(texts[4].elementText?.elements[0]).toStrictEqual(document.getElementById('3'));
-    expect(texts[5].elementText?.elements[0]).toStrictEqual(document.getElementById('3'));
-    expect(texts[5].elementText?.elements[1]).toStrictEqual(document.getElementById('8'));
-    expect(texts[6].elementText?.elements[0]).toStrictEqual(document.getElementById('7'));
-    expect(texts[7].elementText?.elements[0]).toStrictEqual(document.getElementById('8'));
-    expect(texts[8].elementText?.elements[0]).toStrictEqual(document.getElementById('9'));
-    expect(texts[9].elementText?.elements[0]).toStrictEqual(document.getElementById('10.1'));
-    expect(texts[9].elementText?.elements[1]).toStrictEqual(document.getElementById('10'));
-    expect(texts[9].elementText?.elements[2]).toStrictEqual(document.getElementById('10.2'));
+      const child = document.getElementById(id);
+      expect(child).not.toBeNull();
+      if (!child) {
+        throw new Error(`Child with id ${id} not found`);
+      }
+      const text = ALInteractableDOMElement.getElementTextEvent<CustomElementText>(child, null, null, false, {
+        updateText(elementText: CustomElementText, domSource: ALDOMTextSource): void {
+          elementText.elements = [domSource.element];
+        },
+        getText<T extends CustomElementText>(elementTexts: Array<T>): T {
+          const text = elementTexts.reduce<T>(
+            (prev, current) => {
+              return {
+                ...prev,
+                ...current,
+                text: prev.text + current.text,
+                elements: [...(prev.elements ?? []), ...(current.elements ?? [])],
+              };
+            },
+            {
+              ...
+              elementTexts[0],
+              elements: []
+            }
+          );
+          return text;
+        },
+      });
+      expect(text.elementText?.elements?.map(e => e.id)).toStrictEqual(expectedTextIds);
+    }
+
+    testText('1', ['1']);
+    testText('2', ['2']);
+    testText('3', ['3']);
+    testText('4', ['3']);
+    testText('5', ['3']);
+    testText('6', ['3', '8']);
+    testText('7', ['7']);
+    testText('8', ['8']);
+    testText('9', ['9']);
+    testText('10', ['10.1', '10', '10.2']);
 
     dom.cleanup();
   });
