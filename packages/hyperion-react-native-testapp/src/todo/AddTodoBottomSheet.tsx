@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,

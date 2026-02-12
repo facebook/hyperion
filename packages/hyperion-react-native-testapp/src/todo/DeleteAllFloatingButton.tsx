@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import React, { useRef, useEffect } from 'react';
 import { TouchableOpacity, Text, Animated, useColorScheme } from 'react-native';
 
