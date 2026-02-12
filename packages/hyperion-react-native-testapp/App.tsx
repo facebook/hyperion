@@ -1,4 +1,6 @@
 /**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ *
  * Todo List App with React Native
  *
  * @format

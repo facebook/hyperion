@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
 import {guid} from 'hyperion-util/src/guid';
 
 export interface TodoItem {
