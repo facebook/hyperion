@@ -8,6 +8,7 @@ import { assert } from "hyperion-globals";
 import { guid } from "hyperion-util/src/guid";
 import performanceAbsoluteNow from "hyperion-util/src/performanceAbsoluteNow";
 import { CookiePersistentData } from "hyperion-util/src/PersistentData";
+import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
 import { Channel } from "hyperion-channel";
 import { ALChannelHeartbeatEvent, ALHeartbeatType } from "./ALHeartbeat";
@@ -58,20 +59,20 @@ export function init(options: InitOptions) {
 
   // We use any activity that might be the last before moving to next page to update the value.
   // Debounce cookie writes to avoid excessive document.cookie updates on rapid events.
-  let refershCookieTimer: ReturnType<typeof setTimeout> | null = null;
+  let refershCookieTrigger: TimedTrigger | null = null;
   let lastEventTimestamp: number = 0;
   function refershCookie(eventData: ALTimedEvent) {
     lastEventTimestamp = eventData.eventTimestamp;
-    if (refershCookieTimer != null) {
-      clearTimeout(refershCookieTimer);
+    if (refershCookieTrigger == null || refershCookieTrigger.isDone()) {
+      refershCookieTrigger = new TimedTrigger(() => {
+        sessionFlowID.setValue({
+          id: sessionFlowID.getValue().id,
+          timestamp: lastEventTimestamp
+        });
+      }, 500);
+    } else {
+      refershCookieTrigger.restart();
     }
-    refershCookieTimer = setTimeout(() => {
-      refershCookieTimer = null;
-      sessionFlowID.setValue({
-        id: sessionFlowID.getValue().id,
-        timestamp: lastEventTimestamp
-      });
-    }, 500);
   }
   options.channel.addListener('al_ui_event_capture', refershCookie);
   options.channel.addListener('al_ui_event', refershCookie);
