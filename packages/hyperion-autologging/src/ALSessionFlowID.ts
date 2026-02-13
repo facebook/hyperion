@@ -12,7 +12,6 @@ import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
 import { Channel } from "hyperion-channel";
 import { ALChannelHeartbeatEvent, ALHeartbeatType } from "./ALHeartbeat";
-import { ALTimedEvent } from "./ALType";
 
 export interface SessionFlowID {
   id: string;
@@ -59,15 +58,13 @@ export function init(options: InitOptions) {
 
   // We use any activity that might be the last before moving to next page to update the value.
   // Debounce cookie writes to avoid excessive document.cookie updates on rapid events.
-  let lastEventTimestamp: number = 0;
   const refershCookieTrigger = new TimedTrigger(() => {
     sessionFlowID.setValue({
       id: sessionFlowID.getValue().id,
-      timestamp: lastEventTimestamp
+      timestamp: performanceAbsoluteNow()
     });
   }, 500);
-  function refershCookie(eventData: ALTimedEvent) {
-    lastEventTimestamp = eventData.eventTimestamp;
+  function refershCookie() {
     refershCookieTrigger.restart();
   }
   options.channel.addListener('al_ui_event_capture', refershCookie);
