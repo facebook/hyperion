@@ -72,7 +72,7 @@ export function init(options: InitOptions) {
 
   options.channel.addListener('al_heartbeat_event', eventData => {
     if (eventData.heartbeatType === ALHeartbeatType.STOP) {
-      refershCookie(eventData);
+      refershCookie();
     }
   });
 
