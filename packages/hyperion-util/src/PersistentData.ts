@@ -4,6 +4,7 @@
 
 'use strict';
 
+import "./reference";
 import { assert } from "hyperion-globals/src/assert";
 import { getFlags } from "hyperion-globals/src/Flags";
 import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
