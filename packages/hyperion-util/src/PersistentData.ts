@@ -43,7 +43,6 @@ class Scheduler {
 
     const firstRun = (data: PersistentData<any>) => {
       assert(!this.runner, "Invalid state! First call should not have runner");
-      const interval = getFlags().optimizePersistentData ? OPTIMIZED_COOKIE_SAVE_INTERVAL : SESSION_DATA_SAVE_INTERVAL;
       const runner = this.runner = new TimedTrigger(
         () => {
           for (const i of this.pending) {
@@ -53,7 +52,7 @@ class Scheduler {
           this.runner = null;
           this.schedule = firstRun;
         },
-        interval
+        getFlags().optimizePersistentData ? OPTIMIZED_COOKIE_SAVE_INTERVAL : SESSION_DATA_SAVE_INTERVAL
       );
       if (typeof window === "object" && typeof window.addEventListener === 'function') {
         window.addEventListener('beforeUnload', () => {
@@ -176,6 +175,6 @@ export class CookiePersistentData<T> extends PersistentData<T> {
     parser: (persistedValue: string) => T,
     cookieAttributes?: string,
   ) {
-    super(fieldName, missingValueInitializer, stringify, parser, !getFlags().optimizePersistentData, new CookieStorage(cookieAttributes));
+    super(fieldName, missingValueInitializer, stringify, parser, true, new CookieStorage(cookieAttributes));
   }
 }
