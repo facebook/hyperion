@@ -5,6 +5,7 @@
 'use strict';
 
 import { assert } from "hyperion-globals/src/assert";
+import { getFlags } from "hyperion-globals/src/Flags";
 import { TimedTrigger } from "hyperion-timed-trigger/src/TimedTrigger";
 
 type IStorage = Pick<Storage, 'getItem' | 'setItem'>;
@@ -61,8 +62,14 @@ class Scheduler {
         });
       }
       const nextRun = (data: PersistentData<any>) => {
-        runner.delay();
         this.pending.add(data);
+        if (getFlags().optimizePersistentData) {
+          if (runner.isDone()) {
+            runner.run();
+          }
+        } else {
+          runner.delay();
+        }
       }
       this.pending.add(data);
       this.schedule = nextRun;
