@@ -69,6 +69,8 @@ function intercept(name: string, props: any): GenericFunctionInterceptor<any> | 
 }
 
 export function publish(options: InitOptions): void {
+  const PROP_INTERCEPTED = '__IS_PROP_INTERCEPTED__REACT_NATIVE';
+
   if (!options.enableInterceptReactComponentProp) {
     return;
   }
@@ -85,6 +87,11 @@ export function publish(options: InitOptions): void {
       if (!options.enableReactComponentPropPublisher || !interceptor) {
         continue
       }
+
+      if (interceptor.testAndSet(PROP_INTERCEPTED)) {
+        continue;
+      }
+
       interceptor.onBeforeCallObserverAdd(function (this: any, ...args: any[]) {
         channel.emit("al_react_component_prop", {
           component: componentName,
