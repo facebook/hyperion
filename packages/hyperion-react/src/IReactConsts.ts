@@ -55,3 +55,4 @@ export const REACT_CACHE_TYPE: Sym = SymbolFor(0xeae4, 'react.cache');
 export const REACT_TRACING_MARKER_TYPE: Sym = SymbolFor(0xeae5, 'react.tracing_marker',);
 export const REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED: Sym = SymbolFor(0xeae7, 'react.default_value',);
 export const FAUX_ITERATOR_SYMBOL = '@@iterator';
+export const REACT_ACTIVITY_TYPE: Sym = SymbolFor(0xeae8, 'react.activity');
