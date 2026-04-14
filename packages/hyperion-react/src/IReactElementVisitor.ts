@@ -183,6 +183,7 @@ function optimizeVisitors<
     [IReactConsts.REACT_LEGACY_HIDDEN_TYPE]: ctor(),
     [IReactConsts.REACT_SCOPE_TYPE]: ctor(),
     [IReactConsts.REACT_STRICT_MODE_TYPE]: ctor(),
+    [IReactConsts.REACT_ACTIVITY_TYPE]: ctor(),
   };
 
   visitors._get = (component, visitors) =>
@@ -300,6 +301,8 @@ function getVisitor<
         case IReactConsts.REACT_SCOPE_TYPE:
           break;
         case IReactConsts.REACT_STRICT_MODE_TYPE:
+          break;
+        case IReactConsts.REACT_ACTIVITY_TYPE:
           break;
         default:
           warn(`skip special component $$type: ${String(component)}`);

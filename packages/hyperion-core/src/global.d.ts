@@ -1,0 +1,8 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
+ */
+
+interface GlobalFlags {
+  preferMetaModuleRuntime?: boolean;
+  safeWebpackModuleExports?: boolean;
+}

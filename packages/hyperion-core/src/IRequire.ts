@@ -4,9 +4,10 @@
 
 import type { FunctionInterceptor, InterceptableObjectType } from './FunctionInterceptor';
 
+import "./reference";
 import { ShadowPrototype, } from './ShadowPrototype';
 import { interceptMethod } from './MethodInterceptor';
-import { assert } from 'hyperion-globals';
+import { assert, getFlags } from 'hyperion-globals';
 
 export type InterceptedModuleExports<TModuleExports extends InterceptableObjectType> = {
   [K in keyof TModuleExports]: FunctionInterceptor<TModuleExports, string, TModuleExports[K]>;
@@ -39,6 +40,9 @@ class WebpackModuleRuntime extends ModuleRuntimeBase {
   getExports<T>(moduleId: string) {
     const modulePath = new RegExp(`${moduleId}(?:/index)?[.]js$`);
     const wexports = Object.keys(this._cache).filter(m => modulePath.test(m)).map(m => this._cache[m]);
+    if (getFlags().safeWebpackModuleExports) {
+      return (wexports[0]?.exports as unknown as T) ?? null;
+    }
     return wexports[0].exports as unknown as T;
   }
 }
@@ -73,21 +77,37 @@ class MetaModuleRuntime extends ModuleRuntimeBase {
   }
 }
 
-const ModuleRuntime: ModuleRuntimeBase = (() => {
-  if (typeof __webpack_module_cache__ === 'object') {
-    // In webpack world
-    return new WebpackModuleRuntime(__webpack_module_cache__);
-  } else if (typeof require === "function") {
+let _moduleRuntime: ModuleRuntimeBase | null = null;
+function getModuleRuntime(): ModuleRuntimeBase {
+  if (_moduleRuntime) {
+    return _moduleRuntime;
+  }
+  const flags = getFlags();
+  if (flags.preferMetaModuleRuntime && typeof require === "function") {
     try {
       const __debug = require("__debug");
       if (typeof __debug === "object") {
-        // In Meta custom runtime world
-        return new MetaModuleRuntime(__debug);
+        _moduleRuntime = new MetaModuleRuntime(__debug);
+        return _moduleRuntime;
       }
     } catch (e) { }
   }
-  return new ModuleRuntimeBase();
-})();
+  if (typeof __webpack_module_cache__ === 'object') {
+    _moduleRuntime = new WebpackModuleRuntime(__webpack_module_cache__);
+    return _moduleRuntime;
+  }
+  if (!flags.preferMetaModuleRuntime && typeof require === "function") {
+    try {
+      const __debug = require("__debug");
+      if (typeof __debug === "object") {
+        _moduleRuntime = new MetaModuleRuntime(__debug);
+        return _moduleRuntime;
+      }
+    } catch (e) { }
+  }
+  _moduleRuntime = new ModuleRuntimeBase();
+  return _moduleRuntime;
+}
 
 export function interceptModuleExports<TModuleExports extends InterceptableObjectType>(
   moduleId: string,
@@ -96,7 +116,7 @@ export function interceptModuleExports<TModuleExports extends InterceptableObjec
   failedExportsKeys?: ModuleExportsKeys<TModuleExports>
 ): InterceptedModuleExports<TModuleExports> {
   let interceptableModuleExports: TModuleExports = moduleExports;
-  const alternativeExports = ModuleRuntime.getExports<TModuleExports>(moduleId);
+  const alternativeExports = getModuleRuntime().getExports<TModuleExports>(moduleId);
 
   if (alternativeExports && alternativeExports !== interceptableModuleExports) {
     console.warn('different exports objects ', moduleId);
@@ -110,7 +130,7 @@ export function interceptModuleExports<TModuleExports extends InterceptableObjec
     IModule[key] = interceptMethod(key, ModuleExportsShadow);
   };
 
-  ModuleRuntime.updateExports(moduleId, moduleExports, IModule, failedExportsKeys)
+  getModuleRuntime().updateExports(moduleId, moduleExports, IModule, failedExportsKeys)
 
   validateModuleInterceptor(moduleId, moduleExports, IModule, failedExportsKeys);
   return IModule;
