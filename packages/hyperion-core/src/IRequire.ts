@@ -4,10 +4,9 @@
 
 import type { FunctionInterceptor, InterceptableObjectType } from './FunctionInterceptor';
 
-import "./reference";
 import { ShadowPrototype, } from './ShadowPrototype';
 import { interceptMethod } from './MethodInterceptor';
-import { assert, getFlags } from 'hyperion-globals';
+import { assert } from 'hyperion-globals';
 
 export type InterceptedModuleExports<TModuleExports extends InterceptableObjectType> = {
   [K in keyof TModuleExports]: FunctionInterceptor<TModuleExports, string, TModuleExports[K]>;
@@ -40,10 +39,7 @@ class WebpackModuleRuntime extends ModuleRuntimeBase {
   getExports<T>(moduleId: string) {
     const modulePath = new RegExp(`${moduleId}(?:/index)?[.]js$`);
     const wexports = Object.keys(this._cache).filter(m => modulePath.test(m)).map(m => this._cache[m]);
-    if (getFlags().safeWebpackModuleExports) {
-      return (wexports[0]?.exports as unknown as T) ?? null;
-    }
-    return wexports[0].exports as unknown as T;
+    return (wexports[0]?.exports as unknown as T) ?? null;
   }
 }
 
@@ -77,37 +73,24 @@ class MetaModuleRuntime extends ModuleRuntimeBase {
   }
 }
 
-let _moduleRuntime: ModuleRuntimeBase | null = null;
-function getModuleRuntime(): ModuleRuntimeBase {
-  if (_moduleRuntime) {
-    return _moduleRuntime;
-  }
-  const flags = getFlags();
-  if (flags.preferMetaModuleRuntime && typeof require === "function") {
+const ModuleRuntime: ModuleRuntimeBase = (() => {
+  if (typeof require === "function") {
     try {
       const __debug = require("__debug");
       if (typeof __debug === "object") {
-        _moduleRuntime = new MetaModuleRuntime(__debug);
-        return _moduleRuntime;
+        // In Meta custom runtime world — check first since Meta's module
+        // system is authoritative in Meta's environment, even if
+        // __webpack_module_cache__ is also present (e.g. injected by tools).
+        return new MetaModuleRuntime(__debug);
       }
     } catch (e) { }
   }
   if (typeof __webpack_module_cache__ === 'object') {
-    _moduleRuntime = new WebpackModuleRuntime(__webpack_module_cache__);
-    return _moduleRuntime;
+    // In webpack world
+    return new WebpackModuleRuntime(__webpack_module_cache__);
   }
-  if (!flags.preferMetaModuleRuntime && typeof require === "function") {
-    try {
-      const __debug = require("__debug");
-      if (typeof __debug === "object") {
-        _moduleRuntime = new MetaModuleRuntime(__debug);
-        return _moduleRuntime;
-      }
-    } catch (e) { }
-  }
-  _moduleRuntime = new ModuleRuntimeBase();
-  return _moduleRuntime;
-}
+  return new ModuleRuntimeBase();
+})();
 
 export function interceptModuleExports<TModuleExports extends InterceptableObjectType>(
   moduleId: string,
@@ -116,7 +99,7 @@ export function interceptModuleExports<TModuleExports extends InterceptableObjec
   failedExportsKeys?: ModuleExportsKeys<TModuleExports>
 ): InterceptedModuleExports<TModuleExports> {
   let interceptableModuleExports: TModuleExports = moduleExports;
-  const alternativeExports = getModuleRuntime().getExports<TModuleExports>(moduleId);
+  const alternativeExports = ModuleRuntime.getExports<TModuleExports>(moduleId);
 
   if (alternativeExports && alternativeExports !== interceptableModuleExports) {
     console.warn('different exports objects ', moduleId);
@@ -130,7 +113,7 @@ export function interceptModuleExports<TModuleExports extends InterceptableObjec
     IModule[key] = interceptMethod(key, ModuleExportsShadow);
   };
 
-  getModuleRuntime().updateExports(moduleId, moduleExports, IModule, failedExportsKeys)
+  ModuleRuntime.updateExports(moduleId, moduleExports, IModule, failedExportsKeys)
 
   validateModuleInterceptor(moduleId, moduleExports, IModule, failedExportsKeys);
   return IModule;

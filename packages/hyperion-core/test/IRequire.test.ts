@@ -9,43 +9,16 @@ import * as IRequire from "../src/IRequire";
 import * as TestModule from "./IRequireTestModule";
 import TestModuleDefault from "./IRequireTestModuleDefault";
 import * as TestModuleDefaultExports from "./IRequireTestModuleDefault";
-import { setFlags, getFlags } from "hyperion-globals";
-
 describe("WebpackModuleRuntime graceful handling", () => {
-  const originalFlags = { ...getFlags() };
-
-  afterEach(() => {
-    setFlags(originalFlags);
-  });
-
   test('interceptModuleExports works when webpack cache has no matching module', () => {
+    // When ModuleRuntime falls through to ModuleRuntimeBase (no webpack cache
+    // or __debug in test env), getExports returns null and the passed-in
+    // moduleExports is used as-is.
     const IModule = IRequire.interceptModuleExports("nonExistentModule", TestModule, ["foo"], []);
     const handler = IModule.foo.onBeforeCallObserverAdd(jest.fn());
     TestModule.foo(42);
     expect(handler).toBeCalledTimes(1);
     expect(handler).toBeCalledWith(42);
-  });
-
-  test('safeWebpackModuleExports flag enables null-safe getExports', () => {
-    setFlags({ ...getFlags(), safeWebpackModuleExports: true });
-    // With flag enabled and no webpack cache in test env, getModuleRuntime()
-    // returns ModuleRuntimeBase (returns null). Verify interception still works.
-    const IModule = IRequire.interceptModuleExports("missingModule", TestModule, ["foo"], []);
-    const handler = IModule.foo.onBeforeCallObserverAdd(jest.fn());
-    TestModule.foo(99);
-    expect(handler).toBeCalledTimes(1);
-    expect(handler).toBeCalledWith(99);
-  });
-
-  test('preferMetaModuleRuntime flag is respected', () => {
-    setFlags({ ...getFlags(), preferMetaModuleRuntime: true });
-    // In test env, require("__debug") will throw/return undefined, so it
-    // falls through to ModuleRuntimeBase. Verify no crash and interception works.
-    const IModule = IRequire.interceptModuleExports("anotherMissing", TestModule, ["foo"], []);
-    const handler = IModule.foo.onBeforeCallObserverAdd(jest.fn());
-    TestModule.foo(77);
-    expect(handler).toBeCalledTimes(1);
-    expect(handler).toBeCalledWith(77);
   });
 });
 
