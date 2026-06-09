@@ -45,7 +45,7 @@ export class FlowletManager<T extends Flowlet = Flowlet> {
 
   private scheduleCleanup() {
     /**
-     * We schdule a listner to see when stack reaches the threshold size.
+     * We schedule a listener to see when stack reaches the threshold size.
      * Then we don't need to have this listener any more until cleanup is finished, at which
      * point we can schedule the stack size monitoring again.
      * This should save some cycles during busy times.

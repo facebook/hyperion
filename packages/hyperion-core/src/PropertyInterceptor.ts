@@ -21,7 +21,7 @@ export abstract class PropertyInterceptor {
   }
 
   interceptObjectOwnProperties(_obj: object) {
-    __DEV__ && assert(false, `This method must be overriden`);
+    __DEV__ && assert(false, `This method must be overridden`);
   }
 }
 

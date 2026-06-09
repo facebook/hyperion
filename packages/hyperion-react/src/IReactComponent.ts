@@ -321,7 +321,7 @@ export function init(options: InitOptions): void {
     /**
      * TODO: T132536682 remove this guard later to speed things up
      * NOTE: tried using ErrorGuard.guard, and ErrorGuard.applyWithGuard but
-     * as usual, Flow cannot handle complex function input/ouput types.
+     * as usual, Flow cannot handle complex function input/output types.
      * So, putting the raw try/catch, which is the actual implementation of
      * ErrorGaurd.applyWithGuard anyways.
      *
