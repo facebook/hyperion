@@ -5,11 +5,13 @@
 'use strict';
 
 export * as ALCustomEvent from './ALCustomEvent';
+export type { ALLoggableEvent } from './ALCommonTypes';
 export { default as ALElementInfo } from "./ALElementInfo";
 export * as ALEventExtension from "./ALEventExtension";
 export * as ALEventIndex from "./ALEventIndex";
 export { ALFlowlet, ALFlowletManager, ALFlowletManagerInstance } from "./ALFlowletManager";
-export { ALHeartbeatType } from "./ALHeartbeat";
+export { ALHeartbeatType } from "./ALHeartbeatType";
+export { ALSurfaceHierarchyNode } from "./ALSurfaceHierarchy";
 export { getOrSetAutoLoggingID } from "./ALID";
 export * as ALInteractableDOMElement from "./ALInteractableDOMElement";
 export { getSessionFlowID } from "./ALSessionFlowID";

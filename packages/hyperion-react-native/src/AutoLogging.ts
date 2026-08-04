@@ -2,60 +2,77 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Channel, ChannelEventType } from "hyperion-channel/src/Channel";
-import type * as Types from "hyperion-util/src/Types";
-
-import * as IReactComponent from "hyperion-react/src/IReactComponent";
-import TestAndSet from 'hyperion-test-and-set/src/TestAndSet';
-import * as ALReactComponentProps from "./ALReactComponentProps";
-import * as ALReactComponent from "./ALReactComponent";
+import type {Channel} from 'hyperion-channel/src/Channel';
+import {DEFAULT_CONFIG, DEFAULT_INTERCEPT_PROPS} from './ALConfig';
+import {initALChannel} from './ALChannel';
+import {startHeartbeat} from './ALHeartbeat';
+import {
+  initializeAutoLogging,
+  isALRuntimeSampledIn,
+} from './ALProvider';
+import type {ALChannelEventMap} from './ALTypes';
 
 'use strict';
 
 
-export type ALChannelEvent = ChannelEventType<
-  & ALReactComponentProps.InitOptions['channel']
-  & ALReactComponent.InitOptions['channel']
->
+export type ALChannelEvent = ALChannelEventMap;
 
-type PublicInitOptions<T> = Omit<T, 'react' | 'channel'>;
+export interface InitOptions {
+  appName?: string;
+  sampleRate?: number;
+  channel?: Channel<ALChannelEventMap>;
+  heartbeat?:
+    | false
+    | {
+        heartbeatInterval?: number;
+        maxUserInactivityDuration?: number;
+      };
+  react?: {
+    enableInterceptComponentElement?: boolean;
+  };
+  props?: {
+    intercept?: readonly string[];
+    enableInterceptReactComponentProp?: boolean;
+  } | null;
+  componentProps?: {
+    intercept?: readonly string[];
+    enableInterceptReactComponentProp?: boolean;
+  } | null;
+}
 
-export type InitOptions = Types.Options<{
-  react:
-    & IReactComponent.InitOptions
-    & PublicInitOptions<ALReactComponent.InitOptions>;
-  channel: Channel<ALChannelEvent>;
-  props?: PublicInitOptions<ALReactComponentProps.InitOptions> | null;
-}>
+const pipedChannels = new WeakSet<object>();
 
-const initialized = new TestAndSet();
 export function init(options: InitOptions): void {
-  if (initialized.testAndSet()) {
-    return;
-  }
-
-  let channel = options.channel;
-
+  const propOptions = options.props ?? options.componentProps;
+  const enabled =
+    options.react?.enableInterceptComponentElement !== false ||
+    propOptions?.enableInterceptReactComponentProp !== false;
+  const heartbeatOptions =
+    options.heartbeat === false ? null : options.heartbeat ?? {};
+  const heartbeatInterval =
+    heartbeatOptions?.heartbeatInterval ?? DEFAULT_CONFIG.heartbeatInterval;
+  initializeAutoLogging({
+    appName: options.appName ?? 'react_native',
+    enabled,
+    sampleRate: options.sampleRate ?? 1,
+    heartbeatInterval:
+      heartbeatOptions == null ? false : heartbeatInterval,
+    maxUserInactivityDuration:
+      heartbeatOptions?.maxUserInactivityDuration,
+    interceptProps: propOptions?.intercept ?? DEFAULT_INTERCEPT_PROPS,
+    debug: false,
+  });
   if (
-    options.react.enableInterceptClassComponentConstructor ||
-    options.react.enableInterceptClassComponentMethods ||
-    options.react.enableInterceptFunctionComponentRender ||
-    options.react.enableInterceptDomElement ||
-    options.react.enableInterceptComponentElement ||
-    options.react.enableInterceptSpecialElement
+    heartbeatOptions != null &&
+    isALRuntimeSampledIn()
   ) {
-    IReactComponent.init(options.react);
+    startHeartbeat(
+      heartbeatInterval,
+      heartbeatOptions.maxUserInactivityDuration,
+    );
   }
-
-  ALReactComponent.publish({
-    channel,
-    enableReactComponentPublisher: options.react.enableReactComponentPublisher,
-  })
-
-  if (options.props) {
-    ALReactComponentProps.publish({
-      channel,
-      ...options.props,
-    })
+  if (options.channel != null && !pipedChannels.has(options.channel)) {
+    (initALChannel() as Channel<ALChannelEventMap>).pipe(options.channel);
+    pipedChannels.add(options.channel);
   }
 }

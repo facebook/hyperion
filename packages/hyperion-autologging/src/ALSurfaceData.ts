@@ -10,6 +10,7 @@ import type { ALSurfaceVisibilityEventData } from "./ALSurfaceVisibilityPublishe
 import { type IALFlowlet } from "./ALFlowletManager";
 import { type Metadata } from "./ALType";
 import { ALSurfaceCapability, EventMetadata, WritableEventMetadata } from "./ALSurfaceTypes";
+import { ALSurfaceHierarchyNode } from "./ALSurfaceHierarchy";
 
 /**
  * This core class captures the general structure of the tree.
@@ -18,32 +19,8 @@ import { ALSurfaceCapability, EventMetadata, WritableEventMetadata } from "./ALS
  * as children, effectively separating the root node from the rest
  * of tree nodes.
  */
-abstract class ALSurfaceDataCore {
-  private __ext: { [namespace: string]: any; };
-  #locked: boolean = false; // allow removal by default
-
+abstract class ALSurfaceDataCore extends ALSurfaceHierarchyNode<ALSurfaceData> {
   private readonly elements: Set<Element> = new Set<Element>();
-  private readonly childrenMap: Map<string, ALSurfaceData> = new Map<string, ALSurfaceData>();
-
-  constructor(
-    public readonly surface: string | null,
-    public readonly parent: ALSurfaceDataCore | null,
-  ) {
-    this.__ext = Object.create(this.parent?.__ext ?? null);
-  }
-
-  getChild(surfaceName: string): ALSurfaceData | null {
-    return this.childrenMap.get(surfaceName) ?? null;
-  }
-  getChildren(): ALSurfaceData[] {
-    return Array.from(this.childrenMap.values());
-  }
-  addChild(child: ALSurfaceData): void {
-    this.childrenMap.set(child.surfaceName, child);
-  }
-  removeChild(child: ALSurfaceData): boolean {
-    return this.childrenMap.delete(child.surfaceName);
-  }
 
   addElement(element: Element): void {
     this.elements.add(element);
@@ -53,26 +30,6 @@ abstract class ALSurfaceDataCore {
   }
   removeElement(element: Element): void {
     this.elements.delete(element);
-  }
-
-  public isRemovable(): boolean {
-    const isChildless = this.childrenMap.size === 0
-    return isChildless && !this.#locked;
-  }
-  remove(): boolean {
-    return this.isRemovable();
-  }
-
-  getInheritedPropery<T>(propName: string): T | undefined | null {
-    return this.__ext[propName] as T;
-  }
-
-  setInheritedPropery<T>(propName: string, propValue: T): T {
-    this.__ext[propName] = propValue;
-
-    this.#locked = true; // now that this node has data, it should never be removed
-
-    return propValue;
   }
 
 }

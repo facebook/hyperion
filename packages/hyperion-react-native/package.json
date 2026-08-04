@@ -28,6 +28,7 @@
   },
   "workspaces": [
     "../hyperion-channel",
+    "../hyperion-autologging",
     "../hyperion-core",
     "../hyperion-devtools",
     "../hyperion-test-and-set",
@@ -35,6 +36,7 @@
   ],
   "dependencies": {
     "hyperion-channel": "*",
+    "hyperion-autologging": "*",
     "hyperion-core": "*",
     "hyperion-test-and-set": "*",
     "hyperion-util": "*"
