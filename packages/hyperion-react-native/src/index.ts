@@ -4,19 +4,16 @@
 
 'use strict';
 
-export * as AutoLogging from "./AutoLogging";
+export * as AutoLogging from './AutoLogging';
+export type { InitOptions } from './AutoLogging';
 export {
-  ALProvider,
-  initializeAutoLogging,
-  initializeAutoLogging as configureAutoLogging,
-  isALRuntimeSampledIn,
-  resolveComponentName,
-  useAL,
-} from './ALProvider';
-export {DEFAULT_CONFIG, DEFAULT_INTERCEPT_PROPS, mapPropToEventType} from './ALConfig';
-export type {ALConfig} from './ALConfig';
-export {initALChannel, getALChannel, addChannelSubscriber} from './ALChannel';
-export type {ALChannel} from './ALChannel';
+  DEFAULT_CONFIG,
+  DEFAULT_INTERCEPT_PROPS,
+  mapPropToEventType,
+} from './ALConfig';
+export type { ALConfig } from './ALConfig';
+export { initALChannel, getALChannel, addChannelSubscriber } from './ALChannel';
+export type { ALChannel } from './ALChannel';
 export {
   createLoggableEvent,
   createTransportEnvelope,
@@ -50,7 +47,20 @@ export {
   getWebSessionId,
   rotateScreenId,
 } from './ALSession';
-export {getCurrentScreen, setCurrentScreen} from './ALScreen';
+export { getCurrentScreen, setCurrentScreen } from './ALScreen';
+export { logAppEvent, useLogAppEvent } from './ALAppEvent';
+export { useALListViewability } from './ALListViewability';
+export type {
+  ALListViewabilityOptions,
+  ALListViewabilityResult,
+  ALViewabilityConfig,
+  ALViewabilityInfo,
+  ALViewToken,
+} from './ALListViewability';
+export { logDeepLinkOpen } from './ALDeepLink';
+export type { ALDeepLinkOptions } from './ALDeepLink';
+export { logReactErrorBoundary } from './ALReactError';
+export type { ALReactErrorInfo, ALReactErrorOptions } from './ALReactError';
 export {
   extractElementInfo,
   extractElementText,
@@ -59,24 +69,6 @@ export {
   isTextInput,
 } from './ALLabelExtraction';
 export type { RNElementInfo, RNElementText } from './ALLabelExtraction';
-export {
-  getSafeControlValue,
-  sanitizeCustomAttributes,
-  sanitizeErrorName,
-  sanitizeLabel,
-  sanitizeMetadata,
-  sanitizeReactComponentStack,
-  sanitizeStableIdentifier,
-  sanitizeStableTargetURI,
-} from './ALPrivacy';
-export {normalizeSampleRate, shouldSampleSession} from './ALSampling';
-export {
-  createObservedJSXFunction,
-  getJSXRuntimeBenchmarkPair,
-  installReactNativeJSXRuntime,
-  isElementObservationEnabled,
-  setElementObservationEnabled,
-} from 'hyperion-react/src/ReactElementObservation';
 export type {
   ALAppStateEventData,
   ALChannelEventMap,
@@ -95,6 +87,9 @@ export type {
   ALTransportEnvelope,
   ALUIEventData,
   RNElementTextSource,
+  RNElementTextSourceType,
+  RNEventValueSource,
+  RNEventValueSourceType,
   SurfaceMetadata,
   SurfaceMetadataValue,
   UIEventMetadata,

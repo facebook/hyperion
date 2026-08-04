@@ -6,27 +6,28 @@
 
 import React, { useEffect, useInsertionEffect, useState } from 'react';
 import type { Channel } from 'hyperion-channel/src/Channel';
-import type { InstrumentedElementProps } from './ReactNativeElementObservation';
+import { getOriginalCreateElement } from './ReactNativeElementObservation';
 import { mapPropToEventType, type ALConfig } from './ALConfig';
 import type { ALRuntimeChannelEventMap } from './ALChannel';
-import { createLoggableEvent } from './ALContract';
+import { createLoggableEvent, setIfDefined } from './ALContract';
 import { recordActivity } from './ALHeartbeat';
 import {
   extractElementInfo,
   extractElementText,
+  extractEventValue,
+  type RNEventValue,
   type RNElementInfo,
   type RNElementText,
 } from './ALLabelExtraction';
-import {
-  getExplicitText,
-  getSafeControlValue,
-  mergeMetadata,
-} from './ALPrivacy';
+import { getExplicitText, mergeMetadata } from './ALMetadata';
 import { extendSession } from './ALSession';
 import { useSurface, type ALSurfaceDataNode } from './ALSurface';
 
+declare const __DEV__: boolean;
+
 const SCROLL_DEBOUNCE_MS = 5_000;
 const VALUE_CHANGE_DEBOUNCE_MS = 500;
+const defaultCreateElement = React.createElement;
 type EventHandler = (this: unknown, ...args: unknown[]) => unknown;
 const instrumentedHandlers = new WeakSet<EventHandler>();
 
@@ -46,24 +47,32 @@ interface InstrumentationRuntimeState {
   lastScrollTimestamp: number;
   valueChangeTimer: ReturnType<typeof setTimeout> | null;
   handlerCache: Map<string, EventHandler>;
-  commit(
-    snapshot: InstrumentationSnapshot,
-    channel: Channel<ALRuntimeChannelEventMap>,
-    config: ALConfig
-  ): void;
-  getHandler(propName: string): EventHandler;
-  dispose(): void;
+}
+
+function createInstrumentationSnapshot(
+  componentName: string | undefined,
+  props: Readonly<Record<string, unknown>>,
+  surface: ALSurfaceDataNode | null,
+  debugOwnerStack?: readonly string[]
+): InstrumentationSnapshot {
+  const elementInfo = extractElementInfo(componentName, props);
+  return {
+    props,
+    componentName: componentName ?? '(anonymous)',
+    elementInfo,
+    elementText: extractElementText(elementInfo),
+    surface,
+    debugOwnerStack,
+  };
 }
 
 export interface ALInstrumentedElementOwnProps {
+  originalType: React.ElementType;
   componentName?: string;
   config: ALConfig;
   channel: Channel<ALRuntimeChannelEventMap>;
   interceptProps: readonly string[];
 }
-
-export type ALInstrumentedElementProps = InstrumentedElementProps &
-  ALInstrumentedElementOwnProps;
 
 function createInstrumentationRuntimeState(
   snapshot: InstrumentationSnapshot,
@@ -77,28 +86,30 @@ function createInstrumentationRuntimeState(
     lastScrollTimestamp: 0,
     valueChangeTimer: null,
     handlerCache: new Map(),
-    commit(nextSnapshot, nextChannel, nextConfig) {
-      state.snapshot = nextSnapshot;
-      state.channel = nextChannel;
-      state.config = nextConfig;
-    },
-    getHandler(propName) {
-      let handler = state.handlerCache.get(propName);
-      if (handler == null) {
-        handler = createStateHandlerWrapper(state, propName);
-        instrumentedHandlers.add(handler);
-        state.handlerCache.set(propName, handler);
-      }
-      return handler;
-    },
-    dispose() {
-      if (state.valueChangeTimer != null) {
-        clearTimeout(state.valueChangeTimer);
-        state.valueChangeTimer = null;
-      }
-    },
   };
   return state;
+}
+
+function getStateHandler(
+  state: InstrumentationRuntimeState,
+  propName: string
+): EventHandler {
+  let handler = state.handlerCache.get(propName);
+  if (handler == null) {
+    handler = createStateHandlerWrapper(state, propName);
+    instrumentedHandlers.add(handler);
+    state.handlerCache.set(propName, handler);
+  }
+  return handler;
+}
+
+function disposeInstrumentationRuntimeState(
+  state: InstrumentationRuntimeState
+): void {
+  if (state.valueChangeTimer != null) {
+    clearTimeout(state.valueChangeTimer);
+    state.valueChangeTimer = null;
+  }
 }
 
 export function isInstrumentedHandler(value: unknown): boolean {
@@ -125,63 +136,78 @@ export function hasInstrumentableEventProp(
   return false;
 }
 
-export function ALInstrumentedElement({
-  originalType,
-  originalProps,
-  originalReceiver,
-  originalArgumentCount,
-  originalArg2,
-  originalArg3,
-  originalArg4,
-  originalArg5,
-  originalTrailingArgs,
-  renderOriginal,
-  componentName,
-  config,
-  channel,
-  interceptProps,
-}: ALInstrumentedElementProps): React.ReactNode {
+export function createALInstrumentedElementType(
+  ownProps: ALInstrumentedElementOwnProps
+): React.ForwardRefExoticComponent<Record<string, unknown>> {
+  const installedCreateElement = getOriginalCreateElement();
+  return React.forwardRef<unknown, Record<string, unknown>>(
+    function ALInstrumentedElement(props, forwardedRef) {
+      return renderALInstrumentedElement(
+        props,
+        forwardedRef,
+        ownProps,
+        installedCreateElement
+      );
+    }
+  );
+}
+
+function renderALInstrumentedElement(
+  props: Readonly<Record<string, unknown>>,
+  forwardedRef: React.ForwardedRef<unknown>,
+  {
+    originalType,
+    componentName,
+    config,
+    channel,
+    interceptProps,
+  }: ALInstrumentedElementOwnProps,
+  installedCreateElement: ReturnType<typeof getOriginalCreateElement>
+): React.ReactElement {
   const surface = useSurface();
-  const props = originalProps as Readonly<Record<string, unknown>>;
-  const resolvedName = componentName ?? '(anonymous)';
-  const elementInfo = extractElementInfo(componentName, props);
-  const snapshot: InstrumentationSnapshot = {
+  const snapshot = createInstrumentationSnapshot(
+    componentName,
     props,
-    componentName: resolvedName,
-    elementInfo,
-    elementText: extractElementText(elementInfo),
     surface,
-    debugOwnerStack: config.debug === true ? getOwnerStack() : undefined,
-  };
+    typeof __DEV__ !== 'undefined' && __DEV__ && config.debug === true
+      ? getOwnerStack()
+      : undefined
+  );
   const [runtimeState] = useState(() =>
     createInstrumentationRuntimeState(snapshot, channel, config)
   );
   useInsertionEffect(() => {
-    runtimeState.commit(snapshot, channel, config);
+    runtimeState.snapshot = snapshot;
+    runtimeState.channel = channel;
+    runtimeState.config = config;
   });
-  useEffect(() => () => runtimeState.dispose(), [runtimeState]);
+  useEffect(
+    () => () => disposeInstrumentationRuntimeState(runtimeState),
+    [runtimeState]
+  );
 
-  let handlerOverrides: Record<string, EventHandler> | null = null;
+  let renderedProps: Record<string, unknown> | null = null;
   for (const propName of interceptProps) {
     const handler = props[propName];
     if (typeof handler !== 'function' || isInstrumentedHandler(handler))
       continue;
-    handlerOverrides ??= {};
-    handlerOverrides[propName] = runtimeState.getHandler(propName);
+    renderedProps ??= { ...props };
+    renderedProps[propName] = getStateHandler(runtimeState, propName);
   }
-  const renderedProps =
-    handlerOverrides == null ? props : { ...props, ...handlerOverrides };
-  return renderOriginal(
-    originalReceiver,
-    originalType,
-    renderedProps,
-    originalArgumentCount,
-    originalArg2,
-    originalArg3,
-    originalArg4,
-    originalArg5,
-    originalTrailingArgs
-  ) as React.ReactNode;
+  if (forwardedRef != null) {
+    renderedProps ??= { ...props };
+    renderedProps.ref = forwardedRef;
+  }
+  const elementProps = renderedProps ?? props;
+  return (
+    installedCreateElement == null
+      ? defaultCreateElement.call(React, originalType, elementProps)
+      : installedCreateElement.renderer.call(
+          installedCreateElement.receiver,
+          originalType,
+          elementProps
+        )
+  ) as React.ReactElement;
 }
 
 function createStateHandlerWrapper(
@@ -210,14 +236,9 @@ function invokeInstrumentedHandler(
     }
     state.lastScrollTimestamp = now;
   }
-  let safeValue: string | undefined;
+  let eventValue: RNEventValue | undefined;
   try {
-    safeValue = getSafeControlValue(
-      propName,
-      args[0],
-      snapshot.elementInfo.testID,
-      state.config.controlValueAllowlist
-    );
+    eventValue = extractEventValue(propName, args, snapshot.elementInfo);
   } catch {
     // Value extraction must not affect the application handler.
   }
@@ -231,7 +252,7 @@ function invokeInstrumentedHandler(
           snapshot,
           eventType,
           propName,
-          safeValue
+          eventValue
         );
       }, VALUE_CHANGE_DEBOUNCE_MS);
       recordActivity();
@@ -242,7 +263,7 @@ function invokeInstrumentedHandler(
     return handler.apply(receiver, args);
   }
   try {
-    emitUIEventSafely(state.channel, snapshot, eventType, propName, safeValue);
+    emitUIEventSafely(state.channel, snapshot, eventType, propName, eventValue);
     recordActivity();
     extendSession();
   } catch {
@@ -256,48 +277,63 @@ function emitUIEventSafely(
   snapshot: InstrumentationSnapshot,
   eventType: string,
   propName: string,
-  value?: string
+  valueInfo?: RNEventValue
 ): void {
   const loggable = createLoggableEvent();
-  const surfaceMetadata = mergeMetadata(
-    snapshot.surface?.interactiveMetadata
-  );
+  const surfaceMetadata = mergeMetadata(snapshot.surface?.interactiveMetadata);
   const eventMetadata = mergeMetadata(
     snapshot.surface?.uiEventMetadata[eventType]
   );
   const elementName =
     getExplicitText(snapshot.elementInfo.testID) ??
     getExplicitText(snapshot.componentName);
-  channel.emitSafely('al_ui_event', {
+  const event = {
     ...loggable,
     event: eventType,
     sourceProp: propName,
-    ...(snapshot.surface?.interactivePath
-      ? { surface: snapshot.surface.interactivePath }
-      : {}),
-    ...(snapshot.surface == null ? {} : { surfaceData: snapshot.surface }),
-    ...(Object.keys(surfaceMetadata).length === 0 ? {} : { surfaceMetadata }),
     reactComponentName: snapshot.componentName,
-    ...(snapshot.debugOwnerStack == null
-      ? {}
-      : { reactComponentStack: snapshot.debugOwnerStack }),
-    ...(snapshot.elementText == null
-      ? {}
-      : {
-          elementText: snapshot.elementText.text,
-          elementTextSource: snapshot.elementText.source,
-        }),
-    ...(elementName == null ? {} : { elementName }),
-    ...(value === undefined ? {} : { value }),
-    ...(snapshot.elementInfo.isDisabled === true ? { isDisabled: true } : {}),
     metadata: eventMetadata,
-  });
+  };
+  setIfDefined(event, 'surface', snapshot.surface?.interactivePath);
+  setIfDefined(event, 'surfaceData', snapshot.surface);
+  setIfDefined(
+    event,
+    'surfaceMetadata',
+    Object.keys(surfaceMetadata).length === 0 ? undefined : surfaceMetadata
+  );
+  setIfDefined(event, 'reactComponentStack', snapshot.debugOwnerStack);
+  setIfDefined(event, 'elementText', snapshot.elementText?.text);
+  setIfDefined(event, 'elementTextSource', snapshot.elementText?.source);
+  setIfDefined(
+    event,
+    'elementTextSourceType',
+    snapshot.elementText?.sourceType
+  );
+  setIfDefined(
+    event,
+    'elementTextPotentiallySensitive',
+    snapshot.elementText?.potentiallySensitive
+  );
+  setIfDefined(event, 'elementName', elementName);
+  if (valueInfo != null) {
+    (event as Record<string, unknown>).value = valueInfo.value;
+  }
+  setIfDefined(event, 'valueSource', valueInfo?.source);
+  setIfDefined(event, 'valueSourceType', valueInfo?.sourceType);
+  setIfDefined(
+    event,
+    'valuePotentiallySensitive',
+    valueInfo?.potentiallySensitive
+  );
+  setIfDefined(
+    event,
+    'isDisabled',
+    snapshot.elementInfo.isDisabled === true ? true : undefined
+  );
+  channel.emitSafely('al_ui_event', event);
 }
 
 function getOwnerStack(): readonly string[] | undefined {
-  const isDevelopment =
-    (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ === true;
-  if (!isDevelopment) return undefined;
   try {
     const captureOwnerStack = (
       React as unknown as { captureOwnerStack?: () => string | null }

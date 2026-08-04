@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 import { ALSurfaceHierarchyNode } from 'hyperion-autologging-shared';
 import { getALRuntimeChannel } from './ALChannel';
-import { getExplicitText, mergeMetadata } from './ALPrivacy';
+import { getExplicitText, mergeMetadata } from './ALMetadata';
 import type { SurfaceMetadata, UIEventMetadata } from './ALTypes';
 
 const EMPTY_ELEMENTS: readonly never[] = Object.freeze([]);

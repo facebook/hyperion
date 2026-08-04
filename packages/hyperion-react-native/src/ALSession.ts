@@ -7,13 +7,16 @@
 import {guid} from 'hyperion-util/src/guid';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+const ID_LENGTH = 6;
+const ID_SPACE = 36 ** ID_LENGTH;
 
 function generateId(): string {
-  return guid()
-    .toLowerCase()
-    .replace(/[^0-9a-z]/g, '')
-    .padEnd(6, '0')
-    .slice(0, 6);
+  const entropy = guid()
+    .slice(1)
+    .replace(/[^0-9a-f]/gi, '')
+    .slice(-8);
+  const randomValue = Number.parseInt(entropy, 16) || 0;
+  return (randomValue % ID_SPACE).toString(36).padStart(ID_LENGTH, '0');
 }
 
 let sessionId = generateId();

@@ -7,12 +7,10 @@
 export interface ALConfig {
   appName: string;
   enabled?: boolean;
-  sampleRate?: number;
   heartbeatInterval?: number | false;
   maxUserInactivityDuration?: number;
   debug?: boolean;
   interceptProps?: readonly string[];
-  controlValueAllowlist?: Readonly<Record<string, readonly string[]>>;
   componentNameValidator?: (name: string) => boolean;
 }
 
@@ -28,7 +26,6 @@ export const DEFAULT_INTERCEPT_PROPS: readonly string[] = Object.freeze([
 
 export const DEFAULT_CONFIG = Object.freeze({
   enabled: true,
-  sampleRate: 1,
   heartbeatInterval: 30_000,
   debug:
     (globalThis as typeof globalThis & {__DEV__?: boolean}).__DEV__ === true,

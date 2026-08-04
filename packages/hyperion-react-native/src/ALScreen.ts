@@ -4,10 +4,10 @@
 
 'use strict';
 
-import {getALRuntimeChannel} from './ALChannel';
-import {sanitizeLabel} from './ALPrivacy';
-import {getScreenId, rotateScreenId} from './ALSession';
-import type {SurfaceMetadata} from './ALTypes';
+import { getALRuntimeChannel } from './ALChannel';
+import { getExplicitText } from './ALMetadata';
+import { getScreenId, rotateScreenId } from './ALSession';
+import type { SurfaceMetadata } from './ALTypes';
 
 export interface ALScreenState {
   name: string;
@@ -22,15 +22,15 @@ export function getCurrentScreen(): ALScreenState | null {
 
 export function setCurrentScreen(
   name: string,
-  metadata?: SurfaceMetadata,
+  metadata?: SurfaceMetadata
 ): boolean {
-  const sanitizedName = sanitizeLabel(name);
-  if (sanitizedName == null || currentScreen?.name === sanitizedName) {
+  const explicitName = getExplicitText(name);
+  if (explicitName == null || currentScreen?.name === explicitName) {
     return false;
   }
   const previousScreen = currentScreen;
   rotateScreenId();
-  currentScreen = {name: sanitizedName, screenId: getScreenId()};
+  currentScreen = { name: explicitName, screenId: getScreenId() };
   getALRuntimeChannel()?.emitSafely('al_screen_transition_request', {
     timestamp: Date.now(),
     screen: currentScreen.name,

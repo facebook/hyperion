@@ -4,15 +4,15 @@
 
 'use strict';
 
-import {Channel} from 'hyperion-channel/src/Channel';
-import type {ALHeartbeatType} from 'hyperion-autologging/src/ALHeartbeatType';
+import { Channel } from 'hyperion-channel/src/Channel';
+import type { ALHeartbeatType } from 'hyperion-autologging-shared';
 import type {
   ALChannelEventMap,
   ALCustomEventLevel,
   ALDeepLinkSource,
   SurfaceMetadata,
 } from './ALTypes';
-import type {ALSurfaceDataNode} from './ALSurface';
+import type { ALSurfaceDataNode } from './ALSurface';
 
 interface SurfaceRequest {
   timestamp: number;
@@ -25,11 +25,9 @@ interface SurfaceRequest {
 
 export type ALRuntimeChannelEventMap = ALChannelEventMap & {
   al_surface_mount_request: [SurfaceRequest];
-  al_surface_unmount_request: [
-    SurfaceRequest & {mountedDuration: number},
-  ];
-  al_heartbeat_request: [{type: ALHeartbeatType; timestamp: number}];
-  al_app_state_request: [{state: string; timestamp: number}];
+  al_surface_unmount_request: [SurfaceRequest & { mountedDuration: number }];
+  al_heartbeat_request: [{ type: ALHeartbeatType; timestamp: number }];
+  al_app_state_request: [{ state: string; timestamp: number }];
   al_custom_event_request: [
     {
       eventName: string;
@@ -37,7 +35,7 @@ export type ALRuntimeChannelEventMap = ALChannelEventMap & {
       attributes?: Readonly<Record<string, unknown>>;
       surface?: string;
       surfaceMetadata?: SurfaceMetadata;
-    },
+    }
   ];
   al_screen_transition_request: [
     {
@@ -47,7 +45,7 @@ export type ALRuntimeChannelEventMap = ALChannelEventMap & {
       previousScreen?: string;
       previousScreenId?: string;
       metadata?: SurfaceMetadata;
-    },
+    }
   ];
   al_list_impression_request: [
     {
@@ -58,7 +56,7 @@ export type ALRuntimeChannelEventMap = ALChannelEventMap & {
       surface?: string;
       surfaceMetadata?: SurfaceMetadata;
       metadata?: SurfaceMetadata;
-    },
+    }
   ];
   al_deep_link_request: [
     {
@@ -66,16 +64,18 @@ export type ALRuntimeChannelEventMap = ALChannelEventMap & {
       targetURI: string;
       source: ALDeepLinkSource;
       metadata?: SurfaceMetadata;
-    },
+    }
   ];
   al_react_error_request: [
     {
       timestamp: number;
       errorName: string;
+      errorMessage?: string;
+      errorStack?: string;
       boundaryName?: string;
       errorCategory?: string;
-      reactComponentStack?: readonly string[];
-    },
+      reactComponentStack?: string;
+    }
   ];
 };
 
@@ -107,13 +107,11 @@ export function getALRuntimeChannel(): Channel<ALRuntimeChannelEventMap> | null 
   return channel;
 }
 
-export function addChannelSubscriber<
-  EventName extends keyof ALChannelEventMap,
->(
+export function addChannelSubscriber<EventName extends keyof ALChannelEventMap>(
   eventType: EventName,
-  handler: (...args: ALChannelEventMap[EventName]) => void,
+  handler: (...args: ALChannelEventMap[EventName]) => void
 ): () => void {
-  const subscriber = {eventType, handler} as ExternalSubscriber<
+  const subscriber = { eventType, handler } as ExternalSubscriber<
     keyof ALChannelEventMap
   >;
   externalSubscribers.push(subscriber);

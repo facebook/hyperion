@@ -9,7 +9,7 @@ import { addChannelSubscriber } from '../src/ALChannel';
 import {
   initializeAutoLogging,
   resetALRuntimeForTests,
-} from '../src/ALProvider';
+} from '../src/ALRuntime';
 import {
   ALSurface,
   ALSurfaceData,
@@ -109,6 +109,46 @@ describe('React Native AutoLogging runtime', () => {
         elementName: 'save-button',
         elementText: 'Save changes',
         elementTextSource: 'title',
+        elementTextSourceType: 'application_text',
+        elementTextPotentiallySensitive: true,
+      })
+    );
+  });
+
+  it('publishes raw text input with sensitivity provenance', () => {
+    const events: ALUIEventData[] = [];
+    addChannelSubscriber('al_ui_event', (event) => events.push(event));
+    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
+    function TextInput(props: {
+      onChangeText(value: string): void;
+      testID: string;
+    }) {
+      return React.createElement('input', props);
+    }
+    const applicationHandler = jest.fn();
+    let renderer: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        jsx(TextInput, {
+          onChangeText: applicationHandler,
+          testID: 'account-email',
+        })
+      );
+    });
+
+    const installedHandler = renderer?.root.findByType('input').props
+      .onChangeText as ((value: string) => void) | undefined;
+    expect(installedHandler).toBeDefined();
+    installedHandler?.('person@example.com');
+
+    expect(applicationHandler).toHaveBeenCalledWith('person@example.com');
+    expect(events).toHaveLength(1);
+    expect(events[0]).toEqual(
+      expect.objectContaining({
+        value: 'person@example.com',
+        valueSource: 'callback_argument',
+        valueSourceType: 'user_input',
+        valuePotentiallySensitive: true,
       })
     );
   });
@@ -246,7 +286,7 @@ describe('React Native AutoLogging runtime', () => {
     jest.useRealTimers();
   });
 
-  it('does zero observation work when disabled or sampled out', () => {
+  it('does zero observation work when disabled', () => {
     const events: ALUIEventData[] = [];
     addChannelSubscriber('al_ui_event', (event) => events.push(event));
     initializeAutoLogging({

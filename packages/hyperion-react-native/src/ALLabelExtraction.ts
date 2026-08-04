@@ -4,7 +4,12 @@
 
 'use strict';
 
-import type { RNElementTextSource } from './ALTypes';
+import type {
+  RNElementTextSource,
+  RNElementTextSourceType,
+  RNEventValueSource,
+  RNEventValueSourceType,
+} from './ALTypes';
 
 export interface RNElementInfo {
   componentName?: string;
@@ -16,12 +21,22 @@ export interface RNElementInfo {
   accessibilityRole?: string;
   accessibilityHint?: string;
   placeholder?: string;
+  value?: unknown;
   isDisabled?: true;
 }
 
 export interface RNElementText {
   text: string;
   source: RNElementTextSource;
+  sourceType: RNElementTextSourceType;
+  potentiallySensitive: boolean;
+}
+
+export interface RNEventValue {
+  value: unknown;
+  source: RNEventValueSource;
+  sourceType: RNEventValueSourceType;
+  potentiallySensitive: boolean;
 }
 
 const TEXT_INPUT_ROLES = new Set(['search', 'text', 'none']);
@@ -48,17 +63,101 @@ export function extractLabel(info: RNElementInfo): string | undefined {
 export function extractElementText(
   info: RNElementInfo
 ): RNElementText | undefined {
-  const candidates: readonly [RNElementTextSource, string | undefined][] = [
-    ['accessibilityLabel', info.accessibilityLabel],
-    ['aria-label', info.ariaLabel],
-    ['title', info.title],
-    ['testID', info.testID],
-    ['placeholder', !isTextInput(info) ? info.placeholder : undefined],
-  ];
-  for (const [source, text] of candidates) {
-    if (text != null && text.length > 0) return { text, source };
+  return (
+    createElementText(
+      info.accessibilityLabel,
+      'accessibilityLabel',
+      'application_text'
+    ) ??
+    createElementText(info.ariaLabel, 'aria-label', 'application_text') ??
+    createElementText(info.title, 'title', 'application_text') ??
+    createElementText(info.testID, 'testID', 'developer_identifier') ??
+    createElementText(
+      isTextInput(info) ? undefined : info.placeholder,
+      'placeholder',
+      'application_text'
+    )
+  );
+}
+
+function createElementText(
+  text: string | undefined,
+  source: RNElementTextSource,
+  sourceType: RNElementTextSourceType
+): RNElementText | undefined {
+  return text == null || text.length === 0
+    ? undefined
+    : {
+        text,
+        source,
+        sourceType,
+        potentiallySensitive: sourceType !== 'developer_identifier',
+      };
+}
+
+export function extractEventValue(
+  propName: string,
+  args: readonly unknown[],
+  info: RNElementInfo
+): RNEventValue | undefined {
+  if (propName === 'onChangeText') {
+    return createEventValue(args[0], 'callback_argument', 'user_input');
+  }
+  if (propName === 'onValueChange') {
+    return createEventValue(args[0], 'callback_argument', 'control_value');
+  }
+  if (
+    propName === 'onChange' ||
+    propName === 'onSubmitEditing' ||
+    propName === 'onEndEditing'
+  ) {
+    const event = args[0];
+    if (event != null && typeof event === 'object') {
+      const nativeEvent = (event as { nativeEvent?: unknown }).nativeEvent;
+      if (nativeEvent != null && typeof nativeEvent === 'object') {
+        const value = (nativeEvent as { text?: unknown }).text;
+        const extracted = createEventValue(
+          value,
+          'native_event_text',
+          'user_input'
+        );
+        if (extracted != null) return extracted;
+      }
+    }
+  }
+  if (isTextInput(info)) {
+    return createEventValue(info.value, 'element_value_prop', 'user_input');
   }
   return undefined;
+}
+
+function createEventValue(
+  value: unknown,
+  source: RNEventValueSource,
+  sourceType: RNEventValueSourceType
+): RNEventValue | undefined {
+  if (
+    value !== null &&
+    typeof value !== 'string' &&
+    typeof value !== 'number' &&
+    typeof value !== 'boolean'
+  ) {
+    return undefined;
+  }
+  return {
+    value,
+    source,
+    sourceType,
+    potentiallySensitive: true,
+  };
+}
+
+function getStringProp(
+  props: Readonly<Record<string, unknown>>,
+  name: string
+): string | undefined {
+  const value = props[name];
+  return typeof value === 'string' ? value : undefined;
 }
 
 export function extractElementInfo(
@@ -70,30 +169,18 @@ export function extractElementInfo(
     accessibilityState != null &&
     typeof accessibilityState === 'object' &&
     (accessibilityState as { disabled?: unknown }).disabled === true;
+  const accessibilityRole = getStringProp(props, 'accessibilityRole');
   return {
     componentName,
-    componentType:
-      typeof props.accessibilityRole === 'string'
-        ? props.accessibilityRole
-        : undefined,
-    accessibilityLabel:
-      typeof props.accessibilityLabel === 'string'
-        ? props.accessibilityLabel
-        : undefined,
-    testID: typeof props.testID === 'string' ? props.testID : undefined,
-    ariaLabel:
-      typeof props['aria-label'] === 'string' ? props['aria-label'] : undefined,
-    title: typeof props.title === 'string' ? props.title : undefined,
-    accessibilityRole:
-      typeof props.accessibilityRole === 'string'
-        ? props.accessibilityRole
-        : undefined,
-    accessibilityHint:
-      typeof props.accessibilityHint === 'string'
-        ? props.accessibilityHint
-        : undefined,
-    placeholder:
-      typeof props.placeholder === 'string' ? props.placeholder : undefined,
+    componentType: accessibilityRole,
+    accessibilityLabel: getStringProp(props, 'accessibilityLabel'),
+    testID: getStringProp(props, 'testID'),
+    ariaLabel: getStringProp(props, 'aria-label'),
+    title: getStringProp(props, 'title'),
+    accessibilityRole,
+    accessibilityHint: getStringProp(props, 'accessibilityHint'),
+    placeholder: getStringProp(props, 'placeholder'),
+    value: props.value,
     isDisabled:
       props.disabled === true || accessibilityDisabled ? true : undefined,
   };

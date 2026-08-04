@@ -13,13 +13,21 @@ export type ALLoggableEvent = SharedALLoggableEvent<SurfaceMetadataValue>;
 export type SurfaceMetadata = Readonly<Record<string, SurfaceMetadataValue>>;
 export type UIEventMetadata = Readonly<Record<string, SurfaceMetadata>>;
 export type ALCustomEventLevel = 'debug' | 'info' | 'warn' | 'error';
-export type ALCustomEventAttributes = SurfaceMetadata;
+export type ALCustomEventAttributes = Readonly<Record<string, unknown>>;
 export type RNElementTextSource =
   | 'accessibilityLabel'
   | 'aria-label'
   | 'title'
   | 'testID'
   | 'placeholder';
+export type RNElementTextSourceType =
+  | 'developer_identifier'
+  | 'application_text';
+export type RNEventValueSource =
+  | 'callback_argument'
+  | 'native_event_text'
+  | 'element_value_prop';
+export type RNEventValueSourceType = 'user_input' | 'control_value';
 
 export interface ALUIEventData extends ALLoggableEvent {
   event: string;
@@ -31,8 +39,13 @@ export interface ALUIEventData extends ALLoggableEvent {
   reactComponentStack?: readonly string[];
   elementText?: string;
   elementTextSource?: RNElementTextSource;
+  elementTextSourceType?: RNElementTextSourceType;
+  elementTextPotentiallySensitive?: boolean;
   elementName?: string;
-  value?: string;
+  value?: unknown;
+  valueSource?: RNEventValueSource;
+  valueSourceType?: RNEventValueSourceType;
+  valuePotentiallySensitive?: boolean;
   isDisabled?: true;
 }
 
@@ -94,10 +107,12 @@ export interface ALReactErrorEventData extends ALLoggableEvent {
   event: 'error';
   source: 'react_error_boundary';
   errorName: string;
+  errorMessage?: string;
+  errorStack?: string;
   boundaryName?: string;
   errorCategory?: string;
   reactComponentName?: string;
-  reactComponentStack?: readonly string[];
+  reactComponentStack?: string;
 }
 
 export type ALChannelEventMap = {
@@ -119,7 +134,6 @@ export interface ALMobileEventContext {
   appInstanceId: string;
   screenId: string;
   screen?: string;
-  sampleRate: number;
 }
 
 export interface ALTransportEnvelope<Event extends ALLoggableEvent> {
