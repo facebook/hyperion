@@ -6,3 +6,5 @@
 export { ClientSessionID } from "./ClientSessionID";
 export { SessionPersistentData, LocalStoragePersistentData, CookiePersistentData, CookieStorage } from "./PersistentData";
 export { SafeGetterSetter } from "./SafeGetterSetter";
+export { guid } from "./guid";
+export type { GUID } from "./guid";

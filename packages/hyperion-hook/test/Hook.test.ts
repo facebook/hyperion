@@ -139,5 +139,27 @@ describe("test Hook", () => {
     expect(hook.hasCallback()).toBe(false);
   });
 
+  test("safe callbacks isolate failures and snapshot dispatch", () => {
+    const hook = new Hook<() => void>();
+    const calls: string[] = [];
+    const removed = () => calls.push("removed");
+    hook.add(() => {
+      calls.push("first");
+      hook.remove(removed);
+      throw new Error("listener failure");
+    });
+    hook.add(removed);
+    hook.add(() => calls.push("last"));
+
+    const errors: unknown[] = [];
+    hook.callSafely(error => errors.push(error));
+
+    expect(calls).toEqual(["first", "removed", "last"]);
+    expect(errors).toHaveLength(1);
+    calls.length = 0;
+    hook.callSafely();
+    expect(calls).toEqual(["first", "last"]);
+  });
+
 
 })

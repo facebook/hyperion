@@ -13,8 +13,17 @@ type ChannelListeners<T extends BaseChannelEventType> = {
 
 export type ChannelEventType<ChannelType> = ChannelType extends Channel<infer EventType> ? EventType : never;
 
-interface IEmitter<TEventToListenerArgsMap extends BaseChannelEventType> {
+export interface IEmitter<TEventToListenerArgsMap extends BaseChannelEventType> {
   emit<
+    TEvent extends keyof TEventToListenerArgsMap,
+    TArgs extends TEventToListenerArgsMap[TEvent]
+  >(eventType: TEvent, ...rawArgs: TArgs): void;
+}
+
+export interface ISafeEmitter<
+  TEventToListenerArgsMap extends BaseChannelEventType
+> extends IEmitter<TEventToListenerArgsMap> {
+  emitSafely<
     TEvent extends keyof TEventToListenerArgsMap,
     TArgs extends TEventToListenerArgsMap[TEvent]
   >(eventType: TEvent, ...rawArgs: TArgs): void;
@@ -22,6 +31,10 @@ interface IEmitter<TEventToListenerArgsMap extends BaseChannelEventType> {
 
 interface IPipedEmitter<TEventToListenerArgsMap extends BaseChannelEventType> {
   emit<
+    TEvent extends keyof TEventToListenerArgsMap,
+  >(eventType: TEvent, ...rawArgs: any): void;
+
+  emitSafely?<
     TEvent extends keyof TEventToListenerArgsMap,
   >(eventType: TEvent, ...rawArgs: any): void;
 }
@@ -47,8 +60,9 @@ type Events<T> =
 /// Checks strict equality of the events of T with BaseEvents. 
 type Check<T, BaseEvents> = IfEquals<Sub<Events<T>, BaseEvents>, BaseEvents, unknown, never>;
 
-export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventType> implements IEmitter<TEventToListenerArgsMap> {
+export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventType> implements ISafeEmitter<TEventToListenerArgsMap> {
   private _next = new Hook<IEmitter<TEventToListenerArgsMap>['emit']>();
+  private _nextSafe = new Hook<ISafeEmitter<TEventToListenerArgsMap>['emitSafely']>();
 
   /**
    * If the nextChannel is a super set of events of the current one, we still want to allow the
@@ -70,14 +84,30 @@ export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventTyp
         nextChannel.emit(eventType, ...args);
       }
     );
+    const safeHandler = this._nextSafe.add(scheduler
+      ? (eventType, ...args) => {
+        scheduler(() => {
+          nextChannel.emitSafely(eventType, ...args);
+        });
+      }
+      : (eventType, ...args) => {
+        nextChannel.emitSafely(eventType, ...args);
+      }
+    );
     //@ts-ignore
     handler._channel = nextChannel;
+    //@ts-ignore
+    safeHandler._channel = nextChannel;
     return nextChannel;
   }
   unpipe<T extends IEmitter<TEventToListenerArgsMap>>(nextChannel: T): boolean {
-    return this._next.removeIf(hook =>
+    const removed = this._next.removeIf(hook =>
       //@ts-ignore
       hook._channel === nextChannel);
+    this._nextSafe.removeIf(hook =>
+      //@ts-ignore
+      hook._channel === nextChannel);
+    return removed;
   }
 
   emit<
@@ -86,12 +116,19 @@ export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventTyp
   >(eventType: TEvent, ...rawArgs: TArgs): void {
     this._next.call(eventType, ...rawArgs);
   }
+
+  emitSafely<
+    TEvent extends keyof TEventToListenerArgsMap,
+    TArgs extends TEventToListenerArgsMap[TEvent]
+  >(eventType: TEvent, ...rawArgs: TArgs): void {
+    this._nextSafe.callSafely(undefined, eventType, ...rawArgs);
+  }
 }
 
 
 export class Channel<TEventToListenerArgsMap extends BaseChannelEventType>
   extends PipeableEmitter<TEventToListenerArgsMap>
-  implements IEmitter<TEventToListenerArgsMap> {
+  implements ISafeEmitter<TEventToListenerArgsMap> {
   private _listeners: ChannelListeners<TEventToListenerArgsMap> = Object.create(null);
 
   private _getOrAddHandler<TEvent extends keyof TEventToListenerArgsMap>(
@@ -134,6 +171,14 @@ export class Channel<TEventToListenerArgsMap extends BaseChannelEventType>
     // Then the event is passed to the next channel
     super.emit(eventType, ...rawArgs);
   }
+
+  emitSafely<
+    TEvent extends keyof TEventToListenerArgsMap,
+    TArgs extends TEventToListenerArgsMap[TEvent]
+  >(eventType: TEvent, ...rawArgs: TArgs): void {
+    this._getOrAddHandler(eventType).callSafely(undefined, ...rawArgs);
+    super.emitSafely(eventType, ...rawArgs);
+  }
 }
 
 export class PausableChannel<TEventToListenerArgsMap extends BaseChannelEventType> extends Channel<TEventToListenerArgsMap> {
@@ -158,6 +203,17 @@ export class PausableChannel<TEventToListenerArgsMap extends BaseChannelEventTyp
     }
 
     super.emit(eventType, ...rawArgs);
+  }
+
+  emitSafely<
+    TEvent extends keyof TEventToListenerArgsMap,
+    TArgs extends TEventToListenerArgsMap[TEvent]
+  >(eventType: TEvent, ...rawArgs: TArgs): void {
+    if (this._paused) {
+      return;
+    }
+
+    super.emitSafely(eventType, ...rawArgs);
   }
 
 

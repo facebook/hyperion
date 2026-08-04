@@ -38,6 +38,25 @@ export class Hook<CallbackType extends Function> {
     return <CallbackType>(<Function>call);
   }
 
+  public callSafely(
+    onError?: (error: unknown) => void,
+    ...args: unknown[]
+  ): void {
+    const callbacks = this._callbacks
+      ? this._callbacks.slice()
+      : this.call === EmptyCallback
+        ? []
+        : [this.call];
+
+    for (const callback of callbacks) {
+      try {
+        callback.apply(this, args);
+      } catch (error) {
+        onError?.(error);
+      }
+    }
+  }
+
   public add(cb: CallbackType, once?: boolean): CallbackType {
     let callback = cb;
     if (once) {

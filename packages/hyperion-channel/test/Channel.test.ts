@@ -243,4 +243,55 @@ describe("test Channel", () => {
     expect(fn2).toHaveBeenCalledTimes(2);
   });
 
+  test("safe emission isolates listeners and downstream channels", () => {
+    const channel1 = new Channel<ChannelEvents>();
+    const channel2 = new Channel<ChannelEvents>();
+    const calls: string[] = [];
+    channel1.addListener('ev1', () => {
+      calls.push('first');
+      throw new Error('listener failure');
+    });
+    channel1.addListener('ev1', () => calls.push('second'));
+    channel2.addListener('ev1', () => {
+      calls.push('downstream first');
+      throw new Error('downstream failure');
+    });
+    channel2.addListener('ev1', () => calls.push('downstream second'));
+    channel1.pipe(channel2);
+
+    expect(() => channel1.emitSafely('ev1')).not.toThrow();
+    expect(calls).toEqual([
+      'first',
+      'second',
+      'downstream first',
+      'downstream second',
+    ]);
+  });
+
+  test("safe emission snapshots listeners removed during dispatch", () => {
+    const channel = new Channel<ChannelEvents>();
+    const calls: string[] = [];
+    const removed = () => calls.push('removed');
+    channel.addListener('ev1', () => {
+      calls.push('first');
+      channel.removeListener('ev1', removed);
+    });
+    channel.addListener('ev1', removed);
+
+    channel.emitSafely('ev1');
+    expect(calls).toEqual(['first', 'removed']);
+  });
+
+  test("pausable channels suppress safe emission", () => {
+    const channel = new PausableChannel<ChannelEvents>();
+    const listener = jest.fn<void, []>();
+    channel.addListener('ev1', listener);
+    channel.pause();
+    channel.emitSafely('ev1');
+    expect(listener).not.toHaveBeenCalled();
+    channel.unpause();
+    channel.emitSafely('ev1');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
 });

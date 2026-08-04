@@ -171,14 +171,6 @@ export function init(options: InitOptions): void {
       return functionComponent;
     }
 
-    /**
-     * For functional components, we should always replace them with the
-     * intercepted version of them.
-     * however, the interceptFunction itself will only assign a FunctionIntercetpr
-     * to the function once.
-     * So, we don't need to use the interceptionInfo map here.
-     */
-
     const fi = interceptFunction<TReactFunctionComponent>(
       functionComponent,
       false,
@@ -187,7 +179,7 @@ export function init(options: InitOptions): void {
     );
     onReactFunctionComponentIntercept.call(fi);
 
-    return fi.interceptor;
+    return functionComponent;
   }
 
   const processComponent = IReactElementVisitor.createReactElementVisitor<

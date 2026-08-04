@@ -1,6 +1,9 @@
 {
   // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
   "extends": "hyperion-devtools",
+  "compilerOptions": {
+    "declaration": true
+  },
   "include": [
     "src",
   ],
