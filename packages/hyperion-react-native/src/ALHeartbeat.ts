@@ -4,25 +4,28 @@
 
 'use strict';
 
-import {AppState} from 'react-native';
-import {ALHeartbeatType} from 'hyperion-autologging/src/ALHeartbeatType';
-import {getALRuntimeChannel} from './ALChannel';
+import { AppState } from 'react-native';
+import { ALHeartbeatType } from 'hyperion-autologging-shared';
+import { getALRuntimeChannel } from './ALChannel';
 
-export {ALHeartbeatType} from 'hyperion-autologging/src/ALHeartbeatType';
+export { ALHeartbeatType } from 'hyperion-autologging-shared';
 
 export interface ALHeartbeatEnvironment {
   getCurrentState(): string;
-  addStateListener(listener: (state: string) => void): {remove(): void};
-  setInterval(callback: () => void, interval: number): ReturnType<typeof setInterval>;
+  addStateListener(listener: (state: string) => void): { remove(): void };
+  setInterval(
+    callback: () => void,
+    interval: number
+  ): ReturnType<typeof setInterval>;
   clearInterval(handle: ReturnType<typeof setInterval>): void;
   now(): number;
 }
 
 const defaultEnvironment: ALHeartbeatEnvironment = {
   getCurrentState: () => AppState.currentState,
-  addStateListener: listener => AppState.addEventListener('change', listener),
+  addStateListener: (listener) => AppState.addEventListener('change', listener),
   setInterval: (callback, interval) => setInterval(callback, interval),
-  clearInterval: handle => clearInterval(handle),
+  clearInterval: (handle) => clearInterval(handle),
   now: () => Date.now(),
 };
 
@@ -32,8 +35,9 @@ let lastActivityTime = Date.now();
 let lastHeartbeatTime = 0;
 let heartbeatIntervalMs = 30_000;
 let maxInactivityMs = 120_000;
-let appStateSubscription: {remove(): void} | null = null;
-let uiEventListener: ((event: {eventTimestamp: number}) => void) | null = null;
+let appStateSubscription: { remove(): void } | null = null;
+let uiEventListener: ((event: { eventTimestamp: number }) => void) | null =
+  null;
 let lastAppState: string | null = null;
 
 function emitHeartbeat(type: ALHeartbeatType): void {
@@ -41,7 +45,7 @@ function emitHeartbeat(type: ALHeartbeatType): void {
   if (timestamp - lastActivityTime > maxInactivityMs) return;
   const channel = getALRuntimeChannel();
   if (channel == null) return;
-  channel.emitSafely('al_heartbeat_request', {type, timestamp});
+  channel.emitSafely('al_heartbeat_request', { type, timestamp });
   lastHeartbeatTime = timestamp;
 }
 
@@ -49,7 +53,7 @@ function startInterval(): void {
   if (intervalHandle != null) return;
   intervalHandle = environment.setInterval(
     () => emitHeartbeat(ALHeartbeatType.SCHEDULED),
-    heartbeatIntervalMs,
+    heartbeatIntervalMs
   );
 }
 
@@ -65,7 +69,7 @@ export function recordActivity(timestamp = environment.now()): void {
 
 export function startHeartbeat(
   intervalMs = 30_000,
-  maximumInactivityMs?: number,
+  maximumInactivityMs?: number
 ): void {
   if (appStateSubscription != null) return;
   heartbeatIntervalMs = intervalMs;
@@ -74,14 +78,14 @@ export function startHeartbeat(
   recordActivity();
   const channel = getALRuntimeChannel();
   if (channel != null) {
-    uiEventListener = event => recordActivity(event.eventTimestamp);
+    uiEventListener = (event) => recordActivity(event.eventTimestamp);
     channel.addListener('al_ui_event', uiEventListener);
   }
   emitHeartbeat(ALHeartbeatType.START);
   if (lastAppState !== 'background' && lastAppState !== 'inactive') {
     startInterval();
   }
-  appStateSubscription = environment.addStateListener(state => {
+  appStateSubscription = environment.addStateListener((state) => {
     const timestamp = environment.now();
     const previousState = lastAppState;
     lastAppState = state;
@@ -90,7 +94,7 @@ export function startHeartbeat(
       emitHeartbeat(
         timestamp - lastHeartbeatTime >= heartbeatIntervalMs
           ? ALHeartbeatType.REGAIN_PAGE_VISIBILITY
-          : ALHeartbeatType.PAGE_FOCUS_GAINED,
+          : ALHeartbeatType.PAGE_FOCUS_GAINED
       );
       startInterval();
     } else {
@@ -99,7 +103,7 @@ export function startHeartbeat(
       }
       stopInterval();
     }
-    channel?.emitSafely('al_app_state_request', {state, timestamp});
+    channel?.emitSafely('al_app_state_request', { state, timestamp });
   });
 }
 
@@ -118,7 +122,7 @@ export function stopHeartbeat(): void {
 }
 
 export function setHeartbeatEnvironmentForTests(
-  nextEnvironment: ALHeartbeatEnvironment,
+  nextEnvironment: ALHeartbeatEnvironment
 ): void {
   stopHeartbeat();
   environment = nextEnvironment;

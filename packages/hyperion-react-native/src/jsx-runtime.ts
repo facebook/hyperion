@@ -12,10 +12,10 @@ import {
   type JSXRuntimeFunction,
 } from './ReactNativeElementObservation';
 
-export {Fragment};
+export { Fragment };
 export const jsx = createObservedJSXFunction(
-  reactJSX as JSXRuntimeFunction,
+  reactJSX as JSXRuntimeFunction
 ) as typeof reactJSX;
 export const jsxs = createObservedJSXFunction(
-  reactJSXS as JSXRuntimeFunction,
+  reactJSXS as JSXRuntimeFunction
 ) as typeof reactJSXS;

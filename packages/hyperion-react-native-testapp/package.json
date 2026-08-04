@@ -6,23 +6,24 @@
     "android": "react-native run-android",
     "build:android": "npm run mkdist && react-native bundle --entry-file index.js --platform android --dev true --bundle-output dist/main.android.jsbundle --assets-dest dist/res",
     "build:ios": "npm run mkdist && react-native bundle --entry-file index.js --platform ios --dev true --bundle-output dist/main.ios.jsbundle --assets-dest dist",
+    "bundle:baseline:ios": "npm run mkdist && HYPERION_BENCHMARK_BASELINE=1 react-native bundle --entry-file index.js --platform ios --dev false --minify true --bundle-output dist/baseline.ios.jsbundle",
+    "bundle:fixture:ios": "npm run mkdist && react-native bundle --entry-file index.js --platform ios --dev false --minify true --bundle-output dist/fixture.ios.jsbundle",
+    "benchmark:bundle:ios": "npm run bundle:baseline:ios && npm run bundle:fixture:ios && node benchmark/report-bundle-size.cjs",
+    "benchmark:hermes:ios": "node_modules/react-native/sdks/hermesc/osx-bin/hermesc -emit-binary -O -out dist/baseline.ios.hbc dist/baseline.ios.jsbundle && node_modules/react-native/sdks/hermesc/osx-bin/hermesc -emit-binary -O -out dist/fixture.ios.hbc dist/fixture.ios.jsbundle && node benchmark/report-bundle-size.cjs",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "mkdist": "node -e \"require('node:fs').mkdirSync('dist', { recursive: true, mode: 0o755 })\"",
     "start": "react-native start",
-    "test": "jest",
-    "build": "",
+    "test": "jest --watchman=false --runInBand",
+    "build": "tsc --noEmit",
     "build-go": ""
   },
   "workspaces": [
-    "../hyperion-react",
     "../hyperion-react-native"
   ],
   "dependencies": {
-    "hyperion-react": "*",
     "hyperion-react-native": "*",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
     "react-native": "0.79.2"
   },
   "devDependencies": {

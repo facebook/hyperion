@@ -3,42 +3,50 @@
   "description": "Utility to intercept React Native api",
   "version": "0.0.1",
   "license": "MIT",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "babel-plugin-stable-event-props.cjs"
+  ],
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./jsx-runtime": {
-      "types": "./src/jsx-runtime.d.ts",
-      "default": "./src/jsx-runtime.js"
+      "types": "./dist/jsx-runtime.d.ts",
+      "default": "./dist/jsx-runtime.js"
     },
     "./jsx-dev-runtime": {
-      "types": "./src/jsx-dev-runtime.d.ts",
-      "default": "./src/jsx-dev-runtime.js"
-    }
+      "types": "./dist/jsx-dev-runtime.d.ts",
+      "default": "./dist/jsx-dev-runtime.js"
+    },
+    "./legacy-runtime-installer": {
+      "types": "./dist/legacy-runtime-installer.d.ts",
+      "default": "./dist/legacy-runtime-installer.js"
+    },
+    "./babel-plugin-stable-event-props": "./babel-plugin-stable-event-props.cjs"
   },
   "scripts": {
-    "build": "tsc", 
-    "build-go": "tsgo",
+    "clean": "node scripts/clean.cjs",
+    "build": "npm run clean && tsc",
+    "build-go": "npm run clean && tsgo",
     "watch": "npm run build -- --watch",
     "start": "npm run watch",
-    "test": "npm run build & jest"
+    "test": "npm run build && jest",
+    "benchmark:runtime": "HYPERION_RUNTIME_BENCHMARK=1 node --expose-gc ../../node_modules/jest/bin/jest.js --watchman=false --runInBand --coverage=false --runTestsByPath test/RuntimeBenchmark.test.ts"
   },
   "workspaces": [
     "../hyperion-channel",
-    "../hyperion-autologging",
-    "../hyperion-core",
+    "../hyperion-autologging-shared",
     "../hyperion-devtools",
-    "../hyperion-test-and-set",
     "../hyperion-util"
   ],
   "dependencies": {
     "hyperion-channel": "*",
-    "hyperion-autologging": "*",
-    "hyperion-core": "*",
-    "hyperion-test-and-set": "*",
+    "hyperion-autologging-shared": "*",
     "hyperion-util": "*"
   },
   "peerDependencies": {

@@ -4,90 +4,85 @@ import commonjs from 'rollup-plugin-commonjs';
 import md5 from 'md5';
 
 export default defineConfig({
-  input: 'src/index.js',
-  external: [
-    /cytoscape/,
-    "react",
-  ],
+  input: {
+    index: 'src/index.js',
+  },
+  external: [/cytoscape/, /^react(?:\/|$)/, /^react-native(?:\/|$)/],
   output: {
     // file: './dist/hyperion.js',
     dir: './dist',
     manualChunks: {
-      "hyperionGlobals": [
-        "hyperion-globals/src/assert",
-        "hyperion-globals/src/index",
+      hyperionGlobals: [
+        'hyperion-globals/src/assert',
+        'hyperion-globals/src/index',
       ],
-      "hyperionHook": [
-        "hyperion-hook/src/Hook",
-        "hyperion-hook/src/index",
+      hyperionHook: ['hyperion-hook/src/Hook', 'hyperion-hook/src/index'],
+      hyperionChannel: [
+        'hyperion-channel/src/Channel',
+        'hyperion-channel/src/index',
       ],
-      "hyperionChannel": [
-        "hyperion-channel/src/Channel",
-        "hyperion-channel/src/index",
+      hyperionAsyncCounter: [
+        'hyperion-async-counter/src/AsyncCounter',
+        'hyperion-async-counter/src/index',
       ],
-      "hyperionAsyncCounter": [
-        "hyperion-async-counter/src/AsyncCounter",
-        "hyperion-async-counter/src/index",
+      hyperionTimedTrigger: [
+        'hyperion-timed-trigger/src/TimedTrigger',
+        'hyperion-timed-trigger/src/index',
       ],
-      "hyperionTimedTrigger": [
-        "hyperion-timed-trigger/src/TimedTrigger",
-        "hyperion-timed-trigger/src/index",
+      hyperionTestAndSet: [
+        'hyperion-test-and-set/src/TestAndSet',
+        'hyperion-test-and-set/src/index',
       ],
-      "hyperionTestAndSet": [
-        "hyperion-test-and-set/src/TestAndSet",
-        "hyperion-test-and-set/src/index",
+      hyperionCore: [
+        'hyperion-core/src/FunctionInterceptor',
+        'hyperion-core/src/ConstructorInterceptor',
+        'hyperion-core/src/AttributeInterceptor',
+        'hyperion-core/src/intercept',
+        'hyperion-core/src/IRequire',
+        'hyperion-core/src/IPromise',
+        'hyperion-core/src/IGlobalThis',
+        'hyperion-core/src/index',
       ],
-      "hyperionCore": [
-        "hyperion-core/src/FunctionInterceptor",
-        "hyperion-core/src/ConstructorInterceptor",
-        "hyperion-core/src/AttributeInterceptor",
-        "hyperion-core/src/intercept",
-        "hyperion-core/src/IRequire",
-        "hyperion-core/src/IPromise",
-        "hyperion-core/src/IGlobalThis",
-        "hyperion-core/src/index",
+      hyperionDOM: [
+        'hyperion-dom/src/IEvent',
+        'hyperion-dom/src/IEventTarget',
+        'hyperion-dom/src/INode',
+        'hyperion-dom/src/IElement_',
+        'hyperion-dom/src/IElement',
+        'hyperion-dom/src/IHTMLElement',
+        'hyperion-dom/src/IHTMLInputElement',
+        'hyperion-dom/src/IHistory',
+        'hyperion-dom/src/IWindow',
+        'hyperion-dom/src/IXMLHttpRequest',
+        'hyperion-dom/src/ICSSStyleDeclaration',
+        'hyperion-dom/src/IGlobalEventHandlers',
+        'hyperion-dom/src/index',
       ],
-      "hyperionDOM": [
-        "hyperion-dom/src/IEvent",
-        "hyperion-dom/src/IEventTarget",
-        "hyperion-dom/src/INode",
-        "hyperion-dom/src/IElement_",
-        "hyperion-dom/src/IElement",
-        "hyperion-dom/src/IHTMLElement",
-        "hyperion-dom/src/IHTMLInputElement",
-        "hyperion-dom/src/IHistory",
-        "hyperion-dom/src/IWindow",
-        "hyperion-dom/src/IXMLHttpRequest",
-        "hyperion-dom/src/ICSSStyleDeclaration",
-        "hyperion-dom/src/IGlobalEventHandlers",
-        "hyperion-dom/src/index",
+      hyperionTrackElementsWithAttributes: [
+        'hyperion-util/src/trackElementsWithAttributes',
       ],
-      "hyperionTrackElementsWithAttributes": [
-        "hyperion-util/src/trackElementsWithAttributes",
+      hyperionSyncMutationObserver: ['hyperion-util/src/SyncMutationObserver'],
+      hyperionUtil: [
+        'hyperion-util/src/ClientSessionID',
+        'hyperion-util/src/PersistentData',
+        'hyperion-util/src/SafeGetterSetter',
+        'hyperion-util/src/guid',
+        'hyperion-util/src/index',
       ],
-      "hyperionSyncMutationObserver": [
-        "hyperion-util/src/SyncMutationObserver",
+      hyperionFlowletCore: [
+        'hyperion-flowlet/src/Flowlet',
+        'hyperion-flowlet/src/FlowletManager',
+        'hyperion-flowlet/src/TriggerFlowlet',
       ],
-      "hyperionUtil": [
-        "hyperion-util/src/ClientSessionID",
-        "hyperion-util/src/PersistentData",
-        "hyperion-util/src/SafeGetterSetter",
-        "hyperion-util/src/index",
+      hyperionFlowlet: [
+        'hyperion-flowlet/src/FlowletWrappers',
+        'hyperion-flowlet/src/index',
       ],
-      "hyperionFlowletCore": [
-        "hyperion-flowlet/src/Flowlet",
-        "hyperion-flowlet/src/FlowletManager",
-        "hyperion-flowlet/src/TriggerFlowlet",
-      ],
-      "hyperionFlowlet": [
-        "hyperion-flowlet/src/FlowletWrappers",
-        "hyperion-flowlet/src/index",
-      ],
-      "hyperionReact": [
-        "hyperion-react/src/IReact",
-        "hyperion-react/src/IReactDOM",
-        "hyperion-react/src/IReactComponent",
-        "hyperion-react/src/index",
+      hyperionReact: [
+        'hyperion-react/src/IReact',
+        'hyperion-react/src/IReactDOM',
+        'hyperion-react/src/IReactComponent',
+        'hyperion-react/src/index',
       ],
       // "hyperionAutoLoggingSurface": [
       //   "hyperion-autologging/src/ALSurface",
@@ -97,33 +92,35 @@ export default defineConfig({
       //   "hyperion-autologging/src/ALSurfaceData",
       //   "hyperion-autologging/src/ALSurfaceUtils",
       // ],
-      "hyperionAutoLogging": [
-        "hyperion-autologging/src/ALEventExtension",
-        "hyperion-autologging/src/ALCustomEvent",
-        "hyperion-autologging/src/ALFlowletManager",
-        "hyperion-autologging/src/ALSurface",
-        "hyperion-autologging/src/ALSurfaceContext",
-        "hyperion-autologging/src/ALSurfaceEventData",
-        "hyperion-autologging/src/ALSurfaceData",
-        "hyperion-autologging/src/ALSurfaceUtils",
-        "hyperion-autologging/src/ALEventIndex",
-        "hyperion-autologging/src/ALElementInfo",
-        "hyperion-autologging/src/ALInteractableDOMElement",
-        "hyperion-autologging/src/AutoLogging",
-        "hyperion-autologging/src/ALUIEventPublisher",
-        "hyperion-autologging/src/ALSessionFlowID",
-        "hyperion-autologging/src/index",
+      hyperionAutoLogging: [
+        'hyperion-autologging-shared',
+        'hyperion-autologging/src/ALEventExtension',
+        'hyperion-autologging/src/ALCustomEvent',
+        'hyperion-autologging/src/ALFlowletManager',
+        'hyperion-autologging/src/ALSurface',
+        'hyperion-autologging/src/ALSurfaceContext',
+        'hyperion-autologging/src/ALSurfaceEventData',
+        'hyperion-autologging/src/ALSurfaceData',
+        'hyperion-autologging/src/ALSurfaceUtils',
+        'hyperion-autologging/src/ALEventIndex',
+        'hyperion-autologging/src/ALElementInfo',
+        'hyperion-autologging/src/ALInteractableDOMElement',
+        'hyperion-autologging/src/AutoLogging',
+        'hyperion-autologging/src/ALUIEventPublisher',
+        'hyperion-autologging/src/ALSessionFlowID',
+        'hyperion-autologging/src/index',
       ],
-      "hyperionAutoLoggingVisualizer": [
-        "hyperion-autologging-visualizer/src/component/ALGraph",
-        "hyperion-autologging-visualizer/src/component/ALGraphInfo.react",
-        "hyperion-autologging-visualizer/src/index",
+      hyperionAutoLoggingVisualizer: [
+        'hyperion-autologging-visualizer/src/component/ALGraph',
+        'hyperion-autologging-visualizer/src/component/ALGraphInfo.react',
+        'hyperion-autologging-visualizer/src/index',
       ],
-      "hyperionAutoLoggingPluginEventHash": [
-        "hyperion-autologging-plugin-eventhash/src/index",
-      ]
+      hyperionAutoLoggingPluginEventHash: [
+        'hyperion-autologging-plugin-eventhash/src/index',
+      ],
     },
-    chunkFileNames: "[name].js",
+    entryFileNames: '[name].js',
+    chunkFileNames: '[name].js',
     minifyInternalExports: false,
     /////////////////////////////////////////////////////////////////
     format: 'es',
@@ -153,7 +150,7 @@ export default defineConfig({
       preferConst: true,
       constBindings: true,
       symbols: false, // use of Symobl
-    }
+    },
   },
   // preserveSymlinks: true,
   plugins: [
@@ -176,17 +173,22 @@ export default defineConfig({
       generateBundle: (options, bundle, isWrite) => {
         for (let bundleName in bundle) {
           const b = bundle[bundleName];
-          if (typeof b.code === "string") {
+          if (typeof b.code === 'string') {
             const signature = md5(b.code);
             b.code = b.code
-              .replace(/@generated <<SignedSource::[^>]+>>/, `@generated <<SignedSource::${signature}>>`)
+              .replace(
+                /@generated <<SignedSource::[^>]+>>/,
+                `@generated <<SignedSource::${signature}>>`
+              )
               .replace(/(import [^']*from ')[.]\/([^.]+)[.]js(';)/g, `$1$2$3`)
-              .replace(/\n(intercept(?:Function|Method|Attribute|Constructor|ConstructorMethod|ElementAttribute|EventHandlerAttribute)\([^\)]+\);)/g, "\n//$1")
-              ;
+              .replace(
+                /\n(intercept(?:Function|Method|Attribute|Constructor|ConstructorMethod|ElementAttribute|EventHandlerAttribute)\([^\)]+\);)/g,
+                '\n//$1'
+              );
           }
         }
-      }
-    }
+      },
+    },
   ],
-  treeshake: "smallest"
-})
+  treeshake: 'smallest',
+});

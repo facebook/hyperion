@@ -1,0 +1,26 @@
+{
+  "name": "hyperion-autologging-shared",
+  "description": "Platform-neutral Hyperion AutoLogging contracts and hierarchy",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', {recursive: true, force: true})\"",
+    "build": "npm run clean && tsc",
+    "build-go": "npm run clean && tsgo",
+    "test": "npm run build"
+  },
+  "devDependencies": {
+    "hyperion-devtools": "*"
+  }
+}

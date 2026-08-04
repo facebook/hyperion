@@ -4,4 +4,4 @@
 
 'use strict';
 
-export { ALHeartbeatType } from 'hyperion-autologging-shared';
+export { installReactNativeJSXRuntime } from './ReactNativeElementObservation';

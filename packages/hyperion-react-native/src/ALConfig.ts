@@ -28,7 +28,7 @@ export const DEFAULT_CONFIG = Object.freeze({
   enabled: true,
   heartbeatInterval: 30_000,
   debug:
-    (globalThis as typeof globalThis & {__DEV__?: boolean}).__DEV__ === true,
+    (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ === true,
   interceptProps: DEFAULT_INTERCEPT_PROPS,
 });
 

@@ -4,7 +4,9 @@
 
 'use strict';
 
+export type { ALLoggableEvent } from './ALCommonTypes';
+export { ALHeartbeatType } from './ALHeartbeatType';
 export {
   ALSurfaceHierarchyNode,
   type ALSurfaceHierarchyChild,
-} from 'hyperion-autologging-shared';
+} from './ALSurfaceHierarchy';

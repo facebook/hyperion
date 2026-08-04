@@ -4,9 +4,11 @@
 
 'use strict';
 
-import type {ALLoggableEvent as SharedALLoggableEvent} from 'hyperion-autologging/src/ALCommonTypes';
-import type {ALHeartbeatType} from 'hyperion-autologging/src/ALHeartbeatType';
-import type {ALSurfaceDataNode} from './ALSurface';
+import type {
+  ALHeartbeatType,
+  ALLoggableEvent as SharedALLoggableEvent,
+} from 'hyperion-autologging-shared';
+import type { ALSurfaceDataNode } from './ALSurface';
 
 export type SurfaceMetadataValue = string | number | boolean | null;
 export type ALLoggableEvent = SharedALLoggableEvent<SurfaceMetadataValue>;
@@ -92,10 +94,7 @@ export interface ALListImpressionEventData extends ALLoggableEvent {
   surfaceMetadata?: SurfaceMetadata;
 }
 
-export type ALDeepLinkSource =
-  | 'initial_url'
-  | 'url_event'
-  | 'notification';
+export type ALDeepLinkSource = 'initial_url' | 'url_event' | 'notification';
 
 export interface ALDeepLinkEventData extends ALLoggableEvent {
   event: 'deep_link_open';
@@ -115,6 +114,8 @@ export interface ALReactErrorEventData extends ALLoggableEvent {
   reactComponentStack?: string;
 }
 
+// The channel constraint requires a finite mapped event contract.
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type ALChannelEventMap = {
   al_ui_event: [ALUIEventData];
   al_surface_mutation_event: [ALSurfaceMutationEventData];

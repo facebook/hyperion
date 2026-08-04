@@ -4,7 +4,7 @@
 
 'use strict';
 
-import {guid} from 'hyperion-util/src/guid';
+import { guid } from 'hyperion-util/src/guid';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 const ID_LENGTH = 6;
