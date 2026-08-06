@@ -32,29 +32,20 @@ export const DEFAULT_CONFIG = Object.freeze({
   interceptProps: DEFAULT_INTERCEPT_PROPS,
 });
 
+const EVENT_TYPES: Readonly<Record<string, string>> = Object.freeze({
+  onPress: 'click',
+  onPressIn: 'press_in',
+  onLongPress: 'long_press',
+  onChangeText: 'change',
+  onChange: 'change',
+  onValueChange: 'change',
+  onScroll: 'scroll',
+  onFocus: 'focusin',
+  onSubmitEditing: 'submit',
+  onBlur: 'focusout',
+  onRefresh: 'refresh',
+});
+
 export function mapPropToEventType(prop: string): string {
-  switch (prop) {
-    case 'onPress':
-      return 'click';
-    case 'onPressIn':
-      return 'press_in';
-    case 'onLongPress':
-      return 'long_press';
-    case 'onChangeText':
-    case 'onChange':
-    case 'onValueChange':
-      return 'change';
-    case 'onScroll':
-      return 'scroll';
-    case 'onFocus':
-      return 'focusin';
-    case 'onSubmitEditing':
-      return 'submit';
-    case 'onBlur':
-      return 'focusout';
-    case 'onRefresh':
-      return 'refresh';
-    default:
-      return prop;
-  }
+  return EVENT_TYPES[prop] ?? prop;
 }

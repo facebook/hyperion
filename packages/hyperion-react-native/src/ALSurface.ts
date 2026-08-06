@@ -16,12 +16,10 @@ import { getALRuntimeChannel } from './ALChannel';
 import { getExplicitText, mergeMetadata } from './ALMetadata';
 import type { SurfaceMetadata, UIEventMetadata } from './ALTypes';
 
+declare const __DEV__: boolean;
+
 const EMPTY_ELEMENTS: readonly never[] = Object.freeze([]);
 const surfaceByPath = new Map<string, ALSurfaceDataNode>();
-const registryKeysBySurface = new WeakMap<
-  ALSurfaceDataNode,
-  readonly string[]
->();
 
 export class ALSurfaceDataRoot extends ALSurfaceHierarchyNode<ALSurfaceDataNode> {
   readonly surface = null;
@@ -123,21 +121,23 @@ export const ALSurfaceData = Object.freeze({
 
 function registerSurfaceData(data: ALSurfaceDataNode): void {
   data.parent.addChild(data);
-  const keys = data.nonInteractive
-    ? [data.nonInteractiveSurface]
-    : data.surface === data.nonInteractiveSurface
-    ? [data.nonInteractiveSurface]
-    : [data.nonInteractiveSurface, data.surface];
-  registryKeysBySurface.set(data, keys);
-  for (const key of keys) surfaceByPath.set(key, data);
+  surfaceByPath.set(data.nonInteractiveSurface, data);
+  if (!data.nonInteractive && data.surface !== data.nonInteractiveSurface) {
+    surfaceByPath.set(data.surface, data);
+  }
 }
 
 function unregisterSurfaceData(data: ALSurfaceDataNode): void {
   data.parent.removeChild(data);
-  for (const key of registryKeysBySurface.get(data) ?? []) {
-    if (surfaceByPath.get(key) === data) surfaceByPath.delete(key);
+  if (surfaceByPath.get(data.nonInteractiveSurface) === data) {
+    surfaceByPath.delete(data.nonInteractiveSurface);
   }
-  registryKeysBySurface.delete(data);
+  if (
+    data.surface !== data.nonInteractiveSurface &&
+    surfaceByPath.get(data.surface) === data
+  ) {
+    surfaceByPath.delete(data.surface);
+  }
 }
 
 export function resetALSurfaceDataForTests(): void {
@@ -204,10 +204,7 @@ export function ALSurface({
     : parentSurface?.surface
     ? `${parentSurface.surface}/${surfaceName}`
     : surfaceName;
-  const mergedMetadata = mergeMetadata(
-    parentSurface?.metadata,
-    metadata
-  );
+  const mergedMetadata = mergeMetadata(parentSurface?.metadata, metadata);
   const mergedInteractiveMetadata = nonInteractive
     ? parentSurface?.interactiveMetadata ?? {}
     : mergeMetadata(parentSurface?.interactiveMetadata, metadata);
@@ -310,10 +307,7 @@ export function ALSurface({
         state.data = undefined;
         state.mountTime = undefined;
       };
-      const isDevelopment =
-        (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ ===
-        true;
-      if (isDevelopment) {
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
         const pendingUnmount = {
           cancel: () => {
             cancelled = true;
@@ -341,17 +335,15 @@ export function ALSurface({
 }
 
 function serializeMetadata(metadata: SurfaceMetadata): string {
-  const sorted: Record<string, string | number | boolean | null> = {};
-  for (const key of Object.keys(metadata).sort()) sorted[key] = metadata[key];
-  return JSON.stringify(sorted);
+  return JSON.stringify(metadata, Object.keys(metadata).sort());
 }
 
 function serializeUIEventMetadata(metadata: UIEventMetadata): string {
-  const sorted: Record<string, SurfaceMetadata> = {};
-  for (const eventName of Object.keys(metadata).sort()) {
-    sorted[eventName] = JSON.parse(
-      serializeMetadata(metadata[eventName])
-    ) as SurfaceMetadata;
-  }
-  return JSON.stringify(sorted);
+  return `{${Object.keys(metadata)
+    .sort()
+    .map(
+      (eventName) =>
+        `${JSON.stringify(eventName)}:${serializeMetadata(metadata[eventName])}`
+    )
+    .join(',')}}`;
 }

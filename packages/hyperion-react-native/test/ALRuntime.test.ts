@@ -4,7 +4,10 @@
 
 import React, { StrictMode, Suspense } from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
-import { jsx } from '../src/jsx-runtime';
+import { jsx, jsxs } from '../src/jsx-runtime';
+import { jsxDEV } from '../src/jsx-dev-runtime';
+import { installReactNativeJSXRuntime } from '../src/legacy-runtime-installer';
+import { createObservedJSXFunction } from '../src/ReactNativeElementObservation';
 import { addChannelSubscriber } from '../src/ALChannel';
 import {
   initializeAutoLogging,
@@ -32,6 +35,7 @@ jest.mock('react-native', () => ({
 
 describe('React Native AutoLogging runtime', () => {
   afterEach(async () => {
+    jest.restoreAllMocks();
     resetALRuntimeForTests();
     await Promise.resolve();
   });
@@ -307,6 +311,253 @@ describe('React Native AutoLogging runtime', () => {
     renderer!.root.findByType('button').props.onPress();
     expect(handler).toHaveBeenCalledTimes(1);
     expect(events).toHaveLength(0);
+  });
+
+  it.each([
+    ['jsx', false],
+    ['jsx', true],
+    ['jsxs', false],
+    ['jsxs', true],
+    ['jsxDEV', false],
+    ['jsxDEV', true],
+    ['createElement', false],
+    ['createElement', true],
+  ] as const)(
+    'forwards cloneElement replacements through %s when observation enabled=%s',
+    (runtimeKind, enabled) => {
+      interface ScrollHandle {
+        readonly variant: string;
+      }
+      interface ScrollProps {
+        children?: React.ReactNode;
+        componentName: string;
+        onRefresh(): void;
+        originalProps: string;
+        renderOriginal: string;
+        variant: string;
+      }
+
+      const events: ALUIEventData[] = [];
+      const applicationHandler = jest.fn(() => 'refreshed');
+      const originalRef = React.createRef<ScrollHandle>();
+      const replacementRef = React.createRef<ScrollHandle>();
+      let receivedProps: ScrollProps | null = null;
+      const ScrollView = React.forwardRef<ScrollHandle, ScrollProps>(
+        (props, ref) => {
+          receivedProps = props;
+          React.useImperativeHandle(ref, () => ({ variant: props.variant }), [
+            props.variant,
+          ]);
+          return React.createElement(
+            'scroll-view',
+            { onRefresh: props.onRefresh, variant: props.variant },
+            props.children
+          );
+        }
+      );
+      ScrollView.displayName = 'ScrollView';
+
+      addChannelSubscriber('al_ui_event', (event) => events.push(event));
+      initializeAutoLogging({
+        appName: 'test',
+        enabled,
+        heartbeatInterval: false,
+      });
+
+      const originalProps = {
+        children: runtimeKind === 'jsxs' ? ['original-cell'] : 'original-cell',
+        componentName: 'application-component-name',
+        onRefresh: applicationHandler,
+        originalProps: 'application-original-props',
+        ref: originalRef,
+        renderOriginal: 'application-render-original',
+        variant: 'original-variant',
+      };
+      let originalElement: React.ReactElement;
+      switch (runtimeKind) {
+        case 'jsx':
+          originalElement = jsx(ScrollView, originalProps, 'original-key');
+          break;
+        case 'jsxs':
+          originalElement = jsxs(ScrollView, originalProps, 'original-key');
+          break;
+        case 'jsxDEV':
+          originalElement = jsxDEV(
+            ScrollView,
+            originalProps,
+            'original-key',
+            false,
+            { fileName: 'fixture.tsx', lineNumber: 1, columnNumber: 1 },
+            undefined
+          );
+          break;
+        case 'createElement':
+          originalElement = createObservedJSXFunction(
+            React.createElement,
+            'createElement'
+          )(
+            ScrollView,
+            { ...originalProps, children: undefined },
+            'original-cell'
+          ) as React.ReactElement;
+          break;
+      }
+
+      const clonedElement = React.cloneElement(
+        originalElement,
+        {
+          key: 'cloned-key',
+          ref: replacementRef,
+          variant: 'cloned-variant',
+        },
+        'injected-cell'
+      );
+      expect(clonedElement.key).toBe('cloned-key');
+
+      let renderer: TestRenderer.ReactTestRenderer | null = null;
+      act(() => {
+        renderer = TestRenderer.create(clonedElement);
+      });
+      if (renderer == null) throw new Error('Expected a mounted renderer');
+      const mountedRenderer = renderer as TestRenderer.ReactTestRenderer;
+      expect(originalRef.current).toBeNull();
+      expect(replacementRef.current).toEqual({ variant: 'cloned-variant' });
+      expect(receivedProps).toEqual(
+        expect.objectContaining({
+          children: 'injected-cell',
+          componentName: 'application-component-name',
+          originalProps: 'application-original-props',
+          renderOriginal: 'application-render-original',
+          variant: 'cloned-variant',
+        })
+      );
+      expect(Object.keys(receivedProps ?? {}).sort()).toEqual(
+        [
+          'children',
+          'componentName',
+          'onRefresh',
+          'originalProps',
+          'renderOriginal',
+          'variant',
+        ].sort()
+      );
+
+      const installedHandler = receivedProps?.onRefresh;
+      expect(installedHandler?.()).toBe('refreshed');
+      expect(applicationHandler).toHaveBeenCalledTimes(1);
+      expect(events).toHaveLength(enabled ? 1 : 0);
+
+      const updatedClone = React.cloneElement(
+        originalElement,
+        {
+          key: 'cloned-key',
+          ref: replacementRef,
+          variant: 'updated-variant',
+        },
+        'updated-cell'
+      );
+      act(() => mountedRenderer.update(updatedClone));
+      expect(receivedProps?.children).toBe('updated-cell');
+      expect(receivedProps?.variant).toBe('updated-variant');
+      expect(receivedProps?.onRefresh).toBe(installedHandler);
+      expect(replacementRef.current).toEqual({ variant: 'updated-variant' });
+      act(() => mountedRenderer.unmount());
+    }
+  );
+
+  it('keeps distinct snapshots for elements that share an application handler', () => {
+    const events: ALUIEventData[] = [];
+    const applicationHandler = jest.fn();
+    addChannelSubscriber('al_ui_event', (event) => events.push(event));
+    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
+
+    function Pressable(props: { accessibilityLabel: string; onPress(): void }) {
+      return React.createElement('button', props);
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer | null = null;
+    act(() => {
+      renderer = TestRenderer.create(
+        React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(
+            ALSurface,
+            { name: 'first_surface' },
+            jsx(Pressable, {
+              accessibilityLabel: 'First action',
+              onPress: applicationHandler,
+            })
+          ),
+          React.createElement(
+            ALSurface,
+            { name: 'second_surface' },
+            jsx(Pressable, {
+              accessibilityLabel: 'Second action',
+              onPress: applicationHandler,
+            })
+          )
+        )
+      );
+    });
+    if (renderer == null) throw new Error('Expected a mounted renderer');
+    const buttons = (
+      renderer as TestRenderer.ReactTestRenderer
+    ).root.findAllByType('button');
+    expect(buttons[0].props.onPress).not.toBe(buttons[1].props.onPress);
+    buttons[0].props.onPress();
+    buttons[1].props.onPress();
+
+    expect(applicationHandler).toHaveBeenCalledTimes(2);
+    expect(events.map((event) => event.elementText)).toEqual([
+      'First action',
+      'Second action',
+    ]);
+    expect(events.map((event) => event.surface)).toEqual([
+      'first_surface',
+      'second_surface',
+    ]);
+  });
+
+  it('uses the unwrapped createElement after legacy runtime installation', () => {
+    let createElementCalls = 0;
+    const invokeReactCreateElement = React.createElement as unknown as (
+      ...args: unknown[]
+    ) => React.ReactElement;
+    const originalCreateElement = function (
+      this: unknown,
+      ...args: unknown[]
+    ): React.ReactElement {
+      createElementCalls++;
+      return invokeReactCreateElement.apply(React, args);
+    };
+    const reactModule = { createElement: originalCreateElement };
+    installReactNativeJSXRuntime(reactModule);
+    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
+
+    function Refreshable(props: {
+      onLongPress?: () => void;
+      onRefresh(): void;
+    }) {
+      return React.createElement('scroll-view', props);
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer | null = null;
+    act(() => {
+      renderer = TestRenderer.create(
+        reactModule.createElement(Refreshable, {
+          onLongPress: undefined,
+          onRefresh: () => undefined,
+        })
+      );
+    });
+    if (renderer == null) throw new Error('Expected a mounted renderer');
+    expect(
+      (renderer as TestRenderer.ReactTestRenderer).root.findByType(
+        'scroll-view'
+      )
+    ).toBeDefined();
+    expect(createElementCalls).toBe(2);
   });
 
   it('registers only committed surfaces with interactive ancestry', async () => {

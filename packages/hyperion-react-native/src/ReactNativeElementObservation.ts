@@ -10,12 +10,12 @@ export type JSXRuntimeFunction = (this: unknown, ...args: any[]) => unknown;
 
 export interface ElementInstrumenterDescriptor {
   type: unknown;
-  props: Record<string, unknown>;
 }
 
 export type ElementInstrumenter = (
   type: unknown,
-  props: Record<string, unknown> | null | undefined
+  props: Record<string, unknown> | null | undefined,
+  key?: unknown
 ) => ElementInstrumenterDescriptor | null;
 
 export type OriginalElementRenderer = (
@@ -30,32 +30,26 @@ export type OriginalElementRenderer = (
   trailingArgs?: unknown[]
 ) => unknown;
 
-export interface InstrumentedElementProps {
-  originalType: unknown;
-  originalProps: unknown;
-  originalReceiver: unknown;
-  originalArgumentCount: number;
-  originalArg2?: unknown;
-  originalArg3?: unknown;
-  originalArg4?: unknown;
-  originalArg5?: unknown;
-  originalTrailingArgs?: unknown[];
-  renderOriginal: OriginalElementRenderer;
-}
-
 export type JSXRuntimeKind = 'jsx' | 'createElement';
 
 let elementObservationEnabled = false;
 let elementInstrumenter: ElementInstrumenter | null = null;
+let originalCreateElement: Readonly<{
+  receiver: unknown;
+  renderer: JSXRuntimeFunction;
+}> | null = null;
 let benchmarkPair: Readonly<{
   original: JSXRuntimeFunction;
   wrapped: JSXRuntimeFunction;
 }> | null = null;
 
-const wrappedFunctions = new WeakMap<
-  JSXRuntimeFunction,
-  Map<JSXRuntimeKind, JSXRuntimeFunction>
->();
+const wrappedFunctions: Record<
+  JSXRuntimeKind,
+  WeakMap<JSXRuntimeFunction, JSXRuntimeFunction>
+> = {
+  jsx: new WeakMap(),
+  createElement: new WeakMap(),
+};
 
 export function setElementObservationEnabled(enabled: boolean): void {
   elementObservationEnabled = enabled;
@@ -107,82 +101,30 @@ function createOriginalRenderer(
 }
 
 function createInstrumentedElement(
-  original: JSXRuntimeFunction,
   renderOriginal: OriginalElementRenderer,
   receiver: unknown,
   args: IArguments,
-  runtimeKind: JSXRuntimeKind,
   descriptor: ElementInstrumenterDescriptor
 ): unknown {
-  const wrapperProps: Record<string, unknown> & InstrumentedElementProps = {
-    ...descriptor.props,
-    originalType: args[0],
-    originalProps: args[1],
-    originalReceiver: receiver,
-    originalArgumentCount: args.length,
-    renderOriginal,
-  };
-  if (args.length > 2) wrapperProps.originalArg2 = args[2];
-  if (args.length > 3) wrapperProps.originalArg3 = args[3];
-  if (args.length > 4) wrapperProps.originalArg4 = args[4];
-  if (args.length > 5) wrapperProps.originalArg5 = args[5];
-  if (args.length > 6) {
-    wrapperProps.originalTrailingArgs = Array.prototype.slice.call(args, 2);
-  }
-
-  if (runtimeKind === 'createElement') {
-    const key = (args[1] as { key?: unknown } | null | undefined)?.key;
-    if (key !== undefined) wrapperProps.key = key;
-    return original.call(receiver, descriptor.type, wrapperProps);
-  }
-
-  switch (args.length) {
-    case 2:
-      return original.call(receiver, descriptor.type, wrapperProps);
-    case 3:
-      return original.call(receiver, descriptor.type, wrapperProps, args[2]);
-    case 4:
-      return original.call(
-        receiver,
-        descriptor.type,
-        wrapperProps,
-        args[2],
-        args[3]
-      );
-    case 5:
-      return original.call(
-        receiver,
-        descriptor.type,
-        wrapperProps,
-        args[2],
-        args[3],
-        args[4]
-      );
-    case 6:
-      return original.call(
-        receiver,
-        descriptor.type,
-        wrapperProps,
-        args[2],
-        args[3],
-        args[4],
-        args[5]
-      );
-    default:
-      return original.apply(receiver, [
-        descriptor.type,
-        wrapperProps,
-        ...Array.prototype.slice.call(args, 2),
-      ]);
-  }
+  return renderOriginal(
+    receiver,
+    descriptor.type,
+    args[1],
+    args.length,
+    args[2],
+    args[3],
+    args[4],
+    args[5],
+    args.length > 6 ? Array.prototype.slice.call(args, 2) : undefined
+  );
 }
 
 export function createObservedJSXFunction<T extends JSXRuntimeFunction>(
   original: T,
   runtimeKind: JSXRuntimeKind = 'jsx'
 ): T {
-  let byKind = wrappedFunctions.get(original);
-  const installed = byKind?.get(runtimeKind);
+  const cachedFunctions = wrappedFunctions[runtimeKind];
+  const installed = cachedFunctions.get(original);
   if (installed != null) return installed as T;
 
   const renderOriginal = createOriginalRenderer(original);
@@ -196,16 +138,18 @@ export function createObservedJSXFunction<T extends JSXRuntimeFunction>(
       if (instrumenter !== null) {
         const descriptor = instrumenter(
           type,
-          props as Record<string, unknown> | null | undefined
+          props as Record<string, unknown> | null | undefined,
+          runtimeKind === 'createElement'
+            ? (props as { key?: unknown } | null | undefined)?.key
+            : // eslint-disable-next-line prefer-rest-params
+              arguments[2]
         );
         if (descriptor !== null) {
           return createInstrumentedElement(
-            original,
             renderOriginal,
             this,
             // eslint-disable-next-line prefer-rest-params
             arguments,
-            runtimeKind,
             descriptor
           );
         }
@@ -217,10 +161,8 @@ export function createObservedJSXFunction<T extends JSXRuntimeFunction>(
     return original.apply(this, arguments as any);
   } as T;
 
-  byKind ??= new Map();
-  byKind.set(runtimeKind, wrapped);
-  wrappedFunctions.set(original, byKind);
-  wrappedFunctions.set(wrapped, byKind);
+  cachedFunctions.set(original, wrapped);
+  cachedFunctions.set(wrapped, wrapped);
   benchmarkPair = { original, wrapped };
   return wrapped;
 }
@@ -230,6 +172,13 @@ export function getJSXRuntimeBenchmarkPair(): Readonly<{
   wrapped: JSXRuntimeFunction;
 }> | null {
   return benchmarkPair;
+}
+
+export function getOriginalCreateElement(): Readonly<{
+  receiver: unknown;
+  renderer: JSXRuntimeFunction;
+}> | null {
+  return originalCreateElement;
 }
 
 export function installReactNativeJSXRuntime(
@@ -252,6 +201,10 @@ export function installReactNativeJSXRuntime(
     );
   }
   if (reactModule.createElement != null) {
+    originalCreateElement ??= {
+      receiver: reactModule,
+      renderer: reactModule.createElement,
+    };
     reactModule.createElement = createObservedJSXFunction(
       reactModule.createElement,
       'createElement'

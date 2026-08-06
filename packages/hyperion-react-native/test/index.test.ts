@@ -7,6 +7,7 @@ import { jsx, jsxs } from '../src/jsx-runtime';
 import { jsxDEV } from '../src/jsx-dev-runtime';
 import { installReactNativeJSXRuntime } from '../src/legacy-runtime-installer';
 import {
+  createObservedJSXFunction,
   setElementInstrumenter,
   setElementObservationEnabled,
 } from '../src/ReactNativeElementObservation';
@@ -36,30 +37,67 @@ describe('supported JSX runtime entries', () => {
     const Component = () => null;
     const Wrapper = () => null;
     const props = { onPress: () => undefined };
-    setElementInstrumenter(() => ({ type: Wrapper, props: { marker: true } }));
+    setElementInstrumenter(() => ({ type: Wrapper }));
     setElementObservationEnabled(true);
 
     const element = jsx(Component, props, 'stable-key');
     expect(element.type).toBe(Wrapper);
     expect(element.key).toBe('stable-key');
-    expect(element.props).toEqual(
-      expect.objectContaining({
-        marker: true,
-        originalType: Component,
-        originalProps: props,
-      })
-    );
+    expect(element.props).toBe(props);
   });
+
+  it.each(['jsx', 'createElement'] as const)(
+    'preserves the %s receiver and arguments while replacing only the type',
+    (runtimeKind) => {
+      const Component = () => null;
+      const Wrapper = () => null;
+      const receiver = { runtimeKind };
+      const props = {
+        key: 'props-key',
+        onPress: () => undefined,
+        ref: React.createRef<unknown>(),
+      };
+      const trailing = [
+        'runtime-key',
+        false,
+        { fileName: 'fixture.tsx' },
+        receiver,
+        'extra-argument',
+      ];
+      let receiverMatched = false;
+      let receivedArgs: unknown[] = [];
+      let instrumenterKey: unknown;
+      const original = function (this: unknown, ...args: unknown[]) {
+        receiverMatched = this === receiver;
+        receivedArgs = args;
+        return { args };
+      };
+      const observed = createObservedJSXFunction(original, runtimeKind);
+      setElementInstrumenter((_type, _props, key) => {
+        instrumenterKey = key;
+        return { type: Wrapper };
+      });
+      setElementObservationEnabled(true);
+
+      observed.call(receiver, Component, props, ...trailing);
+
+      expect(receiverMatched).toBe(true);
+      expect(receivedArgs).toEqual([Wrapper, props, ...trailing]);
+      expect(instrumenterKey).toBe(
+        runtimeKind === 'createElement' ? 'props-key' : 'runtime-key'
+      );
+    }
+  );
 
   it('keeps memo and forwardRef objects as the original component type', () => {
     const Forwarded = React.forwardRef(() => null);
     const Memoized = React.memo(Forwarded);
     const Wrapper = () => null;
-    setElementInstrumenter(() => ({ type: Wrapper, props: {} }));
+    setElementInstrumenter(() => ({ type: Wrapper }));
     setElementObservationEnabled(true);
 
     const element = jsx(Memoized, { onPress: () => undefined });
-    expect(element.props.originalType).toBe(Memoized);
+    expect(element.props.onPress).toBeDefined();
     expect(Memoized.type).toBe(Forwarded);
   });
 
@@ -74,7 +112,7 @@ describe('supported JSX runtime entries', () => {
     const reactModule = { createElement: render };
     const jsxRuntimeModule = { jsx: render, jsxs: render };
     const jsxDevRuntimeModule = { jsxDEV: render };
-    setElementInstrumenter(() => ({ type: Wrapper, props: {} }));
+    setElementInstrumenter(() => ({ type: Wrapper }));
     setElementObservationEnabled(true);
 
     installReactNativeJSXRuntime(
