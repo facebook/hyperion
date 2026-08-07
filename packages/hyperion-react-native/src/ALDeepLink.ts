@@ -5,7 +5,7 @@
 'use strict';
 
 import { getALRuntimeChannel } from './ALChannel';
-import { isALRuntimeEnabled } from './ALRuntime';
+import { isALFeatureEnabled } from './ALRuntime';
 import type { ALDeepLinkSource, SurfaceMetadata } from './ALTypes';
 
 export interface ALDeepLinkOptions {
@@ -17,7 +17,7 @@ export function logDeepLinkOpen(
   targetURI: string,
   options: ALDeepLinkOptions
 ): boolean {
-  if (!isALRuntimeEnabled()) return false;
+  if (!isALFeatureEnabled('deepLinkEvents')) return false;
   if (targetURI.length === 0 || !isDeepLinkSource(options.source)) return false;
   const channel = getALRuntimeChannel();
   if (channel == null) return false;

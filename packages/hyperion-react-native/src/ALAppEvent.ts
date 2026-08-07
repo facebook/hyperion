@@ -6,7 +6,7 @@
 
 import { useCallback } from 'react';
 import { getALRuntimeChannel } from './ALChannel';
-import { isALRuntimeEnabled } from './ALRuntime';
+import { isALFeatureEnabled } from './ALRuntime';
 import { useSurface } from './ALSurface';
 import type { ALCustomEventLevel, SurfaceMetadata } from './ALTypes';
 
@@ -49,7 +49,8 @@ function emitAppEvent(
   surface?: string,
   surfaceMetadata?: SurfaceMetadata
 ): void {
-  if (!isALRuntimeEnabled() || !isValidAppEventName(eventName)) return;
+  if (!isALFeatureEnabled('customEvents') || !isValidAppEventName(eventName))
+    return;
   const channel = getALRuntimeChannel();
   if (channel == null) return;
   channel.emitSafely('al_custom_event_request', {

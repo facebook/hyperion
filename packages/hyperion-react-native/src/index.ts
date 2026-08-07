@@ -11,7 +11,7 @@ export {
   DEFAULT_INTERCEPT_PROPS,
   mapPropToEventType,
 } from './ALConfig';
-export type { ALConfig } from './ALConfig';
+export type { ALConfig, ALFeature, ALFeatureConfig } from './ALConfig';
 export { initALChannel, getALChannel, addChannelSubscriber } from './ALChannel';
 export type { ALChannel } from './ALChannel';
 export {

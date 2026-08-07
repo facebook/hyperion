@@ -42,9 +42,14 @@ const pipedChannels = new WeakSet<object>();
 
 export function init(options: InitOptions): void {
   const propOptions = options.props ?? options.componentProps;
+  const hasLegacyOptions =
+    options.react != null ||
+    options.props !== undefined ||
+    options.componentProps !== undefined;
   const legacyEnabled =
-    options.react?.enableInterceptComponentElement !== false ||
-    propOptions?.enableInterceptReactComponentProp !== false;
+    !hasLegacyOptions ||
+    options.react?.enableInterceptComponentElement === true ||
+    propOptions?.enableInterceptReactComponentProp === true;
   const heartbeatOptions =
     options.heartbeat === false ? null : options.heartbeat;
   const heartbeatInterval =
@@ -67,6 +72,7 @@ export function init(options: InitOptions): void {
       DEFAULT_INTERCEPT_PROPS,
     debug: options.debug ?? DEFAULT_CONFIG.debug,
     componentNameValidator: options.componentNameValidator,
+    features: options.features,
   });
   if (heartbeatInterval !== false && isALRuntimeEnabled()) {
     startHeartbeat(heartbeatInterval, maxUserInactivityDuration);

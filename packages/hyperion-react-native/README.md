@@ -28,6 +28,13 @@ and set `heartbeatInterval: false` to disable only heartbeat. The legacy
 supported. Initialization is idempotent and the first call owns the runtime
 configuration.
 
+Use `features` to disable individual publishers while leaving the rest of the
+runtime enabled. Available gates are `automaticUIEvents`,
+`surfaceMutationEvents`, `customEvents`, `screenTransitionEvents`,
+`listImpressionEvents`, `deepLinkEvents`, and `reactErrorEvents`. Every feature
+defaults to enabled. App-state events follow the heartbeat lifecycle and are
+disabled with `heartbeatInterval: false`.
+
 AutoLogging does not require a React provider. Sampling, filtering, redaction,
 persistence, and transport policy belong in channel subscribers.
 

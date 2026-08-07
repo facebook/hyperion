@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { getALRuntimeChannel } from './ALChannel';
 import { getExplicitText } from './ALMetadata';
-import { isALRuntimeEnabled } from './ALRuntime';
+import { isALFeatureEnabled } from './ALRuntime';
 import { getScreenId } from './ALSession';
 import { useSurface } from './ALSurface';
 import type { SurfaceMetadata } from './ALTypes';
@@ -120,7 +120,8 @@ function emitListImpressions<Item>(
   dedupe: DedupeState,
   changed: readonly ALViewToken<Item>[]
 ): void {
-  if (!isALRuntimeEnabled() || options.listName == null) return;
+  if (!isALFeatureEnabled('listImpressionEvents') || options.listName == null)
+    return;
   const channel = getALRuntimeChannel();
   if (channel == null) return;
   const screenId = getScreenId();

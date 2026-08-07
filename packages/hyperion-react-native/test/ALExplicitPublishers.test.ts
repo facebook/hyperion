@@ -236,4 +236,56 @@ describe('explicit mobile publishers', () => {
     expect(events[0].reactComponentStack).toContain('Thrower');
     consoleError.mockRestore();
   });
+
+  it('independently disables explicit publisher families', () => {
+    const deepLinks: ALDeepLinkEventData[] = [];
+    const listEvents: ALListImpressionEventData[] = [];
+    const reactErrors: ALReactErrorEventData[] = [];
+    const productCallback = jest.fn();
+    addChannelSubscriber('al_deep_link_event', (event) =>
+      deepLinks.push(event)
+    );
+    addChannelSubscriber('al_list_impression_event', (event) =>
+      listEvents.push(event)
+    );
+    addChannelSubscriber('al_react_error_event', (event) =>
+      reactErrors.push(event)
+    );
+    initializeAutoLogging({
+      appName: 'test',
+      heartbeatInterval: false,
+      features: {
+        deepLinkEvents: false,
+        listImpressionEvents: false,
+        reactErrorEvents: false,
+      },
+    });
+    let result: ALListViewabilityResult<string>;
+    function Harness() {
+      result = useALListViewability({
+        listName: 'disabled_list',
+        onViewableItemsChanged: productCallback,
+      });
+      return null;
+    }
+    act(() => {
+      TestRenderer.create(React.createElement(Harness));
+    });
+
+    expect(
+      logDeepLinkOpen('sample://disabled', { source: 'url_event' })
+    ).toBe(false);
+    expect(logReactErrorBoundary(new Error('disabled'), {})).toBe(false);
+    result!.onViewableItemsChanged({
+      viewableItems: [],
+      changed: [
+        { item: 'item', key: 'item', index: 0, isViewable: true },
+      ],
+    });
+
+    expect(productCallback).toHaveBeenCalledTimes(1);
+    expect(deepLinks).toHaveLength(0);
+    expect(listEvents).toHaveLength(0);
+    expect(reactErrors).toHaveLength(0);
+  });
 });

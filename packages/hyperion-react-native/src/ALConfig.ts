@@ -4,6 +4,18 @@
 
 'use strict';
 
+export interface ALFeatureConfig {
+  automaticUIEvents?: boolean;
+  surfaceMutationEvents?: boolean;
+  customEvents?: boolean;
+  screenTransitionEvents?: boolean;
+  listImpressionEvents?: boolean;
+  deepLinkEvents?: boolean;
+  reactErrorEvents?: boolean;
+}
+
+export type ALFeature = keyof ALFeatureConfig;
+
 export interface ALConfig {
   appName: string;
   enabled?: boolean;
@@ -12,6 +24,7 @@ export interface ALConfig {
   debug?: boolean;
   interceptProps?: readonly string[];
   componentNameValidator?: (name: string) => boolean;
+  features?: ALFeatureConfig;
 }
 
 export const DEFAULT_INTERCEPT_PROPS: readonly string[] = Object.freeze([

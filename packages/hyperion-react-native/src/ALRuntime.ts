@@ -13,6 +13,7 @@ import {
 import {
   DEFAULT_CONFIG,
   DEFAULT_INTERCEPT_PROPS,
+  type ALFeature,
   type ALConfig,
 } from './ALConfig';
 import {
@@ -50,48 +51,54 @@ export function initializeAutoLogging(config: ALConfig): ALChannel {
     return publicChannel;
   }
 
-  const interceptProps = config.interceptProps ?? DEFAULT_INTERCEPT_PROPS;
-  const skippedComponents = new Set([
-    'View',
-    'RCTView',
-    'AnimatedComponent',
-    'AnimatedComponentWrapper',
-    'ForwardRef',
-    'ForwardRef(React.Fragment)',
-  ]);
-  const instrumentedTypes = new WeakMap<object, unknown>();
-  const elementInstrumenter: ElementInstrumenter = (type, props) => {
-    if (props == null) return null;
-    if (typeof type !== 'function' && typeof type !== 'object') return null;
-    if (!hasInstrumentableEventProp(props, interceptProps)) return null;
-    if (isLoggingSuppressed(props)) return null;
-    const componentName = resolveComponentName(type);
-    if (skippedComponents.has(componentName ?? '')) return null;
-    if (
-      componentName != null &&
-      config.componentNameValidator != null &&
-      !config.componentNameValidator(componentName)
-    ) {
-      return null;
-    }
-    let instrumentedType = instrumentedTypes.get(type as object);
-    if (instrumentedType == null) {
-      instrumentedType = createALInstrumentedElementType({
-        originalType: type as React.ElementType,
-        componentName,
-        config: runtimeConfig ?? config,
-        channel,
-        interceptProps,
-      });
-      instrumentedTypes.set(type as object, instrumentedType);
-    }
-    return { type: instrumentedType };
-  };
-  setElementInstrumenter(elementInstrumenter);
-  setElementObservationEnabled(true);
+  if (isALFeatureEnabled('automaticUIEvents')) {
+    const interceptProps = config.interceptProps ?? DEFAULT_INTERCEPT_PROPS;
+    const skippedComponents = new Set([
+      'View',
+      'RCTView',
+      'AnimatedComponent',
+      'AnimatedComponentWrapper',
+      'ForwardRef',
+      'ForwardRef(React.Fragment)',
+    ]);
+    const instrumentedTypes = new WeakMap<object, unknown>();
+    const elementInstrumenter: ElementInstrumenter = (type, props) => {
+      if (props == null) return null;
+      if (typeof type !== 'function' && typeof type !== 'object') return null;
+      if (!hasInstrumentableEventProp(props, interceptProps)) return null;
+      if (isLoggingSuppressed(props)) return null;
+      const componentName = resolveComponentName(type);
+      if (skippedComponents.has(componentName ?? '')) return null;
+      if (
+        componentName != null &&
+        config.componentNameValidator != null &&
+        !config.componentNameValidator(componentName)
+      ) {
+        return null;
+      }
+      let instrumentedType = instrumentedTypes.get(type as object);
+      if (instrumentedType == null) {
+        instrumentedType = createALInstrumentedElementType({
+          originalType: type as React.ElementType,
+          componentName,
+          config: runtimeConfig ?? config,
+          channel,
+          interceptProps,
+        });
+        instrumentedTypes.set(type as object, instrumentedType);
+      }
+      return { type: instrumentedType };
+    };
+    setElementInstrumenter(elementInstrumenter);
+    setElementObservationEnabled(true);
+  } else {
+    setElementInstrumenter(null);
+    setElementObservationEnabled(false);
+  }
 
   const surfaceMountEventIndexes = new WeakMap<object, number>();
   channel.addListener('al_surface_mount_request', (data) => {
+    if (!isALFeatureEnabled('surfaceMutationEvents')) return;
     const event = {
       ...createLoggableEvent(data.timestamp),
       event: 'mount_component' as const,
@@ -104,6 +111,7 @@ export function initializeAutoLogging(config: ALConfig): ALChannel {
     channel.emitSafely('al_surface_mutation_event', event);
   });
   channel.addListener('al_surface_unmount_request', (data) => {
+    if (!isALFeatureEnabled('surfaceMutationEvents')) return;
     const mountIndex = surfaceMountEventIndexes.get(data.instance);
     surfaceMountEventIndexes.delete(data.instance);
     channel.emitSafely('al_surface_mutation_event', {
@@ -131,6 +139,7 @@ export function initializeAutoLogging(config: ALConfig): ALChannel {
     });
   });
   channel.addListener('al_custom_event_request', (data) => {
+    if (!isALFeatureEnabled('customEvents')) return;
     const attributes = data.attributes;
     const level = data.level ?? 'info';
     const event = {
@@ -151,6 +160,7 @@ export function initializeAutoLogging(config: ALConfig): ALChannel {
     channel.emitSafely('al_custom_event', event);
   });
   channel.addListener('al_screen_transition_request', (data) => {
+    if (!isALFeatureEnabled('screenTransitionEvents')) return;
     const event = {
       ...createLoggableEvent(data.timestamp),
       event: 'screen_transition',
@@ -164,6 +174,7 @@ export function initializeAutoLogging(config: ALConfig): ALChannel {
     extendSession();
   });
   channel.addListener('al_list_impression_request', (data) => {
+    if (!isALFeatureEnabled('listImpressionEvents')) return;
     const listName = getExplicitText(data.listName);
     if (listName == null) return;
     const itemName = getExplicitText(data.itemName);
@@ -189,6 +200,7 @@ export function initializeAutoLogging(config: ALConfig): ALChannel {
     channel.emitSafely('al_list_impression_event', event);
   });
   channel.addListener('al_deep_link_request', (data) => {
+    if (!isALFeatureEnabled('deepLinkEvents')) return;
     channel.emitSafely('al_deep_link_event', {
       ...createLoggableEvent(data.timestamp),
       event: 'deep_link_open',
@@ -198,6 +210,7 @@ export function initializeAutoLogging(config: ALConfig): ALChannel {
     });
   });
   channel.addListener('al_react_error_request', (data) => {
+    if (!isALFeatureEnabled('reactErrorEvents')) return;
     const event = {
       ...createLoggableEvent(data.timestamp),
       event: 'error',
@@ -216,6 +229,10 @@ export function initializeAutoLogging(config: ALConfig): ALChannel {
 
 export function isALRuntimeEnabled(): boolean {
   return runtimeEnabled;
+}
+
+export function isALFeatureEnabled(feature: ALFeature): boolean {
+  return runtimeEnabled && runtimeConfig?.features?.[feature] !== false;
 }
 
 export function getALRuntimeConfig(): ALConfig | null {

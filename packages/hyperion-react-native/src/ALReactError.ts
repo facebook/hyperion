@@ -5,7 +5,7 @@
 'use strict';
 
 import { getALRuntimeChannel } from './ALChannel';
-import { isALRuntimeEnabled } from './ALRuntime';
+import { isALFeatureEnabled } from './ALRuntime';
 
 export interface ALReactErrorInfo {
   componentStack?: string | null;
@@ -21,7 +21,7 @@ export function logReactErrorBoundary(
   info: ALReactErrorInfo,
   options: ALReactErrorOptions = {}
 ): boolean {
-  if (!isALRuntimeEnabled()) return false;
+  if (!isALFeatureEnabled('reactErrorEvents')) return false;
   try {
     const channel = getALRuntimeChannel();
     if (channel == null) return false;

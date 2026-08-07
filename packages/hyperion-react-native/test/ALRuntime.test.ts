@@ -8,6 +8,7 @@ import { jsx, jsxs } from '../src/jsx-runtime';
 import { jsxDEV } from '../src/jsx-dev-runtime';
 import { installReactNativeJSXRuntime } from '../src/legacy-runtime-installer';
 import { createObservedJSXFunction } from '../src/ReactNativeElementObservation';
+import { logAppEvent } from '../src/ALAppEvent';
 import { addChannelSubscriber } from '../src/ALChannel';
 import {
   initializeAutoLogging,
@@ -19,7 +20,11 @@ import {
   useSurface,
   type ALSurfaceDataNode,
 } from '../src/ALSurface';
-import type { ALSurfaceMutationEventData, ALUIEventData } from '../src/ALTypes';
+import type {
+  ALCustomEventData,
+  ALSurfaceMutationEventData,
+  ALUIEventData,
+} from '../src/ALTypes';
 
 jest.mock('react-native', () => ({
   AppState: {
@@ -310,6 +315,81 @@ describe('React Native AutoLogging runtime', () => {
     });
     renderer!.root.findByType('button').props.onPress();
     expect(handler).toHaveBeenCalledTimes(1);
+    expect(events).toHaveLength(0);
+  });
+
+  it('disables automatic UI observation independently of custom events', () => {
+    const uiEvents: ALUIEventData[] = [];
+    const customEvents: ALCustomEventData[] = [];
+    addChannelSubscriber('al_ui_event', (event) => uiEvents.push(event));
+    addChannelSubscriber('al_custom_event', (event) => customEvents.push(event));
+    initializeAutoLogging({
+      appName: 'test',
+      heartbeatInterval: false,
+      features: { automaticUIEvents: false, customEvents: true },
+    });
+    const handler = jest.fn();
+    function Button(props: { onPress(): unknown }) {
+      return React.createElement('button', props);
+    }
+
+    const element = jsx(Button, { onPress: handler });
+    expect(element.type).toBe(Button);
+    logAppEvent('fixture.feature_gate');
+
+    expect(uiEvents).toHaveLength(0);
+    expect(customEvents).toHaveLength(1);
+  });
+
+  it('disables custom events independently of automatic UI observation', () => {
+    const uiEvents: ALUIEventData[] = [];
+    const customEvents: ALCustomEventData[] = [];
+    addChannelSubscriber('al_ui_event', (event) => uiEvents.push(event));
+    addChannelSubscriber('al_custom_event', (event) => customEvents.push(event));
+    initializeAutoLogging({
+      appName: 'test',
+      heartbeatInterval: false,
+      features: { automaticUIEvents: true, customEvents: false },
+    });
+    function Button(props: { onPress(): unknown }) {
+      return React.createElement('button', props);
+    }
+    let renderer: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        jsx(Button, { onPress: () => undefined })
+      );
+    });
+
+    renderer!.root.findByType('button').props.onPress();
+    logAppEvent('fixture.feature_gate');
+
+    expect(uiEvents).toHaveLength(1);
+    expect(customEvents).toHaveLength(0);
+  });
+
+  it('disables surface lifecycle events without disabling the registry', () => {
+    const events: ALSurfaceMutationEventData[] = [];
+    addChannelSubscriber('al_surface_mutation_event', (event) =>
+      events.push(event)
+    );
+    initializeAutoLogging({
+      appName: 'test',
+      heartbeatInterval: false,
+      features: { surfaceMutationEvents: false },
+    });
+    let renderer: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        React.createElement(ALSurface, { name: 'registry_only' }, 'content')
+      );
+    });
+
+    expect(ALSurfaceData.tryGet('registry_only')?.surfaceName).toBe(
+      'registry_only'
+    );
+    expect(events).toHaveLength(0);
+    act(() => renderer!.unmount());
     expect(events).toHaveLength(0);
   });
 

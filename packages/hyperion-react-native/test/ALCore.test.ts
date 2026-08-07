@@ -306,6 +306,7 @@ describe('sessions, screens, and core publishers', () => {
       debug: true,
       interceptProps: ['onMagic'],
       componentNameValidator,
+      features: { automaticUIEvents: false, customEvents: true },
       react: { enableInterceptComponentElement: false },
       props: { enableInterceptReactComponentProp: false },
     });
@@ -318,7 +319,35 @@ describe('sessions, screens, and core publishers', () => {
       debug: true,
       interceptProps: ['onMagic'],
       componentNameValidator,
+      features: { automaticUIEvents: false, customEvents: true },
     });
+  });
+
+  it('preserves disabled legacy interception gates when enabled is omitted', () => {
+    AutoLogging.init({
+      appName: 'legacy_disabled',
+      heartbeat: false,
+      react: { enableInterceptComponentElement: false },
+      props: null,
+    });
+
+    expect(isALRuntimeEnabled()).toBe(false);
+  });
+
+  it('can disable screen-transition publishing without disabling screen state', () => {
+    const screens: ALScreenTransitionEventData[] = [];
+    addChannelSubscriber('al_screen_transition_event', (event) =>
+      screens.push(event)
+    );
+    AutoLogging.init({
+      appName: 'screen_state_only',
+      heartbeat: false,
+      features: { screenTransitionEvents: false },
+    });
+
+    expect(setCurrentScreen('Settings')).toBe(true);
+    expect(getCurrentScreen()?.name).toBe('Settings');
+    expect(screens).toHaveLength(0);
   });
 
   it('allows enabled to disable work independently of legacy gates', () => {
