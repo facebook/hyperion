@@ -72,11 +72,7 @@ export function extractElementText(
     createElementText(info.ariaLabel, 'aria-label', 'application_text') ??
     createElementText(info.title, 'title', 'application_text') ??
     createElementText(info.testID, 'testID', 'developer_identifier') ??
-    createElementText(
-      isTextInput(info) ? undefined : info.placeholder,
-      'placeholder',
-      'application_text'
-    )
+    createElementText(info.placeholder, 'placeholder', 'application_text')
   );
 }
 

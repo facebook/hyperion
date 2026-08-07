@@ -17,8 +17,9 @@ walks the committed `ALSurfaceData` registry as a tree, including lifecycle and
 interactive paths, explicit metadata, ancestry, and serialized node data. UI
 payloads expose `elementTextSource`, and the metadata fixture demonstrates that
 subscriber policy—not the runtime—decides whether explicit scalar metadata is
-filtered before persistence. Text-entry values and raw handler arguments remain
-excluded at extraction time.
+filtered before persistence. Text-entry scalar values include source and
+sensitivity annotations; raw handler argument arrays and native event objects
+are not serialized into public events.
 
 ## Commands
 

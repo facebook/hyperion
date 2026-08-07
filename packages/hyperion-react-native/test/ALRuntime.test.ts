@@ -130,7 +130,7 @@ describe('React Native AutoLogging runtime', () => {
     initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
     function TextInput(props: {
       onChangeText(value: string): void;
-      testID: string;
+      placeholder: string;
     }) {
       return React.createElement('input', props);
     }
@@ -140,7 +140,7 @@ describe('React Native AutoLogging runtime', () => {
       renderer = TestRenderer.create(
         jsx(TextInput, {
           onChangeText: applicationHandler,
-          testID: 'account-email',
+          placeholder: 'Account email',
         })
       );
     });
@@ -155,6 +155,10 @@ describe('React Native AutoLogging runtime', () => {
     expect(events[0]).toEqual(
       expect.objectContaining({
         value: 'person@example.com',
+        elementText: 'Account email',
+        elementTextSource: 'placeholder',
+        elementTextSourceType: 'application_text',
+        elementTextPotentiallySensitive: true,
         valueSource: 'callback_argument',
         valueSourceType: 'user_input',
         valuePotentiallySensitive: true,

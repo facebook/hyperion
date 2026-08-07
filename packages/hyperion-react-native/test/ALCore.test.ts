@@ -147,7 +147,12 @@ describe('raw data extraction and provenance', () => {
       placeholder: 'Email',
       value: 'person@example.com',
     });
-    expect(extractElementText(info)).toBeUndefined();
+    expect(extractElementText(info)).toEqual({
+      text: 'Email',
+      source: 'placeholder',
+      sourceType: 'application_text',
+      potentiallySensitive: true,
+    });
     expect(extractEventValue('onChangeText', ['secret text'], info)).toEqual({
       value: 'secret text',
       source: 'callback_argument',
