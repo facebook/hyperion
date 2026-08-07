@@ -154,8 +154,6 @@ export function init(options: InitOptions): void {
     TReactClassComponent | Class<TReactClassComponent>,
     ReactClassComponentShadowPrototype<PropsType> | null
   >();
-  const interceptedFunctionComponents = new WeakSet<TReactFunctionComponent>();
-
   type PropsType = ReactComponentObjectProps;
   type TReactClassComponent = ReactClassComponent<PropsType>;
   type TReactFunctionComponent =
@@ -195,13 +193,9 @@ export function init(options: InitOptions): void {
   function processReactFunctionComponent(
     functionComponent: TReactFunctionComponent
   ): TReactFunctionComponent {
-    if (
-      !options.enableInterceptFunctionComponentRender ||
-      interceptedFunctionComponents.has(functionComponent)
-    ) {
+    if (!options.enableInterceptFunctionComponentRender) {
       return functionComponent;
     }
-    interceptedFunctionComponents.add(functionComponent);
 
     const fi = interceptFunction<TReactFunctionComponent>(
       functionComponent,
@@ -211,7 +205,7 @@ export function init(options: InitOptions): void {
     );
     onReactFunctionComponentIntercept.call(fi);
 
-    return functionComponent;
+    return fi.interceptor;
   }
 
   const processComponent = IReactElementVisitor.createReactElementVisitor<

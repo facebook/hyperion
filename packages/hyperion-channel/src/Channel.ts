@@ -74,6 +74,7 @@ export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventTyp
    */
   pipe<T extends IPipedEmitter<TEventToListenerArgsMap>, P = Check<T, TEventToListenerArgsMap>>(nextChannel: T, scheduler?: (task: () => void) => void): T & P;
   pipe<T extends IEmitter<TEventToListenerArgsMap>>(nextChannel: T, scheduler?: (task: () => void) => void): T {
+    const pipedEmitter = nextChannel as IPipedEmitter<TEventToListenerArgsMap>;
     const handler = this._next.add(scheduler
       ? (eventType, ...args) => {
         scheduler(() => {
@@ -87,11 +88,19 @@ export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventTyp
     const safeHandler = this._nextSafe.add(scheduler
       ? (eventType, ...args) => {
         scheduler(() => {
-          nextChannel.emitSafely(eventType, ...args);
+          if (pipedEmitter.emitSafely) {
+            pipedEmitter.emitSafely(eventType, ...args);
+          } else {
+            pipedEmitter.emit(eventType, ...args);
+          }
         });
       }
       : (eventType, ...args) => {
-        nextChannel.emitSafely(eventType, ...args);
+        if (pipedEmitter.emitSafely) {
+          pipedEmitter.emitSafely(eventType, ...args);
+        } else {
+          pipedEmitter.emit(eventType, ...args);
+        }
       }
     );
     //@ts-ignore

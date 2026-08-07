@@ -3,7 +3,11 @@
  */
 
 import "jest";
-import { Channel, PausableChannel } from "../src/Channel";
+import {
+  Channel,
+  PausableChannel,
+  type IEmitter,
+} from "../src/Channel";
 
 type ChannelEvents = {
   ev1: [],
@@ -266,6 +270,18 @@ describe("test Channel", () => {
       'downstream first',
       'downstream second',
     ]);
+  });
+
+  test("safe emission supports legacy downstream emitters", () => {
+    const channel = new Channel<Pick<ChannelEvents, 'ev2'>>();
+    const downstream: IEmitter<Pick<ChannelEvents, 'ev2'>> = {
+      emit: jest.fn<void, [eventType: 'ev2', value: number]>(),
+    };
+    channel.pipe(downstream);
+
+    channel.emitSafely('ev2', 42);
+
+    expect(downstream.emit).toHaveBeenCalledWith('ev2', 42);
   });
 
   test("safe emission snapshots listeners removed during dispatch", () => {
