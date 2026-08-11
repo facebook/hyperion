@@ -17,8 +17,7 @@ type Sym = symbol | number;
 const usePolyfill = typeof Symbol !== 'function' || !Symbol.for; // The Symbol used to tag the ReactElement-like types.
 const SymbolFor: (symbolValue: number, symbolName: string) => Sym = usePolyfill
   ? (symbolValue, _symbolName) => symbolValue
-  : // eslint-disable-next-line fb-www/no-symbol
-  (_symbolValue, symbolName) => Symbol.for(symbolName);
+  : (_symbolValue, symbolName) => Symbol.for(symbolName);
 
 // export const REACT_ELEMENT_TYPE: Sym = ReactIs.Element;
 // export const REACT_PORTAL_TYPE: Sym = ReactIs.Portal;
