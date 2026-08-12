@@ -114,9 +114,21 @@ export interface ALReactErrorEventData extends ALLoggableEvent {
   reactComponentStack?: string;
 }
 
+export interface ALLegacyReactComponentPropEventData {
+  component: string;
+  prop: string;
+  args: unknown[];
+  type: 'class' | 'func' | 'dom';
+}
+
+export interface ALLegacyReactComponentMountEventData {
+  surface: string;
+  args: unknown[];
+}
+
 // The channel constraint requires a finite mapped event contract.
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type ALChannelEventMap = {
+export type ALModernChannelEventMap = {
   al_ui_event: [ALUIEventData];
   al_surface_mutation_event: [ALSurfaceMutationEventData];
   al_heartbeat_event: [ALHeartbeatEventData];
@@ -127,6 +139,15 @@ export type ALChannelEventMap = {
   al_deep_link_event: [ALDeepLinkEventData];
   al_react_error_event: [ALReactErrorEventData];
 };
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type ALLegacyChannelEventMap = {
+  al_react_component_prop: [ALLegacyReactComponentPropEventData];
+  al_react_component_mount: [ALLegacyReactComponentMountEventData];
+};
+
+export type ALChannelEventMap = ALModernChannelEventMap &
+  ALLegacyChannelEventMap;
 
 export interface ALMobileEventContext {
   appName: string;

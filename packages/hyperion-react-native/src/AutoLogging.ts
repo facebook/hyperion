@@ -10,14 +10,24 @@ import {
   DEFAULT_INTERCEPT_PROPS,
   type ALConfig,
 } from './ALConfig';
-import { initALChannel } from './ALChannel';
+import { getALRuntimeChannel, initALChannel } from './ALChannel';
 import { startHeartbeat } from './ALHeartbeat';
 import { initializeAutoLogging, isALRuntimeEnabled } from './ALRuntime';
 import type { ALChannelEventMap } from './ALTypes';
+import {
+  hasLegacyAutoLoggingOptions,
+  installLegacyAutoLogging,
+  isLegacyAutoLoggingEnabled,
+  type LegacyAutoLoggingOptions,
+  type LegacyComponentPropsOptions,
+  type LegacyReactOptions,
+} from './ALLegacyAutoLogging';
 
 export type ALChannelEvent = ALChannelEventMap;
 
-export interface InitOptions extends Partial<ALConfig> {
+export interface InitOptions
+  extends Partial<ALConfig>,
+    LegacyAutoLoggingOptions {
   channel?: Channel<ALChannelEventMap>;
   heartbeat?:
     | false
@@ -25,31 +35,18 @@ export interface InitOptions extends Partial<ALConfig> {
         heartbeatInterval?: number;
         maxUserInactivityDuration?: number;
       };
-  react?: {
-    enableInterceptComponentElement?: boolean;
-  };
-  props?: {
-    intercept?: readonly string[];
-    enableInterceptReactComponentProp?: boolean;
-  } | null;
-  componentProps?: {
-    intercept?: readonly string[];
-    enableInterceptReactComponentProp?: boolean;
-  } | null;
+  // TODO: Remove these aliases after WWW/AMA migrates to the modern config.
+  react?: LegacyReactOptions;
+  props?: LegacyComponentPropsOptions | null;
+  componentProps?: LegacyComponentPropsOptions | null;
 }
 
 const pipedChannels = new WeakSet<object>();
 
 export function init(options: InitOptions): void {
   const propOptions = options.props ?? options.componentProps;
-  const hasLegacyOptions =
-    options.react != null ||
-    options.props !== undefined ||
-    options.componentProps !== undefined;
-  const legacyEnabled =
-    !hasLegacyOptions ||
-    options.react?.enableInterceptComponentElement === true ||
-    propOptions?.enableInterceptReactComponentProp === true;
+  const hasLegacyOptions = hasLegacyAutoLoggingOptions(options);
+  const legacyEnabled = isLegacyAutoLoggingEnabled(options);
   const heartbeatOptions =
     options.heartbeat === false ? null : options.heartbeat;
   const heartbeatInterval =
@@ -57,23 +54,38 @@ export function init(options: InitOptions): void {
       ? false
       : options.heartbeatInterval ??
         heartbeatOptions?.heartbeatInterval ??
-        DEFAULT_CONFIG.heartbeatInterval;
+        (hasLegacyOptions ? false : DEFAULT_CONFIG.heartbeatInterval);
   const maxUserInactivityDuration =
     options.maxUserInactivityDuration ??
     heartbeatOptions?.maxUserInactivityDuration;
-  initializeAutoLogging({
-    appName: options.appName ?? 'react_native',
-    enabled: options.enabled ?? legacyEnabled,
-    heartbeatInterval,
-    maxUserInactivityDuration,
-    interceptProps:
-      options.interceptProps ??
-      propOptions?.intercept ??
-      DEFAULT_INTERCEPT_PROPS,
-    debug: options.debug ?? DEFAULT_CONFIG.debug,
-    componentNameValidator: options.componentNameValidator,
-    features: options.features,
-  });
+  initializeAutoLogging(
+    {
+      appName: options.appName ?? 'react_native',
+      enabled: options.enabled ?? (!hasLegacyOptions || legacyEnabled),
+      heartbeatInterval,
+      maxUserInactivityDuration,
+      interceptProps:
+        options.interceptProps ??
+        propOptions?.intercept ??
+        DEFAULT_INTERCEPT_PROPS,
+      debug: options.debug ?? DEFAULT_CONFIG.debug,
+      componentNameValidator: options.componentNameValidator,
+      features: options.features,
+    },
+    !hasLegacyOptions
+  );
+  if (hasLegacyOptions && isALRuntimeEnabled()) {
+    const runtimeChannel = getALRuntimeChannel();
+    if (runtimeChannel != null) {
+      installLegacyAutoLogging(
+        options,
+        runtimeChannel,
+        options.interceptProps ??
+          propOptions?.intercept ??
+          DEFAULT_INTERCEPT_PROPS
+      );
+    }
+  }
   if (heartbeatInterval !== false && isALRuntimeEnabled()) {
     startHeartbeat(heartbeatInterval, maxUserInactivityDuration);
   }

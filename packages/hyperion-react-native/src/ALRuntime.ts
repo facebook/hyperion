@@ -37,10 +37,15 @@ import { resetALSurfaceDataForTests } from './ALSurface';
 let initialized = false;
 let runtimeEnabled = false;
 let runtimeConfig: ALConfig | null = null;
+let featuresEnabledByDefault = true;
 
-export function initializeAutoLogging(config: ALConfig): ALChannel {
+export function initializeAutoLogging(
+  config: ALConfig,
+  enableFeaturesByDefault = true
+): ALChannel {
   if (initialized) return initALChannel();
   initialized = true;
+  featuresEnabledByDefault = enableFeaturesByDefault;
   runtimeConfig = { ...DEFAULT_CONFIG, ...config };
   const publicChannel = initALChannel();
   const channel = getALRuntimeChannel();
@@ -232,7 +237,10 @@ export function isALRuntimeEnabled(): boolean {
 }
 
 export function isALFeatureEnabled(feature: ALFeature): boolean {
-  return runtimeEnabled && runtimeConfig?.features?.[feature] !== false;
+  return (
+    runtimeEnabled &&
+    (runtimeConfig?.features?.[feature] ?? featuresEnabledByDefault)
+  );
 }
 
 export function getALRuntimeConfig(): ALConfig | null {
@@ -272,6 +280,7 @@ export function resetALRuntimeForTests(): void {
   initialized = false;
   runtimeEnabled = false;
   runtimeConfig = null;
+  featuresEnabledByDefault = true;
   resetALScreenForTests();
   resetALSurfaceDataForTests();
   resetALChannelForTests();

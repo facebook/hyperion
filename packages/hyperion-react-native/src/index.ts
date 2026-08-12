@@ -79,8 +79,12 @@ export type {
   ALDeepLinkSource,
   ALHeartbeatEventData,
   ALListImpressionEventData,
+  ALLegacyChannelEventMap,
+  ALLegacyReactComponentMountEventData,
+  ALLegacyReactComponentPropEventData,
   ALLoggableEvent,
   ALMobileEventContext,
+  ALModernChannelEventMap,
   ALReactErrorEventData,
   ALScreenTransitionEventData,
   ALSurfaceMutationEventData,
@@ -94,3 +98,10 @@ export type {
   SurfaceMetadataValue,
   UIEventMetadata,
 } from './ALTypes';
+export type {
+  LegacyCallInterceptor,
+  LegacyComponentPropsOptions,
+  LegacyJSXRuntimeInterceptors,
+  LegacyReactModuleInterceptors,
+  LegacyReactOptions,
+} from './ALLegacyAutoLogging';

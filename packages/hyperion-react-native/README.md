@@ -23,10 +23,15 @@ AutoLogging.init(config);
 
 `AutoLogging.init` accepts the complete `ALConfig` surface and is the canonical
 setup API. Set `enabled: false` to install no observation or heartbeat work,
-and set `heartbeatInterval: false` to disable only heartbeat. The legacy
-`react`, `props`, `componentProps`, and nested `heartbeat` options remain
-supported. Initialization is idempotent and the first call owns the runtime
-configuration.
+and set `heartbeatInterval: false` to disable only heartbeat. Initialization is
+idempotent and the first call owns the runtime configuration.
+
+The deprecated `react`, `props`, `componentProps`, and nested `heartbeat`
+options remain available while WWW/AMA migrates. This path accepts the original
+injected `IReactModule` and `IJsxRuntimeModule`, preserves the independent
+interception and publishing flags, and emits `al_react_component_prop` and
+`al_react_component_mount`. It does not enable heartbeat or any modern event
+family unless that functionality is explicitly configured.
 
 Use `features` to disable individual publishers while leaving the rest of the
 runtime enabled. Available gates are `automaticUIEvents`,

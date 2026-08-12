@@ -6,13 +6,13 @@ import { useSyncExternalStore } from 'react';
 import {
   addChannelSubscriber,
   createTransportEnvelope,
-  type ALChannelEventMap,
+  type ALModernChannelEventMap,
   type ALTransportEnvelope,
 } from 'hyperion-react-native';
 import { AUTO_LOGGING_CONFIG } from './AutoLoggingConfig';
 
-export type EventType = keyof ALChannelEventMap;
-type PublicEvent = ALChannelEventMap[EventType][0];
+export type EventType = keyof ALModernChannelEventMap;
+type PublicEvent = ALModernChannelEventMap[EventType][0];
 
 export interface DebugEvent {
   sequence: number;
@@ -27,7 +27,7 @@ let snapshot: readonly DebugEvent[] = Object.freeze([]);
 
 function record<EventName extends EventType>(
   eventType: EventName,
-  event: ALChannelEventMap[EventName][0]
+  event: ALModernChannelEventMap[EventName][0]
 ): void {
   const publicEvent = event as PublicEvent;
   snapshot = Object.freeze([
