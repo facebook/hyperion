@@ -1,5 +1,8 @@
 import { defineConfig } from 'rollup';
 import webConfig from './rollup.config.js';
+import mobileDistUtils from './scripts/mobile-dist-utils.cjs';
+
+const { rewriteHasteSpecifiers } = mobileDistUtils;
 
 function mobileChunkName(moduleId) {
   const id = moduleId.replaceAll('\\', '/');
@@ -54,15 +57,12 @@ function mobileChunkName(moduleId) {
   }
 }
 
-const stripRelativeSideEffectImports = {
-  name: 'strip-relative-side-effect-imports',
+const rewriteMobileHasteSpecifiers = {
+  name: 'rewrite-mobile-haste-specifiers',
   generateBundle(_options, bundle) {
     for (const artifact of Object.values(bundle)) {
       if (typeof artifact.code === 'string') {
-        artifact.code = artifact.code.replace(
-          /(import ')[.]\/([^.]+)[.]js(';)/g,
-          '$1$2$3'
-        );
+        artifact.code = rewriteHasteSpecifiers(artifact.code);
       }
     }
   },
@@ -97,6 +97,6 @@ export default defineConfig({
     intro: mobileIntro,
     manualChunks: mobileChunkName,
   },
-  plugins: [stripRelativeSideEffectImports, ...webConfig.plugins],
+  plugins: [rewriteMobileHasteSpecifiers, ...webConfig.plugins],
   preserveEntrySignatures: 'strict',
 });

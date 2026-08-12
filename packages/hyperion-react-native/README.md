@@ -99,3 +99,6 @@ At the repository root, `npm run build` keeps the flat `dist/` artifact set
 web-only while still compiling this package. Use `npm run build:mobile` to
 generate flat React Native compatibility bundles in `dist-mobile/`, or
 `npm run build:all` to generate both artifact sets from one workspace build.
+Native-dependent WWW entries use `.react.native.js`; dependency-neutral
+observation and legacy-installer entries remain generic. Generated
+cross-artifact imports are bare Haste module names.
