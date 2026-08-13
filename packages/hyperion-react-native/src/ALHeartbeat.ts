@@ -4,15 +4,17 @@
 
 'use strict';
 
-import { AppState } from 'react-native';
 import { ALHeartbeatType } from 'hyperion-autologging-shared';
 import { getALRuntimeChannel } from './ALChannel';
+import type { AppStateStatus, ReactNativeModuleExports } from './IReactNative';
 
 export { ALHeartbeatType } from 'hyperion-autologging-shared';
 
 export interface ALHeartbeatEnvironment {
-  getCurrentState(): string;
-  addStateListener(listener: (state: string) => void): { remove(): void };
+  getCurrentState(): AppStateStatus | null;
+  addStateListener(listener: (state: AppStateStatus) => void): {
+    remove(): void;
+  };
   setInterval(
     callback: () => void,
     interval: number
@@ -21,15 +23,16 @@ export interface ALHeartbeatEnvironment {
   now(): number;
 }
 
-const defaultEnvironment: ALHeartbeatEnvironment = {
-  getCurrentState: () => AppState.currentState,
-  addStateListener: (listener) => AppState.addEventListener('change', listener),
+const defaultTimingEnvironment: Pick<
+  ALHeartbeatEnvironment,
+  'setInterval' | 'clearInterval' | 'now'
+> = {
   setInterval: (callback, interval) => setInterval(callback, interval),
   clearInterval: (handle) => clearInterval(handle),
   now: () => Date.now(),
 };
 
-let environment = defaultEnvironment;
+let environment: ALHeartbeatEnvironment | null = null;
 let intervalHandle: ReturnType<typeof setInterval> | null = null;
 let lastActivityTime = Date.now();
 let lastHeartbeatTime = 0;
@@ -38,10 +41,36 @@ let maxInactivityMs = 120_000;
 let appStateSubscription: { remove(): void } | null = null;
 let uiEventListener: ((event: { eventTimestamp: number }) => void) | null =
   null;
-let lastAppState: string | null = null;
+let lastAppState: AppStateStatus | null = null;
+
+function getEnvironment(): ALHeartbeatEnvironment {
+  if (environment == null) {
+    throw new Error(
+      'Heartbeat requires react.ReactNativeModule.AppState configuration'
+    );
+  }
+  return environment;
+}
+
+export function configureReactNativeHeartbeatEnvironment(
+  reactNativeModule: ReactNativeModuleExports | undefined
+): void {
+  const appState = reactNativeModule?.AppState;
+  if (appState == null) {
+    throw new Error(
+      'Heartbeat requires react.ReactNativeModule.AppState configuration'
+    );
+  }
+  environment = {
+    getCurrentState: () => appState.currentState,
+    addStateListener: (listener) =>
+      appState.addEventListener('change', listener),
+    ...defaultTimingEnvironment,
+  };
+}
 
 function emitHeartbeat(type: ALHeartbeatType): void {
-  const timestamp = environment.now();
+  const timestamp = getEnvironment().now();
   if (timestamp - lastActivityTime > maxInactivityMs) return;
   const channel = getALRuntimeChannel();
   if (channel == null) return;
@@ -51,7 +80,7 @@ function emitHeartbeat(type: ALHeartbeatType): void {
 
 function startInterval(): void {
   if (intervalHandle != null) return;
-  intervalHandle = environment.setInterval(
+  intervalHandle = getEnvironment().setInterval(
     () => emitHeartbeat(ALHeartbeatType.SCHEDULED),
     heartbeatIntervalMs
   );
@@ -59,11 +88,13 @@ function startInterval(): void {
 
 function stopInterval(): void {
   if (intervalHandle == null) return;
-  environment.clearInterval(intervalHandle);
+  getEnvironment().clearInterval(intervalHandle);
   intervalHandle = null;
 }
 
-export function recordActivity(timestamp = environment.now()): void {
+export function recordActivity(
+  timestamp = environment?.now() ?? Date.now()
+): void {
   lastActivityTime = timestamp;
 }
 
@@ -72,9 +103,10 @@ export function startHeartbeat(
   maximumInactivityMs?: number
 ): void {
   if (appStateSubscription != null) return;
+  const heartbeatEnvironment = getEnvironment();
   heartbeatIntervalMs = intervalMs;
   maxInactivityMs = maximumInactivityMs ?? intervalMs * 4;
-  lastAppState = environment.getCurrentState();
+  lastAppState = heartbeatEnvironment.getCurrentState();
   recordActivity();
   const channel = getALRuntimeChannel();
   if (channel != null) {
@@ -85,8 +117,8 @@ export function startHeartbeat(
   if (lastAppState !== 'background' && lastAppState !== 'inactive') {
     startInterval();
   }
-  appStateSubscription = environment.addStateListener((state) => {
-    const timestamp = environment.now();
+  appStateSubscription = heartbeatEnvironment.addStateListener((state) => {
+    const timestamp = heartbeatEnvironment.now();
     const previousState = lastAppState;
     lastAppState = state;
     if (state === 'active') {
@@ -130,7 +162,7 @@ export function setHeartbeatEnvironmentForTests(
 
 export function resetHeartbeatEnvironmentForTests(): void {
   stopHeartbeat();
-  environment = defaultEnvironment;
+  environment = null;
   lastHeartbeatTime = 0;
-  lastActivityTime = environment.now();
+  lastActivityTime = Date.now();
 }

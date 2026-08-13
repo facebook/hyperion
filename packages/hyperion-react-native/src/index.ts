@@ -105,3 +105,9 @@ export type {
   LegacyReactModuleInterceptors,
   LegacyReactOptions,
 } from './ALLegacyAutoLogging';
+export type {
+  AppStateStatus,
+  ReactNativeAppState,
+  ReactNativeAppStateSubscription,
+  ReactNativeModuleExports,
+} from './IReactNative';

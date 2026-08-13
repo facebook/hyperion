@@ -236,6 +236,10 @@ export function isALRuntimeEnabled(): boolean {
   return runtimeEnabled;
 }
 
+export function isALRuntimeInitialized(): boolean {
+  return initialized;
+}
+
 export function isALFeatureEnabled(feature: ALFeature): boolean {
   return (
     runtimeEnabled &&

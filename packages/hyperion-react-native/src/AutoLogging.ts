@@ -11,8 +11,15 @@ import {
   type ALConfig,
 } from './ALConfig';
 import { getALRuntimeChannel, initALChannel } from './ALChannel';
-import { startHeartbeat } from './ALHeartbeat';
-import { initializeAutoLogging, isALRuntimeEnabled } from './ALRuntime';
+import {
+  configureReactNativeHeartbeatEnvironment,
+  startHeartbeat,
+} from './ALHeartbeat';
+import {
+  initializeAutoLogging,
+  isALRuntimeEnabled,
+  isALRuntimeInitialized,
+} from './ALRuntime';
 import type { ALChannelEventMap } from './ALTypes';
 import {
   hasLegacyAutoLoggingOptions,
@@ -44,6 +51,7 @@ export interface InitOptions
 const pipedChannels = new WeakSet<object>();
 
 export function init(options: InitOptions): void {
+  if (isALRuntimeInitialized()) return;
   const propOptions = options.props ?? options.componentProps;
   const hasLegacyOptions = hasLegacyAutoLoggingOptions(options);
   const legacyEnabled = isLegacyAutoLoggingEnabled(options);
@@ -58,10 +66,15 @@ export function init(options: InitOptions): void {
   const maxUserInactivityDuration =
     options.maxUserInactivityDuration ??
     heartbeatOptions?.maxUserInactivityDuration;
+  const runtimeEnabled =
+    options.enabled ?? (!hasLegacyOptions || legacyEnabled);
+  if (runtimeEnabled && heartbeatInterval !== false) {
+    configureReactNativeHeartbeatEnvironment(options.react?.ReactNativeModule);
+  }
   initializeAutoLogging(
     {
       appName: options.appName ?? 'react_native',
-      enabled: options.enabled ?? (!hasLegacyOptions || legacyEnabled),
+      enabled: runtimeEnabled,
       heartbeatInterval,
       maxUserInactivityDuration,
       interceptProps:

@@ -6,15 +6,19 @@ transport, persistence, and product policy to the application.
 
 ## Installation
 
-React and React Native are peer dependencies. Initialize AutoLogging before the
-application module containing instrumented JSX is evaluated:
+React and React Native are peer dependencies. The portable runtime does not
+load React Native itself; inject the narrow lifecycle capability when heartbeat
+is enabled. Initialize AutoLogging before the application module containing
+instrumented JSX is evaluated:
 
 ```ts
+import { AppState } from 'react-native';
 import { AutoLogging, addChannelSubscriber } from 'hyperion-react-native';
 
 const config = {
   appName: 'sample_app',
   enabled: true,
+  react: { ReactNativeModule: { AppState } },
 };
 
 addChannelSubscriber('al_ui_event', (event) => transport(event));
@@ -24,7 +28,9 @@ AutoLogging.init(config);
 `AutoLogging.init` accepts the complete `ALConfig` surface and is the canonical
 setup API. Set `enabled: false` to install no observation or heartbeat work,
 and set `heartbeatInterval: false` to disable only heartbeat. Initialization is
-idempotent and the first call owns the runtime configuration.
+idempotent and the first call owns the runtime configuration. Heartbeat-enabled
+initialization requires `react.ReactNativeModule.AppState`; disabled and
+heartbeat-disabled initialization never reads it.
 
 The deprecated `react`, `props`, `componentProps`, and nested `heartbeat`
 options remain available while WWW/AMA migrates. This path accepts the original
@@ -99,6 +105,10 @@ At the repository root, `npm run build` keeps the flat `dist/` artifact set
 web-only while still compiling this package. Use `npm run build:mobile` to
 generate flat React Native compatibility bundles in `dist-mobile/`, or
 `npm run build:all` to generate both artifact sets from one workspace build.
-Native-dependent WWW entries use `.react.native.js`; dependency-neutral
-observation and legacy-installer entries remain generic. Generated
-cross-artifact imports are bare Haste module names.
+The portable main runtime is emitted as `hyperionMobileReactNative.js`, with an
+equivalent `.react.native.js` alias for existing platform resolution. Only the
+automatic JSX-runtime entries directly import React JSX runtimes and therefore
+use `.react.native.js`. Dependency-neutral observation and legacy-installer
+entries remain generic. Generated cross-artifact imports are bare Haste module
+names. Embedded consumers can avoid the JSX-runtime entries and use
+`installReactNativeJSXRuntime` with explicitly supplied React runtime modules.

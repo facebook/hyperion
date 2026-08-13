@@ -8,7 +8,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {
   NATIVE_ONLY_ARTIFACTS,
-  getImportSpecifiers,
+  PORTABLE_NATIVE_ALIASES,
+  getRuntimeSpecifiers,
   getNativeArtifactName,
 } = require('./mobile-dist-utils.cjs');
 
@@ -26,6 +27,17 @@ for (const artifact of NATIVE_ONLY_ARTIFACTS) {
   fs.rmSync(nativeVariant, { force: true });
   fs.renameSync(source, nativeVariant);
 }
+for (const artifact of PORTABLE_NATIVE_ALIASES) {
+  const source = path.join(outputDirectory, artifact);
+  const nativeVariant = path.join(
+    outputDirectory,
+    getNativeArtifactName(artifact)
+  );
+  if (!fs.existsSync(source)) {
+    throw new Error(`Missing portable entry artifact: ${artifact}`);
+  }
+  fs.copyFileSync(source, nativeVariant);
+}
 
 for (const buildEntry of ['mobile.js', 'mobile.js.map']) {
   fs.rmSync(path.join(outputDirectory, buildEntry), { force: true });
@@ -38,6 +50,8 @@ const artifactSet = new Set(artifacts);
 
 const requiredEntries = [
   ...NATIVE_ONLY_ARTIFACTS.map(getNativeArtifactName),
+  ...PORTABLE_NATIVE_ALIASES,
+  ...PORTABLE_NATIVE_ALIASES.map(getNativeArtifactName),
   'hyperionMobileReactNativeJSXObservation.js',
   'hyperionMobileReactNativeLegacyRuntimeInstaller.js',
 ];
@@ -49,7 +63,7 @@ for (const artifact of requiredEntries) {
 
 for (const artifact of artifacts) {
   const code = fs.readFileSync(path.join(outputDirectory, artifact), 'utf8');
-  const imports = getImportSpecifiers(code);
+  const imports = getRuntimeSpecifiers(code);
   for (const importedModule of imports) {
     if (importedModule.startsWith('./hyperionMobile')) {
       throw new Error(
@@ -66,9 +80,7 @@ for (const artifact of artifacts) {
       !artifactSet.has(`${importedModule}.js`) &&
       !artifactSet.has(`${importedModule}.react.native.js`)
     ) {
-      throw new Error(
-        `${artifact} imports missing artifact ${importedModule}`
-      );
+      throw new Error(`${artifact} imports missing artifact ${importedModule}`);
     }
   }
   if (!artifact.endsWith('.react.native.js')) {
@@ -91,7 +103,7 @@ const reactNativeArtifacts = artifacts.filter((artifact) =>
 );
 for (const artifact of reactNativeArtifacts) {
   const code = fs.readFileSync(path.join(outputDirectory, artifact), 'utf8');
-  const imports = getImportSpecifiers(code);
+  const imports = getRuntimeSpecifiers(code);
   for (const forbiddenDependency of [
     'hyperionMobileCore',
     'hyperionMobileReact',
@@ -99,6 +111,34 @@ for (const artifact of reactNativeArtifacts) {
     if (imports.includes(forbiddenDependency)) {
       const message = `${artifact} depends on forbidden module ${forbiddenDependency}`;
       throw new Error(message);
+    }
+  }
+}
+
+for (const portableArtifact of PORTABLE_NATIVE_ALIASES) {
+  const portableCode = fs.readFileSync(
+    path.join(outputDirectory, portableArtifact),
+    'utf8'
+  );
+  const nativeCode = fs.readFileSync(
+    path.join(outputDirectory, getNativeArtifactName(portableArtifact)),
+    'utf8'
+  );
+  if (nativeCode !== portableCode) {
+    throw new Error(
+      `${portableArtifact} and its native alias must be equivalent`
+    );
+  }
+  const dependencies = getRuntimeSpecifiers(portableCode);
+  for (const forbiddenDependency of [
+    'react-native',
+    'react/jsx-runtime',
+    'react/jsx-dev-runtime',
+  ]) {
+    if (dependencies.includes(forbiddenDependency)) {
+      throw new Error(
+        `${portableArtifact} eagerly imports ${forbiddenDependency}`
+      );
     }
   }
 }

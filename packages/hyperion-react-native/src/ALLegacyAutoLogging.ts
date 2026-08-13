@@ -6,6 +6,7 @@
 
 import type { Channel } from 'hyperion-channel/src/Channel';
 import type { ALRuntimeChannelEventMap } from './ALChannel';
+import type { ReactNativeModuleExports } from './IReactNative';
 
 type LegacyComponentType = 'class' | 'func' | 'dom';
 type LegacyMapper = (args: unknown[]) => unknown[];
@@ -29,7 +30,7 @@ export interface LegacyReactOptions {
   ReactModule?: {
     Component?: new (...args: never[]) => unknown;
   };
-  ReactNativeModule?: unknown;
+  ReactNativeModule?: ReactNativeModuleExports;
   IReactModule?: LegacyReactModuleInterceptors;
   IJsxRuntimeModule?: LegacyJSXRuntimeInterceptors;
   enableInterceptClassComponentConstructor?: boolean;
@@ -129,8 +130,7 @@ function getComponentInfo(
     return {
       name: resolveName(value),
       type: 'func',
-      canPublishMount:
-        options.enableInterceptFunctionComponentRender === true,
+      canPublishMount: options.enableInterceptFunctionComponentRender === true,
     };
   }
   if (
@@ -141,8 +141,7 @@ function getComponentInfo(
     return {
       name: resolveName(value),
       type: 'func',
-      canPublishMount:
-        options.enableInterceptFunctionComponentRender === true,
+      canPublishMount: options.enableInterceptFunctionComponentRender === true,
     };
   }
   return null;
@@ -193,10 +192,19 @@ function installMapper(
 export function hasLegacyAutoLoggingOptions(
   options: LegacyAutoLoggingOptions
 ): boolean {
+  const react = options.react;
   return (
-    options.react != null ||
     options.props !== undefined ||
-    options.componentProps !== undefined
+    options.componentProps !== undefined ||
+    react?.IReactModule !== undefined ||
+    react?.IJsxRuntimeModule !== undefined ||
+    react?.enableInterceptClassComponentConstructor !== undefined ||
+    react?.enableInterceptClassComponentMethods !== undefined ||
+    react?.enableInterceptFunctionComponentRender !== undefined ||
+    react?.enableInterceptDomElement !== undefined ||
+    react?.enableInterceptComponentElement !== undefined ||
+    react?.enableInterceptSpecialElement !== undefined ||
+    react?.enableReactComponentPublisher !== undefined
   );
 }
 
