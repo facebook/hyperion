@@ -22,7 +22,6 @@ const EVENT_LABELS: Readonly<Record<EventType, string>> = {
   al_ui_event: 'UI',
   al_surface_mutation_event: 'Surface',
   al_heartbeat_event: 'Heartbeat',
-  al_custom_event: 'Custom',
   al_app_state_event: 'App state',
   al_screen_transition_event: 'Screen',
   al_list_impression_event: 'List',

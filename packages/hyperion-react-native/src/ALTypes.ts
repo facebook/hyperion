@@ -14,8 +14,6 @@ export type SurfaceMetadataValue = string | number | boolean | null;
 export type ALLoggableEvent = SharedALLoggableEvent<SurfaceMetadataValue>;
 export type SurfaceMetadata = Readonly<Record<string, SurfaceMetadataValue>>;
 export type UIEventMetadata = Readonly<Record<string, SurfaceMetadata>>;
-export type ALCustomEventLevel = 'debug' | 'info' | 'warn' | 'error';
-export type ALCustomEventAttributes = Readonly<Record<string, unknown>>;
 export type RNElementTextSource =
   | 'accessibilityLabel'
   | 'aria-label'
@@ -62,14 +60,6 @@ export interface ALSurfaceMutationEventData extends ALLoggableEvent {
 export interface ALHeartbeatEventData extends ALLoggableEvent {
   event: 'heartbeat';
   heartbeatType: ALHeartbeatType;
-}
-
-export interface ALCustomEventData extends ALLoggableEvent {
-  event: 'custom';
-  eventName: string;
-  level: ALCustomEventLevel;
-  attributes?: ALCustomEventAttributes;
-  surface?: string;
 }
 
 export interface ALAppStateEventData extends ALLoggableEvent {
@@ -132,7 +122,6 @@ export type ALModernChannelEventMap = {
   al_ui_event: [ALUIEventData];
   al_surface_mutation_event: [ALSurfaceMutationEventData];
   al_heartbeat_event: [ALHeartbeatEventData];
-  al_custom_event: [ALCustomEventData];
   al_app_state_event: [ALAppStateEventData];
   al_screen_transition_event: [ALScreenTransitionEventData];
   al_list_impression_event: [ALListImpressionEventData];

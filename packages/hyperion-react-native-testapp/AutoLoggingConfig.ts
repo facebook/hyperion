@@ -3,9 +3,13 @@
  */
 
 import { AppState } from 'react-native';
-import type { InitOptions } from 'hyperion-react-native';
+import { Channel } from 'hyperion-channel';
+import type { ALChannelEventMap, InitOptions } from 'hyperion-react-native';
+
+export const AUTO_LOGGING_CHANNEL = new Channel<ALChannelEventMap>();
 
 export const AUTO_LOGGING_CONFIG = Object.freeze({
+  channel: AUTO_LOGGING_CHANNEL,
   appName: 'hyperion_react_native_testapp',
   enabled: true,
   heartbeatInterval: 5_000,

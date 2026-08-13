@@ -8,10 +8,8 @@ import { jsx, jsxs } from '../src/jsx-runtime';
 import { jsxDEV } from '../src/jsx-dev-runtime';
 import { installReactNativeJSXRuntime } from '../src/legacy-runtime-installer';
 import { createObservedJSXFunction } from '../src/ReactNativeElementObservation';
-import { logAppEvent } from '../src/ALAppEvent';
-import { addChannelSubscriber } from '../src/ALChannel';
 import {
-  initializeAutoLogging,
+  initializeAutoLogging as initializeRuntime,
   resetALRuntimeForTests,
 } from '../src/ALRuntime';
 import {
@@ -20,11 +18,8 @@ import {
   useSurface,
   type ALSurfaceDataNode,
 } from '../src/ALSurface';
-import type {
-  ALCustomEventData,
-  ALSurfaceMutationEventData,
-  ALUIEventData,
-} from '../src/ALTypes';
+import type { ALSurfaceMutationEventData, ALUIEventData } from '../src/ALTypes';
+import { createALTestChannel } from './ALTestChannel';
 
 jest.mock('react-native', () => ({
   AppState: {
@@ -38,7 +33,20 @@ jest.mock('react-native', () => ({
 ).IS_REACT_ACT_ENVIRONMENT = true;
 (globalThis as typeof globalThis & { __DEV__: boolean }).__DEV__ = true;
 
+let channel: ReturnType<typeof createALTestChannel>;
+
+function initializeAutoLogging(
+  config: Parameters<typeof initializeRuntime>[0],
+  enableFeaturesByDefault = true
+) {
+  return initializeRuntime(config, channel, enableFeaturesByDefault);
+}
+
 describe('React Native AutoLogging runtime', () => {
+  beforeEach(() => {
+    channel = createALTestChannel();
+  });
+
   afterEach(async () => {
     jest.restoreAllMocks();
     resetALRuntimeForTests();
@@ -47,10 +55,10 @@ describe('React Native AutoLogging runtime', () => {
 
   it('isolates subscribers and preserves application handler behavior', () => {
     const events: ALUIEventData[] = [];
-    addChannelSubscriber('al_ui_event', () => {
+    channel.addListener('al_ui_event', () => {
       throw new Error('subscriber failure');
     });
-    addChannelSubscriber('al_ui_event', (event) => events.push(event));
+    channel.addListener('al_ui_event', (event) => events.push(event));
     initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
     const receiver = { name: 'receiver' };
     const applicationHandler = jest.fn(function (
@@ -94,7 +102,7 @@ describe('React Native AutoLogging runtime', () => {
 
   it('publishes visible button titles with their source', () => {
     const events: ALUIEventData[] = [];
-    addChannelSubscriber('al_ui_event', (event) => events.push(event));
+    channel.addListener('al_ui_event', (event) => events.push(event));
     initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
     function Button(props: { onPress(): void; testID: string; title: string }) {
       return React.createElement('button', props);
@@ -126,7 +134,7 @@ describe('React Native AutoLogging runtime', () => {
 
   it('publishes raw text input with sensitivity provenance', () => {
     const events: ALUIEventData[] = [];
-    addChannelSubscriber('al_ui_event', (event) => events.push(event));
+    channel.addListener('al_ui_event', (event) => events.push(event));
     initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
     function TextInput(props: {
       onChangeText(value: string): void;
@@ -277,7 +285,7 @@ describe('React Native AutoLogging runtime', () => {
   it('cleans delayed value events on unmount', () => {
     jest.useFakeTimers();
     const events: ALUIEventData[] = [];
-    addChannelSubscriber('al_ui_event', (event) => events.push(event));
+    channel.addListener('al_ui_event', (event) => events.push(event));
     initializeAutoLogging({
       appName: 'test',
       heartbeatInterval: false,
@@ -301,7 +309,7 @@ describe('React Native AutoLogging runtime', () => {
 
   it('does zero observation work when disabled', () => {
     const events: ALUIEventData[] = [];
-    addChannelSubscriber('al_ui_event', (event) => events.push(event));
+    channel.addListener('al_ui_event', (event) => events.push(event));
     initializeAutoLogging({
       appName: 'test',
       enabled: false,
@@ -322,59 +330,9 @@ describe('React Native AutoLogging runtime', () => {
     expect(events).toHaveLength(0);
   });
 
-  it('disables automatic UI observation independently of custom events', () => {
-    const uiEvents: ALUIEventData[] = [];
-    const customEvents: ALCustomEventData[] = [];
-    addChannelSubscriber('al_ui_event', (event) => uiEvents.push(event));
-    addChannelSubscriber('al_custom_event', (event) => customEvents.push(event));
-    initializeAutoLogging({
-      appName: 'test',
-      heartbeatInterval: false,
-      features: { automaticUIEvents: false, customEvents: true },
-    });
-    const handler = jest.fn();
-    function Button(props: { onPress(): unknown }) {
-      return React.createElement('button', props);
-    }
-
-    const element = jsx(Button, { onPress: handler });
-    expect(element.type).toBe(Button);
-    logAppEvent('fixture.feature_gate');
-
-    expect(uiEvents).toHaveLength(0);
-    expect(customEvents).toHaveLength(1);
-  });
-
-  it('disables custom events independently of automatic UI observation', () => {
-    const uiEvents: ALUIEventData[] = [];
-    const customEvents: ALCustomEventData[] = [];
-    addChannelSubscriber('al_ui_event', (event) => uiEvents.push(event));
-    addChannelSubscriber('al_custom_event', (event) => customEvents.push(event));
-    initializeAutoLogging({
-      appName: 'test',
-      heartbeatInterval: false,
-      features: { automaticUIEvents: true, customEvents: false },
-    });
-    function Button(props: { onPress(): unknown }) {
-      return React.createElement('button', props);
-    }
-    let renderer: TestRenderer.ReactTestRenderer;
-    act(() => {
-      renderer = TestRenderer.create(
-        jsx(Button, { onPress: () => undefined })
-      );
-    });
-
-    renderer!.root.findByType('button').props.onPress();
-    logAppEvent('fixture.feature_gate');
-
-    expect(uiEvents).toHaveLength(1);
-    expect(customEvents).toHaveLength(0);
-  });
-
   it('disables surface lifecycle events without disabling the registry', () => {
     const events: ALSurfaceMutationEventData[] = [];
-    addChannelSubscriber('al_surface_mutation_event', (event) =>
+    channel.addListener('al_surface_mutation_event', (event) =>
       events.push(event)
     );
     initializeAutoLogging({
@@ -441,7 +399,7 @@ describe('React Native AutoLogging runtime', () => {
       );
       ScrollView.displayName = 'ScrollView';
 
-      addChannelSubscriber('al_ui_event', (event) => events.push(event));
+      channel.addListener('al_ui_event', (event) => events.push(event));
       initializeAutoLogging({
         appName: 'test',
         enabled,
@@ -552,7 +510,7 @@ describe('React Native AutoLogging runtime', () => {
   it('keeps distinct snapshots for elements that share an application handler', () => {
     const events: ALUIEventData[] = [];
     const applicationHandler = jest.fn();
-    addChannelSubscriber('al_ui_event', (event) => events.push(event));
+    channel.addListener('al_ui_event', (event) => events.push(event));
     initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
 
     function Pressable(props: { accessibilityLabel: string; onPress(): void }) {
@@ -646,7 +604,7 @@ describe('React Native AutoLogging runtime', () => {
 
   it('registers only committed surfaces with interactive ancestry', async () => {
     const mutations: ALSurfaceMutationEventData[] = [];
-    addChannelSubscriber('al_surface_mutation_event', (event) =>
+    channel.addListener('al_surface_mutation_event', (event) =>
       mutations.push(event)
     );
     initializeAutoLogging({ appName: 'test', heartbeatInterval: false });

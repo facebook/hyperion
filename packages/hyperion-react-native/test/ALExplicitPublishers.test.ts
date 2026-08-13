@@ -4,7 +4,6 @@
 
 import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
-import { addChannelSubscriber } from '../src/ALChannel';
 import { logDeepLinkOpen } from '../src/ALDeepLink';
 import {
   useALListViewability,
@@ -26,6 +25,7 @@ import type {
   ALListImpressionEventData,
   ALReactErrorEventData,
 } from '../src/ALTypes';
+import { createALTestChannel } from './ALTestChannel';
 
 jest.mock('react-native', () => ({
   AppState: {
@@ -40,7 +40,10 @@ jest.mock('react-native', () => ({
 (globalThis as typeof globalThis & { __DEV__: boolean }).__DEV__ = true;
 
 describe('explicit mobile publishers', () => {
+  let channel: ReturnType<typeof createALTestChannel>;
+
   beforeEach(() => {
+    channel = createALTestChannel();
     resetSessionForTests();
   });
 
@@ -50,11 +53,14 @@ describe('explicit mobile publishers', () => {
 
   it('publishes raw deep-link targets for subscriber-owned policy', () => {
     const events: ALDeepLinkEventData[] = [];
-    addChannelSubscriber('al_deep_link_event', () => {
+    channel.addListener('al_deep_link_event', () => {
       throw new Error('product subscriber failure');
     });
-    addChannelSubscriber('al_deep_link_event', (event) => events.push(event));
-    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
+    channel.addListener('al_deep_link_event', (event) => events.push(event));
+    initializeAutoLogging(
+      { appName: 'test', heartbeatInterval: false },
+      channel
+    );
 
     expect(
       logDeepLinkOpen('sample://settings/profile', {
@@ -92,13 +98,16 @@ describe('explicit mobile publishers', () => {
   it('deduplicates list impressions without publishing keys or items', () => {
     const events: ALListImpressionEventData[] = [];
     const productCallback = jest.fn();
-    addChannelSubscriber('al_list_impression_event', () => {
+    channel.addListener('al_list_impression_event', () => {
       throw new Error('product subscriber failure');
     });
-    addChannelSubscriber('al_list_impression_event', (event) =>
+    channel.addListener('al_list_impression_event', (event) =>
       events.push(event)
     );
-    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
+    initializeAutoLogging(
+      { appName: 'test', heartbeatInterval: false },
+      channel
+    );
     let result: ALListViewabilityResult<{ name: string; privateValue: string }>;
     function Harness() {
       result = useALListViewability({
@@ -152,10 +161,13 @@ describe('explicit mobile publishers', () => {
 
   it('bounds list dedupe memory with oldest-key eviction', () => {
     const events: ALListImpressionEventData[] = [];
-    addChannelSubscriber('al_list_impression_event', (event) =>
+    channel.addListener('al_list_impression_event', (event) =>
       events.push(event)
     );
-    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
+    initializeAutoLogging(
+      { appName: 'test', heartbeatInterval: false },
+      channel
+    );
     let result: ALListViewabilityResult<number>;
     function Harness() {
       result = useALListViewability({ listName: 'large_list' });
@@ -179,8 +191,11 @@ describe('explicit mobile publishers', () => {
 
   it('publishes raw React boundary input for subscriber-owned policy', () => {
     const events: ALReactErrorEventData[] = [];
-    addChannelSubscriber('al_react_error_event', (event) => events.push(event));
-    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
+    channel.addListener('al_react_error_event', (event) => events.push(event));
+    initializeAutoLogging(
+      { appName: 'test', heartbeatInterval: false },
+      channel
+    );
     const consoleError = jest
       .spyOn(console, 'error')
       .mockImplementation(() => undefined);
@@ -242,24 +257,25 @@ describe('explicit mobile publishers', () => {
     const listEvents: ALListImpressionEventData[] = [];
     const reactErrors: ALReactErrorEventData[] = [];
     const productCallback = jest.fn();
-    addChannelSubscriber('al_deep_link_event', (event) =>
-      deepLinks.push(event)
-    );
-    addChannelSubscriber('al_list_impression_event', (event) =>
+    channel.addListener('al_deep_link_event', (event) => deepLinks.push(event));
+    channel.addListener('al_list_impression_event', (event) =>
       listEvents.push(event)
     );
-    addChannelSubscriber('al_react_error_event', (event) =>
+    channel.addListener('al_react_error_event', (event) =>
       reactErrors.push(event)
     );
-    initializeAutoLogging({
-      appName: 'test',
-      heartbeatInterval: false,
-      features: {
-        deepLinkEvents: false,
-        listImpressionEvents: false,
-        reactErrorEvents: false,
+    initializeAutoLogging(
+      {
+        appName: 'test',
+        heartbeatInterval: false,
+        features: {
+          deepLinkEvents: false,
+          listImpressionEvents: false,
+          reactErrorEvents: false,
+        },
       },
-    });
+      channel
+    );
     let result: ALListViewabilityResult<string>;
     function Harness() {
       result = useALListViewability({
@@ -272,15 +288,13 @@ describe('explicit mobile publishers', () => {
       TestRenderer.create(React.createElement(Harness));
     });
 
-    expect(
-      logDeepLinkOpen('sample://disabled', { source: 'url_event' })
-    ).toBe(false);
+    expect(logDeepLinkOpen('sample://disabled', { source: 'url_event' })).toBe(
+      false
+    );
     expect(logReactErrorBoundary(new Error('disabled'), {})).toBe(false);
     result!.onViewableItemsChanged({
       viewableItems: [],
-      changed: [
-        { item: 'item', key: 'item', index: 0, isViewable: true },
-      ],
+      changed: [{ item: 'item', key: 'item', index: 0, isViewable: true }],
     });
 
     expect(productCallback).toHaveBeenCalledTimes(1);

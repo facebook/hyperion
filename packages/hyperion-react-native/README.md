@@ -13,20 +13,26 @@ instrumented JSX is evaluated:
 
 ```ts
 import { AppState } from 'react-native';
-import { AutoLogging, addChannelSubscriber } from 'hyperion-react-native';
+import { Channel } from 'hyperion-channel';
+import { AutoLogging, type ALChannelEventMap } from 'hyperion-react-native';
+
+const channel = new Channel<ALChannelEventMap>();
 
 const config = {
+  channel,
   appName: 'sample_app',
   enabled: true,
   react: { ReactNativeModule: { AppState } },
 };
 
-addChannelSubscriber('al_ui_event', (event) => transport(event));
+channel.addListener('al_ui_event', (event) => transport(event));
 AutoLogging.init(config);
 ```
 
 `AutoLogging.init` accepts the complete `ALConfig` surface and is the canonical
-setup API. Set `enabled: false` to install no observation or heartbeat work,
+setup API. The application creates and subscribes to the channel passed to
+`init`; Hyperion does not create or pipe a second channel. Set `enabled: false`
+to install no observation or heartbeat work,
 and set `heartbeatInterval: false` to disable only heartbeat. Initialization is
 idempotent and the first call owns the runtime configuration. Heartbeat-enabled
 initialization requires `react.ReactNativeModule.AppState`; disabled and
@@ -41,7 +47,7 @@ family unless that functionality is explicitly configured.
 
 Use `features` to disable individual publishers while leaving the rest of the
 runtime enabled. Available gates are `automaticUIEvents`,
-`surfaceMutationEvents`, `customEvents`, `screenTransitionEvents`,
+`surfaceMutationEvents`, `screenTransitionEvents`,
 `listImpressionEvents`, `deepLinkEvents`, and `reactErrorEvents`. Every feature
 defaults to enabled. App-state events follow the heartbeat lifecycle and are
 disabled with `heartbeatInterval: false`.
@@ -67,7 +73,6 @@ The public channel exposes:
 - `al_ui_event`
 - `al_surface_mutation_event`
 - `al_heartbeat_event`
-- `al_custom_event`
 - `al_app_state_event`
 - `al_screen_transition_event`
 - `al_list_impression_event`
@@ -75,7 +80,6 @@ The public channel exposes:
 - `al_react_error_event`
 
 Use `ALSurface` and `ALSurfaceData` for committed hierarchy data,
-`logAppEvent`/`useLogAppEvent` for validated custom events,
 `useALListViewability` with `FlatList`, `logDeepLinkOpen` for raw targets, and
 `logReactErrorBoundary` from an application-owned error boundary.
 Navigation listeners, URL listeners, transports, account context, error

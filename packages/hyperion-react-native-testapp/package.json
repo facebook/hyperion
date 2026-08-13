@@ -22,6 +22,7 @@
     "../hyperion-react-native"
   ],
   "dependencies": {
+    "hyperion-channel": "*",
     "hyperion-react-native": "*",
     "react": "19.0.0",
     "react-native": "0.79.2"

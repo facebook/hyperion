@@ -2,7 +2,6 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { addChannelSubscriber } from '../src/ALChannel';
 import {
   ALHeartbeatType,
   resetHeartbeatEnvironmentForTests,
@@ -15,6 +14,7 @@ import type {
   ReactNativeAppState,
   ReactNativeModuleExports,
 } from '../src/IReactNative';
+import { createALTestChannel } from './ALTestChannel';
 
 interface FakeAppState extends ReactNativeAppState {
   transition(state: AppStateStatus): void;
@@ -88,6 +88,12 @@ function createUnreadableReactNativeModule(): ReactNativeModuleExports {
 }
 
 describe('injected React Native lifecycle environment', () => {
+  let channel: ReturnType<typeof createALTestChannel>;
+
+  beforeEach(() => {
+    channel = createALTestChannel();
+  });
+
   afterEach(() => {
     resetALRuntimeForTests();
     resetHeartbeatEnvironmentForTests();
@@ -101,6 +107,7 @@ describe('injected React Native lifecycle environment', () => {
   it('does not access ReactNativeModule for disabled initialization', () => {
     expect(() =>
       AutoLogging.init({
+        channel,
         appName: 'disabled',
         enabled: false,
         react: {
@@ -113,6 +120,7 @@ describe('injected React Native lifecycle environment', () => {
   it('does not access ReactNativeModule when no legacy family is enabled', () => {
     expect(() =>
       AutoLogging.init({
+        channel,
         appName: 'legacy_disabled',
         react: {
           ReactNativeModule: createUnreadableReactNativeModule(),
@@ -126,6 +134,7 @@ describe('injected React Native lifecycle environment', () => {
   it('does not require an adapter when heartbeat is disabled', () => {
     expect(() =>
       AutoLogging.init({
+        channel,
         appName: 'heartbeat_disabled',
         heartbeatInterval: false,
       })
@@ -135,7 +144,11 @@ describe('injected React Native lifecycle environment', () => {
 
   it('fails clearly without an adapter when heartbeat is enabled', () => {
     expect(() =>
-      AutoLogging.init({ appName: 'missing_adapter', heartbeatInterval: 100 })
+      AutoLogging.init({
+        channel,
+        appName: 'missing_adapter',
+        heartbeatInterval: 100,
+      })
     ).toThrow(
       'Heartbeat requires react.ReactNativeModule.AppState configuration'
     );
@@ -147,14 +160,13 @@ describe('injected React Native lifecycle environment', () => {
     const fake = createFakeReactNativeModule('active');
     const heartbeats: ALHeartbeatEventData[] = [];
     const appStates: ALAppStateEventData[] = [];
-    addChannelSubscriber('al_heartbeat_event', (event) =>
+    channel.addListener('al_heartbeat_event', (event) =>
       heartbeats.push(event)
     );
-    addChannelSubscriber('al_app_state_event', (event) =>
-      appStates.push(event)
-    );
+    channel.addListener('al_app_state_event', (event) => appStates.push(event));
 
     AutoLogging.init({
+      channel,
       appName: 'injected_app_state',
       heartbeatInterval: 100,
       maxUserInactivityDuration: 1_000,
@@ -204,12 +216,14 @@ describe('injected React Native lifecycle environment', () => {
     jest.useFakeTimers({ now: 1_700_000_000_000 });
     const fake = createFakeReactNativeModule('active');
     AutoLogging.init({
+      channel,
       appName: 'first',
       heartbeatInterval: 100,
       react: { ReactNativeModule: fake.module },
     });
 
     AutoLogging.init({
+      channel: createALTestChannel(),
       appName: 'ignored',
       heartbeatInterval: 100,
       react: {

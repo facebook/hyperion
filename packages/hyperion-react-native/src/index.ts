@@ -12,7 +12,6 @@ export {
   mapPropToEventType,
 } from './ALConfig';
 export type { ALConfig, ALFeature, ALFeatureConfig } from './ALConfig';
-export { initALChannel, getALChannel, addChannelSubscriber } from './ALChannel';
 export type { ALChannel } from './ALChannel';
 export {
   createLoggableEvent,
@@ -48,7 +47,6 @@ export {
   rotateScreenId,
 } from './ALSession';
 export { getCurrentScreen, setCurrentScreen } from './ALScreen';
-export { logAppEvent, useLogAppEvent } from './ALAppEvent';
 export { useALListViewability } from './ALListViewability';
 export type {
   ALListViewabilityOptions,
@@ -72,9 +70,6 @@ export type { RNElementInfo, RNElementText } from './ALLabelExtraction';
 export type {
   ALAppStateEventData,
   ALChannelEventMap,
-  ALCustomEventAttributes,
-  ALCustomEventData,
-  ALCustomEventLevel,
   ALDeepLinkEventData,
   ALDeepLinkSource,
   ALHeartbeatEventData,

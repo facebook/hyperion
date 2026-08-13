@@ -31,7 +31,6 @@ import {
   logReactErrorBoundary,
   setCurrentScreen,
   useALListViewability,
-  useLogAppEvent,
 } from 'hyperion-react-native';
 import { AutoLoggingInspector, SurfaceTreeInspector } from './DebugInspector';
 import { useDebugEvents } from './EventStore';
@@ -109,7 +108,6 @@ function FixtureContent(): React.JSX.Element {
   const [automaticPresses, setAutomaticPresses] = useState(0);
   const [, setScreenRevision] = useState(0);
   const fixtureRef = useRef<ViewInstance>(null);
-  const logAppEvent = useLogAppEvent();
   const events = useDebugEvents();
   const listViewability = useALListViewability<{ id: string; label: string }>({
     listName: 'fixture_items',
@@ -117,8 +115,8 @@ function FixtureContent(): React.JSX.Element {
     metadata: { fixture: 'flat_list' },
   });
   const onFixturePress = useCallback(() => {
-    logAppEvent('fixture.memo.press', { enabled: true });
-  }, [logAppEvent]);
+    setAutomaticPresses((value) => value + 1);
+  }, []);
 
   const rootChildren = ALSurfaceData.root.getChildren();
   const dashboard = ALSurfaceData.tryGet('dashboard');
@@ -147,14 +145,6 @@ function FixtureContent(): React.JSX.Element {
       >
         <View style={styles.section}>
           <Text style={styles.heading}>Automatic UI events</Text>
-          <Button
-            accessibilityLabel="Create fixture event"
-            onPress={() =>
-              logAppEvent('fixture.action.create', { source: 'button' })
-            }
-            testID="create-fixture-event"
-            title="Log custom event"
-          />
           <Pressable
             accessibilityLabel="Automatic event only"
             onPress={() => setAutomaticPresses((value) => value + 1)}
@@ -196,7 +186,7 @@ function FixtureContent(): React.JSX.Element {
               <ALSurface name="details" metadata={{ fixture: 'conditional' }}>
                 <Pressable
                   accessibilityLabel="Nested surface action"
-                  onLongPress={() => logAppEvent('fixture.details.long_press')}
+                  onLongPress={() => setAutomaticPresses((value) => value + 1)}
                   onPress={() => changeScreen('fixture_details')}
                   style={styles.control}
                 >
@@ -219,20 +209,6 @@ function FixtureContent(): React.JSX.Element {
               title="Screen: details"
             />
           </View>
-          <Button
-            onPress={() =>
-              logAppEvent(
-                'fixture.metadata.inspect',
-                {
-                  contactEmail: 'person@example.com',
-                  count: 2,
-                  nullable: null,
-                },
-                'warn'
-              )
-            }
-            title="Log subscriber-policy metadata"
-          />
           <Button
             onPress={() =>
               logDeepLinkOpen(

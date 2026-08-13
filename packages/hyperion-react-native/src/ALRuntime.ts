@@ -17,9 +17,9 @@ import {
   type ALConfig,
 } from './ALConfig';
 import {
-  initALChannel,
   getALRuntimeChannel,
-  resetALChannelForTests,
+  resetALRuntimeChannelForTests,
+  setALRuntimeChannel,
   type ALChannel,
 } from './ALChannel';
 import { createLoggableEvent, setIfDefined } from './ALContract';
@@ -41,15 +41,18 @@ let featuresEnabledByDefault = true;
 
 export function initializeAutoLogging(
   config: ALConfig,
+  publicChannel: ALChannel,
   enableFeaturesByDefault = true
 ): ALChannel {
-  if (initialized) return initALChannel();
+  if (initialized) {
+    return (
+      (getALRuntimeChannel() as unknown as ALChannel | null) ?? publicChannel
+    );
+  }
   initialized = true;
   featuresEnabledByDefault = enableFeaturesByDefault;
   runtimeConfig = { ...DEFAULT_CONFIG, ...config };
-  const publicChannel = initALChannel();
-  const channel = getALRuntimeChannel();
-  if (channel == null) return publicChannel;
+  const channel = setALRuntimeChannel(publicChannel);
   runtimeEnabled = config.enabled !== false;
   if (!runtimeEnabled) {
     setElementObservationEnabled(false);
@@ -142,27 +145,6 @@ export function initializeAutoLogging(
       event: 'app_state_change',
       appState: data.state,
     });
-  });
-  channel.addListener('al_custom_event_request', (data) => {
-    if (!isALFeatureEnabled('customEvents')) return;
-    const attributes = data.attributes;
-    const level = data.level ?? 'info';
-    const event = {
-      ...createLoggableEvent(),
-      event: 'custom',
-      eventName: data.eventName,
-      level,
-      metadata: mergeMetadata(data.surfaceMetadata, attributes, { level }),
-    } as const;
-    setIfDefined(
-      event,
-      'attributes',
-      attributes == null || Object.keys(attributes).length === 0
-        ? undefined
-        : attributes
-    );
-    setIfDefined(event, 'surface', data.surface);
-    channel.emitSafely('al_custom_event', event);
   });
   channel.addListener('al_screen_transition_request', (data) => {
     if (!isALFeatureEnabled('screenTransitionEvents')) return;
@@ -287,5 +269,5 @@ export function resetALRuntimeForTests(): void {
   featuresEnabledByDefault = true;
   resetALScreenForTests();
   resetALSurfaceDataForTests();
-  resetALChannelForTests();
+  resetALRuntimeChannelForTests();
 }

@@ -8,8 +8,8 @@ import type {
   IJsxRuntimeModuleExports,
   IReactModuleExports,
 } from 'hyperion-react/src/IReact';
-import { logAppEvent } from '../src/ALAppEvent';
 import { getALRuntimeConfig, resetALRuntimeForTests } from '../src/ALRuntime';
+import { setCurrentScreen } from '../src/ALScreen';
 import type { ALChannelEventMap } from '../src/ALTypes';
 import * as AutoLogging from '../src/AutoLogging';
 
@@ -97,15 +97,11 @@ describe('legacy AutoLogging initialization compatibility', () => {
       mountEvents.push(event)
     );
     channel.addListener('al_ui_event', (event) => modernEvents.push(event));
-    channel.addListener('al_custom_event', (event) => modernEvents.push(event));
     channel.addListener('al_heartbeat_event', (event) =>
       modernEvents.push(event)
     );
     const receiver = { id: 'receiver' };
-    const applicationHandler = jest.fn(function (
-      this: unknown,
-      value: string
-    ) {
+    const applicationHandler = jest.fn(function (this: unknown, value: string) {
       expect(this).toBe(receiver);
       return `handled:${value}`;
     });
@@ -155,7 +151,6 @@ describe('legacy AutoLogging initialization compatibility', () => {
       { surface: 'Pressable', args: [originalProps] },
     ]);
 
-    logAppEvent('legacy.should_not_enable_modern');
     expect(modernEvents).toHaveLength(0);
     expect(getALRuntimeConfig()).toEqual(
       expect.objectContaining({
@@ -259,9 +254,12 @@ describe('legacy AutoLogging initialization compatibility', () => {
 
   it('keeps modern initialization on modern event families', () => {
     const channel = new Channel<ALChannelEventMap>();
-    const customEvents: ALChannelEventMap['al_custom_event'][0][] = [];
+    const screenEvents: ALChannelEventMap['al_screen_transition_event'][0][] =
+      [];
     const legacyEvents: unknown[] = [];
-    channel.addListener('al_custom_event', (event) => customEvents.push(event));
+    channel.addListener('al_screen_transition_event', (event) =>
+      screenEvents.push(event)
+    );
     channel.addListener('al_react_component_prop', (event) =>
       legacyEvents.push(event)
     );
@@ -271,9 +269,9 @@ describe('legacy AutoLogging initialization compatibility', () => {
       channel,
       heartbeatInterval: false,
     });
-    logAppEvent('modern.compatibility');
+    setCurrentScreen('modern_compatibility');
 
-    expect(customEvents).toHaveLength(1);
+    expect(screenEvents).toHaveLength(1);
     expect(legacyEvents).toHaveLength(0);
   });
 });

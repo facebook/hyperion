@@ -26,10 +26,6 @@ export function ALSurface({ children }) {
   return React.createElement(React.Fragment, null, children);
 }
 
-export function addChannelSubscriber() {
-  return () => undefined;
-}
-
 export function setCurrentScreen() {
   return true;
 }
@@ -44,10 +40,6 @@ export function logDeepLinkOpen() {
 
 export function logReactErrorBoundary() {
   return true;
-}
-
-export function useLogAppEvent() {
-  return () => true;
 }
 
 export function useALListViewability(options) {

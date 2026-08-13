@@ -4,13 +4,12 @@
 
 'use strict';
 
-import type { Channel } from 'hyperion-channel/src/Channel';
 import {
   DEFAULT_CONFIG,
   DEFAULT_INTERCEPT_PROPS,
   type ALConfig,
 } from './ALConfig';
-import { getALRuntimeChannel, initALChannel } from './ALChannel';
+import { getALRuntimeChannel, type ALChannel } from './ALChannel';
 import {
   configureReactNativeHeartbeatEnvironment,
   startHeartbeat,
@@ -35,7 +34,7 @@ export type ALChannelEvent = ALChannelEventMap;
 export interface InitOptions
   extends Partial<ALConfig>,
     LegacyAutoLoggingOptions {
-  channel?: Channel<ALChannelEventMap>;
+  channel: ALChannel;
   heartbeat?:
     | false
     | {
@@ -48,10 +47,11 @@ export interface InitOptions
   componentProps?: LegacyComponentPropsOptions | null;
 }
 
-const pipedChannels = new WeakSet<object>();
-
 export function init(options: InitOptions): void {
   if (isALRuntimeInitialized()) return;
+  if (options.channel == null) {
+    throw new Error('AutoLogging.init requires an application-owned channel');
+  }
   const propOptions = options.props ?? options.componentProps;
   const hasLegacyOptions = hasLegacyAutoLoggingOptions(options);
   const legacyEnabled = isLegacyAutoLoggingEnabled(options);
@@ -85,6 +85,7 @@ export function init(options: InitOptions): void {
       componentNameValidator: options.componentNameValidator,
       features: options.features,
     },
+    options.channel,
     !hasLegacyOptions
   );
   if (hasLegacyOptions && isALRuntimeEnabled()) {
@@ -101,9 +102,5 @@ export function init(options: InitOptions): void {
   }
   if (heartbeatInterval !== false && isALRuntimeEnabled()) {
     startHeartbeat(heartbeatInterval, maxUserInactivityDuration);
-  }
-  if (options.channel != null && !pipedChannels.has(options.channel)) {
-    (initALChannel() as Channel<ALChannelEventMap>).pipe(options.channel);
-    pipedChannels.add(options.channel);
   }
 }

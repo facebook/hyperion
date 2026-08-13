@@ -3,8 +3,6 @@
  */
 
 import * as AutoLogging from '../src/AutoLogging';
-import { logAppEvent } from '../src/ALAppEvent';
-import { addChannelSubscriber } from '../src/ALChannel';
 import {
   createLoggableEvent,
   createTransportEnvelope,
@@ -25,7 +23,7 @@ import {
 import { mergeMetadata } from '../src/ALMetadata';
 import {
   getALRuntimeConfig,
-  initializeAutoLogging,
+  initializeAutoLogging as initializeRuntime,
   isALRuntimeEnabled,
   resetALRuntimeForTests,
 } from '../src/ALRuntime';
@@ -39,10 +37,10 @@ import {
 } from '../src/ALSession';
 import type {
   ALAppStateEventData,
-  ALCustomEventData,
   ALHeartbeatEventData,
   ALScreenTransitionEventData,
 } from '../src/ALTypes';
+import { createALTestChannel } from './ALTestChannel';
 
 jest.mock('react-native', () => ({
   AppState: {
@@ -50,6 +48,14 @@ jest.mock('react-native', () => ({
     addEventListener: () => ({ remove: () => undefined }),
   },
 }));
+
+let channel: ReturnType<typeof createALTestChannel>;
+
+function initializeAutoLogging(
+  config: Parameters<typeof initializeRuntime>[0]
+) {
+  return initializeRuntime(config, channel);
+}
 
 interface FakeEnvironment extends ALHeartbeatEnvironment {
   advance(milliseconds: number): void;
@@ -176,6 +182,7 @@ describe('raw data extraction and provenance', () => {
 
 describe('sessions, screens, and core publishers', () => {
   beforeEach(() => {
+    channel = createALTestChannel();
     resetSessionForTests();
   });
 
@@ -184,81 +191,39 @@ describe('sessions, screens, and core publishers', () => {
   });
 
   it('assigns contiguous indexes and keeps deployment context in an envelope', () => {
-    const custom: ALCustomEventData[] = [];
     const screens: ALScreenTransitionEventData[] = [];
-    addChannelSubscriber('al_custom_event', (event) => custom.push(event));
-    addChannelSubscriber('al_screen_transition_event', (event) =>
+    channel.addListener('al_screen_transition_event', (event) =>
       screens.push(event)
     );
     initializeAutoLogging({ appName: 'sample_app', heartbeatInterval: false });
 
-    logAppEvent('settings.open', { source: 'button' });
     const previousScreenId = getScreenId();
     expect(setCurrentScreen('Settings', { route_name: 'settings' })).toBe(true);
     expect(setCurrentScreen('Settings')).toBe(false);
-    logAppEvent('settings.save.success');
+    expect(setCurrentScreen('Details')).toBe(true);
 
-    const events = [custom[0], screens[0], custom[1]];
-    expect(events.map((event) => event.eventIndex)).toEqual([0, 1, 2]);
+    expect(screens.map((event) => event.eventIndex)).toEqual([0, 1]);
     expect(
-      events.every((event) => event.eventTimestamp > 1_000_000_000_000)
+      screens.every((event) => event.eventTimestamp > 1_000_000_000_000)
     ).toBe(true);
-    expect(getCurrentScreen()?.name).toBe('Settings');
+    expect(getCurrentScreen()?.name).toBe('Details');
     expect(getScreenId()).not.toBe(previousScreenId);
     expect(getSessionId()).toMatch(/^[0-9a-z]{6}$/);
     expect(getAppInstanceId()).toMatch(/^[0-9a-z]{6}$/);
 
-    const envelope = createTransportEnvelope('custom', custom[0], 'sample_app');
-    expect(custom[0]).not.toHaveProperty('appName');
+    const envelope = createTransportEnvelope(
+      'al_screen_transition_event',
+      screens[0],
+      'sample_app'
+    );
+    expect(screens[0]).not.toHaveProperty('appName');
     expect(envelope.context).toEqual(
       expect.objectContaining({
         appName: 'sample_app',
         sessionId: getSessionId(),
-        screen: 'Settings',
+        screen: 'Details',
       })
     );
-  });
-
-  it('rejects invalid custom event names', () => {
-    const events: ALCustomEventData[] = [];
-    addChannelSubscriber('al_custom_event', (event) => events.push(event));
-    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
-    logAppEvent('Invalid Event', { safe: true });
-    logAppEvent('one_segment', { safe: true });
-    expect(events).toHaveLength(0);
-  });
-
-  it('preserves explicit attributes for subscriber-owned policy', () => {
-    const events: ALCustomEventData[] = [];
-    addChannelSubscriber('al_custom_event', (event) => events.push(event));
-    initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
-    const longValue = 'x'.repeat(400);
-
-    logAppEvent('fixture.metadata', {
-      contactEmail: 'person@example.com',
-      count: 2,
-      enabled: true,
-      nullable: null,
-      longValue,
-      nested: { unsupported: true },
-    });
-
-    expect(events[0].attributes).toEqual({
-      contactEmail: 'person@example.com',
-      count: 2,
-      enabled: true,
-      nullable: null,
-      longValue,
-      nested: { unsupported: true },
-    });
-    expect(events[0].metadata).toEqual({
-      contactEmail: 'person@example.com',
-      count: 2,
-      enabled: true,
-      nullable: null,
-      longValue,
-      level: 'info',
-    });
   });
 
   it('rotates expired sessions and restarts the contiguous event index', () => {
@@ -274,9 +239,11 @@ describe('sessions, screens, and core publishers', () => {
     expect(createLoggableEvent(afterTimeout + 1).eventIndex).toBe(0);
   });
 
-  it('initializes one runtime and one request-to-public publisher set', () => {
-    const events: ALCustomEventData[] = [];
-    addChannelSubscriber('al_custom_event', (event) => events.push(event));
+  it('uses the application channel directly and initializes one publisher set', () => {
+    const events: ALScreenTransitionEventData[] = [];
+    channel.addListener('al_screen_transition_event', (event) =>
+      events.push(event)
+    );
     const first = initializeAutoLogging({
       appName: 'test',
       heartbeatInterval: false,
@@ -286,24 +253,34 @@ describe('sessions, screens, and core publishers', () => {
       heartbeatInterval: false,
     });
 
-    expect(second).toBe(first);
-    logAppEvent('runtime.idempotent');
+    expect(first).toBe(channel);
+    expect(second).toBe(channel);
+    setCurrentScreen('runtime_idempotent');
     expect(events).toHaveLength(1);
   });
 
   it('does no heartbeat or publisher work when disabled', () => {
     const environment = createFakeEnvironment();
     setHeartbeatEnvironmentForTests(environment);
-    AutoLogging.init({ appName: 'test', enabled: false });
+    AutoLogging.init({ channel, appName: 'test', enabled: false });
     expect(isALRuntimeEnabled()).toBe(false);
     expect(environment.listenerCount).toBe(0);
     expect(environment.intervalCount).toBe(0);
-    logAppEvent('disabled.event');
+  });
+
+  it('fails clearly when JavaScript callers omit the application channel', () => {
+    expect(() =>
+      AutoLogging.init({
+        appName: 'missing_channel',
+        heartbeat: false,
+      } as AutoLogging.InitOptions)
+    ).toThrow('AutoLogging.init requires an application-owned channel');
   });
 
   it('accepts the complete runtime config through AutoLogging.init', () => {
     const componentNameValidator = (name: string) => name !== 'Ignored';
     AutoLogging.init({
+      channel,
       appName: 'configured_app',
       enabled: true,
       heartbeatInterval: false,
@@ -311,7 +288,7 @@ describe('sessions, screens, and core publishers', () => {
       debug: true,
       interceptProps: ['onMagic'],
       componentNameValidator,
-      features: { automaticUIEvents: false, customEvents: true },
+      features: { automaticUIEvents: false },
       react: { enableInterceptComponentElement: false },
       props: { enableInterceptReactComponentProp: false },
     });
@@ -324,12 +301,13 @@ describe('sessions, screens, and core publishers', () => {
       debug: true,
       interceptProps: ['onMagic'],
       componentNameValidator,
-      features: { automaticUIEvents: false, customEvents: true },
+      features: { automaticUIEvents: false },
     });
   });
 
   it('preserves disabled legacy interception gates when enabled is omitted', () => {
     AutoLogging.init({
+      channel,
       appName: 'legacy_disabled',
       heartbeat: false,
       react: { enableInterceptComponentElement: false },
@@ -341,10 +319,11 @@ describe('sessions, screens, and core publishers', () => {
 
   it('can disable screen-transition publishing without disabling screen state', () => {
     const screens: ALScreenTransitionEventData[] = [];
-    addChannelSubscriber('al_screen_transition_event', (event) =>
+    channel.addListener('al_screen_transition_event', (event) =>
       screens.push(event)
     );
     AutoLogging.init({
+      channel,
       appName: 'screen_state_only',
       heartbeat: false,
       features: { screenTransitionEvents: false },
@@ -359,6 +338,7 @@ describe('sessions, screens, and core publishers', () => {
     const environment = createFakeEnvironment();
     setHeartbeatEnvironmentForTests(environment);
     AutoLogging.init({
+      channel,
       appName: 'disabled_app',
       enabled: false,
       react: { enableInterceptComponentElement: true },
@@ -377,16 +357,15 @@ describe('heartbeat lifecycle', () => {
   let appStates: ALAppStateEventData[];
 
   beforeEach(() => {
+    channel = createALTestChannel();
     environment = createFakeEnvironment();
     setHeartbeatEnvironmentForTests(environment);
     heartbeats = [];
     appStates = [];
-    addChannelSubscriber('al_heartbeat_event', (event) =>
+    channel.addListener('al_heartbeat_event', (event) =>
       heartbeats.push(event)
     );
-    addChannelSubscriber('al_app_state_event', (event) =>
-      appStates.push(event)
-    );
+    channel.addListener('al_app_state_event', (event) => appStates.push(event));
     initializeAutoLogging({ appName: 'test', heartbeatInterval: false });
   });
 
@@ -448,7 +427,7 @@ describe('heartbeat lifecycle', () => {
   });
 
   it('keeps application subscribers isolated from lifecycle control', () => {
-    addChannelSubscriber('al_heartbeat_event', () => {
+    channel.addListener('al_heartbeat_event', () => {
       throw new Error('product listener failure');
     });
     startHeartbeat(100, 400);

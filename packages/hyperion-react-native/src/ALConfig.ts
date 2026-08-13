@@ -7,7 +7,6 @@
 export interface ALFeatureConfig {
   automaticUIEvents?: boolean;
   surfaceMutationEvents?: boolean;
-  customEvents?: boolean;
   screenTransitionEvents?: boolean;
   listImpressionEvents?: boolean;
   deepLinkEvents?: boolean;

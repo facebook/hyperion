@@ -29,6 +29,9 @@ describe('public React Native package entries', () => {
       'utf8'
     ) as string;
     expect(declaration).not.toContain('ALProvider');
+    expect(declaration).not.toContain('addChannelSubscriber');
+    expect(declaration).not.toContain('logAppEvent');
+    expect(declaration).not.toContain('useLogAppEvent');
     expect(declaration).not.toContain('normalizeSampleRate');
     expect(declaration).not.toContain('sanitizeMetadata');
   });

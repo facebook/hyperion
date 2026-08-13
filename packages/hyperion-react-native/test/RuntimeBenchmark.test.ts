@@ -10,11 +10,11 @@ import {
   setElementObservationEnabled,
 } from '../src/ReactNativeElementObservation';
 import { jsx } from '../src/jsx-runtime';
-import { addChannelSubscriber } from '../src/ALChannel';
 import {
-  initializeAutoLogging,
+  initializeAutoLogging as initializeRuntime,
   resetALRuntimeForTests,
 } from '../src/ALRuntime';
+import { createALTestChannel } from './ALTestChannel';
 
 jest.mock('react-native', () => ({
   AppState: {
@@ -29,6 +29,14 @@ jest.mock('react-native', () => ({
 
 const benchmark =
   process.env.HYPERION_RUNTIME_BENCHMARK === '1' ? describe : describe.skip;
+
+let channel: ReturnType<typeof createALTestChannel>;
+
+function initializeAutoLogging(
+  config: Parameters<typeof initializeRuntime>[0]
+) {
+  return initializeRuntime(config, channel);
+}
 
 function p95Microseconds(
   operation: () => void,
@@ -47,6 +55,10 @@ function p95Microseconds(
 }
 
 benchmark('React Native AutoLogging runtime budgets', () => {
+  beforeEach(() => {
+    channel = createALTestChannel();
+  });
+
   afterEach(() => {
     resetALRuntimeForTests();
     setElementObservationEnabled(false);
@@ -75,6 +87,7 @@ benchmark('React Native AutoLogging runtime budgets', () => {
       wrapped('Button', { onPress: applicationHandler }, 'key');
     });
     resetALRuntimeForTests();
+    channel = createALTestChannel();
 
     const trackedProps = [
       'onPress',
@@ -111,7 +124,7 @@ benchmark('React Native AutoLogging runtime budgets', () => {
     function Button(props: { onPress(): void }) {
       return React.createElement('button', props);
     }
-    addChannelSubscriber('al_ui_event', () => dispatched++);
+    channel.addListener('al_ui_event', () => dispatched++);
     initializeAutoLogging({ appName: 'benchmark', heartbeatInterval: false });
     let renderer: TestRenderer.ReactTestRenderer;
     act(() => {
