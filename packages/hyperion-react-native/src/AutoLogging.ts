@@ -21,6 +21,11 @@ import {
 } from './ALRuntime';
 import type { ALChannelEventMap } from './ALTypes';
 import {
+  installReactNativeJSXRuntime,
+  type JSXDevRuntimeModuleExports,
+  type JSXRuntimeModuleExports,
+} from './ReactNativeElementObservation';
+import {
   hasLegacyAutoLoggingOptions,
   installLegacyAutoLogging,
   isLegacyAutoLoggingEnabled,
@@ -30,6 +35,11 @@ import {
 } from './ALLegacyAutoLogging';
 
 export type ALChannelEvent = ALChannelEventMap;
+
+export interface ReactOptions extends LegacyReactOptions {
+  JSXRuntimeModule?: JSXRuntimeModuleExports;
+  JSXDevRuntimeModule?: JSXDevRuntimeModuleExports;
+}
 
 export interface InitOptions
   extends Partial<ALConfig>,
@@ -42,7 +52,7 @@ export interface InitOptions
         maxUserInactivityDuration?: number;
       };
   // TODO: Remove these aliases after WWW/AMA migrates to the modern config.
-  react?: LegacyReactOptions;
+  react?: ReactOptions;
   props?: LegacyComponentPropsOptions | null;
   componentProps?: LegacyComponentPropsOptions | null;
 }
@@ -68,8 +78,25 @@ export function init(options: InitOptions): void {
     heartbeatOptions?.maxUserInactivityDuration;
   const runtimeEnabled =
     options.enabled ?? (!hasLegacyOptions || legacyEnabled);
+  const automaticUIEventsEnabled =
+    runtimeEnabled &&
+    (options.features?.automaticUIEvents ?? !hasLegacyOptions);
   if (runtimeEnabled && heartbeatInterval !== false) {
     configureReactNativeHeartbeatEnvironment(options.react?.ReactNativeModule);
+  }
+  const reactOptions = options.react;
+  if (
+    automaticUIEventsEnabled &&
+    reactOptions != null &&
+    (reactOptions.ReactModule != null ||
+      reactOptions.JSXRuntimeModule != null ||
+      reactOptions.JSXDevRuntimeModule != null)
+  ) {
+    installReactNativeJSXRuntime(
+      reactOptions.ReactModule ?? {},
+      reactOptions.JSXRuntimeModule,
+      reactOptions.JSXDevRuntimeModule
+    );
   }
   initializeAutoLogging(
     {

@@ -5,7 +5,7 @@
 'use strict';
 
 export * as AutoLogging from './AutoLogging';
-export type { InitOptions } from './AutoLogging';
+export type { InitOptions, ReactOptions } from './AutoLogging';
 export {
   DEFAULT_CONFIG,
   DEFAULT_INTERCEPT_PROPS,
@@ -106,3 +106,8 @@ export type {
   ReactNativeAppStateSubscription,
   ReactNativeModuleExports,
 } from './IReactNative';
+export type {
+  JSXDevRuntimeModuleExports,
+  JSXRuntimeModuleExports,
+  ReactModuleExports,
+} from './ReactNativeElementObservation';

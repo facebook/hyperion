@@ -8,6 +8,20 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type JSXRuntimeFunction = (this: unknown, ...args: any[]) => unknown;
 
+export interface ReactModuleExports {
+  Component?: new (...args: never[]) => unknown;
+  createElement?: JSXRuntimeFunction;
+}
+
+export interface JSXRuntimeModuleExports {
+  jsx?: JSXRuntimeFunction;
+  jsxs?: JSXRuntimeFunction;
+}
+
+export interface JSXDevRuntimeModuleExports {
+  jsxDEV?: JSXRuntimeFunction;
+}
+
 export interface ElementInstrumenterDescriptor {
   type: unknown;
 }
@@ -182,32 +196,73 @@ export function getOriginalCreateElement(): Readonly<{
 }
 
 export function installReactNativeJSXRuntime(
-  reactModule: { createElement?: JSXRuntimeFunction },
-  jsxRuntimeModule?: {
-    jsx?: JSXRuntimeFunction;
-    jsxs?: JSXRuntimeFunction;
-  } | null,
-  jsxDevRuntimeModule?: { jsxDEV?: JSXRuntimeFunction } | null
+  reactModule: ReactModuleExports,
+  jsxRuntimeModule?: JSXRuntimeModuleExports | null,
+  jsxDevRuntimeModule?: JSXDevRuntimeModuleExports | null
 ): void {
-  if (jsxRuntimeModule?.jsx != null) {
-    jsxRuntimeModule.jsx = createObservedJSXFunction(jsxRuntimeModule.jsx);
-  }
-  if (jsxRuntimeModule?.jsxs != null) {
-    jsxRuntimeModule.jsxs = createObservedJSXFunction(jsxRuntimeModule.jsxs);
-  }
-  if (jsxDevRuntimeModule?.jsxDEV != null) {
-    jsxDevRuntimeModule.jsxDEV = createObservedJSXFunction(
-      jsxDevRuntimeModule.jsxDEV
-    );
-  }
-  if (reactModule.createElement != null) {
+  installObservedRuntimeFunctions(jsxRuntimeModule, ['jsx', 'jsxs'], 'jsx');
+  installObservedRuntimeFunctions(jsxDevRuntimeModule, ['jsxDEV'], 'jsx');
+  const originalCreateElementFunction = installObservedRuntimeFunction(
+    reactModule,
+    'createElement',
+    'createElement'
+  );
+  if (originalCreateElementFunction != null) {
     originalCreateElement ??= {
       receiver: reactModule,
-      renderer: reactModule.createElement,
+      renderer: originalCreateElementFunction,
     };
-    reactModule.createElement = createObservedJSXFunction(
-      reactModule.createElement,
-      'createElement'
-    );
+  }
+}
+
+function installObservedRuntimeFunctions(
+  runtimeModule: object | null | undefined,
+  keys: readonly string[],
+  runtimeKind: JSXRuntimeKind
+): void {
+  if (runtimeModule == null) return;
+  for (const key of keys) {
+    installObservedRuntimeFunction(runtimeModule, key, runtimeKind);
+  }
+}
+
+function installObservedRuntimeFunction(
+  runtimeModule: object,
+  key: string,
+  runtimeKind: JSXRuntimeKind
+): JSXRuntimeFunction | null {
+  const mutableRuntimeModule = runtimeModule as Record<string, unknown>;
+  let original: unknown;
+  try {
+    original = mutableRuntimeModule[key];
+  } catch {
+    return null;
+  }
+  if (typeof original !== 'function') return null;
+  const originalFunction = original as JSXRuntimeFunction;
+  const wrapped = createObservedJSXFunction(originalFunction, runtimeKind);
+
+  try {
+    mutableRuntimeModule[key] = wrapped;
+    if (mutableRuntimeModule[key] !== wrapped) {
+      restoreRuntimeFunction(mutableRuntimeModule, key, originalFunction);
+      return null;
+    }
+  } catch {
+    restoreRuntimeFunction(mutableRuntimeModule, key, originalFunction);
+    return null;
+  }
+  return originalFunction;
+}
+
+function restoreRuntimeFunction(
+  runtimeModule: Record<string, unknown>,
+  key: string,
+  original: JSXRuntimeFunction
+): void {
+  try {
+    runtimeModule[key] = original;
+  } catch {
+    // A hostile runtime facade must not make initialization fail.
   }
 }

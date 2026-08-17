@@ -7,6 +7,7 @@
 import type { Channel } from 'hyperion-channel/src/Channel';
 import type { ALRuntimeChannelEventMap } from './ALChannel';
 import type { ReactNativeModuleExports } from './IReactNative';
+import type { ReactModuleExports } from './ReactNativeElementObservation';
 
 type LegacyComponentType = 'class' | 'func' | 'dom';
 type LegacyMapper = (args: unknown[]) => unknown[];
@@ -27,9 +28,7 @@ export interface LegacyJSXRuntimeInterceptors {
 }
 
 export interface LegacyReactOptions {
-  ReactModule?: {
-    Component?: new (...args: never[]) => unknown;
-  };
+  ReactModule?: ReactModuleExports;
   ReactNativeModule?: ReactNativeModuleExports;
   IReactModule?: LegacyReactModuleInterceptors;
   IJsxRuntimeModule?: LegacyJSXRuntimeInterceptors;

@@ -13,6 +13,9 @@ instrumented JSX is evaluated:
 
 ```ts
 import { AppState } from 'react-native';
+import React from 'react';
+import * as JsxDevRuntime from 'react/jsx-dev-runtime';
+import * as JsxRuntime from 'react/jsx-runtime';
 import { Channel } from 'hyperion-channel';
 import { AutoLogging, type ALChannelEventMap } from 'hyperion-react-native';
 
@@ -22,7 +25,12 @@ const config = {
   channel,
   appName: 'sample_app',
   enabled: true,
-  react: { ReactNativeModule: { AppState } },
+  react: {
+    ReactModule: React,
+    JSXRuntimeModule: JsxRuntime,
+    JSXDevRuntimeModule: JsxDevRuntime,
+    ReactNativeModule: { AppState },
+  },
 };
 
 channel.addListener('al_ui_event', (event) => transport(event));
@@ -38,12 +46,22 @@ idempotent and the first call owns the runtime configuration. Heartbeat-enabled
 initialization requires `react.ReactNativeModule.AppState`; disabled and
 heartbeat-disabled initialization never reads it.
 
+`AutoLogging.init` installs observation into the supplied `ReactModule`,
+`JSXRuntimeModule`, and `JSXDevRuntimeModule` before enabling automatic UI
+observation. Call `init` before evaluating or rendering relevant application
+JSX; installation cannot retroactively observe elements created before it.
+Writable Metro and embedded runtime facades are updated in place. Immutable ESM
+namespace objects are left unchanged; those applications must use the package
+`jsx-runtime` and `jsx-dev-runtime` entries described below.
+
 The deprecated `react`, `props`, `componentProps`, and nested `heartbeat`
 options remain available while WWW/AMA migrates. This path accepts the original
 injected `IReactModule` and `IJsxRuntimeModule`, preserves the independent
 interception and publishing flags, and emits `al_react_component_prop` and
 `al_react_component_mount`. It does not enable heartbeat or any modern event
-family unless that functionality is explicitly configured.
+family unless that functionality is explicitly configured. The `I*` fields are
+intercepted-module adapters; the non-prefixed runtime fields above are the raw
+React exports used by the modern observer.
 
 Use `features` to disable individual publishers while leaving the rest of the
 runtime enabled. Available gates are `automaticUIEvents`,

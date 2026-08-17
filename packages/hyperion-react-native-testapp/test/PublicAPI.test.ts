@@ -34,5 +34,7 @@ describe('public React Native package entries', () => {
     expect(declaration).not.toContain('useLogAppEvent');
     expect(declaration).not.toContain('normalizeSampleRate');
     expect(declaration).not.toContain('sanitizeMetadata');
+    expect(declaration).toContain('JSXRuntimeModule');
+    expect(declaration).toContain('JSXDevRuntimeModule');
   });
 });
