@@ -9,6 +9,12 @@ const NATIVE_ONLY_ARTIFACTS = Object.freeze([
   'hyperionMobileReactNativeJSXDevRuntime.js',
 ]);
 const PORTABLE_NATIVE_ALIASES = Object.freeze(['hyperionMobileReactNative.js']);
+const LEGACY_RUNTIME_INSTALLER_ARTIFACT =
+  'hyperionMobileReactNativeLegacyRuntimeInstaller.js';
+const LEGACY_RUNTIME_INSTALLER_DEPENDENCY =
+  'hyperionMobileReactNativeJSXObservation';
+const LEGACY_RUNTIME_INSTALLER_INPUT =
+  'scripts/mobile-legacy-runtime-installer-entry.js';
 
 function getNativeArtifactName(artifact) {
   return artifact.replace(/[.]js$/, '.react.native.js');
@@ -36,6 +42,9 @@ function getRuntimeSpecifiers(code) {
 }
 
 module.exports = {
+  LEGACY_RUNTIME_INSTALLER_ARTIFACT,
+  LEGACY_RUNTIME_INSTALLER_DEPENDENCY,
+  LEGACY_RUNTIME_INSTALLER_INPUT,
   NATIVE_ONLY_ARTIFACTS,
   PORTABLE_NATIVE_ALIASES,
   getRuntimeSpecifiers,

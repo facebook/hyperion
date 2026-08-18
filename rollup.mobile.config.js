@@ -2,7 +2,11 @@ import { defineConfig } from 'rollup';
 import webConfig from './rollup.config.js';
 import mobileDistUtils from './scripts/mobile-dist-utils.cjs';
 
-const { rewriteHasteSpecifiers } = mobileDistUtils;
+const {
+  LEGACY_RUNTIME_INSTALLER_DEPENDENCY,
+  LEGACY_RUNTIME_INSTALLER_INPUT,
+  rewriteHasteSpecifiers,
+} = mobileDistUtils;
 
 function mobileChunkName(moduleId) {
   const id = moduleId.replaceAll('\\', '/');
@@ -81,6 +85,7 @@ const mobileIntro = webConfig.output.intro
 
 export default defineConfig({
   ...webConfig,
+  external: [...webConfig.external, LEGACY_RUNTIME_INSTALLER_DEPENDENCY],
   input: {
     mobile: 'scripts/mobile-dist-entry.js',
     hyperionMobileReactNative: 'packages/hyperion-react-native/dist/index.js',
@@ -89,7 +94,7 @@ export default defineConfig({
     hyperionMobileReactNativeJSXDevRuntime:
       'packages/hyperion-react-native/dist/jsx-dev-runtime.js',
     hyperionMobileReactNativeLegacyRuntimeInstaller:
-      'packages/hyperion-react-native/dist/legacy-runtime-installer.js',
+      LEGACY_RUNTIME_INSTALLER_INPUT,
   },
   output: {
     ...webConfig.output,
