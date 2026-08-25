@@ -31,8 +31,8 @@
     "hyperion-react": "*"
   },
   "peerDependencies": {
-    "@types/react": "^18.2.14",
-    "@types/react-dom": "^18.2.7"
+    "@types/react": "^18.2.14 || ^19.0.0",
+    "@types/react-dom": "^18.2.7 || ^19.0.0"
   },
   "devDependencies": {
     "hyperion-devtools": "*",

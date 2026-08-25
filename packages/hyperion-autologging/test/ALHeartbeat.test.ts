@@ -9,6 +9,7 @@ import { Channel } from "hyperion-channel/src/Channel"
 import { Flowlet } from "hyperion-flowlet/src/Flowlet";
 import performanceAbsoluteNow from 'hyperion-util/src/performanceAbsoluteNow';
 import * as ALHeartbeat from "../src/ALHeartbeat";
+import { ALHeartbeatType as SharedALHeartbeatType } from "../src/ALHeartbeatType";
 import * as ALUIEventPublisher from "../src/ALUIEventPublisher";
 
 const channel = new Channel<
@@ -46,6 +47,10 @@ function simulateClick(eventTimestamp: number): void {
 // }
 
 describe('ALHeartbeat', () => {
+
+  it('uses the shared heartbeat vocabulary', () => {
+    expect(ALHeartbeat.ALHeartbeatType).toBe(SharedALHeartbeatType);
+  });
 
   // beforeEach(() => {
   //   jest.useFakeTimers();

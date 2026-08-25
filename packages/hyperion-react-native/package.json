@@ -11,6 +11,7 @@
     "test": "npm run build & jest"
   },
   "workspaces": [
+    "../hyperion-autologging",
     "../hyperion-channel",
     "../hyperion-core",
     "../hyperion-devtools",
@@ -19,6 +20,7 @@
     "../hyperion-util"
   ],
   "dependencies": {
+    "hyperion-autologging": "*",
     "hyperion-channel": "*",
     "hyperion-core": "*",
     "hyperion-react": "*",

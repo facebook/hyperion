@@ -10,24 +10,12 @@ import performanceAbsoluteNow from 'hyperion-util/src/performanceAbsoluteNow';
 import * as Types from "hyperion-util/src/Types";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
 import * as ALEventIndex from "./ALEventIndex";
-import { ALLoggableEvent } from "./ALType";
 import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
+import { ALHeartbeatType, type ALHeartbeatEventData } from "./ALHeartbeatType";
 
-export enum ALHeartbeatType {
-  REGAIN_PAGE_VISIBILITY = "REGAIN_PAGE_VISIBILITY",
-  PAGE_FOCUS_GAINED = "PAGE_FOCUS_GAINED",
-  PAGE_FOCUS_LOST = "PAGE_FOCUS_LOST",
-  SCHEDULED = "SCHEDULED",
-  START = "START",
-  STOP = "STOP",
-}
+export { ALHeartbeatType } from "./ALHeartbeatType";
 
-export type AdsALHeartbeatEventData = Readonly<
-  ALLoggableEvent &
-  {
-    event: "heartbeat";
-    heartbeatType: ALHeartbeatType;
-  }>;
+export type AdsALHeartbeatEventData = ALHeartbeatEventData<string>;
 
 export type ALChannelHeartbeatEvent = Readonly<{
   al_heartbeat_event: [AdsALHeartbeatEventData],

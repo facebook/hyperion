@@ -9,6 +9,12 @@ import type { BaseChannelEventType, Channel } from "hyperion-channel/src/Channel
 import * as Types from "hyperion-util/src/Types";
 import { IALFlowlet } from './ALFlowletManager';
 import { ALID } from "./ALID";
+import type {
+  ALLoggableEvent as SharedALLoggableEvent,
+  ALMetadata as SharedALMetadata,
+  ALMetadataEvent as SharedALMetadataEvent,
+  ALTimedEvent as SharedALTimedEvent,
+} from "./ALCommonTypes";
 
 export type ALFlowletEvent = Readonly<{
   callFlowlet: IALFlowlet;
@@ -19,20 +25,14 @@ export type ALOptionalFlowletEvent = Omit<ALFlowletEvent, 'callFlowlet'> & Reado
   callFlowlet: ALFlowletEvent['callFlowlet'] | null;
 }>;
 
-export type ALTimedEvent = Readonly<{
-  eventTimestamp: number;
-}>;
+export type ALTimedEvent = SharedALTimedEvent;
 
-export type Metadata = {
-  [Key: string]: string;
-};
+export type Metadata = SharedALMetadata<string>;
 
-export type ALMetadataEvent = Readonly<{
-  /**
-   * Extended data do be logged along with the event payload later
-   */
-  metadata: Metadata;
-}>;
+/**
+ * Extended data to be logged along with the event payload later.
+ */
+export type ALMetadataEvent = SharedALMetadataEvent<string>;
 
 export type ALExtensibleEventData = { [key: string]: any };
 export type ALExtensibleEvent = {
@@ -56,10 +56,7 @@ export type ALExtensibleEvent = {
  * for their events to signal to the subscribers that they need to add extra
  * information as needed.
  */
-export type ALLoggableEvent = ALTimedEvent & ALMetadataEvent & Readonly<{
-  eventIndex: number;
-  relatedEventIndex?: number;
-}>;
+export type ALLoggableEvent = SharedALLoggableEvent<string>;
 
 export type ALPageEvent = {
   // window.location.href when the event was captured
