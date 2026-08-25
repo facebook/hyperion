@@ -9,17 +9,12 @@ import type {
   ALTransportEnvelope as SharedALTransportEnvelope,
 } from 'hyperion-autologging/src/ALCommonTypes';
 import type { ALHeartbeatType } from 'hyperion-autologging/src/ALHeartbeatType';
-import type { ALSurfaceDataNodeContract } from 'hyperion-autologging/src/ALSurfaceContract';
+import type { ALSurfaceDataNode } from './ALSurface';
 
 export type SurfaceMetadataValue = string | number | boolean | null;
 export type SurfaceMetadata = Readonly<Record<string, SurfaceMetadataValue>>;
 export type UIEventMetadata = Readonly<Record<string, SurfaceMetadata>>;
 export type ALLoggableEvent = SharedALLoggableEvent<SurfaceMetadataValue>;
-
-export type ALSurfaceDataNodeContractType = ALSurfaceDataNodeContract<
-  never,
-  SurfaceMetadata
->;
 
 export type RNElementTextSource =
   | 'accessibilityLabel'
@@ -40,7 +35,7 @@ export interface ALUIEventData extends ALLoggableEvent {
   readonly event: string;
   readonly sourceProp: string;
   readonly surface?: string;
-  readonly surfaceData?: ALSurfaceDataNodeContractType;
+  readonly surfaceData?: ALSurfaceDataNode;
   readonly surfaceMetadata?: SurfaceMetadata;
   readonly reactComponentName?: string;
   readonly reactComponentStack?: readonly string[];
@@ -60,7 +55,7 @@ export interface ALSurfaceMutationEventData extends ALLoggableEvent {
   readonly event: 'mount_component' | 'unmount_component';
   readonly surface: string;
   readonly surfacePath: string;
-  readonly surfaceData: ALSurfaceDataNodeContractType;
+  readonly surfaceData: ALSurfaceDataNode;
   readonly mountedDuration?: number;
 }
 

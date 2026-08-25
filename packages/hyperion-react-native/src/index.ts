@@ -20,6 +20,21 @@ export type {
   ReactModuleExports,
 } from './ReactNativeElementObservation';
 export {
+  ALSurface,
+  ALSurfaceData,
+  reactNativeSurfaces,
+  useSurface,
+  useSurfaceMetadata,
+  useSurfacePath,
+  useSurfaceUIEventMetadata,
+} from './ALSurface';
+export type {
+  ALSurfaceDataNode,
+  ALSurfaceDataRoot,
+  ALSurfaceProps,
+  ReactNativeSurfacesOptions,
+} from './ALSurface';
+export {
   createObservedJSXFunction,
   getJSXRuntimeBenchmarkPair,
   installReactNativeJSXRuntime,
