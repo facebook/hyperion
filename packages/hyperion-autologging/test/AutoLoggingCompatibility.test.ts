@@ -23,7 +23,8 @@ interface LoadedAutoLogging {
 }
 
 async function loadAutoLogging(
-  globalValue: unknown = window
+  globalValue: unknown = window,
+  throwOn?: string
 ): Promise<LoadedAutoLogging> {
   jest.resetModules();
   const calls: RecordedCall[] = [];
@@ -31,6 +32,9 @@ async function loadAutoLogging(
     (name: string) =>
     (...args: unknown[]): void => {
       calls.push({ name, args });
+      if (name === throwOn) {
+        throw new Error(`${name} failed`);
+      }
     };
 
   jest.doMock('hyperion-flowlet/src/FlowletWrappers', () => ({
@@ -285,6 +289,41 @@ describe('web AutoLogging compatibility contract', () => {
     expect(() => AutoLogging.init(options)).toThrow('plugin failed');
     expect(laterPlugin).not.toHaveBeenCalled();
     expect(calls.map((call) => call.name)).toEqual(['failing-plugin']);
+    expect(AutoLogging.getInitOptions()).toBe(options);
+    expect(AutoLogging.init(createOptions(applicationChannel))).toBe(false);
+  });
+
+  it('evaluates built-in option gates after custom plugins run', async () => {
+    const { AutoLogging, calls } = await loadAutoLogging();
+    const applicationChannel = new Channel<ALChannelEvent>();
+    const options = createOptions(applicationChannel, {
+      plugins: [
+        () => {
+          options.network = {};
+        },
+      ],
+    });
+
+    expect(AutoLogging.init(options)).toBe(true);
+    expect(calls.some((call) => call.name === 'network')).toBe(true);
+  });
+
+  it('preserves sticky partial initialization when a built-in throws', async () => {
+    const { AutoLogging, calls } = await loadAutoLogging(
+      window,
+      'surface-mutation'
+    );
+    const applicationChannel = new Channel<ALChannelEvent>();
+    const options = createOptions(applicationChannel, {
+      surfaceMutationPublisher: {},
+      surfaceVisibilityPublisher: {},
+    });
+
+    expect(() => AutoLogging.init(options)).toThrow('surface-mutation failed');
+    expect(calls.map((call) => call.name)).toEqual([
+      'flowlet-trackers',
+      'surface-mutation',
+    ]);
     expect(AutoLogging.getInitOptions()).toBe(options);
     expect(AutoLogging.init(createOptions(applicationChannel))).toBe(false);
   });

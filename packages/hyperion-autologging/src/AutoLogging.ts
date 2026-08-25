@@ -5,21 +5,16 @@
 'use strict';
 
 import { Channel, ChannelEventType } from "hyperion-channel/src/Channel";
-import { initFlowletTrackers } from "hyperion-flowlet/src/FlowletWrappers";
-import global from "hyperion-globals/src/global";
-import * as IReactComponent from "hyperion-react/src/IReactComponent";
 import { SafeGetterSetter } from "hyperion-util/src/SafeGetterSetter";
 import * as Types from "hyperion-util/src/Types";
 import * as ALCustomEvent from "./ALCustomEvent";
 import * as ALDOMSnapshotPublisher from "./ALDOMSnaptshotPublisher";
-import * as ALElementValuePublisher from "./ALElementValuePublisher";
-import { ALFlowletManagerInstance } from "./ALFlowletManager";
 import * as ALFlowletPublisher from "./ALFlowletPublisher";
 import * as ALHeartbeat from "./ALHeartbeat";
-import * as ALHoverPublisher from "./ALHoverPublisher";
 import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
 import * as ALNetworkPublisher from "./ALNetworkPublisher";
-import { ComponentNameValidator, setComponentNameValidator } from "./ALReactUtils";
+import { initializePluginsStrictly, type ALChannelPluginInit } from './ALPlugin';
+import { ComponentNameValidator } from "./ALReactUtils";
 import * as ALSessionFlowID from "./ALSessionFlowID";
 import * as ALSurface from "./ALSurface";
 import * as ALSurfaceMutationPublisher from "./ALSurfaceMutationPublisher";
@@ -28,6 +23,7 @@ import * as ALSurfaceVisibilityPublisher from "./ALSurfaceVisibilityPublisher";
 import * as ALTriggerFlowlet from "./ALTriggerFlowlet";
 import { ALSharedInitOptions } from "./ALType";
 import * as ALUIEventPublisher from "./ALUIEventPublisher";
+import { createWebAutoLoggingPlugins } from './ALWebPlugins';
 
 /**
  * This type extracts the union of all events types so that external modules
@@ -47,7 +43,7 @@ export type ALChannelEvent = ChannelEventType<
 
 type PublicInitOptions<T> = Omit<T, keyof ALSharedInitOptions<never> | 'react'>;
 
-type PluginInit = (channel: Channel<ALChannelEvent>) => void;
+type PluginInit = ALChannelPluginInit<ALChannelEvent>;
 
 export type InitOptions = Types.Options<
   ALSharedInitOptions<ALChannelEvent> &
@@ -98,132 +94,11 @@ export function init(options: InitOptions): boolean {
   if (options.plugins) {
     const pluginChannel = new Channel<ALChannelEvent>();
     pluginChannel.pipe(options.channel);
-    options.plugins.forEach(plugin => plugin?.(pluginChannel));
+    initializePluginsStrictly(pluginChannel, options.plugins);
     channel = pluginChannel;
   }
 
-  if (options.componentNameValidator) {
-    setComponentNameValidator(options.componentNameValidator);
-  }
-
-  const sharedOptions: ALSharedInitOptions<ALChannelEvent> = {
-    channel,
-  }
-
-  if (typeof global !== 'undefined' && (global as Window)?.document?.createElement != null) {
-    initFlowletTrackers(ALFlowletManagerInstance);
-    options.triggerFlowlet && ALTriggerFlowlet.init({
-      react: options.react,
-      ...sharedOptions,
-      ...options.triggerFlowlet,
-    });
-  }
-
-  // Enumerating the cases where we need react interception and visitors
-  const reactOptions = options.react;
-  if (typeof reactOptions.enableInterceptClassComponentConstructor !== "boolean") {
-    reactOptions.enableInterceptClassComponentConstructor =
-      options.triggerFlowlet?.enableReactMethodFlowlet;
-  }
-  if (typeof reactOptions.enableInterceptClassComponentMethods !== "boolean") {
-    reactOptions.enableInterceptClassComponentMethods =
-      options.triggerFlowlet?.enableReactSetStateTracking ||
-      options.triggerFlowlet?.enableReactMethodFlowlet;
-  }
-  if (typeof reactOptions.enableInterceptFunctionComponentRender !== "boolean") {
-    reactOptions.enableInterceptFunctionComponentRender =
-      options.triggerFlowlet?.enableReactMethodFlowlet
-  }
-  if (
-    options.enableReactComponentVisitors ||
-    reactOptions.enableInterceptClassComponentConstructor ||
-    reactOptions.enableInterceptClassComponentMethods ||
-    reactOptions.enableInterceptDomElement ||
-    reactOptions.enableInterceptFunctionComponentRender
-  ) {
-    IReactComponent.init(options.react);
-  }
-
-  if (options.sessionFlowID) {
-    ALSessionFlowID.init({
-      ...sharedOptions,
-      ...options.sessionFlowID
-    });
-  }
-
-  if (options.elementText) {
-    ALInteractableDOMElement.init(options.elementText);
-  }
-
-  if (options.flowletPublisher) {
-    ALFlowletPublisher.publish({
-      ...sharedOptions,
-      ...options.flowletPublisher
-    });
-  }
-
-  if (options.surfaceMutationPublisher) {
-    ALSurfaceMutationPublisher.publish({
-      ...sharedOptions,
-      ...options.surfaceMutationPublisher
-    });
-  }
-
-  if (options.surfaceVisibilityPublisher) {
-    ALSurfaceVisibilityPublisher.publish({
-      ...sharedOptions,
-      ...options.surfaceVisibilityPublisher
-    });
-  }
-
-  if (options.uiEventPublisher) {
-    ALUIEventPublisher.publish({
-      ...sharedOptions,
-      ...options.uiEventPublisher
-    });
-
-    ALHoverPublisher.publish({
-      ...sharedOptions,
-      ...options.uiEventPublisher,
-    });
-
-    /**
-     * The following will depend on the surface mutation events
-     * so we need to make sure it is initialized afterwards
-     */
-    ALElementValuePublisher.publish({
-      ...sharedOptions,
-      ...options.uiEventPublisher,
-    });
-  }
-
-  if (options.heartbeat) {
-    ALHeartbeat.start({
-      ...sharedOptions,
-      ...options.heartbeat,
-    });
-  }
-
-
-  if (options.network) {
-    ALNetworkPublisher.publish({
-      ...sharedOptions,
-      ...options.network
-    });
-  }
-
-  if (options.domSnapshotPublisher) {
-    ALDOMSnapshotPublisher.publish({
-      ...sharedOptions,
-      ...options.domSnapshotPublisher
-    })
-  }
-
-  ALSurface.init({
-    ...sharedOptions,
-    ...options.surface
-  });
-  ALSurfaceProxy.init({ react: options.react });
+  initializePluginsStrictly(channel, createWebAutoLoggingPlugins(options));
 
   return true;
 }
