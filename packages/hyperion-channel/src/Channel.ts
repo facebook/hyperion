@@ -50,6 +50,16 @@ type Check<T, BaseEvents> = IfEquals<Sub<Events<T>, BaseEvents>, BaseEvents, unk
 export class PipeableEmitter<TEventToListenerArgsMap extends BaseChannelEventType> implements IEmitter<TEventToListenerArgsMap> {
   private _next = new Hook<IEmitter<TEventToListenerArgsMap>['emit']>();
 
+  protected createHook<
+    CallbackType extends (...args: never[]) => unknown
+  >(): Hook<CallbackType> {
+    return new Hook<CallbackType>();
+  }
+
+  protected resetPipeHook(): void {
+    this._next = this.createHook<IEmitter<TEventToListenerArgsMap>['emit']>();
+  }
+
   /**
    * If the nextChannel is a super set of events of the current one, we still want to allow the
    * pipe to work. This type overload enables that by using a less restrictive emit function.
@@ -100,7 +110,7 @@ export class Channel<TEventToListenerArgsMap extends BaseChannelEventType>
     let handler: Listeners<TEventToListenerArgsMap[TEvent]> | undefined =
       this._listeners[eventType];
     if (!handler) {
-      handler = this._listeners[eventType] = new Hook<Listener<TEventToListenerArgsMap[TEvent]>>();
+      handler = this._listeners[eventType] = this.createHook<Listener<TEventToListenerArgsMap[TEvent]>>();
     }
     return handler;
   }

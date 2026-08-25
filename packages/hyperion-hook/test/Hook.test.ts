@@ -13,9 +13,23 @@ describe("test Hook", () => {
 
   test("single callback", () => {
     const hook = new Hook<(i: number) => boolean>();
-    hook.add(i => i > 10);
+    const callback = hook.add(i => i > 10);
+    expect(hook.call).toBe(callback);
     const test = hook.call(20);
     expect(test).toBe(true);
+  });
+
+  test("strict callbacks stop after a failure", () => {
+    const hook = new Hook<() => void>();
+    const calls: string[] = [];
+    hook.add(() => {
+      calls.push("first");
+      throw new Error("listener failure");
+    });
+    hook.add(() => calls.push("second"));
+
+    expect(() => hook.call()).toThrow("listener failure");
+    expect(calls).toEqual(["first"]);
   });
 
   test("multiple callbacks", () => {
@@ -138,6 +152,5 @@ describe("test Hook", () => {
     hook.clear();
     expect(hook.hasCallback()).toBe(false);
   });
-
 
 })

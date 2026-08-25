@@ -25,7 +25,11 @@ describe("test Channel", () => {
     channel.on('ev2').add(fn1);
     channel.on('ev1').add(fn2);
 
+    expect(channel.on('ev2').call).toBe(fn1);
+
+    const emit = channel.on('ev2').call;
     channel.emit('ev2', 20);
+    expect(channel.on('ev2').call).toBe(emit);
     expect(fn2).toBeCalledTimes(0);
     expect(fn1).toBeCalledTimes(1);
     expect(fn1.mock.calls[0]).toEqual([20]);
@@ -241,6 +245,22 @@ describe("test Channel", () => {
     channel1.emit('ev1');
     expect(fn1).toHaveBeenCalledTimes(1);
     expect(fn2).toHaveBeenCalledTimes(2);
+  });
+
+  test("strict emission stops before later listeners and pipes", () => {
+    const channel1 = new Channel<ChannelEvents>();
+    const channel2 = new Channel<ChannelEvents>();
+    const calls: string[] = [];
+    channel1.addListener('ev1', () => {
+      calls.push('first');
+      throw new Error('listener failure');
+    });
+    channel1.addListener('ev1', () => calls.push('second'));
+    channel2.addListener('ev1', () => calls.push('downstream'));
+    channel1.pipe(channel2);
+
+    expect(() => channel1.emit('ev1')).toThrow('listener failure');
+    expect(calls).toEqual(['first']);
   });
 
 });

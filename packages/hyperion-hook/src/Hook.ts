@@ -13,16 +13,31 @@ export class Hook<CallbackType extends Function> {
   public call = <CallbackType>EmptyCallback;
 
 
+  // These seams let subclasses wrap dispatch while listener identity stays stable.
+  protected createSingleCallbackCall(callback: CallbackType): CallbackType {
+    return callback;
+  }
+
+  protected getCallbackForComparison(callback: CallbackType): CallbackType {
+    return callback;
+  }
+
+
   hasCallback(cb?: CallbackType): boolean {
     if (!this._callbacks) {
-      return cb ? this.call === cb : this.call !== EmptyCallback;
+      return cb
+        ? this.getCallbackForComparison(this.call) === cb
+        : this.call !== EmptyCallback;
     } else {
-      const callbacks = <Extended<CallbackType>[]>this._callbacks;
+      const callbacks = this._callbacks;
       return (
         callbacks.length > 0 &&
         (
           !cb ||
-          callbacks.some(func => func === cb || func._original === cb)
+          callbacks.some(func => {
+            const callback = this.getCallbackForComparison(func) as Extended<CallbackType>;
+            return callback === cb || callback._original === cb;
+          })
         )
       );
     }
@@ -51,9 +66,9 @@ export class Hook<CallbackType extends Function> {
     }
 
     if (this.call === EmptyCallback) {
-      this.call = callback;
+      this.call = this.createSingleCallbackCall(callback);
     } else if (!this._callbacks) {
-      this._callbacks = [this.call, callback];
+      this._callbacks = [this.getCallbackForComparison(this.call), callback];
       this.call = this.createMultiCallbackCall(this._callbacks);
     } else {
       this._callbacks.push(callback);
@@ -77,7 +92,9 @@ export class Hook<CallbackType extends Function> {
      * expensive than .call (e.g. detecting when a .call is running)
      */
     if (this._callbacks) {
-      const newList = this._callbacks.filter(l => !condition(l));
+      const newList = this._callbacks.filter(
+        l => !condition(this.getCallbackForComparison(l))
+      );
       // Alternatively we can find the index of cb and just replace it with EmptyCallback
 
       /**
@@ -91,7 +108,7 @@ export class Hook<CallbackType extends Function> {
         this.call = this.createMultiCallbackCall(this._callbacks);
       }
       return changed;
-    } else if (condition(this.call)) {
+    } else if (condition(this.getCallbackForComparison(this.call))) {
       this.call = <CallbackType>EmptyCallback;
       return true;
     } else {
