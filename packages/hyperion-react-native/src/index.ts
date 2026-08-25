@@ -29,12 +29,26 @@ export type {
   ReactNativeAppLifecycleOptions,
 } from './ALAppLifecycle';
 export { reactNativeAppStateEvents } from './ALAppStateEvents';
+export { logDeepLinkOpen, reactNativeDeepLinks } from './ALDeepLink';
+export type { ALDeepLinkOptions } from './ALDeepLink';
 export {
   ALHeartbeatType,
   reactNativeHeartbeat,
   REACT_NATIVE_HEARTBEAT_PLUGIN,
 } from './ALHeartbeat';
 export type { ReactNativeHeartbeatOptions } from './ALHeartbeat';
+export {
+  MAX_DEDUPED_ITEMS_PER_SCREEN,
+  reactNativeListImpressions,
+  useALListViewability,
+} from './ALListViewability';
+export type {
+  ALListViewabilityOptions,
+  ALListViewabilityResult,
+  ALViewabilityConfig,
+  ALViewabilityInfo,
+  ALViewToken,
+} from './ALListViewability';
 export {
   extractElementInfo,
   extractElementText,
@@ -60,6 +74,8 @@ export type {
 } from './ALSurface';
 export { reactNativeUIEvents } from './ALUIEvents';
 export type { ReactNativeUIEventsOptions } from './ALUIEvents';
+export { logReactErrorBoundary, reactNativeReactErrors } from './ALReactError';
+export type { ALReactErrorInfo, ALReactErrorOptions } from './ALReactError';
 export {
   getCurrentScreen,
   reactNativeScreens,
