@@ -15,6 +15,18 @@ export type {
   ALReactNativeRuntimeContext,
 } from './ALRuntime';
 export type {
+  JSXDevRuntimeModuleExports,
+  JSXRuntimeModuleExports,
+  ReactModuleExports,
+} from './ReactNativeElementObservation';
+export {
+  createObservedJSXFunction,
+  getJSXRuntimeBenchmarkPair,
+  installReactNativeJSXRuntime,
+  isElementInstrumenterInstalled,
+  isElementObservationEnabled,
+} from './ReactNativeElementObservation';
+export type {
   ALAppStateEventData,
   ALDeepLinkEventData,
   ALDeepLinkSource,
