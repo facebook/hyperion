@@ -9,6 +9,8 @@
 import mobileDistUtils from '../../../scripts/mobile-dist-utils.cjs';
 
 const {
+  LEGACY_RUNTIME_INSTALLER_ARTIFACT,
+  LEGACY_RUNTIME_INSTALLER_DEPENDENCY,
   NATIVE_ONLY_ARTIFACTS,
   PORTABLE_NATIVE_ALIASES,
   getNativeArtifactName,
@@ -16,6 +18,8 @@ const {
   getSideEffectImportSpecifiers,
   rewriteHasteSpecifiers,
 } = mobileDistUtils as {
+  LEGACY_RUNTIME_INSTALLER_ARTIFACT: string;
+  LEGACY_RUNTIME_INSTALLER_DEPENDENCY: string;
   NATIVE_ONLY_ARTIFACTS: readonly string[];
   PORTABLE_NATIVE_ALIASES: readonly string[];
   getNativeArtifactName(artifact: string): string;
@@ -64,5 +68,14 @@ describe('React Native distribution helpers', () => {
         const runtime = import('hyperionMobileReactNativeRuntime');
       `)
     ).toEqual(['react', 'hyperionMobileGuid']);
+  });
+
+  test('keeps the legacy installer isolated on JSX observation', () => {
+    expect(LEGACY_RUNTIME_INSTALLER_ARTIFACT).toBe(
+      'hyperionMobileReactNativeLegacyRuntimeInstaller.js'
+    );
+    expect(LEGACY_RUNTIME_INSTALLER_DEPENDENCY).toBe(
+      'hyperionMobileReactNativeJSXObservation'
+    );
   });
 });

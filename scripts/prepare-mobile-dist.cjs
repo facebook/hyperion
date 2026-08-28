@@ -7,6 +7,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {
+  LEGACY_RUNTIME_INSTALLER_ARTIFACT,
+  LEGACY_RUNTIME_INSTALLER_DEPENDENCY,
   NATIVE_ONLY_ARTIFACTS,
   PORTABLE_NATIVE_ALIASES,
   getNativeArtifactName,
@@ -51,12 +53,28 @@ const requiredEntries = [
   ...PORTABLE_NATIVE_ALIASES,
   ...PORTABLE_NATIVE_ALIASES.map(getNativeArtifactName),
   'hyperionMobileReactNativeJSXObservation.js',
+  LEGACY_RUNTIME_INSTALLER_ARTIFACT,
 ];
 
 for (const artifact of requiredEntries) {
   if (!artifactSet.has(artifact)) {
     throw new Error(`Missing React Native entry artifact: ${artifact}`);
   }
+}
+
+const legacyInstallerImports = getRuntimeSpecifiers(
+  fs.readFileSync(
+    path.join(outputDirectory, LEGACY_RUNTIME_INSTALLER_ARTIFACT),
+    'utf8'
+  )
+);
+if (
+  legacyInstallerImports.length !== 1 ||
+  legacyInstallerImports[0] !== LEGACY_RUNTIME_INSTALLER_DEPENDENCY
+) {
+  throw new Error(
+    `${LEGACY_RUNTIME_INSTALLER_ARTIFACT} must depend only on ${LEGACY_RUNTIME_INSTALLER_DEPENDENCY}`
+  );
 }
 
 for (const artifact of artifacts) {

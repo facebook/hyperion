@@ -54,6 +54,8 @@ export default defineConfig({
       'packages/hyperion-react-native/dist/jsx-dev-runtime.js',
     hyperionMobileReactNativeJSXObservation:
       'packages/hyperion-react-native/dist/ReactNativeElementObservation.js',
+    hyperionMobileReactNativeLegacyRuntimeInstaller:
+      'packages/hyperion-react-native/dist/legacy-runtime-installer.js',
   },
   external: [/^react(?:\/|$)/, /^react-native(?:\/|$)/],
   output: {

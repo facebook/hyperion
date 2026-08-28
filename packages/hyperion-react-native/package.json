@@ -20,6 +20,10 @@
     "./jsx-dev-runtime": {
       "types": "./dist/jsx-dev-runtime.d.ts",
       "default": "./dist/jsx-dev-runtime.js"
+    },
+    "./legacy-runtime-installer": {
+      "types": "./dist/legacy-runtime-installer.d.ts",
+      "default": "./dist/legacy-runtime-installer.js"
     }
   },
   "scripts": {
