@@ -28,7 +28,8 @@
     "build-go": "npm run clean && tsgo",
     "watch": "npm run build -- --watch",
     "start": "npm run watch",
-    "test": "npm run build && jest"
+    "test": "npm run build && jest",
+    "benchmark:runtime": "HYPERION_RUNTIME_BENCHMARK=1 node --expose-gc ../../node_modules/jest/bin/jest.js --watchman=false --runInBand --coverage=false --runTestsByPath test/RuntimeBenchmark.test.ts"
   },
   "workspaces": [
     "../hyperion-autologging",

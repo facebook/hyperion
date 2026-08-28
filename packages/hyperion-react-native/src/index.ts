@@ -19,6 +19,15 @@ export type {
   JSXRuntimeModuleExports,
   ReactModuleExports,
 } from './ReactNativeElementObservation';
+export { DEFAULT_INTERCEPT_PROPS, mapPropToEventType } from './ALConfig';
+export {
+  extractElementInfo,
+  extractElementText,
+  extractLabel,
+  isLoggingSuppressed,
+  isTextInput,
+} from './ALLabelExtraction';
+export type { RNElementInfo, RNElementText } from './ALLabelExtraction';
 export {
   ALSurface,
   ALSurfaceData,
@@ -34,6 +43,8 @@ export type {
   ALSurfaceProps,
   ReactNativeSurfacesOptions,
 } from './ALSurface';
+export { reactNativeUIEvents } from './ALUIEvents';
+export type { ReactNativeUIEventsOptions } from './ALUIEvents';
 export {
   createObservedJSXFunction,
   getJSXRuntimeBenchmarkPair,
