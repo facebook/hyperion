@@ -220,6 +220,98 @@ describe('React Native automatic UI event plugin', () => {
     act(() => renderer.unmount());
   });
 
+  test('preserves React use() suspension and retry with observation enabled or disabled', async () => {
+    async function runFixture(enabled: boolean) {
+      let resolveLabel: ((value: string) => void) | undefined;
+      const labelPromise = new Promise<string>((resolve) => {
+        resolveLabel = resolve;
+      });
+      const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+      const events: ALUIEventData[] = [];
+      const applicationHandler = jest.fn();
+      let applicationMounts = 0;
+      let applicationUnmounts = 0;
+      channel.addListener('al_ui_event', (event) => events.push(event));
+      AutoLogging.init({
+        channel,
+        plugins: enabled ? [reactNativeUIEvents()] : [],
+      });
+
+      function Pressable(props: {
+        accessibilityLabel: string;
+        children: React.ReactNode;
+        onPress(): void;
+        revision: number;
+      }) {
+        return React.createElement('pressable', props, props.children);
+      }
+      function SuspendedLabel() {
+        return React.createElement('text', null, React.use(labelPromise));
+      }
+      function ApplicationContent({ revision }: { revision: number }) {
+        React.useEffect(() => {
+          applicationMounts++;
+          return () => {
+            applicationUnmounts++;
+          };
+        }, []);
+        return jsx(Pressable, {
+          accessibilityLabel: 'Suspended action',
+          onPress: applicationHandler,
+          revision,
+          children: React.createElement(SuspendedLabel),
+        });
+      }
+      const createTree = (revision: number) =>
+        React.createElement(
+          Suspense,
+          { fallback: React.createElement('text', null, 'Loading') },
+          React.createElement(ApplicationContent, { revision })
+        );
+
+      let renderer: TestRenderer.ReactTestRenderer | undefined;
+      await act(async () => {
+        renderer = TestRenderer.create(createTree(0));
+      });
+      if (renderer == null) throw new Error('Expected a mounted renderer.');
+      expect(renderer.root.findByType('text').children).toEqual(['Loading']);
+
+      await act(async () => {
+        resolveLabel?.('Ready');
+        await labelPromise;
+      });
+      expect(renderer.root.findByType('text').children).toEqual(['Ready']);
+      await act(async () => {
+        renderer?.update(createTree(1));
+      });
+      const pressable = renderer.root.findByType('pressable');
+      expect(pressable.props.revision).toBe(1);
+      pressable.props.onPress();
+      expect(applicationHandler).toHaveBeenCalledTimes(1);
+      expect(events).toHaveLength(enabled ? 1 : 0);
+      expect(applicationMounts).toBe(1);
+      const visibleTree = JSON.parse(JSON.stringify(renderer.toJSON()));
+
+      act(() => renderer?.unmount());
+      expect(applicationUnmounts).toBe(1);
+      AutoLogging.dispose();
+      resetElementObservationForTests();
+      return visibleTree;
+    }
+
+    const disabledTree = await runFixture(false);
+    const enabledTree = await runFixture(true);
+    expect(enabledTree).toEqual(disabledTree);
+    const conditionalUseWarnings = (
+      console.error as jest.MockedFunction<typeof console.error>
+    ).mock.calls.filter((args) =>
+      String(args[0]).includes(
+        'called use() to suspend in a previous render but did not call use()'
+      )
+    );
+    expect(conditionalUseWarnings).toHaveLength(0);
+  });
+
   test('preserves application handler exceptions', () => {
     const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
     AutoLogging.init({ channel, plugins: [reactNativeUIEvents()] });
