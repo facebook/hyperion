@@ -6,7 +6,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "babel-plugin-stable-event-props.cjs"
   ],
   "exports": {
     ".": {
@@ -80,7 +81,8 @@
     "./legacy-runtime-installer": {
       "types": "./dist/legacy-runtime-installer.d.ts",
       "default": "./dist/legacy-runtime-installer.js"
-    }
+    },
+    "./babel-plugin-stable-event-props": "./babel-plugin-stable-event-props.cjs"
   },
   "scripts": {
     "clean": "node scripts/clean.cjs",
