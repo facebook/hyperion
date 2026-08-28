@@ -17,7 +17,7 @@ import type {
   ALReactNativePlugin,
   ALReactNativeRuntimeContext,
 } from './ALRuntime';
-import { useSurface } from './ALSurface';
+import { useSurface } from './ALSurfaceContext';
 import type {
   ALListImpressionEventData,
   ALReactNativeEventMap,

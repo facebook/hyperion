@@ -9,11 +9,14 @@ import type {
   ALTransportEnvelope as SharedALTransportEnvelope,
 } from 'hyperion-autologging/src/ALCommonTypes';
 import type { ALHeartbeatType } from 'hyperion-autologging/src/ALHeartbeatType';
-import type { ALSurfaceDataNode } from './ALSurface';
+import type { SurfaceMetadata, SurfaceMetadataValue } from './ALSharedTypes';
+import type { ALSurfaceDataNode } from './ALSurfaceData';
 
-export type SurfaceMetadataValue = string | number | boolean | null;
-export type SurfaceMetadata = Readonly<Record<string, SurfaceMetadataValue>>;
-export type UIEventMetadata = Readonly<Record<string, SurfaceMetadata>>;
+export type {
+  SurfaceMetadata,
+  SurfaceMetadataValue,
+  UIEventMetadata,
+} from './ALSharedTypes';
 export type ALLoggableEvent = SharedALLoggableEvent<SurfaceMetadataValue>;
 
 export type RNElementTextSource =

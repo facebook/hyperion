@@ -4,7 +4,7 @@
 
 'use strict';
 
-import type { SurfaceMetadataValue } from './ALTypes';
+import type { SurfaceMetadataValue } from './ALSharedTypes';
 
 export function mergeMetadata(
   ...sources: readonly (Readonly<Record<string, unknown>> | null | undefined)[]

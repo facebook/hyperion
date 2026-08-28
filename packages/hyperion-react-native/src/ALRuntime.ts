@@ -13,7 +13,7 @@ import type {
 import { createALEventFactory } from 'hyperion-autologging/src/ALEventFactory';
 import type { ALManagedPlugin } from 'hyperion-autologging/src/ALPlugin';
 import { ALPluginRuntime } from 'hyperion-autologging/src/ALPluginRuntime';
-import type { ALAppLifecycle } from './ALAppLifecycle';
+import type { ALAppLifecycleEnvironment } from './IReactNative';
 import { ALReactNativeSession } from './ALSession';
 import type { ALLoggableEvent, SurfaceMetadataValue } from './ALTypes';
 
@@ -21,9 +21,9 @@ export interface ALReactNativeRuntimeContext {
   readonly eventFactory: ALEventFactory<SurfaceMetadataValue>;
   readonly session: ALReactNativeSession;
   readonly now: () => number;
-  getAppLifecycle(): ALAppLifecycle | null;
-  installAppLifecycle(lifecycle: ALAppLifecycle): void;
-  removeAppLifecycle(lifecycle: ALAppLifecycle): void;
+  getAppLifecycle(): ALAppLifecycleEnvironment | null;
+  installAppLifecycle(lifecycle: ALAppLifecycleEnvironment): void;
+  removeAppLifecycle(lifecycle: ALAppLifecycleEnvironment): void;
 }
 
 export type ALReactNativePlugin<EventMap extends BaseChannelEventType> =
@@ -58,7 +58,7 @@ function createRuntimeContext(now: () => number): ALReactNativeRuntimeContext {
       return factory.createEvent({ ...options, eventTimestamp });
     },
   };
-  let appLifecycle: ALAppLifecycle | null = null;
+  let appLifecycle: ALAppLifecycleEnvironment | null = null;
   return {
     eventFactory,
     session,

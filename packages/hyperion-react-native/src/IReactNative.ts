@@ -26,3 +26,16 @@ export interface ReactNativeAppState {
 export interface ReactNativeModuleExports {
   readonly AppState: ReactNativeAppState;
 }
+
+export type ALAppStateListener = (
+  state: AppStateStatus,
+  previousState: AppStateStatus | null,
+  timestamp: number
+) => void;
+
+export interface ALAppLifecycleEnvironment {
+  getCurrentState(): AppStateStatus | null;
+  addListener(listener: ALAppStateListener): () => void;
+  start(): void;
+  dispose(): void;
+}

@@ -17,7 +17,8 @@ import {
   type RNEventValue,
 } from './ALLabelExtraction';
 import { getExplicitText, mergeMetadata } from './ALMetadata';
-import { useSurface, type ALSurfaceDataNode } from './ALSurface';
+import type { ALSurfaceDataNode } from './ALSurfaceData';
+import { useSurface } from './ALSurfaceContext';
 import type { ALReactNativeEventMap, ALUIEventData } from './ALTypes';
 import { getOriginalCreateElement } from './ReactNativeElementObservation';
 

@@ -6,17 +6,18 @@
 
 import type { ALReactNativePlugin } from './ALRuntime';
 import type { ALReactNativeEventMap } from './ALTypes';
-import type { AppStateStatus, ReactNativeAppState } from './IReactNative';
+import type {
+  ALAppLifecycleEnvironment,
+  ALAppStateListener,
+  AppStateStatus,
+  ReactNativeAppState,
+} from './IReactNative';
+
+export type { ALAppStateListener } from './IReactNative';
 
 export const REACT_NATIVE_APP_LIFECYCLE_PLUGIN = 'react-native-app-lifecycle';
 
-export type ALAppStateListener = (
-  state: AppStateStatus,
-  previousState: AppStateStatus | null,
-  timestamp: number
-) => void;
-
-export class ALAppLifecycle {
+export class ALAppLifecycle implements ALAppLifecycleEnvironment {
   private currentState: AppStateStatus | null = null;
   private readonly listeners = new Set<ALAppStateListener>();
   private subscription: { remove(): void } | null = null;
