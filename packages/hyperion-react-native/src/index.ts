@@ -21,6 +21,21 @@ export type {
 } from './ReactNativeElementObservation';
 export { DEFAULT_INTERCEPT_PROPS, mapPropToEventType } from './ALConfig';
 export {
+  reactNativeAppLifecycle,
+  REACT_NATIVE_APP_LIFECYCLE_PLUGIN,
+} from './ALAppLifecycle';
+export type {
+  ALAppStateListener,
+  ReactNativeAppLifecycleOptions,
+} from './ALAppLifecycle';
+export { reactNativeAppStateEvents } from './ALAppStateEvents';
+export {
+  ALHeartbeatType,
+  reactNativeHeartbeat,
+  REACT_NATIVE_HEARTBEAT_PLUGIN,
+} from './ALHeartbeat';
+export type { ReactNativeHeartbeatOptions } from './ALHeartbeat';
+export {
   extractElementInfo,
   extractElementText,
   extractLabel,
@@ -45,6 +60,12 @@ export type {
 } from './ALSurface';
 export { reactNativeUIEvents } from './ALUIEvents';
 export type { ReactNativeUIEventsOptions } from './ALUIEvents';
+export type {
+  AppStateStatus,
+  ReactNativeAppState,
+  ReactNativeAppStateSubscription,
+  ReactNativeModuleExports,
+} from './IReactNative';
 export {
   createObservedJSXFunction,
   getJSXRuntimeBenchmarkPair,

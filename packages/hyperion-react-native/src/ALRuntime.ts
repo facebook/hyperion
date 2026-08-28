@@ -13,6 +13,7 @@ import type {
 import { createALEventFactory } from 'hyperion-autologging/src/ALEventFactory';
 import type { ALManagedPlugin } from 'hyperion-autologging/src/ALPlugin';
 import { ALPluginRuntime } from 'hyperion-autologging/src/ALPluginRuntime';
+import type { ALAppLifecycle } from './ALAppLifecycle';
 import { ALReactNativeSession } from './ALSession';
 import type { ALLoggableEvent, SurfaceMetadataValue } from './ALTypes';
 
@@ -20,6 +21,9 @@ export interface ALReactNativeRuntimeContext {
   readonly eventFactory: ALEventFactory<SurfaceMetadataValue>;
   readonly session: ALReactNativeSession;
   readonly now: () => number;
+  getAppLifecycle(): ALAppLifecycle | null;
+  installAppLifecycle(lifecycle: ALAppLifecycle): void;
+  removeAppLifecycle(lifecycle: ALAppLifecycle): void;
 }
 
 export type ALReactNativePlugin<EventMap extends BaseChannelEventType> =
@@ -54,7 +58,22 @@ function createRuntimeContext(now: () => number): ALReactNativeRuntimeContext {
       return factory.createEvent({ ...options, eventTimestamp });
     },
   };
-  return { eventFactory, session, now };
+  let appLifecycle: ALAppLifecycle | null = null;
+  return {
+    eventFactory,
+    session,
+    now,
+    getAppLifecycle: () => appLifecycle,
+    installAppLifecycle(lifecycle) {
+      if (appLifecycle != null) {
+        throw new Error('React Native app lifecycle is already installed.');
+      }
+      appLifecycle = lifecycle;
+    },
+    removeAppLifecycle(lifecycle) {
+      if (appLifecycle === lifecycle) appLifecycle = null;
+    },
+  };
 }
 
 export function createReactNativeRuntime<EventMap extends BaseChannelEventType>(
