@@ -1,6 +1,8 @@
 const path = require('node:path');
 const { makeMetroConfig } = require('@rnx-kit/metro-config');
 
+const useBaselineRuntime = process.env.HYPERION_BENCHMARK_BASELINE === '1';
+
 module.exports = makeMetroConfig({
   transformer: {
     getTransformOptions: async () => ({
@@ -21,5 +23,36 @@ module.exports = makeMetroConfig({
     },
     unstable_enableSymlinks: true,
     useWatchman: false,
+    resolveRequest: useBaselineRuntime
+      ? (context, moduleName, platform) => {
+          if (moduleName === 'hyperion-react-native/jsx-runtime') {
+            return context.resolveRequest(
+              context,
+              'react/jsx-runtime',
+              platform
+            );
+          }
+          if (moduleName === 'hyperion-react-native/jsx-dev-runtime') {
+            return context.resolveRequest(
+              context,
+              'react/jsx-dev-runtime',
+              platform
+            );
+          }
+          if (
+            moduleName === 'hyperion-react-native' ||
+            moduleName.startsWith('hyperion-react-native/')
+          ) {
+            return {
+              filePath: path.resolve(
+                __dirname,
+                'benchmark/HyperionBaseline.js'
+              ),
+              type: 'sourceFile',
+            };
+          }
+          return context.resolveRequest(context, moduleName, platform);
+        }
+      : undefined,
   },
 });
