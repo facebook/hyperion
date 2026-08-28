@@ -2,60 +2,65 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Channel, ChannelEventType } from "hyperion-channel/src/Channel";
-import type * as Types from "hyperion-util/src/Types";
-
-import * as IReactComponent from "hyperion-react/src/IReactComponent";
-import TestAndSet from 'hyperion-test-and-set/src/TestAndSet';
-import * as ALReactComponentProps from "./ALReactComponentProps";
-import * as ALReactComponent from "./ALReactComponent";
-
 'use strict';
 
+import type { BaseChannelEventType } from 'hyperion-channel/src/Channel';
+import type { AutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
+import {
+  createReactNativeRuntime,
+  type ALReactNativePlugin,
+  type ALReactNativeRuntime,
+} from './ALRuntime';
+import type { ALReactNativeEventMap } from './ALTypes';
 
-export type ALChannelEvent = ChannelEventType<
-  & ALReactComponentProps.InitOptions['channel']
-  & ALReactComponent.InitOptions['channel']
->
+export interface InitOptions<
+  EventMap extends BaseChannelEventType = ALReactNativeEventMap
+> {
+  readonly channel: AutoLoggingChannel<EventMap>;
+  readonly plugins: readonly ALReactNativePlugin<EventMap>[];
+}
 
-type PublicInitOptions<T> = Omit<T, 'react' | 'channel'>;
+type InitializationState =
+  | 'idle'
+  | 'initializing'
+  | 'initialized'
+  | 'disposing';
 
-export type InitOptions = Types.Options<{
-  react:
-    & IReactComponent.InitOptions
-    & PublicInitOptions<ALReactComponent.InitOptions>;
-  channel: Channel<ALChannelEvent>;
-  props?: PublicInitOptions<ALReactComponentProps.InitOptions> | null;
-}>
+let initializationState: InitializationState = 'idle';
+let activeRuntime: ALReactNativeRuntime<BaseChannelEventType> | null = null;
 
-const initialized = new TestAndSet();
-export function init(options: InitOptions): void {
-  if (initialized.testAndSet()) {
-    return;
+export function init<
+  EventMap extends BaseChannelEventType = ALReactNativeEventMap
+>(options: InitOptions<EventMap>): boolean {
+  if (initializationState !== 'idle') return false;
+  if (options.channel == null) {
+    throw new Error('AutoLogging.init requires an application-owned channel.');
   }
-
-  let channel = options.channel;
-
-  if (
-    options.react.enableInterceptClassComponentConstructor ||
-    options.react.enableInterceptClassComponentMethods ||
-    options.react.enableInterceptFunctionComponentRender ||
-    options.react.enableInterceptDomElement ||
-    options.react.enableInterceptComponentElement ||
-    options.react.enableInterceptSpecialElement
-  ) {
-    IReactComponent.init(options.react);
+  initializationState = 'initializing';
+  try {
+    const runtime = createReactNativeRuntime(options);
+    activeRuntime =
+      runtime as unknown as ALReactNativeRuntime<BaseChannelEventType>;
+    initializationState = 'initialized';
+    return true;
+  } catch (error) {
+    initializationState = 'idle';
+    throw error;
   }
+}
 
-  ALReactComponent.publish({
-    channel,
-    enableReactComponentPublisher: options.react.enableReactComponentPublisher,
-  })
-
-  if (options.props) {
-    ALReactComponentProps.publish({
-      channel,
-      ...options.props,
-    })
+export function dispose(): boolean {
+  const runtime = activeRuntime;
+  if (initializationState !== 'initialized' || runtime == null) return false;
+  initializationState = 'disposing';
+  try {
+    return runtime.dispose();
+  } finally {
+    activeRuntime = null;
+    initializationState = 'idle';
   }
+}
+
+export function isInitialized(): boolean {
+  return initializationState === 'initialized';
 }
