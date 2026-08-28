@@ -6,11 +6,13 @@
 
 'use strict';
 
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import mobileDistUtils from '../../../scripts/mobile-dist-utils.cjs';
 
 const {
+  LEGACY_CHANNEL_EXPORTS,
   LEGACY_RUNTIME_INSTALLER_ARTIFACT,
   LEGACY_RUNTIME_INSTALLER_DEPENDENCY,
   NATIVE_ONLY_ARTIFACTS,
@@ -20,11 +22,13 @@ const {
   REACT_NATIVE_PLUGIN_ARTIFACTS,
   REACT_NATIVE_PORTABLE_ENTRIES,
   getNativeArtifactName,
+  getNamedExports,
   getRuntimeSpecifiers,
   getSideEffectImportSpecifiers,
   hasDefaultExport,
   rewriteHasteSpecifiers,
 } = mobileDistUtils as {
+  LEGACY_CHANNEL_EXPORTS: readonly string[];
   LEGACY_RUNTIME_INSTALLER_ARTIFACT: string;
   LEGACY_RUNTIME_INSTALLER_DEPENDENCY: string;
   NATIVE_ONLY_ARTIFACTS: readonly string[];
@@ -34,6 +38,7 @@ const {
   REACT_NATIVE_PLUGIN_ARTIFACTS: readonly string[];
   REACT_NATIVE_PORTABLE_ENTRIES: readonly string[];
   getNativeArtifactName(artifact: string): string;
+  getNamedExports(code: string): ReadonlySet<string>;
   getRuntimeSpecifiers(code: string): string[];
   getSideEffectImportSpecifiers(code: string): string[];
   hasDefaultExport(code: string): boolean;
@@ -117,6 +122,62 @@ describe('React Native distribution helpers', () => {
     expect(LEGACY_RUNTIME_INSTALLER_DEPENDENCY).toBe(
       'hyperionMobileReactNativeJSXObservation'
     );
+  });
+
+  test('preserves the complete legacy mobile Channel export surface', () => {
+    expect(LEGACY_CHANNEL_EXPORTS).toEqual([
+      'Channel',
+      'Hook',
+      'PausableChannel',
+      'PipeableEmitter',
+      'ResilientChannel',
+    ]);
+    expect(
+      Array.from(
+        getNamedExports(
+          'export { Channel, Hook as Hook, PausableChannel, PipeableEmitter, ResilientChannel };'
+        )
+      ).sort()
+    ).toEqual([...LEGACY_CHANNEL_EXPORTS].sort());
+  });
+
+  test('loads legacy mobile Core and React artifacts against the Channel artifact', () => {
+    const validation = spawnSync(
+      process.execPath,
+      [
+        path.resolve(
+          packageRoot,
+          '../../scripts/validate-legacy-mobile-runtime.mjs'
+        ),
+      ],
+      {
+        cwd: path.resolve(packageRoot, '../..'),
+        encoding: 'utf8',
+        maxBuffer: 16 * 1024 * 1024,
+      }
+    );
+    if (validation.status !== 0) {
+      throw new Error(validation.stderr || validation.stdout);
+    }
+    expect(JSON.parse(validation.stdout.trim())).toEqual({
+      channelArtifact: expect.stringMatching(/^(?:dist-mobile|generated)$/),
+      channelCalls: 1,
+      channelExports: [...LEGACY_CHANNEL_EXPORTS],
+      coreImports: expect.arrayContaining(['hyperionMobileChannel']),
+      coreLoaded: true,
+      hookCalls: 1,
+      pausableCalls: 1,
+      pipedCalls: 1,
+      reactImports: expect.arrayContaining([
+        'hyperionMobileChannel',
+        'hyperionMobileCore',
+        'hyperionMobileTestAndSet',
+        'hyperionMobileUtil',
+      ]),
+      reactLoaded: true,
+      resilientCalls: 1,
+      resilientErrors: 1,
+    });
   });
 
   test('detects conditional-loader-compatible default exports', () => {
