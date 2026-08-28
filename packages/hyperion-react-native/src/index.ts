@@ -60,6 +60,22 @@ export type {
 } from './ALSurface';
 export { reactNativeUIEvents } from './ALUIEvents';
 export type { ReactNativeUIEventsOptions } from './ALUIEvents';
+export {
+  getCurrentScreen,
+  reactNativeScreens,
+  setCurrentScreen,
+} from './ALScreen';
+export type { ALScreenState } from './ALScreen';
+export {
+  extendSession,
+  getAppInstanceId,
+  getScreenId,
+  getSessionId,
+  getWebSessionId,
+  recordActivity,
+  rotateScreenId,
+} from './ALSessionPublic';
+export { createTransportEnvelope, getMobileEventContext } from './ALTransport';
 export type {
   AppStateStatus,
   ReactNativeAppState,
