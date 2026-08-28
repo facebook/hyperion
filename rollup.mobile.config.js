@@ -22,6 +22,25 @@ function mobileChunkName(moduleId) {
   ) {
     return 'hyperionMobileAutoLogging';
   }
+  if (id.endsWith('/packages/hyperion-react-native/dist/ALActiveRuntime.js')) {
+    return 'hyperionMobileReactNativeActiveRuntime';
+  }
+  if (
+    id.endsWith(
+      '/packages/hyperion-react-native/dist/ALPluginAutoLogging.js'
+    ) ||
+    id.endsWith('/packages/hyperion-react-native/dist/ALRuntime.js') ||
+    id.endsWith('/packages/hyperion-react-native/dist/ALSession.js') ||
+    id.endsWith('/packages/hyperion-react-native/dist/ALSessionPublic.js')
+  ) {
+    return 'hyperionMobileReactNativeRuntimeCore';
+  }
+  if (id.endsWith('/packages/hyperion-react-native/dist/ALMetadata.js')) {
+    return 'hyperionMobileReactNativeMetadata';
+  }
+  if (id.endsWith('/packages/hyperion-react-native/dist/ALSurfaceContext.js')) {
+    return 'hyperionMobileReactNativeSurfaceContext';
+  }
   if (id.endsWith('/packages/hyperion-util/src/guid.js')) {
     return 'hyperionMobileGuid';
   }
@@ -48,6 +67,30 @@ const intro = `
 export default defineConfig({
   input: {
     hyperionMobileReactNative: 'packages/hyperion-react-native/dist/index.js',
+    hyperionMobileReactNativeRuntime:
+      'packages/hyperion-react-native/dist/runtime.js',
+    hyperionMobileReactNativeSurfaces:
+      'packages/hyperion-react-native/dist/ALSurface.js',
+    hyperionMobileReactNativeUIEvents:
+      'packages/hyperion-react-native/dist/ALUIEvents.js',
+    hyperionMobileReactNativeLifecycle:
+      'packages/hyperion-react-native/dist/lifecycle.js',
+    hyperionMobileReactNativeAppLifecycle:
+      'packages/hyperion-react-native/dist/ALAppLifecycle.js',
+    hyperionMobileReactNativeHeartbeat:
+      'packages/hyperion-react-native/dist/ALHeartbeat.js',
+    hyperionMobileReactNativeAppStateEvents:
+      'packages/hyperion-react-native/dist/ALAppStateEvents.js',
+    hyperionMobileReactNativeScreens:
+      'packages/hyperion-react-native/dist/ALScreen.js',
+    hyperionMobileReactNativeListImpressions:
+      'packages/hyperion-react-native/dist/ALListViewability.js',
+    hyperionMobileReactNativeDeepLinks:
+      'packages/hyperion-react-native/dist/ALDeepLink.js',
+    hyperionMobileReactNativeReactErrors:
+      'packages/hyperion-react-native/dist/ALReactError.js',
+    hyperionMobileReactNativeTransport:
+      'packages/hyperion-react-native/dist/ALTransport.js',
     hyperionMobileReactNativeJSXRuntime:
       'packages/hyperion-react-native/dist/jsx-runtime.js',
     hyperionMobileReactNativeJSXDevRuntime:

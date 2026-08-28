@@ -6,6 +6,8 @@
 
 'use strict';
 
+import fs from 'node:fs';
+import path from 'node:path';
 import mobileDistUtils from '../../../scripts/mobile-dist-utils.cjs';
 
 const {
@@ -13,20 +15,33 @@ const {
   LEGACY_RUNTIME_INSTALLER_DEPENDENCY,
   NATIVE_ONLY_ARTIFACTS,
   PORTABLE_NATIVE_ALIASES,
+  REACT_NATIVE_CONVENIENCE_ARTIFACTS,
+  REACT_NATIVE_MODERN_ENTRIES,
+  REACT_NATIVE_PLUGIN_ARTIFACTS,
+  REACT_NATIVE_PORTABLE_ENTRIES,
   getNativeArtifactName,
   getRuntimeSpecifiers,
   getSideEffectImportSpecifiers,
+  hasDefaultExport,
   rewriteHasteSpecifiers,
 } = mobileDistUtils as {
   LEGACY_RUNTIME_INSTALLER_ARTIFACT: string;
   LEGACY_RUNTIME_INSTALLER_DEPENDENCY: string;
   NATIVE_ONLY_ARTIFACTS: readonly string[];
   PORTABLE_NATIVE_ALIASES: readonly string[];
+  REACT_NATIVE_CONVENIENCE_ARTIFACTS: readonly string[];
+  REACT_NATIVE_MODERN_ENTRIES: readonly string[];
+  REACT_NATIVE_PLUGIN_ARTIFACTS: readonly string[];
+  REACT_NATIVE_PORTABLE_ENTRIES: readonly string[];
   getNativeArtifactName(artifact: string): string;
   getRuntimeSpecifiers(code: string): string[];
   getSideEffectImportSpecifiers(code: string): string[];
+  hasDefaultExport(code: string): boolean;
   rewriteHasteSpecifiers(code: string): string;
 };
+
+const packageRoot = path.resolve(__dirname, '..');
+const declarationRoot = path.join(packageRoot, 'dist');
 
 describe('React Native distribution helpers', () => {
   test('keeps native runtime entries out of generic filenames', () => {
@@ -35,6 +50,31 @@ describe('React Native distribution helpers', () => {
       'hyperionMobileReactNativeJSXDevRuntime.react.native.js',
     ]);
     expect(PORTABLE_NATIVE_ALIASES).toEqual(['hyperionMobileReactNative.js']);
+    expect(REACT_NATIVE_PLUGIN_ARTIFACTS).toEqual([
+      'hyperionMobileReactNativeSurfaces.js',
+      'hyperionMobileReactNativeUIEvents.js',
+      'hyperionMobileReactNativeAppLifecycle.js',
+      'hyperionMobileReactNativeHeartbeat.js',
+      'hyperionMobileReactNativeAppStateEvents.js',
+      'hyperionMobileReactNativeScreens.js',
+      'hyperionMobileReactNativeListImpressions.js',
+      'hyperionMobileReactNativeDeepLinks.js',
+      'hyperionMobileReactNativeReactErrors.js',
+    ]);
+    expect(REACT_NATIVE_CONVENIENCE_ARTIFACTS).toEqual([
+      'hyperionMobileReactNativeLifecycle.js',
+    ]);
+    expect(REACT_NATIVE_PORTABLE_ENTRIES).toEqual([
+      'hyperionMobileReactNativeRuntime.js',
+      ...REACT_NATIVE_PLUGIN_ARTIFACTS,
+      ...REACT_NATIVE_CONVENIENCE_ARTIFACTS,
+      'hyperionMobileReactNativeTransport.js',
+    ]);
+    expect(REACT_NATIVE_MODERN_ENTRIES).toEqual([
+      'hyperionMobileReactNativeRuntime.js',
+      ...REACT_NATIVE_PLUGIN_ARTIFACTS,
+      'hyperionMobileReactNativeTransport.js',
+    ]);
   });
 
   test('rewrites generated relative imports to bare Haste names', () => {
@@ -78,4 +118,89 @@ describe('React Native distribution helpers', () => {
       'hyperionMobileReactNativeJSXObservation'
     );
   });
+
+  test('detects conditional-loader-compatible default exports', () => {
+    expect(hasDefaultExport('export default value;')).toBe(true);
+    expect(hasDefaultExport('export { value as default, named };')).toBe(true);
+    expect(hasDefaultExport('export { named };')).toBe(false);
+  });
+
+  test('keeps split entry declarations below the aggregate and acyclic', () => {
+    const packageJSON = JSON.parse(
+      fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8')
+    ) as {
+      exports: Record<string, { types?: string }>;
+    };
+    const splitEntries = [
+      './runtime',
+      './surfaces',
+      './ui-events',
+      './lifecycle',
+      './app-lifecycle',
+      './heartbeat',
+      './app-state-events',
+      './screens',
+      './list-impressions',
+      './deep-links',
+      './react-errors',
+      './transport',
+    ];
+    const declarations = new Map<string, readonly string[]>();
+    for (const fileName of fs
+      .readdirSync(declarationRoot)
+      .filter((name) => name.endsWith('.d.ts'))) {
+      const source = fs.readFileSync(
+        path.join(declarationRoot, fileName),
+        'utf8'
+      );
+      declarations.set(fileName, getRelativeDeclarations(source));
+    }
+
+    for (const entry of splitEntries) {
+      const declaration = packageJSON.exports[entry]?.types;
+      expect(declaration).toBeDefined();
+      const fileName = path.basename(declaration as string);
+      const source = fs.readFileSync(
+        path.join(declarationRoot, fileName),
+        'utf8'
+      );
+      expect(source).not.toMatch(
+        /from ['"]\.\/(?:index|plugins|AutoLogging)['"]/
+      );
+      expect(findDeclarationCycle(fileName, declarations)).toBeNull();
+    }
+  });
 });
+
+function getRelativeDeclarations(source: string): readonly string[] {
+  return Array.from(
+    source.matchAll(/(?:from\s+|import\s*\()(['"])(\.\/[^'"]+)\1/g),
+    (match) => `${path.basename(match[2])}.d.ts`
+  ).filter((fileName) => fs.existsSync(path.join(declarationRoot, fileName)));
+}
+
+function findDeclarationCycle(
+  entry: string,
+  declarations: ReadonlyMap<string, readonly string[]>
+): readonly string[] | null {
+  const visited = new Set<string>();
+  const active = new Set<string>();
+  const pathToEntry: string[] = [];
+  const visit = (fileName: string): readonly string[] | null => {
+    if (active.has(fileName)) {
+      return [...pathToEntry.slice(pathToEntry.indexOf(fileName)), fileName];
+    }
+    if (visited.has(fileName)) return null;
+    visited.add(fileName);
+    active.add(fileName);
+    pathToEntry.push(fileName);
+    for (const dependency of declarations.get(fileName) ?? []) {
+      const cycle = visit(dependency);
+      if (cycle != null) return cycle;
+    }
+    pathToEntry.pop();
+    active.delete(fileName);
+    return null;
+  };
+  return visit(entry);
+}
