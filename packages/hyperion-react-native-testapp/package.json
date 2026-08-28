@@ -10,19 +10,16 @@
     "lint": "eslint .",
     "mkdist": "node -e \"require('node:fs').mkdirSync('dist', { recursive: true, mode: 0o755 })\"",
     "start": "react-native start",
-    "test": "jest",
-    "build": "",
+    "test": "jest --watchman=false",
+    "build": "tsc --noEmit",
     "build-go": ""
   },
   "workspaces": [
-    "../hyperion-react",
     "../hyperion-react-native"
   ],
   "dependencies": {
-    "hyperion-react": "*",
     "hyperion-react-native": "*",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
     "react-native": "0.79.2"
   },
   "devDependencies": {

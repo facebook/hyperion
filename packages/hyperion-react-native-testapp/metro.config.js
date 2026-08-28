@@ -1,4 +1,6 @@
-const { makeMetroConfig } = require("@rnx-kit/metro-config");
+const path = require('node:path');
+const { makeMetroConfig } = require('@rnx-kit/metro-config');
+
 module.exports = makeMetroConfig({
   transformer: {
     getTransformOptions: async () => ({
@@ -8,8 +10,16 @@ module.exports = makeMetroConfig({
       },
     }),
   },
-  watchFolders: [require('node:path').resolve(__dirname, '../..'), require('node:path').resolve(__dirname, '..')],
+  watchFolders: [
+    path.resolve(__dirname, '../..'),
+    path.resolve(__dirname, '..'),
+  ],
   resolver: {
+    extraNodeModules: {
+      react: path.resolve(__dirname, 'node_modules/react'),
+      'react-native': path.resolve(__dirname, 'node_modules/react-native'),
+    },
     unstable_enableSymlinks: true,
+    useWatchman: false,
   },
 });
