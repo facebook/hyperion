@@ -5,7 +5,8 @@
 'use strict';
 
 export * as AutoLogging from './AutoLogging';
-export type { InitOptions, PluginInitOptions } from './AutoLogging';
+export type { InitOptions } from './AutoLogging';
+export type { PluginInitOptions } from './ALPluginAutoLogging';
 export {
   createAutoLoggingChannel,
   type AutoLoggingChannel,
