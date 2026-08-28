@@ -48,3 +48,5 @@ export function reactNativeAppStateEvents<
     },
   };
 }
+
+export default Object.freeze({ reactNativeAppStateEvents });

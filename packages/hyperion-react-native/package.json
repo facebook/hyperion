@@ -21,6 +21,62 @@
       "types": "./dist/jsx-dev-runtime.d.ts",
       "default": "./dist/jsx-dev-runtime.js"
     },
+    "./channel": {
+      "types": "./dist/channel.d.ts",
+      "default": "./dist/channel.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins.d.ts",
+      "default": "./dist/plugins.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "default": "./dist/runtime.js"
+    },
+    "./surfaces": {
+      "types": "./dist/ALSurface.d.ts",
+      "default": "./dist/ALSurface.js"
+    },
+    "./ui-events": {
+      "types": "./dist/ALUIEvents.d.ts",
+      "default": "./dist/ALUIEvents.js"
+    },
+    "./lifecycle": {
+      "types": "./dist/lifecycle.d.ts",
+      "default": "./dist/lifecycle.js"
+    },
+    "./app-lifecycle": {
+      "types": "./dist/ALAppLifecycle.d.ts",
+      "default": "./dist/ALAppLifecycle.js"
+    },
+    "./heartbeat": {
+      "types": "./dist/ALHeartbeat.d.ts",
+      "default": "./dist/ALHeartbeat.js"
+    },
+    "./app-state-events": {
+      "types": "./dist/ALAppStateEvents.d.ts",
+      "default": "./dist/ALAppStateEvents.js"
+    },
+    "./screens": {
+      "types": "./dist/ALScreen.d.ts",
+      "default": "./dist/ALScreen.js"
+    },
+    "./list-impressions": {
+      "types": "./dist/ALListViewability.d.ts",
+      "default": "./dist/ALListViewability.js"
+    },
+    "./deep-links": {
+      "types": "./dist/ALDeepLink.d.ts",
+      "default": "./dist/ALDeepLink.js"
+    },
+    "./react-errors": {
+      "types": "./dist/ALReactError.d.ts",
+      "default": "./dist/ALReactError.js"
+    },
+    "./transport": {
+      "types": "./dist/ALTransport.d.ts",
+      "default": "./dist/ALTransport.js"
+    },
     "./legacy-runtime-installer": {
       "types": "./dist/legacy-runtime-installer.d.ts",
       "default": "./dist/legacy-runtime-installer.js"
@@ -32,18 +88,19 @@
     "build-go": "npm run clean && tsgo",
     "watch": "npm run build -- --watch",
     "start": "npm run watch",
-    "test": "npm run build && jest",
-    "benchmark:runtime": "HYPERION_RUNTIME_BENCHMARK=1 node --expose-gc ../../node_modules/jest/bin/jest.js --watchman=false --runInBand --coverage=false --runTestsByPath test/RuntimeBenchmark.test.ts"
+    "test": "npm run build && jest"
   },
   "workspaces": [
     "../hyperion-autologging",
     "../hyperion-channel",
     "../hyperion-devtools",
+    "../hyperion-hook",
     "../hyperion-util"
   ],
   "dependencies": {
     "hyperion-autologging": "*",
     "hyperion-channel": "*",
+    "hyperion-hook": "*",
     "hyperion-util": "*"
   },
   "peerDependencies": {

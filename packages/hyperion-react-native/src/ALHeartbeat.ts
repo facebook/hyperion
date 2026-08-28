@@ -109,3 +109,9 @@ export function reactNativeHeartbeat<
     },
   };
 }
+
+export default Object.freeze({
+  ALHeartbeatType,
+  reactNativeHeartbeat,
+  REACT_NATIVE_HEARTBEAT_PLUGIN,
+});

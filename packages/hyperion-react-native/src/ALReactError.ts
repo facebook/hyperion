@@ -93,3 +93,8 @@ function setIfString(target: object, key: string, value: unknown): void {
     (target as Record<string, unknown>)[key] = value;
   }
 }
+
+export default Object.freeze({
+  logReactErrorBoundary,
+  reactNativeReactErrors,
+});

@@ -7,6 +7,7 @@
 'use strict';
 
 import React from 'react';
+import { Channel } from '../src/channel';
 import { createAutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
 import type {
   IJsxRuntimeModuleExports,
@@ -57,7 +58,7 @@ function createInterceptedModules() {
 }
 
 function existingAMAConfigCompiles(
-  channel: ReturnType<typeof createAutoLoggingChannel<ALReactNativeEventMap>>,
+  channel: Channel<ALReactNativeEventMap>,
   IReactModule: IReactModuleExports,
   IJsxRuntimeModule: IJsxRuntimeModuleExports
 ): AutoLogging.InitOptions {
@@ -108,7 +109,7 @@ describe('legacy React Native AutoLogging compatibility', () => {
   test('emits legacy prop and mount events without modern families', () => {
     jest.useFakeTimers();
     const modules = createInterceptedModules();
-    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const channel = new Channel<ALReactNativeEventMap>();
     const propEvents: ALLegacyReactComponentPropEventData[] = [];
     const mountEvents: ALLegacyReactComponentMountEventData[] = [];
     const modernEvents: unknown[] = [];

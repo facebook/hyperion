@@ -6,14 +6,24 @@
 
 import type React from 'react';
 import type { AutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
-import { DEFAULT_INTERCEPT_PROPS } from './ALConfig';
+import {
+  DEFAULT_CONFIG,
+  DEFAULT_INTERCEPT_PROPS,
+  mapPropToEventType,
+} from './ALConfig';
 import {
   createALInstrumentedElementType,
   hasInstrumentableEventProp,
   type ReactNativeUIEventConfig,
   type ReactNativeUIEventController,
 } from './ALInstrumentedElement';
-import { isLoggingSuppressed } from './ALLabelExtraction';
+import {
+  extractElementInfo,
+  extractElementText,
+  extractLabel,
+  isLoggingSuppressed,
+  isTextInput,
+} from './ALLabelExtraction';
 import type { ALReactNativePlugin } from './ALRuntime';
 import type { ALReactNativeEventMap } from './ALTypes';
 import type { ElementInstrumenter } from './ReactNativeElementObservation';
@@ -21,6 +31,24 @@ import {
   createReactNativeJSXPlugin,
   type ReactNativeJSXPluginOptions,
 } from './ReactNativeJSXPlugin';
+
+export {
+  DEFAULT_CONFIG,
+  DEFAULT_INTERCEPT_PROPS,
+  extractElementInfo,
+  extractElementText,
+  extractLabel,
+  isLoggingSuppressed,
+  isTextInput,
+  mapPropToEventType,
+};
+export type { ALConfig, ALFeature, ALFeatureConfig } from './ALConfig';
+export type { RNElementInfo, RNElementText } from './ALLabelExtraction';
+export type {
+  JSXDevRuntimeModuleExports,
+  JSXRuntimeModuleExports,
+  ReactModuleExports,
+} from './ReactNativeElementObservation';
 
 export interface ReactNativeUIEventsOptions
   extends ReactNativeJSXPluginOptions {
@@ -125,3 +153,15 @@ export function resolveComponentName(type: unknown): string | undefined {
   }
   return undefined;
 }
+
+export default Object.freeze({
+  DEFAULT_CONFIG,
+  DEFAULT_INTERCEPT_PROPS,
+  extractElementInfo,
+  extractElementText,
+  extractLabel,
+  isLoggingSuppressed,
+  isTextInput,
+  mapPropToEventType,
+  reactNativeUIEvents,
+});

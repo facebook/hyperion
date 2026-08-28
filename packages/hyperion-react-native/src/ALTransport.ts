@@ -42,3 +42,8 @@ export function createTransportEnvelope<Event extends ALLoggableEvent>(
     context: getMobileEventContext(appName),
   };
 }
+
+export default Object.freeze({
+  createTransportEnvelope,
+  getMobileEventContext,
+});

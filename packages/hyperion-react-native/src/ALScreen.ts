@@ -108,3 +108,9 @@ export function setCurrentScreen(
 function setIfDefined(target: object, key: string, value: unknown): void {
   if (value !== undefined) (target as Record<string, unknown>)[key] = value;
 }
+
+export default Object.freeze({
+  getCurrentScreen,
+  reactNativeScreens,
+  setCurrentScreen,
+});

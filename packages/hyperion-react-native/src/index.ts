@@ -8,9 +8,14 @@ export * as AutoLogging from './AutoLogging';
 export type { InitOptions } from './AutoLogging';
 export type { PluginInitOptions } from './ALPluginAutoLogging';
 export {
+  Channel,
+  Hook,
+  PausableChannel,
+  PipeableEmitter,
+  ResilientChannel,
   createAutoLoggingChannel,
   type AutoLoggingChannel,
-} from 'hyperion-autologging/src/ALChannel';
+} from './channel';
 export type {
   ALReactNativePlugin,
   ALReactNativeRuntimeContext,
@@ -24,8 +29,8 @@ export {
   DEFAULT_CONFIG,
   DEFAULT_INTERCEPT_PROPS,
   mapPropToEventType,
-} from './ALConfig';
-export type { ALConfig, ALFeature, ALFeatureConfig } from './ALConfig';
+} from './ALUIEvents';
+export type { ALConfig, ALFeature, ALFeatureConfig } from './ALUIEvents';
 export { createReactNativePlugins } from './ALCompatibility';
 export type { CompatibilityInitOptions, ReactOptions } from './ALCompatibility';
 export {
@@ -63,8 +68,8 @@ export {
   extractLabel,
   isLoggingSuppressed,
   isTextInput,
-} from './ALLabelExtraction';
-export type { RNElementInfo, RNElementText } from './ALLabelExtraction';
+} from './ALUIEvents';
+export type { RNElementInfo, RNElementText } from './ALUIEvents';
 export {
   ALSurface,
   ALSurfaceData,

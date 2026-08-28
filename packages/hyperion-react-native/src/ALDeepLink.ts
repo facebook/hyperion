@@ -89,3 +89,5 @@ function isDeepLinkSource(value: unknown): value is ALDeepLinkSource {
     value === 'initial_url' || value === 'url_event' || value === 'notification'
   );
 }
+
+export default Object.freeze({ logDeepLinkOpen, reactNativeDeepLinks });

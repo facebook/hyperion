@@ -4,13 +4,13 @@
 
 'use strict';
 
-import type { AutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
+import type { Channel } from 'hyperion-channel/src/Channel';
 import {
   DEFAULT_CONFIG,
   DEFAULT_INTERCEPT_PROPS,
   type ALConfig,
   type ALFeatureConfig,
-} from './ALConfig';
+} from './ALUIEvents';
 import { reactNativeAppLifecycle } from './ALAppLifecycle';
 import { reactNativeAppStateEvents } from './ALAppStateEvents';
 import { reactNativeDeepLinks } from './ALDeepLink';
@@ -33,7 +33,7 @@ import { reactNativeUIEvents } from './ALUIEvents';
 import type {
   JSXDevRuntimeModuleExports,
   JSXRuntimeModuleExports,
-} from './ReactNativeElementObservation';
+} from './ALUIEvents';
 
 export interface ReactOptions extends LegacyReactOptions {
   readonly JSXRuntimeModule?: JSXRuntimeModuleExports;
@@ -43,7 +43,7 @@ export interface ReactOptions extends LegacyReactOptions {
 export interface CompatibilityInitOptions
   extends Partial<ALConfig>,
     LegacyAutoLoggingOptions {
-  readonly channel: AutoLoggingChannel<ALReactNativeEventMap>;
+  readonly channel: Channel<ALReactNativeEventMap>;
   readonly heartbeat?:
     | false
     | {

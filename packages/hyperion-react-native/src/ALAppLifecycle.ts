@@ -92,3 +92,9 @@ export function reactNativeAppLifecycle<
     },
   };
 }
+
+export default Object.freeze({
+  ALAppLifecycle,
+  reactNativeAppLifecycle,
+  REACT_NATIVE_APP_LIFECYCLE_PLUGIN,
+});
