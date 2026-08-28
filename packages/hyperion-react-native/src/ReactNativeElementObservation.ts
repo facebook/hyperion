@@ -9,6 +9,7 @@
 export type JSXRuntimeFunction = (this: unknown, ...args: any[]) => unknown;
 
 export interface ReactModuleExports {
+  Component?: new (...args: never[]) => unknown;
   createElement?: JSXRuntimeFunction;
 }
 

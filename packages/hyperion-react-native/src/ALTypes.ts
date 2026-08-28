@@ -106,9 +106,21 @@ export interface ALReactErrorEventData extends ALLoggableEvent {
   readonly reactComponentStack?: string;
 }
 
-// A type alias keeps the finite event contract required by Channel.
+export interface ALLegacyReactComponentPropEventData {
+  readonly component: string;
+  readonly prop: string;
+  readonly args: unknown[];
+  readonly type: 'class' | 'func' | 'dom';
+}
+
+export interface ALLegacyReactComponentMountEventData {
+  readonly surface: string;
+  readonly args: unknown[];
+}
+
+// Type aliases keep the finite event contracts required by Channel.
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type ALReactNativeEventMap = {
+export type ALModernChannelEventMap = {
   al_ui_event: [ALUIEventData];
   al_surface_mutation_event: [ALSurfaceMutationEventData];
   al_heartbeat_event: [ALHeartbeatEventData];
@@ -118,6 +130,17 @@ export type ALReactNativeEventMap = {
   al_deep_link_event: [ALDeepLinkEventData];
   al_react_error_event: [ALReactErrorEventData];
 };
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type ALLegacyChannelEventMap = {
+  al_react_component_prop: [ALLegacyReactComponentPropEventData];
+  al_react_component_mount: [ALLegacyReactComponentMountEventData];
+};
+
+export type ALReactNativeEventMap = ALModernChannelEventMap &
+  ALLegacyChannelEventMap;
+
+export type ALChannelEventMap = ALReactNativeEventMap;
 
 export interface ALMobileEventContext {
   readonly appName: string;

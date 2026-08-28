@@ -5,7 +5,7 @@
 'use strict';
 
 export * as AutoLogging from './AutoLogging';
-export type { InitOptions } from './AutoLogging';
+export type { InitOptions, PluginInitOptions } from './AutoLogging';
 export {
   createAutoLoggingChannel,
   type AutoLoggingChannel,
@@ -19,7 +19,14 @@ export type {
   JSXRuntimeModuleExports,
   ReactModuleExports,
 } from './ReactNativeElementObservation';
-export { DEFAULT_INTERCEPT_PROPS, mapPropToEventType } from './ALConfig';
+export {
+  DEFAULT_CONFIG,
+  DEFAULT_INTERCEPT_PROPS,
+  mapPropToEventType,
+} from './ALConfig';
+export type { ALConfig, ALFeature, ALFeatureConfig } from './ALConfig';
+export { createReactNativePlugins } from './ALCompatibility';
+export type { CompatibilityInitOptions, ReactOptions } from './ALCompatibility';
 export {
   reactNativeAppLifecycle,
   REACT_NATIVE_APP_LIFECYCLE_PLUGIN,
@@ -98,6 +105,14 @@ export type {
   ReactNativeAppStateSubscription,
   ReactNativeModuleExports,
 } from './IReactNative';
+export type {
+  LegacyAutoLoggingOptions,
+  LegacyCallInterceptor,
+  LegacyComponentPropsOptions,
+  LegacyJSXRuntimeInterceptors,
+  LegacyReactModuleInterceptors,
+  LegacyReactOptions,
+} from './ALLegacyAutoLogging';
 export {
   createObservedJSXFunction,
   getJSXRuntimeBenchmarkPair,
@@ -107,12 +122,17 @@ export {
 } from './ReactNativeElementObservation';
 export type {
   ALAppStateEventData,
+  ALChannelEventMap,
   ALDeepLinkEventData,
   ALDeepLinkSource,
   ALHeartbeatEventData,
   ALListImpressionEventData,
+  ALLegacyChannelEventMap,
+  ALLegacyReactComponentMountEventData,
+  ALLegacyReactComponentPropEventData,
   ALLoggableEvent,
   ALMobileEventContext,
+  ALModernChannelEventMap,
   ALReactErrorEventData,
   ALReactNativeEventMap,
   ALScreenTransitionEventData,

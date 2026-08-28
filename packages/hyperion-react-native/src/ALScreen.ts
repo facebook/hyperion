@@ -26,13 +26,18 @@ interface ScreenRuntime {
   currentScreen: ALScreenState | null;
   readonly channel: AutoLoggingChannel<ALReactNativeEventMap>;
   readonly context: ALReactNativeRuntimeContext;
+  readonly publishTransitions: boolean;
 }
 
 let screenRuntime: ScreenRuntime | null = null;
 
+export interface ReactNativeScreensOptions {
+  readonly publishTransitions?: boolean;
+}
+
 export function reactNativeScreens<
   EventMap extends ALReactNativeEventMap = ALReactNativeEventMap
->(): ALReactNativePlugin<EventMap> {
+>(options: ReactNativeScreensOptions = {}): ALReactNativePlugin<EventMap> {
   return {
     name: 'react-native-screens',
     install(channel, context) {
@@ -42,6 +47,7 @@ export function reactNativeScreens<
         channel:
           channel as unknown as AutoLoggingChannel<ALReactNativeEventMap>,
         context,
+        publishTransitions: options.publishTransitions !== false,
       };
       screenRuntime = runtime;
       return {
@@ -79,6 +85,10 @@ export function setCurrentScreen(
   const previousScreen = runtime.currentScreen;
   const screenId = context.session.rotateScreenId();
   runtime.currentScreen = { name: explicitName, screenId };
+  if (!runtime.publishTransitions) {
+    context.session.recordActivity();
+    return true;
+  }
   const event = {
     ...context.eventFactory.createEvent({ metadata: mergeMetadata(metadata) }),
     event: 'screen_transition' as const,

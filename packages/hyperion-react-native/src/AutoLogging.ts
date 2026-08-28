@@ -14,15 +14,27 @@ import {
   createReactNativeRuntime,
   type ALReactNativePlugin,
   type ALReactNativeRuntime,
+  type ALReactNativeRuntimeOptions,
 } from './ALRuntime';
 import type { ALReactNativeEventMap } from './ALTypes';
+import {
+  createReactNativePlugins,
+  type CompatibilityInitOptions,
+} from './ALCompatibility';
 
-export interface InitOptions<
+export type { ReactOptions } from './ALCompatibility';
+export type ALChannelEvent = ALReactNativeEventMap;
+
+export interface PluginInitOptions<
   EventMap extends BaseChannelEventType = ALReactNativeEventMap
 > {
   readonly channel: AutoLoggingChannel<EventMap>;
   readonly plugins: readonly ALReactNativePlugin<EventMap>[];
 }
+
+export type InitOptions<
+  EventMap extends BaseChannelEventType = ALReactNativeEventMap
+> = PluginInitOptions<EventMap> | CompatibilityInitOptions;
 
 type InitializationState =
   | 'idle'
@@ -42,9 +54,16 @@ export function init<
   }
   initializationState = 'initializing';
   try {
-    const runtime = createReactNativeRuntime(options);
-    activeRuntime =
-      runtime as unknown as ALReactNativeRuntime<BaseChannelEventType>;
+    const runtimeOptions = isPluginInitOptions(options)
+      ? options
+      : {
+          channel: options.channel,
+          plugins: createReactNativePlugins(options),
+        };
+    const runtime = createReactNativeRuntime(
+      runtimeOptions as unknown as ALReactNativeRuntimeOptions<BaseChannelEventType>
+    );
+    activeRuntime = runtime;
     setActiveRuntimeContext(runtime.context);
     initializationState = 'initialized';
     return true;
@@ -52,6 +71,12 @@ export function init<
     initializationState = 'idle';
     throw error;
   }
+}
+
+function isPluginInitOptions<EventMap extends BaseChannelEventType>(
+  options: InitOptions<EventMap>
+): options is PluginInitOptions<EventMap> {
+  return Object.prototype.hasOwnProperty.call(options, 'plugins');
 }
 
 export function dispose(): boolean {
