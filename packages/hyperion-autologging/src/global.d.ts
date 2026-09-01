@@ -7,6 +7,7 @@
 interface GlobalFlags {
   preciseTriggerFlowlet?: boolean;
   optimizeInteractibiltyCheck?: boolean;
+  deferInteractabilityCheck?: boolean;
   enableDynamicChildTracking?: boolean;
   enableSurfaceDataGC?: boolean;
 }

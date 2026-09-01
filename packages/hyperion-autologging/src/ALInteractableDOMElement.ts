@@ -11,6 +11,7 @@ import type { UIEventConfig } from "./ALUIEventPublisher";
 import { getElementSurface } from "./ALSurfaceUtils";
 import { getFlags } from "hyperion-globals";
 import { getVirtualPropertyValue, setVirtualPropertyValue } from "hyperion-core/src/intercept";
+import { scheduleAfterPaint } from "hyperion-util/src/scheduleAfterPaint";
 
 'use strict';
 
@@ -235,13 +236,54 @@ let installHandlers = () => {
     return current?.replace(pattern, "");
   }
 
+  function markInteractable(element: Element, event: string): void {
+    if (!ignoreInteractiveElement(element)) {
+      element.setAttribute(EventHandlerTrackerAttribute, addEventNameToList(event, element.getAttribute(EventHandlerTrackerAttribute)));
+    }
+  }
+
+  /**
+   * ignoreInteractiveElement reads clientHeight/clientWidth, which forces a synchronous
+   * layout in the middle of every addEventListener call. Behind deferInteractabilityCheck
+   * we push that check (and the attribute update it gates) out to just after the next
+   * paint, once layout has settled and the read is free. See scheduleAfterPaint.
+   *
+   * removeEventListener stays synchronous, so a deferred add races with it: for an add
+   * immediately followed by a remove, the remove clears the attribute first and the
+   * delayed add would then resurrect it, marking an element interactable with no listener
+   * on it. Tracking the events with an add in flight lets the remove cancel the pending
+   * add instead of being overwritten by it.
+   */
+  const PendingInteractableEvents = new WeakMap<Element, Set<string>>();
+
+  function markInteractableDeferred(element: Element, event: string): void {
+    const existing = PendingInteractableEvents.get(element);
+    if (existing?.has(event)) {
+      return; // Already in flight, the task below will pick up the latest attribute value.
+    }
+    // The set is never removed from the map, so the task below always sees the live entry.
+    const pending = existing ?? new Set<string>();
+    if (existing == null) {
+      PendingInteractableEvents.set(element, pending);
+    }
+    pending.add(event);
+    scheduleAfterPaint(() => {
+      // A removeEventListener in between drops the entry, which cancels us.
+      if (pending.delete(event)) {
+        markInteractable(element, event);
+      }
+    });
+  }
+
+  const markInteractableImpl = getFlags()?.deferInteractabilityCheck ? markInteractableDeferred : markInteractable;
+
   IEventTarget.addEventListener.onBeforeCallObserverAdd(function (
     this: EventTarget,
     event,
     _listener,
   ) {
-    if (UIEventNames.has(event) && (this instanceof Element) && !ignoreInteractiveElement(this)) {
-      this.setAttribute(EventHandlerTrackerAttribute, addEventNameToList(event, this.getAttribute(EventHandlerTrackerAttribute)));
+    if (UIEventNames.has(event) && (this instanceof Element)) {
+      markInteractableImpl(this, event);
     }
   });
 
@@ -251,6 +293,8 @@ let installHandlers = () => {
     _listener,
   ) {
     if (this instanceof Element) {
+      // Cancel a deferred add for this event so it cannot re-add the attribute after us.
+      PendingInteractableEvents.get(this)?.delete(event);
       const newValue = removeEventNameFromList(event, this.getAttribute(EventHandlerTrackerAttribute));
       if (newValue) {
         this.setAttribute(EventHandlerTrackerAttribute, newValue);
