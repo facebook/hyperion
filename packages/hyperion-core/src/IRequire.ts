@@ -76,7 +76,7 @@ class MetaModuleRuntime extends ModuleRuntimeBase {
 const ModuleRuntime: ModuleRuntimeBase = (() => {
   if (typeof require === "function") {
     try {
-      const __debug = require("__debug");
+      const __debug = require.call(null, "__debug");
       if (typeof __debug === "object") {
         // In Meta custom runtime world — check first since Meta's module
         // system is authoritative in Meta's environment, even if
