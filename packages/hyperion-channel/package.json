@@ -6,7 +6,7 @@
   "author": "Mehrdad Reshadi",
   "main": "./src/Channel.js",
   "scripts": {
-    "build": "tsc", 
+    "build": "tsc",
     "build-go": "tsgo",
     "watch": "npm run build -- --watch",
     "start": "npm run type-check:watch",
@@ -18,8 +18,12 @@
     "test": "npm run build & jest"
   },
   "workspaces": [
-    "../hyperion-devtools"
+    "../hyperion-devtools",
+    "../hyperion-hook"
   ],
+  "dependencies": {
+    "hyperion-hook": "*"
+  },
   "devDependencies": {
     "hyperion-devtools": "^0.1.0",
     "@types/jest": "^29.5.14"

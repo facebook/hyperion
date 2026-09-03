@@ -1,0 +1,12 @@
+{
+  "extends": "hyperion-devtools",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": false,
+    "inlineSourceMap": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "sourceMap": false
+  },
+  "include": ["src"]
+}

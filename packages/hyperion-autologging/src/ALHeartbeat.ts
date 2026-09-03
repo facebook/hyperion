@@ -12,15 +12,9 @@ import { ALChannelUIEvent } from "./ALUIEventPublisher";
 import * as ALEventIndex from "./ALEventIndex";
 import { ALLoggableEvent } from "./ALType";
 import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
+import { ALHeartbeatType } from "./ALHeartbeatType";
 
-export enum ALHeartbeatType {
-  REGAIN_PAGE_VISIBILITY = "REGAIN_PAGE_VISIBILITY",
-  PAGE_FOCUS_GAINED = "PAGE_FOCUS_GAINED",
-  PAGE_FOCUS_LOST = "PAGE_FOCUS_LOST",
-  SCHEDULED = "SCHEDULED",
-  START = "START",
-  STOP = "STOP",
-}
+export { ALHeartbeatType } from "./ALHeartbeatType";
 
 export type AdsALHeartbeatEventData = Readonly<
   ALLoggableEvent &

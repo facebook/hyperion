@@ -4,3 +4,9 @@
 
 'use strict';
 export { PipeableEmitter, Channel, PausableChannel } from "./Channel";
+export type {
+  BaseChannelEventType,
+  ChannelEventType,
+  IEmitter,
+  ISafeEmitter,
+} from "./Channel";

@@ -4,7 +4,7 @@
   "version": "0.3.4",
   "license": "MIT",
   "scripts": {
-    "build": "tsc", 
+    "build": "tsc",
     "build-go": "tsgo",
     "build-react": "react-scripts build",
     "watch": "npm run build -- --watch",
@@ -12,6 +12,7 @@
     "test": "npm run build & jest"
   },
   "workspaces": [
+    "../hyperion-autologging-shared",
     "../hyperion-devtools",
     "../hyperion-globals",
     "../hyperion-hook",
@@ -22,6 +23,7 @@
     "../hyperion-react"
   ],
   "dependencies": {
+    "hyperion-autologging-shared": "*",
     "hyperion-globals": "*",
     "hyperion-hook": "*",
     "hyperion-channel": "*",

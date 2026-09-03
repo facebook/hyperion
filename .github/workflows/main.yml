@@ -4,9 +4,9 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -32,14 +32,17 @@ jobs:
       - name: Install packages
         run: npm run install-packages
 
-
       # - name: Lint
       #   run: npm run lint
 
-      - name: Build
-        run: npm run build
+      - name: Build web and mobile distributions
+        run: npm run build:all
 
       - name: Test
-        run: npm run test --ci --coverage --maxWorkers=2
+        run: npm test -- --ci
 
+      - name: React Native runtime budgets
+        run: npm run benchmark:runtime --workspace=hyperion-react-native
 
+      - name: React Native Metro bundle budget
+        run: npm run benchmark:bundle:ios --workspace=hyperion-react-native-testapp

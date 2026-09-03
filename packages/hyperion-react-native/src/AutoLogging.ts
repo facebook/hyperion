@@ -2,60 +2,132 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
  */
 
-import { Channel, ChannelEventType } from "hyperion-channel/src/Channel";
-import type * as Types from "hyperion-util/src/Types";
-
-import * as IReactComponent from "hyperion-react/src/IReactComponent";
-import TestAndSet from 'hyperion-test-and-set/src/TestAndSet';
-import * as ALReactComponentProps from "./ALReactComponentProps";
-import * as ALReactComponent from "./ALReactComponent";
-
 'use strict';
 
+import {
+  DEFAULT_CONFIG,
+  DEFAULT_INTERCEPT_PROPS,
+  type ALConfig,
+} from './ALConfig';
+import { getALRuntimeChannel, type ALChannel } from './ALChannel';
+import {
+  configureReactNativeHeartbeatEnvironment,
+  startHeartbeat,
+} from './ALHeartbeat';
+import {
+  initializeAutoLogging,
+  isALRuntimeEnabled,
+  isALRuntimeInitialized,
+} from './ALRuntime';
+import type { ALChannelEventMap } from './ALTypes';
+import {
+  installReactNativeJSXRuntime,
+  type JSXDevRuntimeModuleExports,
+  type JSXRuntimeModuleExports,
+} from './ReactNativeElementObservation';
+import {
+  hasLegacyAutoLoggingOptions,
+  installLegacyAutoLogging,
+  isLegacyAutoLoggingEnabled,
+  type LegacyAutoLoggingOptions,
+  type LegacyComponentPropsOptions,
+  type LegacyReactOptions,
+} from './ALLegacyAutoLogging';
 
-export type ALChannelEvent = ChannelEventType<
-  & ALReactComponentProps.InitOptions['channel']
-  & ALReactComponent.InitOptions['channel']
->
+export type ALChannelEvent = ALChannelEventMap;
 
-type PublicInitOptions<T> = Omit<T, 'react' | 'channel'>;
+export interface ReactOptions extends LegacyReactOptions {
+  JSXRuntimeModule?: JSXRuntimeModuleExports;
+  JSXDevRuntimeModule?: JSXDevRuntimeModuleExports;
+}
 
-export type InitOptions = Types.Options<{
-  react:
-    & IReactComponent.InitOptions
-    & PublicInitOptions<ALReactComponent.InitOptions>;
-  channel: Channel<ALChannelEvent>;
-  props?: PublicInitOptions<ALReactComponentProps.InitOptions> | null;
-}>
+export interface InitOptions
+  extends Partial<ALConfig>,
+    LegacyAutoLoggingOptions {
+  channel: ALChannel;
+  heartbeat?:
+    | false
+    | {
+        heartbeatInterval?: number;
+        maxUserInactivityDuration?: number;
+      };
+  // TODO: Remove these aliases after WWW/AMA migrates to the modern config.
+  react?: ReactOptions;
+  props?: LegacyComponentPropsOptions | null;
+  componentProps?: LegacyComponentPropsOptions | null;
+}
 
-const initialized = new TestAndSet();
 export function init(options: InitOptions): void {
-  if (initialized.testAndSet()) {
-    return;
+  if (isALRuntimeInitialized()) return;
+  if (options.channel == null) {
+    throw new Error('AutoLogging.init requires an application-owned channel');
   }
-
-  let channel = options.channel;
-
+  const propOptions = options.props ?? options.componentProps;
+  const hasLegacyOptions = hasLegacyAutoLoggingOptions(options);
+  const legacyEnabled = isLegacyAutoLoggingEnabled(options);
+  const heartbeatOptions =
+    options.heartbeat === false ? null : options.heartbeat;
+  const heartbeatInterval =
+    options.heartbeat === false
+      ? false
+      : options.heartbeatInterval ??
+        heartbeatOptions?.heartbeatInterval ??
+        (hasLegacyOptions ? false : DEFAULT_CONFIG.heartbeatInterval);
+  const maxUserInactivityDuration =
+    options.maxUserInactivityDuration ??
+    heartbeatOptions?.maxUserInactivityDuration;
+  const runtimeEnabled =
+    options.enabled ?? (!hasLegacyOptions || legacyEnabled);
+  const automaticUIEventsEnabled =
+    runtimeEnabled &&
+    (options.features?.automaticUIEvents ?? !hasLegacyOptions);
+  if (runtimeEnabled && heartbeatInterval !== false) {
+    configureReactNativeHeartbeatEnvironment(options.react?.ReactNativeModule);
+  }
+  const reactOptions = options.react;
   if (
-    options.react.enableInterceptClassComponentConstructor ||
-    options.react.enableInterceptClassComponentMethods ||
-    options.react.enableInterceptFunctionComponentRender ||
-    options.react.enableInterceptDomElement ||
-    options.react.enableInterceptComponentElement ||
-    options.react.enableInterceptSpecialElement
+    automaticUIEventsEnabled &&
+    reactOptions != null &&
+    (reactOptions.ReactModule != null ||
+      reactOptions.JSXRuntimeModule != null ||
+      reactOptions.JSXDevRuntimeModule != null)
   ) {
-    IReactComponent.init(options.react);
+    installReactNativeJSXRuntime(
+      reactOptions.ReactModule ?? {},
+      reactOptions.JSXRuntimeModule,
+      reactOptions.JSXDevRuntimeModule
+    );
   }
-
-  ALReactComponent.publish({
-    channel,
-    enableReactComponentPublisher: options.react.enableReactComponentPublisher,
-  })
-
-  if (options.props) {
-    ALReactComponentProps.publish({
-      channel,
-      ...options.props,
-    })
+  initializeAutoLogging(
+    {
+      appName: options.appName ?? 'react_native',
+      enabled: runtimeEnabled,
+      heartbeatInterval,
+      maxUserInactivityDuration,
+      interceptProps:
+        options.interceptProps ??
+        propOptions?.intercept ??
+        DEFAULT_INTERCEPT_PROPS,
+      debug: options.debug ?? DEFAULT_CONFIG.debug,
+      componentNameValidator: options.componentNameValidator,
+      features: options.features,
+    },
+    options.channel,
+    !hasLegacyOptions
+  );
+  if (hasLegacyOptions && isALRuntimeEnabled()) {
+    const runtimeChannel = getALRuntimeChannel();
+    if (runtimeChannel != null) {
+      installLegacyAutoLogging(
+        options,
+        runtimeChannel,
+        options.interceptProps ??
+          propOptions?.intercept ??
+          DEFAULT_INTERCEPT_PROPS
+      );
+    }
+  }
+  if (heartbeatInterval !== false && isALRuntimeEnabled()) {
+    startHeartbeat(heartbeatInterval, maxUserInactivityDuration);
   }
 }

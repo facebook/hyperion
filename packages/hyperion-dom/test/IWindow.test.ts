@@ -6,7 +6,6 @@
 
 import "jest";
 import * as IWindow from "../src/IWindow";
-import { fetch } from "cross-fetch";
 import { intercept } from "hyperion-core/src/intercept";
 
 describe('test Window interception', () => {
@@ -19,11 +18,7 @@ describe('test Window interception', () => {
     IWindow.fetch.onBeforeCallObserverAdd(observer);
     IWindow.fetch.onAfterCallObserverAdd(observer);
 
-    if (typeof window.fetch !== "function") {
-      window.fetch = function () {
-        return fetch.apply(this, arguments);
-      }
-    }
+    window.fetch = jest.fn(() => Promise.resolve({} as Response));
 
     intercept(window);
 

@@ -1,7 +1,13 @@
 {
   // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
   "extends": "hyperion-devtools",
-  "include": [
-    "src",
-  ],
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": false,
+    "inlineSourceMap": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "sourceMap": false
+  },
+  "include": ["src"]
 }
