@@ -225,7 +225,7 @@ export function init(options: InitOptions) {
       IReactModule.useCallback,
     ].forEach(fi => {
       /**
-       * useCallback will recieve a new callback function each time, but may return a previous
+       * useCallback will receive a new callback function each time, but may return a previous
        * one. So, it might be more efficient to only focus on the return value.
        */
       // fi.onArgsMapperAdd(args => {
