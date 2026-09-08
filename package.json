@@ -11,11 +11,13 @@
     "src"
   ],
   "scripts": {
+    "help": "tsc --help",
     "start": "npm run watch",
     "watch": "tsc --watch",
     "install-packages": "npm install --workspaces",
     "build": "tsc && npm run build --workspaces && rollup -c",
     "build-go": "tsgo && npm run build-go --workspaces && rollup -c",
+    "build-mobile": "tsc -p tsconfig.mobile.json && npm run build --workspaces && rollup -c rollup.mobile.config.js",
     "test": "npm test --workspaces",
     "lint": "eslint .",
     "prepare": "npm run build",
@@ -97,7 +99,6 @@
     "@types/node": "^22.10.7",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",
-    "@typescript/native-preview": "^7.0.0-dev.20250919.1",
     "babel-jest": "^29.7.0",
     "eslint": "^9.20.1",
     "hyperion-react-native-testapp": "*",
