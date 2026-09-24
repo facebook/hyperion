@@ -39,4 +39,12 @@ describe('test persistent data', () => {
     );
   });
 
+  test('test pending data is saved on beforeunload', () => {
+    const fieldName = "unloadTestValue";
+    const v1 = new SessionPersistentData(fieldName, () => "--", v => v, v => v);
+    v1.setValue("V4");
+    window.dispatchEvent(new Event("beforeunload"));
+    expect(sessionStorage.getItem(fieldName)).toBe("V4");
+  });
+
 });
