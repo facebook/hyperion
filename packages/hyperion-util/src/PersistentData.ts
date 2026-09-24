@@ -55,7 +55,7 @@ class Scheduler {
         getFlags().optimizePersistentData ? OPTIMIZED_COOKIE_SAVE_INTERVAL : SESSION_DATA_SAVE_INTERVAL
       );
       if (typeof window === "object" && typeof window.addEventListener === 'function') {
-        window.addEventListener('beforeUnload', () => {
+        window.addEventListener('beforeunload', () => {
           runner.run();
           // disable scheduing permanently
           this.schedule = (data: PersistentData<any>) => {
