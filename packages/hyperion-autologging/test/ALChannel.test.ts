@@ -8,7 +8,7 @@
 
 import { ResilientChannel } from 'hyperion-channel/src/ResilientChannel';
 import type { BaseChannelEventType } from 'hyperion-channel/src/Channel';
-import { createAutoLoggingChannel } from '../src/ALChannel';
+import { AutoLoggingChannel, createAutoLoggingChannel } from '../src/ALChannel';
 
 interface TestEvents extends BaseChannelEventType {
   event: [value: number];
@@ -27,6 +27,7 @@ describe('AutoLoggingChannel', () => {
     channel.addListener('event', laterListener);
 
     expect(channel).toBeInstanceOf(ResilientChannel);
+    expect(channel).toBeInstanceOf(AutoLoggingChannel);
     expect(() => channel.emit('event', 42)).not.toThrow();
     expect(laterListener).toHaveBeenCalledWith(42);
     expect(errors).toHaveLength(1);

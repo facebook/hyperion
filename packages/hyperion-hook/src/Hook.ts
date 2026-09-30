@@ -18,7 +18,7 @@ export class Hook<CallbackType extends Function> {
     return callback;
   }
 
-  protected getCallbackForComparison(callback: CallbackType): CallbackType {
+  protected getOriginalCallback(callback: CallbackType): CallbackType {
     return callback;
   }
 
@@ -26,7 +26,7 @@ export class Hook<CallbackType extends Function> {
   hasCallback(cb?: CallbackType): boolean {
     if (!this._callbacks) {
       return cb
-        ? this.getCallbackForComparison(this.call) === cb
+        ? this.getOriginalCallback(this.call) === cb
         : this.call !== EmptyCallback;
     } else {
       const callbacks = this._callbacks;
@@ -35,7 +35,7 @@ export class Hook<CallbackType extends Function> {
         (
           !cb ||
           callbacks.some(func => {
-            const callback = this.getCallbackForComparison(func) as Extended<CallbackType>;
+            const callback = this.getOriginalCallback(func) as Extended<CallbackType>;
             return callback === cb || callback._original === cb;
           })
         )
@@ -68,7 +68,7 @@ export class Hook<CallbackType extends Function> {
     if (this.call === EmptyCallback) {
       this.call = this.createSingleCallbackCall(callback);
     } else if (!this._callbacks) {
-      this._callbacks = [this.getCallbackForComparison(this.call), callback];
+      this._callbacks = [this.getOriginalCallback(this.call), callback];
       this.call = this.createMultiCallbackCall(this._callbacks);
     } else {
       this._callbacks.push(callback);
@@ -93,7 +93,7 @@ export class Hook<CallbackType extends Function> {
      */
     if (this._callbacks) {
       const newList = this._callbacks.filter(
-        l => !condition(this.getCallbackForComparison(l))
+        l => !condition(this.getOriginalCallback(l))
       );
       // Alternatively we can find the index of cb and just replace it with EmptyCallback
 
@@ -108,7 +108,7 @@ export class Hook<CallbackType extends Function> {
         this.call = this.createMultiCallbackCall(this._callbacks);
       }
       return changed;
-    } else if (condition(this.getCallbackForComparison(this.call))) {
+    } else if (condition(this.getOriginalCallback(this.call))) {
       this.call = <CallbackType>EmptyCallback;
       return true;
     } else {
