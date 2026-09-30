@@ -5,6 +5,7 @@
 'use strict';
 
 import type { AutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
+import { createALHeartbeatController } from 'hyperion-autologging/src/ALHeartbeatController';
 import { ALHeartbeatType } from 'hyperion-autologging/src/ALHeartbeatType';
 import { REACT_NATIVE_APP_LIFECYCLE_PLUGIN } from './ALAppLifecycle';
 import type { ALReactNativePlugin } from './ALRuntime';
@@ -36,26 +37,23 @@ export function reactNativeHeartbeat<
       const maxInactivity =
         options.maxUserInactivityDuration ?? heartbeatInterval * 4;
       let active = false;
-      let lastHeartbeatTime = 0;
       let intervalHandle: ReturnType<typeof setInterval> | null = null;
+      let lastHeartbeatTime = 0;
       const publicChannel =
         channel as unknown as AutoLoggingChannel<ALReactNativeEventMap>;
-
-      const emitHeartbeat = (
-        type: ALHeartbeatType,
-        timestamp = context.now()
-      ) => {
-        if (timestamp - context.session.getLastActivityTime() > maxInactivity) {
-          return;
-        }
-        const event: ALHeartbeatEventData = {
-          ...context.eventFactory.createEvent({ eventTimestamp: timestamp }),
-          event: 'heartbeat',
-          heartbeatType: type,
-        };
-        publicChannel.emit('al_heartbeat_event', event);
-        lastHeartbeatTime = timestamp;
-      };
+      const emitHeartbeat = createALHeartbeatController(
+        maxInactivity,
+        (heartbeatType, timestamp) => {
+          const event: ALHeartbeatEventData = {
+            ...context.eventFactory.createEvent({ eventTimestamp: timestamp }),
+            event: 'heartbeat',
+            heartbeatType,
+          };
+          publicChannel.emit('al_heartbeat_event', event);
+          lastHeartbeatTime = timestamp;
+        },
+        () => context.session.getLastActivityTime()
+      );
       const stopInterval = () => {
         if (intervalHandle == null) return;
         clearInterval(intervalHandle);
@@ -64,7 +62,7 @@ export function reactNativeHeartbeat<
       const startInterval = () => {
         if (intervalHandle != null) return;
         intervalHandle = setInterval(
-          () => emitHeartbeat(ALHeartbeatType.SCHEDULED),
+          () => emitHeartbeat(ALHeartbeatType.SCHEDULED, context.now()),
           heartbeatInterval
         );
       };
@@ -93,14 +91,12 @@ export function reactNativeHeartbeat<
         start() {
           active = true;
           context.session.recordActivity();
-          emitHeartbeat(ALHeartbeatType.START);
+          emitHeartbeat(ALHeartbeatType.START, context.now());
           const state = lifecycle.getCurrentState();
-          if (state !== 'background' && state !== 'inactive') {
-            startInterval();
-          }
+          if (state !== 'background' && state !== 'inactive') startInterval();
         },
         dispose() {
-          if (active) emitHeartbeat(ALHeartbeatType.STOP);
+          if (active) emitHeartbeat(ALHeartbeatType.STOP, context.now());
           active = false;
           stopInterval();
           removeStateListener();

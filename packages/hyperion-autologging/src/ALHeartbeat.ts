@@ -11,6 +11,7 @@ import * as Types from "hyperion-util/src/Types";
 import { ALChannelUIEvent } from "./ALUIEventPublisher";
 import * as ALEventIndex from "./ALEventIndex";
 import * as ALInteractableDOMElement from "./ALInteractableDOMElement";
+import { createALHeartbeatController } from './ALHeartbeatController';
 import { ALHeartbeatType, type ALHeartbeatEventData } from "./ALHeartbeatType";
 
 export { ALHeartbeatType } from "./ALHeartbeatType";
@@ -35,16 +36,31 @@ const HEARTBEAT_INTERVAL = 30 * 1000 /* DateConsts.MS_PER_SEC */;
 const MAX_USER_INACTIVITY_DURATION = 4 * HEARTBEAT_INTERVAL;
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 
-let _lastHeartbeatTime: number = 0;
-let _lastUserActionTime: number = performanceAbsoluteNow();
-let _timedLogger: TimedTrigger | null = null;
 let _options: InitOptions | null = null;
 let _releaseListeners: (() => void) | null;
+let _timedLogger: TimedTrigger | null = null;
+let _lastHeartbeatTime = 0;
+let _lastUserActionTime = performanceAbsoluteNow();
 
 
 export function getInterval(): number {
   return _options?.heartbeatInterval ?? HEARTBEAT_INTERVAL;
 }
+
+const emitHeartbeat = createALHeartbeatController(
+  MAX_USER_INACTIVITY_DURATION,
+  (heartbeatType, timestamp) => {
+    _options?.channel.emit('al_heartbeat_event', {
+      event: 'heartbeat',
+      eventIndex: ALEventIndex.getNextEventIndex(),
+      eventTimestamp: timestamp,
+      heartbeatType,
+      metadata: {},
+    });
+    _lastHeartbeatTime = timestamp;
+  },
+  () => _lastUserActionTime
+);
 
 export function getLastHeartbeatTime(): number {
   return _lastHeartbeatTime;
@@ -80,9 +96,12 @@ export function start(options: InitOptions): void {
 
     // Reset timers on coming back to the page if past the heartbeat interval
     const timestamp = performanceAbsoluteNow();
-    if (timestamp - _lastHeartbeatTime >= HEARTBEAT_INTERVAL) {
+    if (timestamp - getLastHeartbeatTime() >= HEARTBEAT_INTERVAL) {
       _lastUserActionTime = timestamp;
-      _logHeartbeat(ALHeartbeatType.REGAIN_PAGE_VISIBILITY);
+      emitHeartbeat(
+        ALHeartbeatType.REGAIN_PAGE_VISIBILITY,
+        performanceAbsoluteNow()
+      );
       if (isActive()) {
         _timedLogger?.delay(getInterval());
       } else {
@@ -99,13 +118,13 @@ export function start(options: InitOptions): void {
   let focusHandler;
   window.addEventListener(
     'focus',
-    focusHandler = () => _logHeartbeat(ALHeartbeatType.PAGE_FOCUS_GAINED),
+    focusHandler = () => emitHeartbeat(ALHeartbeatType.PAGE_FOCUS_GAINED, performanceAbsoluteNow()),
     ALInteractableDOMElement.SafeBubbleEventListenerOptions
   );
   let blurHandler;
   window.addEventListener(
     'blur',
-    blurHandler = () => _logHeartbeat(ALHeartbeatType.PAGE_FOCUS_LOST),
+    blurHandler = () => emitHeartbeat(ALHeartbeatType.PAGE_FOCUS_LOST, performanceAbsoluteNow()),
     ALInteractableDOMElement.SafeBubbleEventListenerOptions
   );
 
@@ -116,7 +135,7 @@ export function start(options: InitOptions): void {
     window.removeEventListener('blur', blurHandler, ALInteractableDOMElement.SafeBubbleEventListenerOptions);
     channel.removeListener('al_ui_event', userActionListener);
   }
-  _logHeartbeat(ALHeartbeatType.START);
+  emitHeartbeat(ALHeartbeatType.START, performanceAbsoluteNow());
   _scheduleNextHeartbeat();
 
   window.addEventListener('beforeunload', () => {
@@ -129,34 +148,19 @@ export function stop(): void {
   if (!isActive()) {
     return;
   }
-  if (_timedLogger != null) {
-    _timedLogger.cancel();
-    _timedLogger = null;
-  }
+  _timedLogger?.cancel();
+  _timedLogger = null;
   _releaseListeners?.();
-  _logHeartbeat(ALHeartbeatType.STOP);
-}
-
-function _logHeartbeat(heartbeatType: ALHeartbeatType): void {
-  const timestamp = performanceAbsoluteNow();
-  if (timestamp - _lastUserActionTime <= MAX_USER_INACTIVITY_DURATION) {
-    _options?.channel.emit('al_heartbeat_event', {
-      event: 'heartbeat',
-      eventIndex: ALEventIndex.getNextEventIndex(),
-      eventTimestamp: timestamp,
-      heartbeatType,
-      metadata: {},
-    });
-    _lastHeartbeatTime = timestamp;
-  }
+  emitHeartbeat(ALHeartbeatType.STOP, performanceAbsoluteNow());
 }
 
 function _scheduleNextHeartbeat(): void {
   _timedLogger = new TimedTrigger(() => {
-    if (!isActive()) {
-      return;
-    }
-    _logHeartbeat(ALHeartbeatType.SCHEDULED);
+    if (!isActive()) return;
+    emitHeartbeat(
+      ALHeartbeatType.SCHEDULED,
+      performanceAbsoluteNow()
+    );
     _scheduleNextHeartbeat();
   }, getInterval());
 }
