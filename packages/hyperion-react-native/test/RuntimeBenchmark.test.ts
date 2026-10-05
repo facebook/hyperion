@@ -128,8 +128,14 @@ benchmark('React Native AutoLogging runtime budgets', () => {
     if (renderer == null) throw new Error('Expected a mounted renderer.');
     const mountedRenderer = renderer;
     const handler = mountedRenderer.root.findByType('pressable').props
-      .onPress as () => void;
+      .onPress as (event?: unknown) => void;
     const handlerDispatch = p95Microseconds(handler, 250, 60);
+    let nativeEventID = 0;
+    const uniqueNativeEventDispatch = p95Microseconds(
+      () => handler({ nativeEvent: { id: nativeEventID++ } }),
+      250,
+      60
+    );
     const observedElement = jsx(Pressable, {
       accessibilityLabel: 'Benchmark',
       onPress: countedHandler,
@@ -153,6 +159,7 @@ benchmark('React Native AutoLogging runtime budgets', () => {
         wrapper,
         clonedObserved,
         handlerDispatch,
+        uniqueNativeEventDispatch,
       })
     );
     expect(disabled).toBeLessThanOrEqual(1);

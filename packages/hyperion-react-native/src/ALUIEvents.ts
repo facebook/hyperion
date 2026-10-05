@@ -64,7 +64,11 @@ export function reactNativeUIEvents<
     debug: options.debug === true,
     interceptProps: options.interceptProps ?? DEFAULT_INTERCEPT_PROPS,
   };
-  const controller: ReactNativeUIEventController = { active: false };
+  const controller: ReactNativeUIEventController = {
+    active: false,
+    isHandlingInteraction: false,
+    seenNativeEvents: new WeakMap(),
+  };
   const skippedComponents = new Set([
     'View',
     'RCTView',
@@ -121,6 +125,8 @@ export function reactNativeUIEvents<
         },
         dispose() {
           controller.active = false;
+          controller.isHandlingInteraction = false;
+          controller.seenNativeEvents = new WeakMap();
           observationLifecycle?.dispose?.();
         },
       };
