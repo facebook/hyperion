@@ -32,6 +32,25 @@ function mount(element: React.ReactElement): TestRenderer.ReactTestRenderer {
   return renderer;
 }
 
+interface InstrumentedControlProps {
+  readonly accessibilityLabel: string;
+  readonly children?: React.ReactNode;
+  readonly onChange?: (event: unknown) => unknown;
+  readonly onPress?: (event: unknown) => unknown;
+  readonly onScroll?: (event: unknown) => unknown;
+  readonly onValueChange?: (value: number) => unknown;
+}
+
+function InstrumentedControl(props: InstrumentedControlProps) {
+  return React.createElement('instrumented-control', props, props.children);
+}
+
+function createNativeEvent(nativeEvent: object = {}): {
+  readonly nativeEvent: object;
+} {
+  return { nativeEvent };
+}
+
 describe('React Native automatic UI event plugin', () => {
   const originalConsoleError = console.error;
 
@@ -110,6 +129,279 @@ describe('React Native automatic UI event plugin', () => {
       })
     );
     expect(JSON.stringify(events[0])).not.toContain('private');
+    act(() => renderer.unmount());
+  });
+
+  test('logs a native interaction once when parent and child forward the same handler', () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const applicationHandler = jest.fn();
+    channel.addListener('al_ui_event', (event) => events.push(event));
+    AutoLogging.init({ channel, plugins: [reactNativeUIEvents()] });
+    const renderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Parent action',
+        onPress: applicationHandler,
+        children: jsx(InstrumentedControl, {
+          accessibilityLabel: 'Child action',
+          onPress: applicationHandler,
+        }),
+      })
+    );
+    const controls = renderer.root.findAllByType('instrumented-control');
+    const nativeEvent = {};
+
+    controls[1].props.onPress(createNativeEvent(nativeEvent));
+    controls[0].props.onPress(createNativeEvent(nativeEvent));
+
+    expect(applicationHandler).toHaveBeenCalledTimes(2);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toEqual(
+      expect.objectContaining({ event: 'click', elementText: 'Child action' })
+    );
+    act(() => renderer.unmount());
+  });
+
+  test('logs once when a nested handler drops the original event', () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const childHandler = jest.fn();
+    const installedHandlers: { child?: () => unknown } = {};
+    const parentHandler = jest.fn(() => installedHandlers.child?.());
+    channel.addListener('al_ui_event', (event) => events.push(event));
+    AutoLogging.init({ channel, plugins: [reactNativeUIEvents()] });
+    const renderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Parent action',
+        onPress: parentHandler,
+        children: jsx(InstrumentedControl, {
+          accessibilityLabel: 'Child action',
+          onPress: childHandler,
+        }),
+      })
+    );
+    const controls = renderer.root.findAllByType('instrumented-control');
+    installedHandlers.child = controls[1].props.onPress;
+
+    controls[0].props.onPress(createNativeEvent());
+
+    expect(parentHandler).toHaveBeenCalledTimes(1);
+    expect(childHandler).toHaveBeenCalledTimes(1);
+    expect(events).toHaveLength(1);
+    expect(events[0].elementText).toBe('Parent action');
+    act(() => renderer.unmount());
+  });
+
+  test('suppresses callback-derived changes but logs a genuine native change', () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const changeHandler = jest.fn();
+    const forwardedNativeEvent = { text: 'forwarded' };
+    const installedHandlers: {
+      change?: (event: { nativeEvent: object }) => unknown;
+    } = {};
+    const pressHandler = jest.fn(() =>
+      installedHandlers.change?.(createNativeEvent(forwardedNativeEvent))
+    );
+    channel.addListener('al_ui_event', (event) => events.push(event));
+    AutoLogging.init({
+      channel,
+      plugins: [
+        reactNativeUIEvents({ interceptProps: ['onPress', 'onChange'] }),
+      ],
+    });
+    const renderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Composed control',
+        onPress: pressHandler,
+        onChange: changeHandler,
+      })
+    );
+    const control = renderer.root.findByType('instrumented-control');
+    installedHandlers.change = control.props.onChange;
+
+    control.props.onPress(createNativeEvent());
+    expect(events.map((event) => event.event)).toEqual(['click']);
+
+    installedHandlers.change?.(createNativeEvent(forwardedNativeEvent));
+    expect(events.map((event) => event.event)).toEqual(['click', 'change']);
+    expect(pressHandler).toHaveBeenCalledTimes(1);
+    expect(changeHandler).toHaveBeenCalledTimes(2);
+    act(() => renderer.unmount());
+  });
+
+  test('logs distinct native event identities independently', () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const applicationHandler = jest.fn();
+    channel.addListener('al_ui_event', (event) => events.push(event));
+    AutoLogging.init({ channel, plugins: [reactNativeUIEvents()] });
+    const renderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Action',
+        onPress: applicationHandler,
+      })
+    );
+    const installedHandler = renderer.root.findByType('instrumented-control')
+      .props.onPress;
+    const firstNativeEvent = {};
+
+    installedHandler(createNativeEvent(firstNativeEvent));
+    installedHandler(createNativeEvent(firstNativeEvent));
+    installedHandler(createNativeEvent({}));
+
+    expect(applicationHandler).toHaveBeenCalledTimes(3);
+    expect(events).toHaveLength(2);
+    act(() => renderer.unmount());
+  });
+
+  test('logs distinct semantic event types that share one native event', () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const pressHandler = jest.fn();
+    const changeHandler = jest.fn();
+    channel.addListener('al_ui_event', (event) => events.push(event));
+    AutoLogging.init({
+      channel,
+      plugins: [
+        reactNativeUIEvents({ interceptProps: ['onPress', 'onChange'] }),
+      ],
+    });
+    const renderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Shared native event',
+        onPress: pressHandler,
+        onChange: changeHandler,
+      })
+    );
+    const control = renderer.root.findByType('instrumented-control');
+    const nativeEvent = { text: 'shared' };
+
+    control.props.onPress(createNativeEvent(nativeEvent));
+    control.props.onChange(createNativeEvent(nativeEvent));
+    control.props.onPress(createNativeEvent(nativeEvent));
+    control.props.onChange(createNativeEvent(nativeEvent));
+
+    expect(pressHandler).toHaveBeenCalledTimes(2);
+    expect(changeHandler).toHaveBeenCalledTimes(2);
+    expect(events.map((event) => event.event)).toEqual(['click', 'change']);
+    act(() => renderer.unmount());
+  });
+
+  test('clears the synchronous guard when an application handler throws', () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const error = new Error('application failure');
+    const changeHandler = jest.fn();
+    channel.addListener('al_ui_event', (event) => events.push(event));
+    AutoLogging.init({
+      channel,
+      plugins: [
+        reactNativeUIEvents({ interceptProps: ['onPress', 'onChange'] }),
+      ],
+    });
+    const renderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Throwing control',
+        onPress() {
+          throw error;
+        },
+        onChange: changeHandler,
+      })
+    );
+    const control = renderer.root.findByType('instrumented-control');
+
+    expect(() => control.props.onPress(createNativeEvent())).toThrow(error);
+    control.props.onChange(createNativeEvent());
+
+    expect(changeHandler).toHaveBeenCalledTimes(1);
+    expect(events.map((event) => event.event)).toEqual(['click', 'change']);
+    act(() => renderer.unmount());
+  });
+
+  test('resets native-event identity tracking when the plugin is disposed', () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const applicationHandler = jest.fn();
+    const plugin = reactNativeUIEvents();
+    const nativeEvent = {};
+    channel.addListener('al_ui_event', (event) => events.push(event));
+
+    AutoLogging.init({ channel, plugins: [plugin] });
+    const firstRenderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'First runtime',
+        onPress: applicationHandler,
+      })
+    );
+    firstRenderer.root
+      .findByType('instrumented-control')
+      .props.onPress(createNativeEvent(nativeEvent));
+    act(() => firstRenderer.unmount());
+    expect(AutoLogging.dispose()).toBe(true);
+
+    AutoLogging.init({ channel, plugins: [plugin] });
+    const secondRenderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Second runtime',
+        onPress: applicationHandler,
+      })
+    );
+    secondRenderer.root
+      .findByType('instrumented-control')
+      .props.onPress(createNativeEvent(nativeEvent));
+
+    expect(applicationHandler).toHaveBeenCalledTimes(2);
+    expect(events.map((event) => event.elementText)).toEqual([
+      'First runtime',
+      'Second runtime',
+    ]);
+    act(() => secondRenderer.unmount());
+  });
+
+  test('preserves scroll throttling and value-change debouncing', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(10_000);
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const scrollHandler = jest.fn();
+    const valueHandler = jest.fn();
+    channel.addListener('al_ui_event', (event) => events.push(event));
+    AutoLogging.init({
+      channel,
+      plugins: [
+        reactNativeUIEvents({
+          interceptProps: ['onScroll', 'onValueChange'],
+        }),
+      ],
+    });
+    const renderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Debounced control',
+        onScroll: scrollHandler,
+        onValueChange: valueHandler,
+      })
+    );
+    const control = renderer.root.findByType('instrumented-control');
+
+    control.props.onScroll(createNativeEvent());
+    jest.setSystemTime(11_000);
+    control.props.onScroll(createNativeEvent());
+    jest.setSystemTime(16_000);
+    control.props.onScroll(createNativeEvent());
+    control.props.onValueChange(1);
+    control.props.onValueChange(2);
+
+    expect(scrollHandler).toHaveBeenCalledTimes(3);
+    expect(valueHandler).toHaveBeenCalledTimes(2);
+    expect(events.map((event) => event.event)).toEqual(['scroll', 'scroll']);
+    act(() => jest.advanceTimersByTime(500));
+    expect(events.map((event) => event.event)).toEqual([
+      'scroll',
+      'scroll',
+      'change',
+    ]);
+    expect(events[2]).toEqual(expect.objectContaining({ value: 2 }));
     act(() => renderer.unmount());
   });
 
