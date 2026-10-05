@@ -12,12 +12,6 @@ describe('public React Native package entries', () => {
       resolve(entry: string): string;
     }
   ).resolve;
-  const resolveFrom = (
-    require as unknown as {
-      resolve(entry: string, options: { paths: readonly string[] }): string;
-    }
-  ).resolve;
-
   it.each([
     'hyperion-react-native',
     'hyperion-react-native/jsx-runtime',
@@ -88,13 +82,17 @@ describe('public React Native package entries', () => {
     );
   });
 
-  it('resolves the application and package to one React copy', () => {
-    const packageEntry = resolve('hyperion-react-native');
+  it('configures Metro to resolve the application and package to one React copy', () => {
+    const metroConfigPath = resolve('../metro.config');
+    const metroConfig = fs.readFileSync(metroConfigPath, 'utf8');
     const applicationReact = fs.realpathSync(resolve('react'));
-    const packageReact = fs.realpathSync(
-      resolveFrom('react', { paths: [path.dirname(packageEntry)] })
+    const metroReact = fs.realpathSync(
+      path.resolve(path.dirname(metroConfigPath), 'node_modules/react/index.js')
     );
-    expect(packageReact).toBe(applicationReact);
+    expect(metroConfig).toContain(
+      "react: path.resolve(__dirname, 'node_modules/react')"
+    );
+    expect(metroReact).toBe(applicationReact);
   });
 
   it('exposes independently loadable capability entries', () => {

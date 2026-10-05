@@ -8,6 +8,7 @@
 
 import { ALSurfaceData } from '../src/ALSurfaceData';
 import type { IALFlowlet } from '../src/ALFlowletManager';
+import { ALSurfaceHierarchyNode } from '../src/ALSurfaceHierarchy';
 import type { ALSurfaceCapability, EventMetadata } from '../src/ALSurfaceTypes';
 
 let nextSurfaceID = 0;
@@ -45,6 +46,8 @@ describe('web ALSurfaceData compatibility contract', () => {
 
     expect(ALSurfaceData.root.surface).toBeNull();
     expect(ALSurfaceData.root.parent).toBeNull();
+    expect(ALSurfaceData.root).toBeInstanceOf(ALSurfaceHierarchyNode);
+    expect(data).toBeInstanceOf(ALSurfaceHierarchyNode);
     expect(ALSurfaceData.root.isRemovable()).toBe(false);
     expect(ALSurfaceData.tryGet(surface)).toBe(data);
     expect(ALSurfaceData.get(surface)).toBe(data);

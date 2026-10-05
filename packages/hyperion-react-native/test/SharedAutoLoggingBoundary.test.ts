@@ -91,6 +91,7 @@ describe('React Native shared AutoLogging package boundary', () => {
     );
     expect(rootPackage.devDependencies['@types/react']).toBe('^18.2.14');
     expect(rootPackage.devDependencies['@types/react-dom']).toBe('^18.2.7');
+    expect(rootPackage.devDependencies.react).toBe('18.3.1');
     expect(
       rootPackage.workspaces.indexOf('./packages/hyperion-autologging')
     ).toBeLessThan(
