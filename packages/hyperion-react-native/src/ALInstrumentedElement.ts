@@ -37,6 +37,8 @@ export interface ReactNativeUIEventConfig {
 
 export interface ReactNativeUIEventController {
   active: boolean;
+  isHandlingInteraction: boolean;
+  seenNativeEvents: WeakMap<object, Set<string>>;
 }
 
 interface InstrumentationSnapshot {
@@ -233,6 +235,34 @@ function createStateHandlerWrapper(
   };
 }
 
+function getNativeEventIdentity(args: readonly unknown[]): object | null {
+  const event = args[0];
+  if (event == null || typeof event !== 'object') return null;
+  try {
+    const nativeEvent = (event as { nativeEvent?: unknown }).nativeEvent;
+    return nativeEvent != null && typeof nativeEvent === 'object'
+      ? nativeEvent
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function hasSeenNativeEvent(
+  controller: ReactNativeUIEventController,
+  nativeEvent: object,
+  eventType: string
+): boolean {
+  const seenEventTypes = controller.seenNativeEvents.get(nativeEvent);
+  if (seenEventTypes != null) {
+    if (seenEventTypes.has(eventType)) return true;
+    seenEventTypes.add(eventType);
+  } else {
+    controller.seenNativeEvents.set(nativeEvent, new Set([eventType]));
+  }
+  return false;
+}
+
 function invokeInstrumentedHandler(
   state: InstrumentationRuntimeState,
   propName: string,
@@ -243,7 +273,43 @@ function invokeInstrumentedHandler(
   const handler = snapshot.props[propName];
   if (typeof handler !== 'function') return undefined;
   if (!state.controller.active) return handler.apply(receiver, args);
+  if (state.controller.isHandlingInteraction) {
+    // Callback-derived events must not contaminate native identity tracking.
+    return handler.apply(receiver, args);
+  }
   const eventType = mapPropToEventType(propName);
+  const nativeEvent = getNativeEventIdentity(args);
+  if (
+    nativeEvent != null &&
+    hasSeenNativeEvent(state.controller, nativeEvent, eventType)
+  ) {
+    return handler.apply(receiver, args);
+  }
+  state.controller.isHandlingInteraction = true;
+  try {
+    return invokeRootInstrumentedHandler(
+      state,
+      snapshot,
+      handler as EventHandler,
+      propName,
+      eventType,
+      receiver,
+      args
+    );
+  } finally {
+    state.controller.isHandlingInteraction = false;
+  }
+}
+
+function invokeRootInstrumentedHandler(
+  state: InstrumentationRuntimeState,
+  snapshot: InstrumentationSnapshot,
+  handler: EventHandler,
+  propName: string,
+  eventType: string,
+  receiver: unknown,
+  args: unknown[]
+): unknown {
   if (eventType === 'scroll') {
     const now = state.context.now();
     if (now - state.lastScrollTimestamp < SCROLL_DEBOUNCE_MS) {
