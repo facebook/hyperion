@@ -45,7 +45,7 @@ export class ResilientHook<
     return call as Function as CallbackType;
   }
 
-  protected getCallbackForComparison(callback: CallbackType): CallbackType {
+  protected getOriginalCallback(callback: CallbackType): CallbackType {
     return (resilientCallbacks.get(callback) ?? callback) as CallbackType;
   }
 }

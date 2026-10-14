@@ -27,37 +27,38 @@ export abstract class ALSurfaceHierarchyNode<
   Child extends ALSurfaceHierarchyChild
 > implements ALSurfaceHierarchyNodeContract<Child>
 {
-  private readonly inheritedProperties: Record<string, unknown>;
-  private locked = false;
-  private readonly children = new Map<string, Child>();
+  private readonly __ext: Record<string, unknown>;
+  #locked = false;
+  private readonly childrenMap = new Map<string, Child>();
 
   constructor(
     public readonly surface: string | null,
     public readonly parent: ALSurfaceHierarchyNode<Child> | null
   ) {
-    this.inheritedProperties = Object.create(
-      parent?.inheritedProperties ?? null
-    ) as Record<string, unknown>;
+    this.__ext = Object.create(parent?.__ext ?? null) as Record<
+      string,
+      unknown
+    >;
   }
 
   getChild(surfaceName: string): Child | null {
-    return this.children.get(surfaceName) ?? null;
+    return this.childrenMap.get(surfaceName) ?? null;
   }
 
   getChildren(): Child[] {
-    return Array.from(this.children.values());
+    return Array.from(this.childrenMap.values());
   }
 
   addChild(child: Child): void {
-    this.children.set(child.surfaceName, child);
+    this.childrenMap.set(child.surfaceName, child);
   }
 
   removeChild(child: Child): boolean {
-    return this.children.delete(child.surfaceName);
+    return this.childrenMap.delete(child.surfaceName);
   }
 
   isRemovable(): boolean {
-    return this.children.size === 0 && !this.locked;
+    return this.childrenMap.size === 0 && !this.#locked;
   }
 
   remove(): boolean {
@@ -65,12 +66,12 @@ export abstract class ALSurfaceHierarchyNode<
   }
 
   getInheritedPropery<T>(propName: string): T | undefined | null {
-    return this.inheritedProperties[propName] as T | undefined | null;
+    return this.__ext[propName] as T | undefined | null;
   }
 
   setInheritedPropery<T>(propName: string, propValue: T): T {
-    this.inheritedProperties[propName] = propValue;
-    this.locked = true;
+    this.__ext[propName] = propValue;
+    this.#locked = true;
     return propValue;
   }
 }
