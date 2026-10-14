@@ -43,6 +43,7 @@ describe('web distribution compatibility contract', () => {
       'hyperionAsyncCounter.js',
       'hyperionAutoLogging.js',
       'hyperionAutoLoggingPluginEventHash.js',
+      'hyperionAutoLoggingSurface.js',
       'hyperionAutoLoggingVisualizer.js',
       'hyperionChannel.js',
       'hyperionCore.js',
@@ -61,13 +62,14 @@ describe('web distribution compatibility contract', () => {
     ]);
   });
 
-  it('retains the AutoLogging chunk boundary and public exports', () => {
+  it('retains the core AutoLogging chunk boundary and exports', () => {
     const code = readFileSync(
       resolve(distributionDirectory, 'hyperionAutoLogging.js'),
       'utf8'
     );
 
     expect(getImports(code)).toEqual([
+      'hyperionAutoLoggingSurface',
       'hyperionChannel',
       'hyperionCore',
       'hyperionDOM',
@@ -91,15 +93,41 @@ describe('web distribution compatibility contract', () => {
         'ALFlowletManagerInstance',
         'ALHeartbeatType',
         'ALInteractableDOMElement',
-        'ALSurfaceChannel',
-        'ALSurfaceData',
-        'ALSurfaceUtils',
         'AutoLogging',
-        'SURFACE_SEPARATOR',
-        'Surface',
         'getCurrentUIEventData',
         'getOrSetAutoLoggingID',
         'getSessionFlowID',
+      ].sort()
+    );
+    expect(code).not.toContain('react-native');
+  });
+
+  it('retains the split Surface chunk boundary and exports', () => {
+    const code = readFileSync(
+      resolve(distributionDirectory, 'hyperionAutoLoggingSurface.js'),
+      'utf8'
+    );
+
+    expect(getImports(code)).toEqual([
+      'hyperionAutoLogging',
+      'hyperionGlobals',
+      'hyperionReact',
+      'hyperionUtil',
+    ]);
+    expect(getExports(code)).toEqual(
+      [
+        'ALSurfaceChannel',
+        'ALSurfaceContextInstance',
+        'ALSurfaceData',
+        'ALSurfaceUtils',
+        'SURFACE_SEPARATOR',
+        'Surface',
+        'SurfaceImpl',
+        'getAncestralSurfaceNode',
+        'getElementSurface',
+        'getSurfacePath',
+        'init',
+        'isSurfaceWrapper',
         'useALSurfaceContext',
       ].sort()
     );

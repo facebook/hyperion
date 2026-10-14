@@ -11,6 +11,7 @@ const expectedArtifacts = [
   'hyperionAsyncCounter.js',
   'hyperionAutoLogging.js',
   'hyperionAutoLoggingPluginEventHash.js',
+  'hyperionAutoLoggingSurface.js',
   'hyperionAutoLoggingVisualizer.js',
   'hyperionChannel.js',
   'hyperionCore.js',
