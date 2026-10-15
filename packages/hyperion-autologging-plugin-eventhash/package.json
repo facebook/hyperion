@@ -9,7 +9,7 @@
     "build-react": "react-scripts build",
     "watch": "npm run build -- --watch",
     "start": "npm run watch",
-    "test": "npm run build & jest"
+    "test": "npm run build && jest"
   },
   "workspaces": [
     "../hyperion-devtools",
