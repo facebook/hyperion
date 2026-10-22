@@ -11,6 +11,7 @@ import TestRenderer, { act } from 'react-test-renderer';
 import { createAutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
 import { ALHeartbeatType } from 'hyperion-autologging/src/ALHeartbeatType';
 import {
+  ALAppLifecycle,
   reactNativeAppLifecycle,
   type ReactNativeAppLifecycleOptions,
 } from '../src/ALAppLifecycle';
@@ -79,6 +80,27 @@ function createFakeLifecycle(
   return { AppState };
 }
 
+interface ObservedAppStateTransition {
+  readonly state: AppStateStatus;
+  readonly previousState: AppStateStatus | null;
+  readonly timestamp: number;
+}
+
+function observeLifecycle(transientInactiveMs = 0) {
+  const fake = createFakeLifecycle('active');
+  const transitions: ObservedAppStateTransition[] = [];
+  const lifecycle = new ALAppLifecycle(
+    fake.AppState,
+    Date.now,
+    transientInactiveMs
+  );
+  lifecycle.addListener((state, previousState, timestamp) => {
+    transitions.push({ state, previousState, timestamp });
+  });
+  lifecycle.start();
+  return { fake, lifecycle, transitions };
+}
+
 describe('React Native lifecycle plugins', () => {
   const originalConsoleError = console.error;
 
@@ -95,6 +117,162 @@ describe('React Native lifecycle plugins', () => {
     resetElementObservationForTests();
     jest.useRealTimers();
     jest.restoreAllMocks();
+  });
+
+  test('dispatches every AppState change immediately by default', () => {
+    const { fake, lifecycle, transitions } = observeLifecycle();
+    const backgroundTimestamp = Date.now();
+
+    fake.AppState.transition('background');
+    jest.advanceTimersByTime(10);
+    fake.AppState.transition('inactive');
+
+    expect(transitions).toEqual([
+      {
+        state: 'background',
+        previousState: 'active',
+        timestamp: backgroundTimestamp,
+      },
+      {
+        state: 'inactive',
+        previousState: 'background',
+        timestamp: backgroundTimestamp + 10,
+      },
+    ]);
+    expect(lifecycle.getCurrentState()).toBe('inactive');
+    lifecycle.dispose();
+  });
+
+  test('suppresses a transient return to active', () => {
+    const { fake, lifecycle, transitions } = observeLifecycle(1_000);
+
+    fake.AppState.transition('background');
+    expect(lifecycle.getCurrentState()).toBe('active');
+    jest.advanceTimersByTime(100);
+    fake.AppState.transition('active');
+    jest.advanceTimersByTime(1_000);
+
+    expect(transitions).toEqual([]);
+    expect(lifecycle.getCurrentState()).toBe('active');
+    expect(jest.getTimerCount()).toBe(0);
+    lifecycle.dispose();
+  });
+
+  test('dispatches an elapsed hold with its original timestamp', () => {
+    const { fake, lifecycle, transitions } = observeLifecycle(1_000);
+    const backgroundTimestamp = Date.now();
+
+    fake.AppState.transition('background');
+    jest.advanceTimersByTime(1_000);
+
+    expect(transitions).toEqual([
+      {
+        state: 'background',
+        previousState: 'active',
+        timestamp: backgroundTimestamp,
+      },
+    ]);
+    expect(lifecycle.getCurrentState()).toBe('background');
+
+    jest.advanceTimersByTime(10);
+    fake.AppState.transition('active');
+    expect(transitions[1]).toEqual({
+      state: 'active',
+      previousState: 'background',
+      timestamp: backgroundTimestamp + 1_010,
+    });
+    lifecycle.dispose();
+  });
+
+  test('dispatches an elapsed hold when the timer was paused', () => {
+    const { fake, lifecycle, transitions } = observeLifecycle(1_000);
+    const backgroundTimestamp = Date.now();
+
+    fake.AppState.transition('background');
+    jest.setSystemTime(backgroundTimestamp + 5_000);
+    fake.AppState.transition('active');
+
+    expect(transitions).toEqual([
+      {
+        state: 'background',
+        previousState: 'active',
+        timestamp: backgroundTimestamp,
+      },
+      {
+        state: 'active',
+        previousState: 'background',
+        timestamp: backgroundTimestamp + 5_000,
+      },
+    ]);
+    expect(lifecycle.getCurrentState()).toBe('active');
+    expect(jest.getTimerCount()).toBe(0);
+    lifecycle.dispose();
+  });
+
+  test('coalesces held non-active states into the latest state', () => {
+    const { fake, lifecycle, transitions } = observeLifecycle(1_000);
+    const inactiveTimestamp = Date.now();
+
+    fake.AppState.transition('inactive');
+    jest.advanceTimersByTime(100);
+    fake.AppState.transition('background');
+    jest.advanceTimersByTime(900);
+
+    expect(transitions).toEqual([
+      {
+        state: 'background',
+        previousState: 'active',
+        timestamp: inactiveTimestamp,
+      },
+    ]);
+    expect(lifecycle.getCurrentState()).toBe('background');
+    lifecycle.dispose();
+  });
+
+  test('discards a held transition during disposal', () => {
+    const { fake, lifecycle, transitions } = observeLifecycle(1_000);
+
+    fake.AppState.transition('background');
+    lifecycle.dispose();
+    jest.advanceTimersByTime(1_000);
+
+    expect(transitions).toEqual([]);
+    expect(lifecycle.getCurrentState()).toBeNull();
+    expect(fake.AppState.removeCalls).toBe(1);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  test('hides a transient bounce from heartbeat and app-state plugins', () => {
+    const fake = createFakeLifecycle('active');
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const heartbeats: ALHeartbeatEventData[] = [];
+    const appStates: ALAppStateEventData[] = [];
+    channel.addListener('al_heartbeat_event', (event) =>
+      heartbeats.push(event)
+    );
+    channel.addListener('al_app_state_event', (event) => appStates.push(event));
+    AutoLogging.init({
+      channel,
+      plugins: [
+        reactNativeAppLifecycle({
+          ...fake,
+          transientInactiveMs: 1_000,
+        }),
+        reactNativeHeartbeat({ heartbeatInterval: 10_000 }),
+        reactNativeAppStateEvents(),
+      ],
+    });
+
+    fake.AppState.transition('background');
+    jest.advanceTimersByTime(100);
+    fake.AppState.transition('active');
+    jest.advanceTimersByTime(1_000);
+
+    expect(heartbeats.map((event) => event.heartbeatType)).toEqual([
+      ALHeartbeatType.START,
+    ]);
+    expect(appStates).toEqual([]);
+    expect(jest.getTimerCount()).toBe(1);
   });
 
   test('shares one AppState subscription across heartbeat and app-state events', () => {
