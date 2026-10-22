@@ -181,7 +181,7 @@ describe('React Native plugin runtime', () => {
     expect(
       context.eventFactory.createEvent({ eventTimestamp: start + 120_001 })
         .eventIndex
-    ).toBe(0);
+    ).toBe(2);
   });
 
   test('keeps non-activity events in the current session at the timeout boundary', () => {

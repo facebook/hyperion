@@ -128,7 +128,7 @@ describe('React Native session and screen state', () => {
     expect(publishedSessionIds[0]).not.toBe(initialSessionId);
   });
 
-  test('resets contiguous indexes when the in-memory session expires', () => {
+  test('keeps contiguous indexes when the in-memory session expires', () => {
     const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
     const indexes: number[] = [];
     const timestamps = [
@@ -147,7 +147,7 @@ describe('React Native session and screen state', () => {
     };
 
     AutoLogging.init({ channel, plugins: [plugin] });
-    expect(indexes).toEqual([0, 1, 0]);
+    expect(indexes).toEqual([0, 1, 2]);
   });
 
   test('allows later plugins to publish a screen during managed startup', () => {

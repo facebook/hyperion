@@ -58,7 +58,6 @@ export class ALReactNativeSession {
   recordActivity(timestamp = this.now()): void {
     if (timestamp - this.lastActivityTime > this.sessionTimeoutMs) {
       this.sessionId = generateId();
-      this.eventIndex = 0;
     }
     this.lastActivityTime = timestamp;
   }

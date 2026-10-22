@@ -21,6 +21,7 @@ import {
   registerSurfaceData,
   unregisterSurfaceData,
 } from '../src/ALSurfaceData';
+import type { ALReactNativeRuntimeContext } from '../src/ALRuntime';
 import type {
   ALReactNativeEventMap,
   ALSurfaceMutationEventData,
@@ -155,6 +156,66 @@ describe('React Native surfaces plugin', () => {
       );
       expect(event.relatedEventIndex).toBe(mount?.eventIndex);
     }
+  });
+
+  test('links lifecycle events across a session rotation without reusing indexes', async () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALSurfaceMutationEventData[] = [];
+    const publishedSessionIds: string[] = [];
+    let runtimeContext: ALReactNativeRuntimeContext | null = null;
+    channel.addListener('al_surface_mutation_event', (event) => {
+      events.push(event);
+      if (runtimeContext != null) {
+        publishedSessionIds.push(runtimeContext.session.getSessionId());
+      }
+    });
+    AutoLogging.init({
+      channel,
+      plugins: [
+        {
+          name: 'session-probe',
+          install(_channel, context) {
+            runtimeContext = context;
+          },
+        },
+        reactNativeSurfaces(),
+      ],
+      sessionTimeoutMs: 60_000,
+    });
+
+    let renderer: TestRenderer.ReactTestRenderer | undefined;
+    await act(async () => {
+      renderer = TestRenderer.create(
+        React.createElement(ALSurface, { name: 'cross-session' }, 'content')
+      );
+      await Promise.resolve();
+    });
+    if (runtimeContext == null || renderer == null) {
+      throw new Error('Expected the runtime and surface to be installed.');
+    }
+    const mountSessionId = runtimeContext.session.getSessionId();
+    runtimeContext.session.recordActivity(Date.now() + 61_000);
+    expect(runtimeContext.session.getSessionId()).not.toBe(mountSessionId);
+
+    await act(async () => {
+      renderer?.unmount();
+      await Promise.resolve();
+    });
+
+    expect(events).toHaveLength(2);
+    expect(events[0]).toEqual(
+      expect.objectContaining({ event: 'mount_component', eventIndex: 0 })
+    );
+    expect(events[1]).toEqual(
+      expect.objectContaining({
+        event: 'unmount_component',
+        eventIndex: 1,
+        relatedEventIndex: events[0].eventIndex,
+      })
+    );
+    expect(new Set(events.map((event) => event.eventIndex)).size).toBe(2);
+    expect(publishedSessionIds).toHaveLength(2);
+    expect(publishedSessionIds[0]).not.toBe(publishedSessionIds[1]);
   });
 
   test('keeps hierarchy available while mutation publishing is disabled', async () => {
