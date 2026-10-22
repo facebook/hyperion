@@ -17,6 +17,7 @@ import {
 } from '../src/ALAppLifecycle';
 import { reactNativeAppStateEvents } from '../src/ALAppStateEvents';
 import { reactNativeHeartbeat } from '../src/ALHeartbeat';
+import type { ALReactNativeRuntimeContext } from '../src/ALRuntime';
 import { reactNativeUIEvents } from '../src/ALUIEvents';
 import type {
   ALAppStateEventData,
@@ -430,6 +431,51 @@ describe('React Native lifecycle plugins', () => {
     expect(heartbeats.at(-1)?.heartbeatType).toBe(ALHeartbeatType.SCHEDULED);
     expect(heartbeats).toHaveLength(3);
     act(() => mountedRenderer.unmount());
+  });
+
+  test('does not rotate or extend sessions from scheduled heartbeats', () => {
+    const fake = createFakeLifecycle('active');
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const heartbeats: ALHeartbeatEventData[] = [];
+    const sessionIds: string[] = [];
+    let runtimeContext: ALReactNativeRuntimeContext | null = null;
+    channel.addListener('al_heartbeat_event', (event) => {
+      heartbeats.push(event);
+      if (runtimeContext != null) {
+        sessionIds.push(runtimeContext.session.getSessionId());
+      }
+    });
+    AutoLogging.init({
+      channel,
+      plugins: [
+        {
+          name: 'session-probe',
+          install(_channel, context) {
+            runtimeContext = context;
+          },
+        },
+        reactNativeAppLifecycle(fake),
+        reactNativeHeartbeat({
+          heartbeatInterval: 30_000,
+          maxUserInactivityDuration: 120_000,
+        }),
+      ],
+      sessionTimeoutMs: 60_000,
+    });
+
+    jest.advanceTimersByTime(180_000);
+
+    expect(heartbeats.map((event) => event.heartbeatType)).toEqual([
+      ALHeartbeatType.START,
+      ALHeartbeatType.SCHEDULED,
+      ALHeartbeatType.SCHEDULED,
+      ALHeartbeatType.SCHEDULED,
+      ALHeartbeatType.SCHEDULED,
+    ]);
+    expect(heartbeats.map((event) => event.eventIndex)).toEqual([
+      0, 1, 2, 3, 4,
+    ]);
+    expect(new Set(sessionIds).size).toBe(1);
   });
 
   test('keeps repeated initialization idempotent', () => {

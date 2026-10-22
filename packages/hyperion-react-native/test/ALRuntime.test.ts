@@ -151,38 +151,52 @@ describe('React Native plugin runtime', () => {
   test('keeps the default session timeout at thirty minutes', () => {
     const context = initializeSession();
     const start = Date.now();
-    const initialSessionId = context.session.getSessionId(start);
+    const initialSessionId = context.session.getSessionId();
 
-    expect(context.session.getSessionId(start + 29 * 60_000)).toBe(
-      initialSessionId
-    );
-    expect(context.session.getSessionId(start + 31 * 60_000)).not.toBe(
-      initialSessionId
-    );
+    jest.setSystemTime(start + 29 * 60_000);
+    expect(context.session.getSessionId()).toBe(initialSessionId);
+    jest.setSystemTime(start + 31 * 60_000);
+    context.session.recordActivity();
+    expect(context.session.getSessionId()).not.toBe(initialSessionId);
   });
 
-  test('rotates sessions and event indexes using a custom timeout', () => {
+  test('rotates a custom-timeout session only on activity', () => {
     const context = initializeSession(60_000);
     const start = Date.now();
-    const initialSessionId = context.session.getSessionId(start);
+    const initialSessionId = context.session.getSessionId();
 
     expect(
       context.eventFactory.createEvent({ eventTimestamp: start }).eventIndex
     ).toBe(0);
     context.session.recordActivity(start + 59_000);
+    expect(context.session.getSessionId()).toBe(initialSessionId);
     expect(
-      context.eventFactory.createEvent({ eventTimestamp: start + 60_000 })
+      context.eventFactory.createEvent({ eventTimestamp: start + 120_001 })
         .eventIndex
     ).toBe(1);
-    expect(context.session.getSessionId(start + 60_000)).toBe(initialSessionId);
+    expect(context.session.getSessionId()).toBe(initialSessionId);
 
+    context.session.recordActivity(start + 120_001);
+    expect(context.session.getSessionId()).not.toBe(initialSessionId);
     expect(
       context.eventFactory.createEvent({ eventTimestamp: start + 120_001 })
         .eventIndex
     ).toBe(0);
-    expect(context.session.getSessionId(start + 120_001)).not.toBe(
-      initialSessionId
-    );
+  });
+
+  test('keeps non-activity events in the current session at the timeout boundary', () => {
+    const context = initializeSession(60_000);
+    const start = Date.now();
+    const initialSessionId = context.session.getSessionId();
+
+    const boundaryEvent = context.eventFactory.createEvent({
+      eventTimestamp: start + 60_000,
+    });
+    jest.setSystemTime(start + 60_001);
+
+    expect(boundaryEvent.eventIndex).toBe(0);
+    expect(context.session.getSessionId()).toBe(initialSessionId);
+    expect(context.eventFactory.createEvent().eventIndex).toBe(1);
   });
 
   test.each([0, -1, Number.NaN])(
@@ -190,14 +204,12 @@ describe('React Native plugin runtime', () => {
     (sessionTimeoutMs) => {
       const context = initializeSession(sessionTimeoutMs);
       const start = Date.now();
-      const initialSessionId = context.session.getSessionId(start);
+      const initialSessionId = context.session.getSessionId();
 
-      expect(context.session.getSessionId(start + 29 * 60_000)).toBe(
-        initialSessionId
-      );
-      expect(context.session.getSessionId(start + 31 * 60_000)).not.toBe(
-        initialSessionId
-      );
+      context.session.recordActivity(start + 29 * 60_000);
+      expect(context.session.getSessionId()).toBe(initialSessionId);
+      context.session.recordActivity(start + 60 * 60_000);
+      expect(context.session.getSessionId()).not.toBe(initialSessionId);
       AutoLogging.dispose();
     }
   );

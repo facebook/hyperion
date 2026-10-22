@@ -85,8 +85,8 @@ export function setCurrentScreen(
   const previousScreen = runtime.currentScreen;
   const screenId = context.session.rotateScreenId();
   runtime.currentScreen = { name: explicitName, screenId };
+  context.session.recordActivity();
   if (!runtime.publishTransitions) {
-    context.session.recordActivity();
     return true;
   }
   const event = {
@@ -101,7 +101,6 @@ export function setCurrentScreen(
     'al_screen_transition_event',
     event as ALScreenTransitionEventData
   );
-  context.session.recordActivity();
   return true;
 }
 

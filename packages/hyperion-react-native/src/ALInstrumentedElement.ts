@@ -341,12 +341,12 @@ function invokeRootInstrumentedHandler(
     }
     return handler.apply(receiver, args);
   }
+  recordActivityWithoutAffectingHandler(state);
   try {
     emitUIEvent(state, snapshot, eventType, propName, eventValue);
   } catch {
     // Logging failures must not affect the application handler.
   }
-  recordActivityWithoutAffectingHandler(state);
   return handler.apply(receiver, args);
 }
 

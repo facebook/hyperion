@@ -50,18 +50,11 @@ function createRuntimeContext(
   sessionTimeoutMs?: number
 ): ALReactNativeRuntimeContext {
   const session = new ALReactNativeSession(now, sessionTimeoutMs);
-  const factory = createALEventFactory<SurfaceMetadataValue>({
+  const eventFactory = createALEventFactory<SurfaceMetadataValue>({
     now,
     nextEventIndex: () => session.nextEventIndex(),
     getBaseMetadata: () => ({}),
   });
-  const eventFactory: ALEventFactory<SurfaceMetadataValue> = {
-    createEvent(options?: ALCreateEventOptions<SurfaceMetadataValue>) {
-      const eventTimestamp = options?.eventTimestamp ?? now();
-      session.getSessionId(eventTimestamp);
-      return factory.createEvent({ ...options, eventTimestamp });
-    },
-  };
   let appLifecycle: ALAppLifecycleEnvironment | null = null;
   return {
     eventFactory,
