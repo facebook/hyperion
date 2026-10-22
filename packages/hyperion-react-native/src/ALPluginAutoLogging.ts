@@ -23,6 +23,7 @@ export interface PluginInitOptions<
 > {
   readonly channel: AutoLoggingChannel<EventMap>;
   readonly plugins: readonly ALReactNativePlugin<EventMap>[];
+  readonly sessionTimeoutMs?: number;
 }
 
 type InitializationState =

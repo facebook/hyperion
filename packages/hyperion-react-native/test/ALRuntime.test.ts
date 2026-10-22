@@ -7,12 +7,45 @@
 'use strict';
 
 import { createAutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
-import type { ALReactNativePlugin } from '../src/ALRuntime';
+import type {
+  ALReactNativePlugin,
+  ALReactNativeRuntimeContext,
+} from '../src/ALRuntime';
 import type { ALReactNativeEventMap } from '../src/ALTypes';
 import * as AutoLogging from '../src/AutoLogging';
 
+function initializeSession(
+  sessionTimeoutMs?: number
+): ALReactNativeRuntimeContext {
+  const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+  let capturedContext: ALReactNativeRuntimeContext | null = null;
+  AutoLogging.init({
+    channel,
+    plugins: [
+      {
+        name: 'session-probe',
+        install(_channel, context) {
+          capturedContext = context;
+        },
+      },
+    ],
+    sessionTimeoutMs,
+  });
+  if (capturedContext == null) {
+    throw new Error('Expected the runtime context to be installed.');
+  }
+  return capturedContext;
+}
+
 describe('React Native plugin runtime', () => {
-  afterEach(() => AutoLogging.dispose());
+  beforeEach(() => {
+    jest.useFakeTimers({ now: 1_700_000_000_000 });
+  });
+
+  afterEach(() => {
+    AutoLogging.dispose();
+    jest.useRealTimers();
+  });
 
   test('uses the application channel and starts only after every install', () => {
     const calls: string[] = [];
@@ -114,4 +147,58 @@ describe('React Native plugin runtime', () => {
     expect(nestedResult).toBe(false);
     expect(AutoLogging.isInitialized()).toBe(true);
   });
+
+  test('keeps the default session timeout at thirty minutes', () => {
+    const context = initializeSession();
+    const start = Date.now();
+    const initialSessionId = context.session.getSessionId(start);
+
+    expect(context.session.getSessionId(start + 29 * 60_000)).toBe(
+      initialSessionId
+    );
+    expect(context.session.getSessionId(start + 31 * 60_000)).not.toBe(
+      initialSessionId
+    );
+  });
+
+  test('rotates sessions and event indexes using a custom timeout', () => {
+    const context = initializeSession(60_000);
+    const start = Date.now();
+    const initialSessionId = context.session.getSessionId(start);
+
+    expect(
+      context.eventFactory.createEvent({ eventTimestamp: start }).eventIndex
+    ).toBe(0);
+    context.session.recordActivity(start + 59_000);
+    expect(
+      context.eventFactory.createEvent({ eventTimestamp: start + 60_000 })
+        .eventIndex
+    ).toBe(1);
+    expect(context.session.getSessionId(start + 60_000)).toBe(initialSessionId);
+
+    expect(
+      context.eventFactory.createEvent({ eventTimestamp: start + 120_001 })
+        .eventIndex
+    ).toBe(0);
+    expect(context.session.getSessionId(start + 120_001)).not.toBe(
+      initialSessionId
+    );
+  });
+
+  test.each([0, -1, Number.NaN])(
+    'uses the default session timeout for invalid value %s',
+    (sessionTimeoutMs) => {
+      const context = initializeSession(sessionTimeoutMs);
+      const start = Date.now();
+      const initialSessionId = context.session.getSessionId(start);
+
+      expect(context.session.getSessionId(start + 29 * 60_000)).toBe(
+        initialSessionId
+      );
+      expect(context.session.getSessionId(start + 31 * 60_000)).not.toBe(
+        initialSessionId
+      );
+      AutoLogging.dispose();
+    }
+  );
 });

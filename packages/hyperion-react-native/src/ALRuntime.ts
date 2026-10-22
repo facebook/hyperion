@@ -35,6 +35,7 @@ export interface ALReactNativeRuntimeOptions<
   readonly channel: AutoLoggingChannel<EventMap>;
   readonly plugins: readonly ALReactNativePlugin<EventMap>[];
   readonly now?: () => number;
+  readonly sessionTimeoutMs?: number;
 }
 
 export interface ALReactNativeRuntime<EventMap extends BaseChannelEventType> {
@@ -44,8 +45,11 @@ export interface ALReactNativeRuntime<EventMap extends BaseChannelEventType> {
   dispose(): boolean;
 }
 
-function createRuntimeContext(now: () => number): ALReactNativeRuntimeContext {
-  const session = new ALReactNativeSession(now);
+function createRuntimeContext(
+  now: () => number,
+  sessionTimeoutMs?: number
+): ALReactNativeRuntimeContext {
+  const session = new ALReactNativeSession(now, sessionTimeoutMs);
   const factory = createALEventFactory<SurfaceMetadataValue>({
     now,
     nextEventIndex: () => session.nextEventIndex(),
@@ -79,7 +83,10 @@ function createRuntimeContext(now: () => number): ALReactNativeRuntimeContext {
 export function createReactNativeRuntime<EventMap extends BaseChannelEventType>(
   options: ALReactNativeRuntimeOptions<EventMap>
 ): ALReactNativeRuntime<EventMap> {
-  const context = createRuntimeContext(options.now ?? Date.now);
+  const context = createRuntimeContext(
+    options.now ?? Date.now,
+    options.sessionTimeoutMs
+  );
   const runtime = new ALPluginRuntime(options.channel, context);
   runtime.initialize(options.plugins);
   return {

@@ -33,6 +33,7 @@ export function init<
   return initPlugins({
     channel: options.channel as AutoLoggingChannel<ALReactNativeEventMap>,
     plugins: createReactNativePlugins(options),
+    sessionTimeoutMs: options.sessionTimeoutMs,
   });
 }
 

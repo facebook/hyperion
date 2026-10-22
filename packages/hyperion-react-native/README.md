@@ -120,6 +120,10 @@ Set `transientInactiveMs` to a positive duration to suppress non-active
 transitions that return to active before that duration elapses. It defaults to
 zero, which dispatches every transition immediately.
 
+`AutoLogging.init()` accepts a positive, finite `sessionTimeoutMs` for mobile
+in-memory session rotation. The default remains 30 minutes; invalid values use
+that default.
+
 ## Compatibility setup
 
 The deprecated configuration initializer remains available while existing
