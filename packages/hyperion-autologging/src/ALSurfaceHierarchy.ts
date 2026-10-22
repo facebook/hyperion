@@ -53,6 +53,9 @@ export abstract class ALSurfaceHierarchyNode<
   }
 
   removeChild(child: Child): boolean {
+    if (this.children.get(child.surfaceName) !== child) {
+      return false;
+    }
     return this.children.delete(child.surfaceName);
   }
 

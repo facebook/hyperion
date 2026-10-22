@@ -16,6 +16,11 @@ import {
   useSurface,
   type ALSurfaceDataNode,
 } from '../src/ALSurface';
+import {
+  ALSurfaceDataNode as SurfaceDataNode,
+  registerSurfaceData,
+  unregisterSurfaceData,
+} from '../src/ALSurfaceData';
 import type {
   ALReactNativeEventMap,
   ALSurfaceMutationEventData,
@@ -225,6 +230,52 @@ describe('React Native surfaces plugin', () => {
       mountedRenderer.unmount();
       await Promise.resolve();
     });
+    consoleError.mockRestore();
+  });
+
+  test('keeps a replacement registered when the stale surface unmounts', () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const parent = ALSurfaceData.root;
+    const createSurface = (
+      name: string,
+      path: string,
+      surfaceParent: typeof parent | SurfaceDataNode = parent
+    ) => {
+      return new SurfaceDataNode({
+        name,
+        path,
+        interactivePath: path,
+        depth:
+          surfaceParent instanceof SurfaceDataNode
+            ? surfaceParent.depth + 1
+            : 1,
+        parent: surfaceParent,
+        nonInteractive: false,
+        metadata: {},
+        interactiveMetadata: {},
+        uiEventMetadata: {},
+      });
+    };
+    const stale = createSurface('home', 'home');
+    const replacement = createSurface('home', 'home');
+
+    registerSurfaceData(stale);
+    registerSurfaceData(replacement);
+    unregisterSurfaceData(stale);
+
+    expect(parent.getChild('home')).toBe(replacement);
+    expect(ALSurfaceData.get('home')).toBe(replacement);
+
+    const child = createSurface('details', 'home/details', replacement);
+    registerSurfaceData(child);
+    expect(replacement.getChild('details')).toBe(child);
+    expect(ALSurfaceData.get('home/details')).toBe(child);
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith(
+      'Duplicate AutoLogging surface name "home" under "root".'
+    );
     consoleError.mockRestore();
   });
 });

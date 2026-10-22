@@ -19,7 +19,7 @@ class TestSurfaceNode extends ALSurfaceHierarchyNode<TestSurfaceNode> {
 }
 
 describe('ALSurfaceHierarchyNode', () => {
-  test('uses name-keyed Map replacement and removal semantics', () => {
+  test('does not remove a replacement through a stale child instance', () => {
     const root = new TestSurfaceNode('root', null, null);
     const first = new TestSurfaceNode('child', '/first', root);
     const second = new TestSurfaceNode('child', '/second', root);
@@ -29,7 +29,9 @@ describe('ALSurfaceHierarchyNode', () => {
 
     expect(root.getChild('child')).toBe(second);
     expect(root.getChildren()).toEqual([second]);
-    expect(root.removeChild(first)).toBe(true);
+    expect(root.removeChild(first)).toBe(false);
+    expect(root.getChild('child')).toBe(second);
+    expect(root.removeChild(second)).toBe(true);
     expect(root.getChild('child')).toBeNull();
   });
 
