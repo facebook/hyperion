@@ -13,6 +13,10 @@ import type {
 import { createALEventFactory } from 'hyperion-autologging/src/ALEventFactory';
 import type { ALManagedPlugin } from 'hyperion-autologging/src/ALPlugin';
 import { ALPluginRuntime } from 'hyperion-autologging/src/ALPluginRuntime';
+import {
+  clearActiveRuntimeContext,
+  setActiveRuntimeContext,
+} from './ALActiveRuntime';
 import type { ALAppLifecycleEnvironment } from './IReactNative';
 import { ALReactNativeSession } from './ALSession';
 import type { ALLoggableEvent, SurfaceMetadataValue } from './ALTypes';
@@ -81,7 +85,14 @@ export function createReactNativeRuntime<EventMap extends BaseChannelEventType>(
     options.sessionTimeoutMs
   );
   const runtime = new ALPluginRuntime(options.channel, context);
-  runtime.initialize(options.plugins);
+  // Startup events may have subscribers that read the active session context.
+  setActiveRuntimeContext(context);
+  try {
+    runtime.initialize(options.plugins);
+  } catch (error) {
+    clearActiveRuntimeContext(context);
+    throw error;
+  }
   return {
     channel: options.channel,
     context,

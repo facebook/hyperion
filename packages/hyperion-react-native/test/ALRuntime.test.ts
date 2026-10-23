@@ -7,12 +7,21 @@
 'use strict';
 
 import { createAutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
+import { ALHeartbeatType } from 'hyperion-autologging/src/ALHeartbeatType';
+import { reactNativeAppLifecycle } from '../src/ALAppLifecycle';
+import { reactNativeHeartbeat } from '../src/ALHeartbeat';
 import type {
   ALReactNativePlugin,
   ALReactNativeRuntimeContext,
 } from '../src/ALRuntime';
+import {
+  getAppInstanceId,
+  getSessionId,
+  getWebSessionId,
+} from '../src/ALSessionPublic';
 import type { ALReactNativeEventMap } from '../src/ALTypes';
 import * as AutoLogging from '../src/AutoLogging';
+import type { ReactNativeAppState } from '../src/IReactNative';
 
 function initializeSession(
   sessionTimeoutMs?: number
@@ -82,10 +91,60 @@ describe('React Native plugin runtime', () => {
     expect(calls.slice(-2)).toEqual(['dispose:second', 'dispose:first']);
   });
 
+  test('publishes session context before startup events', () => {
+    const subscriberErrors: unknown[] = [];
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>((error) =>
+      subscriberErrors.push(error)
+    );
+    const AppState: ReactNativeAppState = {
+      currentState: 'active',
+      addEventListener: () => ({ remove: () => undefined }),
+    };
+    const records: {
+      readonly appInstanceId: string;
+      readonly heartbeatType: ALHeartbeatType;
+      readonly initialized: boolean;
+      readonly sessionId: string;
+      readonly webSessionId: string;
+    }[] = [];
+    channel.addListener('al_heartbeat_event', (event) => {
+      records.push({
+        appInstanceId: getAppInstanceId(),
+        heartbeatType: event.heartbeatType,
+        initialized: AutoLogging.isInitialized(),
+        sessionId: getSessionId(),
+        webSessionId: getWebSessionId(),
+      });
+    });
+
+    expect(
+      AutoLogging.init({
+        channel,
+        plugins: [
+          reactNativeAppLifecycle({ AppState }),
+          reactNativeHeartbeat(),
+        ],
+      })
+    ).toBe(true);
+
+    expect(subscriberErrors).toEqual([]);
+    expect(records).toHaveLength(1);
+    expect(records[0]).toEqual({
+      appInstanceId: expect.stringMatching(/^[0-9a-z]{6}$/),
+      heartbeatType: ALHeartbeatType.START,
+      initialized: false,
+      sessionId: expect.stringMatching(/^[0-9a-z]{6}$/),
+      webSessionId: expect.stringMatching(
+        /^[0-9a-z]{6}:[0-9a-z]{6}:[0-9a-z]{6}$/
+      ),
+    });
+  });
+
   test('rolls back failures and permits a corrected retry', () => {
     const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
     const dispose = jest.fn();
     const failure = new Error('installation failed');
+    let failedSessionId: string | undefined;
 
     expect(() =>
       AutoLogging.init({
@@ -94,7 +153,8 @@ describe('React Native plugin runtime', () => {
           { name: 'first', install: () => ({ dispose }) },
           {
             name: 'failure',
-            install() {
+            install(_channel, context) {
+              failedSessionId = context.session.getSessionId();
               throw failure;
             },
           },
@@ -103,7 +163,11 @@ describe('React Native plugin runtime', () => {
     ).toThrow(failure);
     expect(dispose).toHaveBeenCalledTimes(1);
     expect(AutoLogging.isInitialized()).toBe(false);
+    expect(() => getSessionId()).toThrow(
+      'React Native AutoLogging is not initialized.'
+    );
     expect(AutoLogging.init({ channel, plugins: [] })).toBe(true);
+    expect(getSessionId()).not.toBe(failedSessionId);
   });
 
   test('creates contiguous events through one runtime event factory', () => {
