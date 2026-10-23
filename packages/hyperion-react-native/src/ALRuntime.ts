@@ -13,6 +13,10 @@ import type {
 import { createALEventFactory } from 'hyperion-autologging/src/ALEventFactory';
 import type { ALManagedPlugin } from 'hyperion-autologging/src/ALPlugin';
 import { ALPluginRuntime } from 'hyperion-autologging/src/ALPluginRuntime';
+import {
+  clearActiveRuntimeContext,
+  setActiveRuntimeContext,
+} from './ALActiveRuntime';
 import type { ALAppLifecycleEnvironment } from './IReactNative';
 import { ALReactNativeSession } from './ALSession';
 import type { ALLoggableEvent, SurfaceMetadataValue } from './ALTypes';
@@ -35,6 +39,7 @@ export interface ALReactNativeRuntimeOptions<
   readonly channel: AutoLoggingChannel<EventMap>;
   readonly plugins: readonly ALReactNativePlugin<EventMap>[];
   readonly now?: () => number;
+  readonly sessionTimeoutMs?: number;
 }
 
 export interface ALReactNativeRuntime<EventMap extends BaseChannelEventType> {
@@ -44,20 +49,16 @@ export interface ALReactNativeRuntime<EventMap extends BaseChannelEventType> {
   dispose(): boolean;
 }
 
-function createRuntimeContext(now: () => number): ALReactNativeRuntimeContext {
-  const session = new ALReactNativeSession(now);
-  const factory = createALEventFactory<SurfaceMetadataValue>({
+function createRuntimeContext(
+  now: () => number,
+  sessionTimeoutMs?: number
+): ALReactNativeRuntimeContext {
+  const session = new ALReactNativeSession(now, sessionTimeoutMs);
+  const eventFactory = createALEventFactory<SurfaceMetadataValue>({
     now,
     nextEventIndex: () => session.nextEventIndex(),
     getBaseMetadata: () => ({}),
   });
-  const eventFactory: ALEventFactory<SurfaceMetadataValue> = {
-    createEvent(options?: ALCreateEventOptions<SurfaceMetadataValue>) {
-      const eventTimestamp = options?.eventTimestamp ?? now();
-      session.getSessionId(eventTimestamp);
-      return factory.createEvent({ ...options, eventTimestamp });
-    },
-  };
   let appLifecycle: ALAppLifecycleEnvironment | null = null;
   return {
     eventFactory,
@@ -79,9 +80,19 @@ function createRuntimeContext(now: () => number): ALReactNativeRuntimeContext {
 export function createReactNativeRuntime<EventMap extends BaseChannelEventType>(
   options: ALReactNativeRuntimeOptions<EventMap>
 ): ALReactNativeRuntime<EventMap> {
-  const context = createRuntimeContext(options.now ?? Date.now);
+  const context = createRuntimeContext(
+    options.now ?? Date.now,
+    options.sessionTimeoutMs
+  );
   const runtime = new ALPluginRuntime(options.channel, context);
-  runtime.initialize(options.plugins);
+  // Startup events may have subscribers that read the active session context.
+  setActiveRuntimeContext(context);
+  try {
+    runtime.initialize(options.plugins);
+  } catch (error) {
+    clearActiveRuntimeContext(context);
+    throw error;
+  }
   return {
     channel: options.channel,
     context,

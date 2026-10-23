@@ -7,12 +7,54 @@
 'use strict';
 
 import { createAutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
-import type { ALReactNativePlugin } from '../src/ALRuntime';
+import { ALHeartbeatType } from 'hyperion-autologging/src/ALHeartbeatType';
+import { reactNativeAppLifecycle } from '../src/ALAppLifecycle';
+import { reactNativeHeartbeat } from '../src/ALHeartbeat';
+import type {
+  ALReactNativePlugin,
+  ALReactNativeRuntimeContext,
+} from '../src/ALRuntime';
+import {
+  getAppInstanceId,
+  getSessionId,
+  getWebSessionId,
+} from '../src/ALSessionPublic';
 import type { ALReactNativeEventMap } from '../src/ALTypes';
 import * as AutoLogging from '../src/AutoLogging';
+import type { ReactNativeAppState } from '../src/IReactNative';
+
+function initializeSession(
+  sessionTimeoutMs?: number
+): ALReactNativeRuntimeContext {
+  const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+  let capturedContext: ALReactNativeRuntimeContext | null = null;
+  AutoLogging.init({
+    channel,
+    plugins: [
+      {
+        name: 'session-probe',
+        install(_channel, context) {
+          capturedContext = context;
+        },
+      },
+    ],
+    sessionTimeoutMs,
+  });
+  if (capturedContext == null) {
+    throw new Error('Expected the runtime context to be installed.');
+  }
+  return capturedContext;
+}
 
 describe('React Native plugin runtime', () => {
-  afterEach(() => AutoLogging.dispose());
+  beforeEach(() => {
+    jest.useFakeTimers({ now: 1_700_000_000_000 });
+  });
+
+  afterEach(() => {
+    AutoLogging.dispose();
+    jest.useRealTimers();
+  });
 
   test('uses the application channel and starts only after every install', () => {
     const calls: string[] = [];
@@ -49,10 +91,60 @@ describe('React Native plugin runtime', () => {
     expect(calls.slice(-2)).toEqual(['dispose:second', 'dispose:first']);
   });
 
+  test('publishes session context before startup events', () => {
+    const subscriberErrors: unknown[] = [];
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>((error) =>
+      subscriberErrors.push(error)
+    );
+    const AppState: ReactNativeAppState = {
+      currentState: 'active',
+      addEventListener: () => ({ remove: () => undefined }),
+    };
+    const records: {
+      readonly appInstanceId: string;
+      readonly heartbeatType: ALHeartbeatType;
+      readonly initialized: boolean;
+      readonly sessionId: string;
+      readonly webSessionId: string;
+    }[] = [];
+    channel.addListener('al_heartbeat_event', (event) => {
+      records.push({
+        appInstanceId: getAppInstanceId(),
+        heartbeatType: event.heartbeatType,
+        initialized: AutoLogging.isInitialized(),
+        sessionId: getSessionId(),
+        webSessionId: getWebSessionId(),
+      });
+    });
+
+    expect(
+      AutoLogging.init({
+        channel,
+        plugins: [
+          reactNativeAppLifecycle({ AppState }),
+          reactNativeHeartbeat(),
+        ],
+      })
+    ).toBe(true);
+
+    expect(subscriberErrors).toEqual([]);
+    expect(records).toHaveLength(1);
+    expect(records[0]).toEqual({
+      appInstanceId: expect.stringMatching(/^[0-9a-z]{6}$/),
+      heartbeatType: ALHeartbeatType.START,
+      initialized: false,
+      sessionId: expect.stringMatching(/^[0-9a-z]{6}$/),
+      webSessionId: expect.stringMatching(
+        /^[0-9a-z]{6}:[0-9a-z]{6}:[0-9a-z]{6}$/
+      ),
+    });
+  });
+
   test('rolls back failures and permits a corrected retry', () => {
     const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
     const dispose = jest.fn();
     const failure = new Error('installation failed');
+    let failedSessionId: string | undefined;
 
     expect(() =>
       AutoLogging.init({
@@ -61,7 +153,8 @@ describe('React Native plugin runtime', () => {
           { name: 'first', install: () => ({ dispose }) },
           {
             name: 'failure',
-            install() {
+            install(_channel, context) {
+              failedSessionId = context.session.getSessionId();
               throw failure;
             },
           },
@@ -70,7 +163,11 @@ describe('React Native plugin runtime', () => {
     ).toThrow(failure);
     expect(dispose).toHaveBeenCalledTimes(1);
     expect(AutoLogging.isInitialized()).toBe(false);
+    expect(() => getSessionId()).toThrow(
+      'React Native AutoLogging is not initialized.'
+    );
     expect(AutoLogging.init({ channel, plugins: [] })).toBe(true);
+    expect(getSessionId()).not.toBe(failedSessionId);
   });
 
   test('creates contiguous events through one runtime event factory', () => {
@@ -114,4 +211,70 @@ describe('React Native plugin runtime', () => {
     expect(nestedResult).toBe(false);
     expect(AutoLogging.isInitialized()).toBe(true);
   });
+
+  test('keeps the default session timeout at thirty minutes', () => {
+    const context = initializeSession();
+    const start = Date.now();
+    const initialSessionId = context.session.getSessionId();
+
+    jest.setSystemTime(start + 29 * 60_000);
+    expect(context.session.getSessionId()).toBe(initialSessionId);
+    jest.setSystemTime(start + 31 * 60_000);
+    context.session.recordActivity();
+    expect(context.session.getSessionId()).not.toBe(initialSessionId);
+  });
+
+  test('rotates a custom-timeout session only on activity', () => {
+    const context = initializeSession(60_000);
+    const start = Date.now();
+    const initialSessionId = context.session.getSessionId();
+
+    expect(
+      context.eventFactory.createEvent({ eventTimestamp: start }).eventIndex
+    ).toBe(0);
+    context.session.recordActivity(start + 59_000);
+    expect(context.session.getSessionId()).toBe(initialSessionId);
+    expect(
+      context.eventFactory.createEvent({ eventTimestamp: start + 120_001 })
+        .eventIndex
+    ).toBe(1);
+    expect(context.session.getSessionId()).toBe(initialSessionId);
+
+    context.session.recordActivity(start + 120_001);
+    expect(context.session.getSessionId()).not.toBe(initialSessionId);
+    expect(
+      context.eventFactory.createEvent({ eventTimestamp: start + 120_001 })
+        .eventIndex
+    ).toBe(2);
+  });
+
+  test('keeps non-activity events in the current session at the timeout boundary', () => {
+    const context = initializeSession(60_000);
+    const start = Date.now();
+    const initialSessionId = context.session.getSessionId();
+
+    const boundaryEvent = context.eventFactory.createEvent({
+      eventTimestamp: start + 60_000,
+    });
+    jest.setSystemTime(start + 60_001);
+
+    expect(boundaryEvent.eventIndex).toBe(0);
+    expect(context.session.getSessionId()).toBe(initialSessionId);
+    expect(context.eventFactory.createEvent().eventIndex).toBe(1);
+  });
+
+  test.each([0, -1, Number.NaN])(
+    'uses the default session timeout for invalid value %s',
+    (sessionTimeoutMs) => {
+      const context = initializeSession(sessionTimeoutMs);
+      const start = Date.now();
+      const initialSessionId = context.session.getSessionId();
+
+      context.session.recordActivity(start + 29 * 60_000);
+      expect(context.session.getSessionId()).toBe(initialSessionId);
+      context.session.recordActivity(start + 60 * 60_000);
+      expect(context.session.getSessionId()).not.toBe(initialSessionId);
+      AutoLogging.dispose();
+    }
+  );
 });

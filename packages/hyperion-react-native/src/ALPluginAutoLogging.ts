@@ -6,10 +6,7 @@
 
 import type { BaseChannelEventType } from 'hyperion-channel/src/Channel';
 import type { AutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
-import {
-  clearActiveRuntimeContext,
-  setActiveRuntimeContext,
-} from './ALActiveRuntime';
+import { clearActiveRuntimeContext } from './ALActiveRuntime';
 import {
   createReactNativeRuntime,
   type ALReactNativePlugin,
@@ -23,6 +20,7 @@ export interface PluginInitOptions<
 > {
   readonly channel: AutoLoggingChannel<EventMap>;
   readonly plugins: readonly ALReactNativePlugin<EventMap>[];
+  readonly sessionTimeoutMs?: number;
 }
 
 type InitializationState =
@@ -47,7 +45,6 @@ export function init<
       options as unknown as ALReactNativeRuntimeOptions<BaseChannelEventType>
     );
     activeRuntime = runtime;
-    setActiveRuntimeContext(runtime.context);
     initializationState = 'initialized';
     return true;
   } catch (error) {

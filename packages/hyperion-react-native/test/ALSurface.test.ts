@@ -16,6 +16,12 @@ import {
   useSurface,
   type ALSurfaceDataNode,
 } from '../src/ALSurface';
+import {
+  ALSurfaceDataNode as SurfaceDataNode,
+  registerSurfaceData,
+  unregisterSurfaceData,
+} from '../src/ALSurfaceData';
+import type { ALReactNativeRuntimeContext } from '../src/ALRuntime';
 import type {
   ALReactNativeEventMap,
   ALSurfaceMutationEventData,
@@ -152,6 +158,66 @@ describe('React Native surfaces plugin', () => {
     }
   });
 
+  test('links lifecycle events across a session rotation without reusing indexes', async () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALSurfaceMutationEventData[] = [];
+    const publishedSessionIds: string[] = [];
+    let runtimeContext: ALReactNativeRuntimeContext | null = null;
+    channel.addListener('al_surface_mutation_event', (event) => {
+      events.push(event);
+      if (runtimeContext != null) {
+        publishedSessionIds.push(runtimeContext.session.getSessionId());
+      }
+    });
+    AutoLogging.init({
+      channel,
+      plugins: [
+        {
+          name: 'session-probe',
+          install(_channel, context) {
+            runtimeContext = context;
+          },
+        },
+        reactNativeSurfaces(),
+      ],
+      sessionTimeoutMs: 60_000,
+    });
+
+    let renderer: TestRenderer.ReactTestRenderer | undefined;
+    await act(async () => {
+      renderer = TestRenderer.create(
+        React.createElement(ALSurface, { name: 'cross-session' }, 'content')
+      );
+      await Promise.resolve();
+    });
+    if (runtimeContext == null || renderer == null) {
+      throw new Error('Expected the runtime and surface to be installed.');
+    }
+    const mountSessionId = runtimeContext.session.getSessionId();
+    runtimeContext.session.recordActivity(Date.now() + 61_000);
+    expect(runtimeContext.session.getSessionId()).not.toBe(mountSessionId);
+
+    await act(async () => {
+      renderer?.unmount();
+      await Promise.resolve();
+    });
+
+    expect(events).toHaveLength(2);
+    expect(events[0]).toEqual(
+      expect.objectContaining({ event: 'mount_component', eventIndex: 0 })
+    );
+    expect(events[1]).toEqual(
+      expect.objectContaining({
+        event: 'unmount_component',
+        eventIndex: 1,
+        relatedEventIndex: events[0].eventIndex,
+      })
+    );
+    expect(new Set(events.map((event) => event.eventIndex)).size).toBe(2);
+    expect(publishedSessionIds).toHaveLength(2);
+    expect(publishedSessionIds[0]).not.toBe(publishedSessionIds[1]);
+  });
+
   test('keeps hierarchy available while mutation publishing is disabled', async () => {
     const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
     const listener = jest.fn();
@@ -225,6 +291,52 @@ describe('React Native surfaces plugin', () => {
       mountedRenderer.unmount();
       await Promise.resolve();
     });
+    consoleError.mockRestore();
+  });
+
+  test('keeps a replacement registered when the stale surface unmounts', () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const parent = ALSurfaceData.root;
+    const createSurface = (
+      name: string,
+      path: string,
+      surfaceParent: typeof parent | SurfaceDataNode = parent
+    ) => {
+      return new SurfaceDataNode({
+        name,
+        path,
+        interactivePath: path,
+        depth:
+          surfaceParent instanceof SurfaceDataNode
+            ? surfaceParent.depth + 1
+            : 1,
+        parent: surfaceParent,
+        nonInteractive: false,
+        metadata: {},
+        interactiveMetadata: {},
+        uiEventMetadata: {},
+      });
+    };
+    const stale = createSurface('home', 'home');
+    const replacement = createSurface('home', 'home');
+
+    registerSurfaceData(stale);
+    registerSurfaceData(replacement);
+    unregisterSurfaceData(stale);
+
+    expect(parent.getChild('home')).toBe(replacement);
+    expect(ALSurfaceData.get('home')).toBe(replacement);
+
+    const child = createSurface('details', 'home/details', replacement);
+    registerSurfaceData(child);
+    expect(replacement.getChild('details')).toBe(child);
+    expect(ALSurfaceData.get('home/details')).toBe(child);
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith(
+      'Duplicate AutoLogging surface name "home" under "root".'
+    );
     consoleError.mockRestore();
   });
 });

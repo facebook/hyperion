@@ -7,7 +7,10 @@
 'use strict';
 
 import { createAutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
-import type { ALReactNativePlugin } from '../src/ALRuntime';
+import type {
+  ALReactNativePlugin,
+  ALReactNativeRuntimeContext,
+} from '../src/ALRuntime';
 import {
   getCurrentScreen,
   reactNativeScreens,
@@ -87,7 +90,45 @@ describe('React Native session and screen state', () => {
     );
   });
 
-  test('resets contiguous indexes when the in-memory session expires', () => {
+  test('starts a new session before publishing a screen transition after inactivity', () => {
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALScreenTransitionEventData[] = [];
+    const publishedSessionIds: string[] = [];
+    let runtimeContext: ALReactNativeRuntimeContext | null = null;
+    channel.addListener('al_screen_transition_event', (event) => {
+      events.push(event);
+      if (runtimeContext != null) {
+        publishedSessionIds.push(runtimeContext.session.getSessionId());
+      }
+    });
+    AutoLogging.init({
+      channel,
+      plugins: [
+        {
+          name: 'session-probe',
+          install(_channel, context) {
+            runtimeContext = context;
+          },
+        },
+        reactNativeScreens(),
+      ],
+      sessionTimeoutMs: 60_000,
+    });
+    if (runtimeContext == null) {
+      throw new Error('Expected the runtime context to be installed.');
+    }
+    const initialSessionId = runtimeContext.session.getSessionId();
+
+    jest.advanceTimersByTime(61_000);
+    expect(setCurrentScreen('After inactivity')).toBe(true);
+
+    expect(events).toHaveLength(1);
+    expect(events[0].eventIndex).toBe(0);
+    expect(publishedSessionIds).toHaveLength(1);
+    expect(publishedSessionIds[0]).not.toBe(initialSessionId);
+  });
+
+  test('keeps contiguous indexes when the in-memory session expires', () => {
     const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
     const indexes: number[] = [];
     const timestamps = [
@@ -96,7 +137,8 @@ describe('React Native session and screen state', () => {
     const plugin: ALReactNativePlugin<ALReactNativeEventMap> = {
       name: 'session-probe',
       install(_channel, context) {
-        for (const eventTimestamp of timestamps) {
+        for (const [index, eventTimestamp] of timestamps.entries()) {
+          if (index === 2) context.session.recordActivity(eventTimestamp);
           indexes.push(
             context.eventFactory.createEvent({ eventTimestamp }).eventIndex
           );
@@ -105,7 +147,7 @@ describe('React Native session and screen state', () => {
     };
 
     AutoLogging.init({ channel, plugins: [plugin] });
-    expect(indexes).toEqual([0, 1, 0]);
+    expect(indexes).toEqual([0, 1, 2]);
   });
 
   test('allows later plugins to publish a screen during managed startup', () => {

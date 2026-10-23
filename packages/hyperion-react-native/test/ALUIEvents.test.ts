@@ -8,6 +8,7 @@ import React, { Suspense } from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { createAutoLoggingChannel } from 'hyperion-autologging/src/ALChannel';
 import * as AutoLogging from '../src/AutoLogging';
+import type { ALReactNativeRuntimeContext } from '../src/ALRuntime';
 import { reactNativeSurfaces, ALSurface } from '../src/ALSurface';
 import { reactNativeUIEvents } from '../src/ALUIEvents';
 import type { ALReactNativeEventMap, ALUIEventData } from '../src/ALTypes';
@@ -129,6 +130,56 @@ describe('React Native automatic UI event plugin', () => {
       })
     );
     expect(JSON.stringify(events[0])).not.toContain('private');
+    act(() => renderer.unmount());
+  });
+
+  test('starts a new session before publishing the first interaction after inactivity', () => {
+    jest.useFakeTimers({ now: 1_700_000_000_000 });
+    const channel = createAutoLoggingChannel<ALReactNativeEventMap>();
+    const events: ALUIEventData[] = [];
+    const publishedSessionIds: string[] = [];
+    let runtimeContext: ALReactNativeRuntimeContext | null = null;
+    channel.addListener('al_ui_event', (event) => {
+      events.push(event);
+      if (runtimeContext != null) {
+        publishedSessionIds.push(runtimeContext.session.getSessionId());
+      }
+    });
+    AutoLogging.init({
+      channel,
+      plugins: [
+        {
+          name: 'session-probe',
+          install(_channel, context) {
+            runtimeContext = context;
+          },
+        },
+        reactNativeUIEvents(),
+      ],
+      sessionTimeoutMs: 60_000,
+    });
+    if (runtimeContext == null) {
+      throw new Error('Expected the runtime context to be installed.');
+    }
+    const initialSessionId = runtimeContext.session.getSessionId();
+    const applicationHandler = jest.fn();
+    const renderer = mount(
+      jsx(InstrumentedControl, {
+        accessibilityLabel: 'Resume activity',
+        onPress: applicationHandler,
+      })
+    );
+
+    jest.advanceTimersByTime(61_000);
+    renderer.root
+      .findByType('instrumented-control')
+      .props.onPress(createNativeEvent());
+
+    expect(applicationHandler).toHaveBeenCalledTimes(1);
+    expect(events).toHaveLength(1);
+    expect(events[0].eventIndex).toBe(0);
+    expect(publishedSessionIds).toHaveLength(1);
+    expect(publishedSessionIds[0]).not.toBe(initialSessionId);
     act(() => renderer.unmount());
   });
 

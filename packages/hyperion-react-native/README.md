@@ -116,6 +116,13 @@ portable hierarchy contracts live in `hyperion-autologging`; mobile nodes have
 no DOM element and return a shared frozen empty collection from `getElements()`.
 App lifecycle is injected structurally through `reactNativeAppLifecycle({
 AppState })`, so the portable runtime has no eager `react-native` dependency.
+Set `transientInactiveMs` to a positive duration to suppress non-active
+transitions that return to active before that duration elapses. It defaults to
+zero, which dispatches every transition immediately.
+
+`AutoLogging.init()` accepts a positive, finite `sessionTimeoutMs` for mobile
+in-memory session rotation. The default remains 30 minutes; invalid values use
+that default.
 
 ## Compatibility setup
 

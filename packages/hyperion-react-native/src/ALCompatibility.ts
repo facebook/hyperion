@@ -54,6 +54,7 @@ export interface CompatibilityInitOptions
   readonly props?: LegacyComponentPropsOptions | null;
   readonly componentProps?: LegacyComponentPropsOptions | null;
   readonly features?: ALFeatureConfig;
+  readonly sessionTimeoutMs?: number;
 }
 
 export function createReactNativePlugins(

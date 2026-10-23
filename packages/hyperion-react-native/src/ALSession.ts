@@ -25,20 +25,20 @@ export class ALReactNativeSession {
   private screenId = generateId();
   private lastActivityTime: number;
   private eventIndex = 0;
+  private readonly sessionTimeoutMs: number;
 
   constructor(
     private readonly now: () => number = Date.now,
-    private readonly sessionTimeoutMs = DEFAULT_SESSION_TIMEOUT_MS
+    sessionTimeoutMs = DEFAULT_SESSION_TIMEOUT_MS
   ) {
+    this.sessionTimeoutMs =
+      Number.isFinite(sessionTimeoutMs) && sessionTimeoutMs > 0
+        ? sessionTimeoutMs
+        : DEFAULT_SESSION_TIMEOUT_MS;
     this.lastActivityTime = now();
   }
 
-  getSessionId(timestamp = this.now()): string {
-    if (timestamp - this.lastActivityTime > this.sessionTimeoutMs) {
-      this.sessionId = generateId();
-      this.eventIndex = 0;
-      this.lastActivityTime = timestamp;
-    }
+  getSessionId(): string {
     return this.sessionId;
   }
 
@@ -56,6 +56,9 @@ export class ALReactNativeSession {
   }
 
   recordActivity(timestamp = this.now()): void {
+    if (timestamp - this.lastActivityTime > this.sessionTimeoutMs) {
+      this.sessionId = generateId();
+    }
     this.lastActivityTime = timestamp;
   }
 
